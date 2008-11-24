@@ -14,10 +14,8 @@ namespace Hubble.Core.Index
     public class InvertedIndex
     {
         #region WordIndex
-        public static int MaxSize = 0;
-        public static int TotalSize = 0;
 
-        class WordIndex : IntDictionary<CompressIntList>
+        class WordIndex 
         {
             string _Word;
             List<int> _TempPositionList = new List<int>();
@@ -70,7 +68,6 @@ namespace Hubble.Core.Index
             public WordIndex(string word)
             {
                 _Word = word;
-                MaxChildren = 32;
             }
 
             public void Index()
@@ -96,9 +93,6 @@ namespace Hubble.Core.Index
                     }
 
                     CompressIntList list = new CompressIntList(TempPositionList, TempDocumentId);
-                    TotalSize += list.Size;
-
-                    MaxSize = Math.Max(list.Size, MaxSize);
                     _List.Add(list);
                     //Add(TempDocumentId, list);
                 }
