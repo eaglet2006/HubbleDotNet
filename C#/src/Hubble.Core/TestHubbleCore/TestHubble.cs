@@ -49,8 +49,6 @@ namespace TestHubbleCore
 
                 watch.Start();
                 watch.Stop();
-                Console.WriteLine(Hubble.Core.Index.InvertedIndex.MaxSize);
-                Console.WriteLine(Hubble.Core.Index.InvertedIndex.TotalSize);
 
                 Console.WriteLine(String.Format("插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒",
                     docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
