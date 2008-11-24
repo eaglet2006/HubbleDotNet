@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.Entities
 {
-    public struct WordInfo
+    public struct WordInfo : IComparable<WordInfo>
     {
         public string Word;
         public int Position;
@@ -20,5 +20,14 @@ namespace Hubble.Core.Entities
             Position = position;
             Rank = rank;
         }
+
+        #region IComparable<WordInfo> Members
+
+        public int CompareTo(WordInfo other)
+        {
+            return this.Position.CompareTo(other.Position);
+        }
+
+        #endregion
     }
 }

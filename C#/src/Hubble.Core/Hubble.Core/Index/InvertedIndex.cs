@@ -15,13 +15,43 @@ namespace Hubble.Core.Index
     {
         #region WordIndex
 
-        class WordIndex 
+        /// <summary>
+        /// Index for every word
+        /// </summary>
+        public class WordIndex
         {
+            #region Private fields
             string _Word;
             List<int> _TempPositionList = new List<int>();
             long _TempDocumentId;
             bool _Hit = false;
-            List<CompressIntList> _List = new List<CompressIntList>();
+            bool _IsRamIndex = true;
+
+
+            List<CompressIntList> _ListForReader = new List<CompressIntList>();
+            List<CompressIntList> _ListForWriter = new List<CompressIntList>();
+            #endregion
+
+            #region Private properties
+            private List<CompressIntList> ListForReader
+            {
+                get
+                {
+                    return _ListForReader;
+                }
+            }
+
+            private List<CompressIntList> ListForWriter
+            {
+                get
+                {
+                    return _ListForWriter;
+                }
+            }
+
+            #endregion
+
+            #region Public Properties
 
             public string Word
             {
@@ -31,7 +61,41 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public bool Hit
+            public int Count
+            {
+                get
+                {
+                    if (_IsRamIndex)
+                    {
+                        return ListForWriter.Count;
+                    }
+                    else
+                    {
+                        return ListForReader.Count;
+                    }
+                }
+            }
+
+
+            public CompressIntList this[int index]
+            {
+                get
+                {
+                    if (_IsRamIndex)
+                    {
+                        return ListForWriter[index];
+                    }
+                    else
+                    {
+                        return ListForReader[index];
+                    }
+                }
+            }
+
+            #endregion
+
+            #region internal properties
+            internal bool Hit
             {
                 get
                 {
@@ -44,7 +108,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public long TempDocumentId
+            internal long TempDocumentId
             {
                 get
                 {
@@ -57,7 +121,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public List<int> TempPositionList
+            internal List<int> TempPositionList
             {
                 get
                 {
@@ -65,12 +129,16 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public WordIndex(string word)
+            #endregion
+
+            #region internal methods
+
+            internal WordIndex(string word)
             {
                 _Word = word;
             }
 
-            public void Index()
+            internal void Index()
             {
                 try
                 {
@@ -93,7 +161,7 @@ namespace Hubble.Core.Index
                     }
 
                     CompressIntList list = new CompressIntList(TempPositionList, TempDocumentId);
-                    _List.Add(list);
+                    _ListForWriter.Add(list);
                     //Add(TempDocumentId, list);
                 }
                 finally
@@ -103,6 +171,7 @@ namespace Hubble.Core.Index
                 }
             }
 
+            #endregion
         }
 
         #endregion
@@ -118,7 +187,21 @@ namespace Hubble.Core.Index
             }
         }
 
-        public void Index(string text, int documentId, Analyze.IAnalyzer analyzer)
+        public WordIndex GetWordIndex(string word)
+        {
+            WordIndex retVal;
+
+            if (_WordTable.TryGetValue(word, out retVal))
+            {
+                return retVal;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void Index(string text, long documentId, Analyze.IAnalyzer analyzer)
         {
             List<WordIndex> hitIndexes = new List<WordIndex>(4192);
 

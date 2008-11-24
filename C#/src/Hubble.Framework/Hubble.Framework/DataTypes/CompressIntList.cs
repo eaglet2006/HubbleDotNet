@@ -15,8 +15,8 @@ namespace Hubble.Framework.DataTypes
     /// second int is 0x7f
     /// Input int must not be less then zero!
     /// </summary>
-    [StructLayout(LayoutKind.Sequential,Pack=4)] 
-    public struct CompressIntList
+    [StructLayout(LayoutKind.Sequential,Pack=4)]
+    public struct CompressIntList : IEnumerable<int>
     {
         //[FieldOffset(0)]
         public long DocumentId;
@@ -90,43 +90,98 @@ namespace Hubble.Framework.DataTypes
             tempBuf.CopyTo(Data);
         }
 
-        public IEnumerator<int> Values
+        public IEnumerable<int> GetValues()
         {
-            get
+            int retVal = -1;
+            int shift = 7;
+            int last = -1;
+            foreach (byte data in Data)
             {
-                int retVal = -1;
-                int shift = 7;
-                int last = -1;
-                foreach (byte data in Data)
+                if ((data & 0x80) != 0)
                 {
-                    if ((data & 0x80) != 0)
+                    if (retVal >= 0)
                     {
-                        if (retVal >= 0)
+                        if (last == -1)
                         {
-                            if (last == -1)
-                            {
-                                last = retVal;
-                            }
-                            else
-                            {
-                                last = last + retVal;
-                            }
-
-                            yield return last;
+                            last = retVal;
+                        }
+                        else
+                        {
+                            last = last + retVal;
                         }
 
-                        shift = 7;
-                        retVal = data & 0x7f;
+                        yield return last;
                     }
-                    else
-                    {
-                        retVal += (int)data << shift;
-                        shift += 7;
-                    }
+
+                    shift = 7;
+                    retVal = data & 0x7f;
+                }
+                else
+                {
+                    retVal += (int)data << shift;
+                    shift += 7;
                 }
             }
         }
 
+        public IEnumerator<int> Values
+        {
+            get
+            {
+                return this.GetEnumerator();
+            }
+        }
+
+
+        #region IEnumerable<int> Members
+
+        public IEnumerator<int> GetEnumerator()
+        {
+            int retVal = -1;
+            int shift = 7;
+            int last = -1;
+            foreach (byte data in Data)
+            {
+                if ((data & 0x80) != 0)
+                {
+                    if (retVal >= 0)
+                    {
+                        if (last == -1)
+                        {
+                            last = retVal;
+                        }
+                        else
+                        {
+                            last = last + retVal;
+                        }
+
+                        yield return last;
+                    }
+
+                    shift = 7;
+                    retVal = data & 0x7f;
+                }
+                else
+                {
+                    retVal += (int)data << shift;
+                    shift += 7;
+                }
+            }
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            foreach (int value in GetValues())
+            {
+                yield return value;
+            }
+        }
+
+        #endregion
     }
 
     public class CCompressIntList

@@ -24,7 +24,7 @@ namespace TestHubbleCore
 
                 Stopwatch watch = new Stopwatch();
                 ktAnalyzer.Stopwatch.Reset();
-                int docId = 0;
+                long docId = 0;
                 int totalChars = 0;
                 
                 foreach (XmlNode node in nodes)
@@ -41,7 +41,7 @@ namespace TestHubbleCore
                     invertedIndex.Index(content, docId++, ktAnalyzer);
                     watch.Stop();
 
-                    if (docId == 10000)
+                    if (docId == 2000)
                     {
                         break;
                     }
@@ -53,6 +53,18 @@ namespace TestHubbleCore
                 Console.WriteLine(String.Format("插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒",
                     docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
                     ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000));
+
+                Hubble.Core.Query.FullTextQuery fullTextQuery = new Hubble.Core.Query.FullTextQuery();
+                fullTextQuery.Analyzer = ktAnalyzer;
+                fullTextQuery.InvertedIndex = invertedIndex;
+                fullTextQuery.QueryString = "北京大学";
+
+                long queryDocId;
+                do
+                {
+                    List<Hubble.Core.Entities.WordInfo> wordInfos = fullTextQuery.GetNextHitWords(out queryDocId);
+                    //queryDocId = wordInfos.Count;
+                } while (queryDocId >= 0);
             }
             catch (Exception e1)
             {

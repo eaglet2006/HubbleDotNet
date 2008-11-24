@@ -47,7 +47,7 @@ namespace TestHubbleCore
             //Console.WriteLine(s.ElapsedMilliseconds);
 
             TestHubble testHubble = new TestHubble();
-            testHubble.NewsXml = @"G:\opensource\KTDictSeg\News\news.xml";
+            //testHubble.NewsXml = @"G:\opensource\KTDictSeg\News\news.xml";
             testHubble.Test();
 
             Console.ReadKey();
