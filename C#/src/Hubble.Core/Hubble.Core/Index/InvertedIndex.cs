@@ -205,7 +205,7 @@ namespace Hubble.Core.Index
         {
             List<WordIndex> hitIndexes = new List<WordIndex>(4192);
 
-            foreach (Entities.WordInfo wordInfo in analyzer.Tokenize(text))
+            foreach (Entity.WordInfo wordInfo in analyzer.Tokenize(text))
             {
                 if (wordInfo.Position < 0)
                 {

@@ -54,7 +54,7 @@ namespace TestHubbleCore
 
         #region IAnalyzer Members
 
-        public IEnumerable<Hubble.Core.Entities.WordInfo> Tokenize(string text)
+        public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
             Stopwatch.Start();
             List<T_WordInfo> wordInfos = _SimpleDictSeg.SegmentToWordInfos(text);
@@ -64,7 +64,7 @@ namespace TestHubbleCore
             {
                 if (wordInfo != null)
                 {
-                    yield return new Hubble.Core.Entities.WordInfo(wordInfo.Word, wordInfo.Position); 
+                    yield return new Hubble.Core.Entity.WordInfo(wordInfo.Word, wordInfo.Position); 
                 }
             }
         }

@@ -34,7 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analysis\IAnalyzer.cs" />
-    <Compile Include="Entities\WordInfo.cs" />
+    <Compile Include="Entity\WordInfo.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\FullTextQuery.cs" />

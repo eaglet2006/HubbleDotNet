@@ -124,8 +124,8 @@ namespace Hubble.Core.Query
         string _QueryString;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
         Hubble.Core.Analysis.IAnalyzer _Analyzer;
-        List<Entities.WordInfo> _QueryWords = new List<Hubble.Core.Entities.WordInfo>();
-        List<Entities.WordInfo> _HitWords = new List<Hubble.Core.Entities.WordInfo>();
+        List<Entity.WordInfo> _QueryWords = new List<Hubble.Core.Entity.WordInfo>();
+        List<Entity.WordInfo> _HitWords = new List<Hubble.Core.Entity.WordInfo>();
         Dictionary<string, int> _WordIndexDict = new Dictionary<string, int>();
         List<WordIndexForQuery> _WordIndexList = new List<WordIndexForQuery>();
 
@@ -188,14 +188,14 @@ namespace Hubble.Core.Query
             }
         }
 
-        public List<Entities.WordInfo> GetQueryWords()
+        public List<Entity.WordInfo> GetQueryWords()
         {
             if (_QueryWords.Count <= 0)
             {
                 _WordIndexDict.Clear();
                 _WordIndexList.Clear();
 
-                foreach (Entities.WordInfo wordInfo in Analyzer.Tokenize(QueryString))
+                foreach (Entity.WordInfo wordInfo in Analyzer.Tokenize(QueryString))
                 {
                     _QueryWords.Add(wordInfo);
 
@@ -212,7 +212,7 @@ namespace Hubble.Core.Query
             return _QueryWords;
         }
 
-        public List<Entities.WordInfo> GetNextHitWords(out long docId)
+        public List<Entity.WordInfo> GetNextHitWords(out long docId)
         {
             if (_QueryWords.Count <= 0)
             {
@@ -332,7 +332,7 @@ namespace Hubble.Core.Query
                     WordIndexForQuery indexForQuery = _TempSelect[index];
                     int curIndex = indexForQuery.CurIndex;
 
-                    _HitWords.Add(new Hubble.Core.Entities.WordInfo(indexForQuery.WordIndex.Word,
+                    _HitWords.Add(new Hubble.Core.Entity.WordInfo(indexForQuery.WordIndex.Word,
                         minPos));
 
                     if (_TempSelect[index].CurPositionValues.MoveNext())

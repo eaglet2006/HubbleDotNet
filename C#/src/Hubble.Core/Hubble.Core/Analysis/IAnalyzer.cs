@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Hubble.Core.Entities;
+using Hubble.Core.Entity;
 
 namespace Hubble.Core.Analysis
 {

@@ -62,7 +62,7 @@ namespace TestHubbleCore
                 long queryDocId;
                 do
                 {
-                    List<Hubble.Core.Entities.WordInfo> wordInfos = fullTextQuery.GetNextHitWords(out queryDocId);
+                    List<Hubble.Core.Entity.WordInfo> wordInfos = fullTextQuery.GetNextHitWords(out queryDocId);
                     //queryDocId = wordInfos.Count;
                 } while (queryDocId >= 0);
             }
