@@ -201,7 +201,7 @@ namespace Hubble.Core.Index
             }
         }
 
-        public void Index(string text, long documentId, Analyze.IAnalyzer analyzer)
+        public void Index(string text, long documentId, Analysis.IAnalyzer analyzer)
         {
             List<WordIndex> hitIndexes = new List<WordIndex>(4192);
 

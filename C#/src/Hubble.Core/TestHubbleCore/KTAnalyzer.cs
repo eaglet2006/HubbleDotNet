@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
-using Hubble.Core.Analyze;
+using Hubble.Core.Analysis;
 using KTDictSeg;
 using FTAlgorithm;
 

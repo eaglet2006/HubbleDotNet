@@ -9,7 +9,7 @@ namespace Hubble.Core.Query
         string FieldName { get; set;}
         string QueryString { get; set;}
         Index.InvertedIndex InvertedIndex { get; set;}
-        Analyze.IAnalyzer Analyzer { get; set;}
+        Analysis.IAnalyzer Analyzer { get; set;}
 
         List<Entities.WordInfo> GetQueryWords();
         List<Entities.WordInfo> GetNextHitWords(out long docId);

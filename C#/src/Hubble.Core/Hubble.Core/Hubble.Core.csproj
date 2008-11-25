@@ -33,7 +33,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analyze\IAnalyzer.cs" />
+    <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="Entities\WordInfo.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

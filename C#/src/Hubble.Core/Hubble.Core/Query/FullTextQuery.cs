@@ -123,7 +123,7 @@ namespace Hubble.Core.Query
         string _FieldName;
         string _QueryString;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
-        Hubble.Core.Analyze.IAnalyzer _Analyzer;
+        Hubble.Core.Analysis.IAnalyzer _Analyzer;
         List<Entities.WordInfo> _QueryWords = new List<Hubble.Core.Entities.WordInfo>();
         List<Entities.WordInfo> _HitWords = new List<Hubble.Core.Entities.WordInfo>();
         Dictionary<string, int> _WordIndexDict = new Dictionary<string, int>();
@@ -174,7 +174,7 @@ namespace Hubble.Core.Query
             }
         }
 
-        public Hubble.Core.Analyze.IAnalyzer Analyzer
+        public Hubble.Core.Analysis.IAnalyzer Analyzer
         {
             get
             {
