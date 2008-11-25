@@ -54,17 +54,43 @@ namespace TestHubbleCore
                     docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
                     ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000));
 
-                Hubble.Core.Query.FullTextQuery fullTextQuery = new Hubble.Core.Query.FullTextQuery();
-                fullTextQuery.Analyzer = ktAnalyzer;
-                fullTextQuery.InvertedIndex = invertedIndex;
-                fullTextQuery.QueryString = "北京大学";
+                int count = 0;
 
-                long queryDocId;
-                do
+                watch.Reset();
+                watch.Start();
+
+                int MaxCount = 1000;
+                //int MaxCount = 1;
+
+                for (int i = 0; i < MaxCount; i++)
                 {
-                    List<Hubble.Core.Entity.WordInfo> wordInfos = fullTextQuery.GetNextHitWords(out queryDocId);
-                    //queryDocId = wordInfos.Count;
-                } while (queryDocId >= 0);
+                    Hubble.Core.Query.FullTextQuery fullTextQuery = new Hubble.Core.Query.FullTextQuery();
+                    fullTextQuery.Analyzer = ktAnalyzer;
+                    fullTextQuery.InvertedIndex = invertedIndex;
+                    fullTextQuery.QueryString = "北京大学";
+
+                    long queryDocId;
+
+                    do
+                    {
+                        IList<Hubble.Core.Entity.WordInfo> wordInfos = fullTextQuery.GetNextHitWords(out queryDocId);
+                        count++;
+                        if (MaxCount == 1)
+                        {
+                            Console.WriteLine(queryDocId);
+
+                            foreach (Hubble.Core.Entity.WordInfo wordInfo in wordInfos)
+                            {
+                                Console.WriteLine(wordInfo);
+                            }
+                        }
+                    } while (queryDocId >= 0);
+                }
+
+                watch.Stop();
+
+                Console.WriteLine(count);
+                Console.WriteLine(watch.ElapsedMilliseconds);
             }
             catch (Exception e1)
             {

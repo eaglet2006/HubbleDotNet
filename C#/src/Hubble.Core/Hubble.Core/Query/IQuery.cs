@@ -11,7 +11,7 @@ namespace Hubble.Core.Query
         Index.InvertedIndex InvertedIndex { get; set;}
         Analysis.IAnalyzer Analyzer { get; set;}
 
-        List<Entity.WordInfo> GetQueryWords();
-        List<Entity.WordInfo> GetNextHitWords(out long docId);
+        IList<Entity.WordInfo> GetQueryWords();
+        IList<Entity.WordInfo> GetNextHitWords(out long docId);
     }
 }

@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="Arithmetic\IntDictionary.cs" />
     <Compile Include="DataType\CompressIntList.cs" />
+    <Compile Include="DataType\AppendList.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

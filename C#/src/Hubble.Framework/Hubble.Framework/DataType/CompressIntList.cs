@@ -22,6 +22,9 @@ namespace Hubble.Framework.DataType
         public long DocumentId;
 
         //[FieldOffset(8)]
+        public int Count;
+
+        //[FieldOffset(12)]
         [MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
         private byte[] Data;
 
@@ -63,10 +66,11 @@ namespace Hubble.Framework.DataType
         /// And the list must be sorted!
         /// The first element must be smallest!
         /// </remarks>
-        public CompressIntList(List<int> input, long documentId)
+        public CompressIntList(IList<int> input, long documentId)
         {
             List<byte> tempBuf = new List<byte>(32);
             DocumentId = documentId;
+            Count = input.Count;
 
             int lastData = -1;
 
@@ -88,40 +92,6 @@ namespace Hubble.Framework.DataType
             Data = new byte[tempBuf.Count];
 
             tempBuf.CopyTo(Data);
-        }
-
-        public IEnumerable<int> GetValues()
-        {
-            int retVal = -1;
-            int shift = 7;
-            int last = -1;
-            foreach (byte data in Data)
-            {
-                if ((data & 0x80) != 0)
-                {
-                    if (retVal >= 0)
-                    {
-                        if (last == -1)
-                        {
-                            last = retVal;
-                        }
-                        else
-                        {
-                            last = last + retVal;
-                        }
-
-                        yield return last;
-                    }
-
-                    shift = 7;
-                    retVal = data & 0x7f;
-                }
-                else
-                {
-                    retVal += (int)data << shift;
-                    shift += 7;
-                }
-            }
         }
 
         public IEnumerator<int> Values
@@ -167,6 +137,20 @@ namespace Hubble.Framework.DataType
                     shift += 7;
                 }
             }
+
+            if (retVal >= 0)
+            {
+                if (last == -1)
+                {
+                    last = retVal;
+                }
+                else
+                {
+                    last = last + retVal;
+                }
+
+                yield return last;
+            }
         }
 
         #endregion
@@ -175,10 +159,7 @@ namespace Hubble.Framework.DataType
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            foreach (int value in GetValues())
-            {
-                yield return value;
-            }
+            return this.GetEnumerator();
         }
 
         #endregion

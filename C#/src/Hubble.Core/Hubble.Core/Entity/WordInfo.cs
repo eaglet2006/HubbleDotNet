@@ -21,6 +21,11 @@ namespace Hubble.Core.Entity
             Rank = rank;
         }
 
+        public override string ToString()
+        {
+            return string.Format("{0} {1} {2}", Word, Position, Rank) ;
+        }
+
         #region IComparable<WordInfo> Members
 
         public int CompareTo(WordInfo other)

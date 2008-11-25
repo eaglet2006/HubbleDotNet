@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Framework.DataType;
 
 namespace Hubble.Core.Query
 {
@@ -109,13 +110,11 @@ namespace Hubble.Core.Query
 
             public void IncCurIndex()
             {
+                CurIndex++;
+
                 if (CurIndex >= _WordIndex.Count)
                 {
                     CurIndex = -1;
-                }
-                else
-                {
-                    CurIndex++;
                 }
             }
         }
@@ -124,13 +123,13 @@ namespace Hubble.Core.Query
         string _QueryString;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
         Hubble.Core.Analysis.IAnalyzer _Analyzer;
-        List<Entity.WordInfo> _QueryWords = new List<Hubble.Core.Entity.WordInfo>();
-        List<Entity.WordInfo> _HitWords = new List<Hubble.Core.Entity.WordInfo>();
+        AppendList<Entity.WordInfo> _QueryWords = new AppendList<Hubble.Core.Entity.WordInfo>();
+        AppendList<Entity.WordInfo> _HitWords = new AppendList<Hubble.Core.Entity.WordInfo>();
         Dictionary<string, int> _WordIndexDict = new Dictionary<string, int>();
-        List<WordIndexForQuery> _WordIndexList = new List<WordIndexForQuery>();
+        AppendList<WordIndexForQuery> _WordIndexList = new AppendList<WordIndexForQuery>();
 
-        List<WordIndexForQuery> _TempSelect = new List<WordIndexForQuery>();
-        List<int> _TempPositionList = new List<int>();
+        AppendList<WordIndexForQuery> _TempSelect = new AppendList<WordIndexForQuery>();
+        AppendList<int> _TempPositionList = new AppendList<int>();
 
         #region IQuery Members
 
@@ -188,7 +187,7 @@ namespace Hubble.Core.Query
             }
         }
 
-        public List<Entity.WordInfo> GetQueryWords()
+        public IList<Entity.WordInfo> GetQueryWords()
         {
             if (_QueryWords.Count <= 0)
             {
@@ -212,7 +211,7 @@ namespace Hubble.Core.Query
             return _QueryWords;
         }
 
-        public List<Entity.WordInfo> GetNextHitWords(out long docId)
+        public IList<Entity.WordInfo> GetNextHitWords(out long docId)
         {
             if (_QueryWords.Count <= 0)
             {

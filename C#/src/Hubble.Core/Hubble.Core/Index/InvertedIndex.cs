@@ -22,14 +22,16 @@ namespace Hubble.Core.Index
         {
             #region Private fields
             string _Word;
-            List<int> _TempPositionList = new List<int>();
+            AppendList<int> _TempPositionList = new AppendList<int>();
             long _TempDocumentId;
             bool _Hit = false;
             bool _IsRamIndex = true;
 
-
             List<CompressIntList> _ListForReader = new List<CompressIntList>();
             List<CompressIntList> _ListForWriter = new List<CompressIntList>();
+
+            long _WordCount;
+
             #endregion
 
             #region Private properties
@@ -53,6 +55,9 @@ namespace Hubble.Core.Index
 
             #region Public Properties
 
+            /// <summary>
+            /// Word
+            /// </summary>
             public string Word
             {
                 get
@@ -61,6 +66,9 @@ namespace Hubble.Core.Index
                 }
             }
 
+            /// <summary>
+            /// Total number of documents
+            /// </summary>
             public int Count
             {
                 get
@@ -76,6 +84,16 @@ namespace Hubble.Core.Index
                 }
             }
 
+            /// <summary>
+            /// Total number of words 
+            /// </summary>
+            public long WordCount
+            {
+                get
+                {
+                    return _WordCount;
+                }
+            }
 
             public CompressIntList this[int index]
             {
@@ -95,6 +113,7 @@ namespace Hubble.Core.Index
             #endregion
 
             #region internal properties
+
             internal bool Hit
             {
                 get
@@ -121,7 +140,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            internal List<int> TempPositionList
+            internal AppendList<int> TempPositionList
             {
                 get
                 {
@@ -138,6 +157,9 @@ namespace Hubble.Core.Index
                 _Word = word;
             }
 
+            /// <summary>
+            /// Index one document into the _ListForWriter
+            /// </summary>
             internal void Index()
             {
                 try
@@ -160,9 +182,8 @@ namespace Hubble.Core.Index
                         TempPositionList.Sort();
                     }
 
-                    CompressIntList list = new CompressIntList(TempPositionList, TempDocumentId);
-                    _ListForWriter.Add(list);
-                    //Add(TempDocumentId, list);
+                    _ListForWriter.Add(new CompressIntList(TempPositionList, TempDocumentId));
+                    _WordCount += TempPositionList.Count;
                 }
                 finally
                 {
@@ -178,12 +199,28 @@ namespace Hubble.Core.Index
 
 
         Dictionary<string, WordIndex> _WordTable = new Dictionary<string, WordIndex>();
+        Dictionary<long, int> _DocumentWordCountTable = new Dictionary<long, int>();
+        long _DocumentCount;
 
         public int WordTableSize
         {
             get
             {
                 return _WordTable.Count;
+            }
+        }
+
+        public int GetDocumentWordCount(long docId)
+        {
+            int count;
+
+            if (_DocumentWordCountTable.TryGetValue(docId, out count))
+            {
+                return count;
+            }
+            else
+            {
+                return 0;
             }
         }
 
@@ -201,9 +238,18 @@ namespace Hubble.Core.Index
             }
         }
 
+        /// <summary>
+        /// Index a text for one field
+        /// </summary>
+        /// <param name="text">text</param>
+        /// <param name="documentId">document id</param>
+        /// <param name="analyzer">analyzer</param>
         public void Index(string text, long documentId, Analysis.IAnalyzer analyzer)
         {
             List<WordIndex> hitIndexes = new List<WordIndex>(4192);
+
+            int count = 0;
+            _DocumentCount++;
 
             foreach (Entity.WordInfo wordInfo in analyzer.Tokenize(text))
             {
@@ -233,7 +279,11 @@ namespace Hubble.Core.Index
                 }
 
                 wordIndex.TempPositionList.Add(wordInfo.Position);
+                count++;
+
             }
+
+            _DocumentWordCountTable[documentId] = count;
 
             foreach (WordIndex wordIndex in hitIndexes)
             {
