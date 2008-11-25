@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Hubble.Framework.DataTypes;
+using Hubble.Framework.DataType;
 using Hubble.Framework.Arithmetic;
 
 namespace Hubble.Core.Index
