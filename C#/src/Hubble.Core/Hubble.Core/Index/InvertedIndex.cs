@@ -210,6 +210,14 @@ namespace Hubble.Core.Index
             }
         }
 
+        public long DocumentCount
+        {
+            get
+            {
+                return _DocumentCount;
+            }
+        }
+
         public int GetDocumentWordCount(long docId)
         {
             int count;

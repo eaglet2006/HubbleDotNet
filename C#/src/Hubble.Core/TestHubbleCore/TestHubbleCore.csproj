@@ -28,6 +28,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ConfigurationPattern, Version=0.1.1.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\PubLib\ConfigurationPattern.dll</HintPath>
+    </Reference>
     <Reference Include="DictSeg, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\PubLib\DictSeg.dll</HintPath>
@@ -39,6 +43,10 @@
     <Reference Include="General, Version=1.2.3.26, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\PubLib\General.dll</HintPath>
+    </Reference>
+    <Reference Include="KTDictSeg.HighLight, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\PubLib\KTDictSeg.HighLight.dll</HintPath>
     </Reference>
     <Reference Include="KTDictSegAnalyzer, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -53,6 +61,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="Index.cs" />
     <Compile Include="KTAnalyzer.cs" />
     <Compile Include="News.cs" />

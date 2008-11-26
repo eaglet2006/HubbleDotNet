@@ -37,8 +37,10 @@
     <Compile Include="Entity\WordInfo.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Query\DocumentRank.cs" />
     <Compile Include="Query\FullTextQuery.cs" />
     <Compile Include="Query\IQuery.cs" />
+    <Compile Include="Query\MutiStringQuery.cs" />
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Relationship\Field.cs" />
     <Compile Include="Relationship\Document.cs" />

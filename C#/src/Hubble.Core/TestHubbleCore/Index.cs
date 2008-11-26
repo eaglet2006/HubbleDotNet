@@ -241,5 +241,49 @@ namespace SimpleSearch
             search.Close();
             return result;
         }
+
+        public static int GetTotalCount(List<Hubble.Core.Entity.WordInfo> queryWords)
+        {
+            string keywords = "";
+
+            IndexSearcher search = new IndexSearcher(_RamDirectory);
+            foreach (Hubble.Core.Entity.WordInfo wordInfo in queryWords)
+            {
+                keywords += wordInfo.Word + " ";
+            }
+
+            QueryParser queryParser = new QueryParser("contents", new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(true));
+
+            Query query = queryParser.Parse(keywords);
+
+            Hits hits = search.Search(query);
+
+            return hits.Length();
+        }
+
+
+        public static IEnumerable<Hubble.Core.Query.DocumentRank> GetRankEnumerable(List<Hubble.Core.Entity.WordInfo> queryWords)
+        {
+            string keywords = "";
+
+            IndexSearcher search = new IndexSearcher(_RamDirectory);
+            foreach(Hubble.Core.Entity.WordInfo wordInfo in queryWords)
+            {
+                keywords += wordInfo.Word + " ";
+            }
+
+            QueryParser queryParser = new QueryParser("contents", new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(true));
+
+            Query query = queryParser.Parse(keywords);
+
+            Hits hits = search.Search(query);
+
+            int recCount = hits.Length();
+
+            for(int i = 0 ; i < recCount; i++)
+            {
+                yield return new Hubble.Core.Query.DocumentRank((long)hits.Id(i), (int)(hits.Score(i) * 1000000));
+            }
+        }
     }
 }

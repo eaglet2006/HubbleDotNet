@@ -6,12 +6,18 @@ namespace Hubble.Core.Query
 {
     public interface IQuery
     {
+        //Input parameters
         string FieldName { get; set;}
-        string QueryString { get; set;}
+        IList<Entity.WordInfo> QueryWords { get; set;}
+        
+        //Inner parameters
+        //need not set by caller
         Index.InvertedIndex InvertedIndex { get; set;}
-        Analysis.IAnalyzer Analyzer { get; set;}
+        //Analysis.IAnalyzer Analyzer { get; set;}
 
-        IList<Entity.WordInfo> GetQueryWords();
-        IList<Entity.WordInfo> GetNextHitWords(out long docId);
+        //output 
+        IEnumerable<DocumentRank> GetRankEnumerable();
+        //IList<Entity.WordInfo> GetQueryWords();
+        //IList<Entity.WordInfo> GetNextHitWords(out long docId);
     }
 }

@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHubbleCore", "TestHubbleCore\TestHubbleCore.csproj", "{2419D421-2309-47F9-A2C3-84E7781A4999}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.Core", "Hubble.Core\Hubble.Core.csproj", "{003F69CF-186C-45C9-85B6-96D175D56711}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.Framework", "..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj", "{21D12CAB-9917-432E-A54E-E432DA0F432A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHubbleCore", "TestHubbleCore\TestHubbleCore.csproj", "{2419D421-2309-47F9-A2C3-84E7781A4999}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +13,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2419D421-2309-47F9-A2C3-84E7781A4999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2419D421-2309-47F9-A2C3-84E7781A4999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2419D421-2309-47F9-A2C3-84E7781A4999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2419D421-2309-47F9-A2C3-84E7781A4999}.Release|Any CPU.Build.0 = Release|Any CPU
 		{003F69CF-186C-45C9-85B6-96D175D56711}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{003F69CF-186C-45C9-85B6-96D175D56711}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{003F69CF-186C-45C9-85B6-96D175D56711}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -21,10 +25,6 @@ Global
 		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2419D421-2309-47F9-A2C3-84E7781A4999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2419D421-2309-47F9-A2C3-84E7781A4999}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2419D421-2309-47F9-A2C3-84E7781A4999}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2419D421-2309-47F9-A2C3-84E7781A4999}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

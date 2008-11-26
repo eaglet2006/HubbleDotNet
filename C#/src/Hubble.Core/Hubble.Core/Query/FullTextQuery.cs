@@ -5,6 +5,11 @@ using Hubble.Framework.DataType;
 
 namespace Hubble.Core.Query
 {
+    /// <summary>
+    /// This query analyze documents with position
+    /// belong to the input words.
+    /// Syntax: FullTextQuery('xxxyyyzzz')
+    /// </summary>
     public class FullTextQuery : IQuery
     {
         class WordIndexForQuery
@@ -120,9 +125,7 @@ namespace Hubble.Core.Query
         }
 
         string _FieldName;
-        string _QueryString;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
-        Hubble.Core.Analysis.IAnalyzer _Analyzer;
         AppendList<Entity.WordInfo> _QueryWords = new AppendList<Hubble.Core.Entity.WordInfo>();
         AppendList<Entity.WordInfo> _HitWords = new AppendList<Hubble.Core.Entity.WordInfo>();
         Dictionary<string, int> _WordIndexDict = new Dictionary<string, int>();
@@ -131,93 +134,8 @@ namespace Hubble.Core.Query
         AppendList<WordIndexForQuery> _TempSelect = new AppendList<WordIndexForQuery>();
         AppendList<int> _TempPositionList = new AppendList<int>();
 
-        #region IQuery Members
-
-        public string FieldName
+        private IList<Entity.WordInfo> GetNextHitWords(out long docId)
         {
-            get
-            {
-                return _FieldName;
-            }
-
-            set
-            {
-                _FieldName = value;
-            }
-        }
-
-        public string QueryString
-        {
-            get
-            {
-                return _QueryString;
-            }
-
-            set
-            {
-                _QueryWords.Clear();
-                _QueryString = value;
-            }
-        }
-
-        public Hubble.Core.Index.InvertedIndex InvertedIndex
-        {
-            get
-            {
-                return _InvertedIndex;
-            }
-
-            set
-            {
-                _InvertedIndex = value;
-            }
-        }
-
-        public Hubble.Core.Analysis.IAnalyzer Analyzer
-        {
-            get
-            {
-                _QueryWords.Clear();
-                return _Analyzer;
-            }
-
-            set
-            {
-                _Analyzer = value;
-            }
-        }
-
-        public IList<Entity.WordInfo> GetQueryWords()
-        {
-            if (_QueryWords.Count <= 0)
-            {
-                _WordIndexDict.Clear();
-                _WordIndexList.Clear();
-
-                foreach (Entity.WordInfo wordInfo in Analyzer.Tokenize(QueryString))
-                {
-                    _QueryWords.Add(wordInfo);
-
-                    if (!_WordIndexDict.ContainsKey(wordInfo.Word))
-                    {
-                        _WordIndexList.Add(new WordIndexForQuery(InvertedIndex.GetWordIndex(wordInfo.Word)));
-                        _WordIndexDict.Add(wordInfo.Word, _WordIndexList.Count - 1);
-                    }
-                }
-
-                _QueryWords.Sort();
-            }
-
-            return _QueryWords;
-        }
-
-        public IList<Entity.WordInfo> GetNextHitWords(out long docId)
-        {
-            if (_QueryWords.Count <= 0)
-            {
-                GetQueryWords();
-            }
-
             _HitWords.Clear();
 
             if (_QueryWords.Count <= 0)
@@ -265,7 +183,6 @@ namespace Hubble.Core.Query
             }
 
             docId = minDocId;
-            IEnumerator<int> values;
 
             while (true)
             {
@@ -346,6 +263,96 @@ namespace Hubble.Core.Query
 
             }
 
+        }
+
+        private int CaculateRank(IList<Entity.WordInfo> wordInfoList)
+        {
+            long rank = 0;
+
+            foreach (Entity.WordInfo wordInfo in wordInfoList)
+            {
+                rank += wordInfo.Rank <= 0 ? 1 : wordInfo.Rank;
+            }
+
+            if (rank > int.MaxValue - 4000000)
+            {
+                return int.MaxValue - 4000000;
+            }
+            else
+            {
+                return (int)rank;
+            }
+
+        }
+
+
+        #region IQuery Members
+
+        public string FieldName
+        {
+            get
+            {
+                return _FieldName;
+            }
+
+            set
+            {
+                _FieldName = value;
+            }
+        }
+
+        public Hubble.Core.Index.InvertedIndex InvertedIndex
+        {
+            get
+            {
+                return _InvertedIndex;
+            }
+
+            set
+            {
+                _InvertedIndex = value;
+            }
+        }
+
+        public IList<Hubble.Core.Entity.WordInfo> QueryWords
+        {
+            get
+            {
+                return _QueryWords;
+            }
+
+            set
+            {
+                _QueryWords.Clear();
+                _WordIndexList.Clear();
+                _WordIndexDict.Clear();
+
+                foreach (Hubble.Core.Entity.WordInfo wordInfo in value)
+                {
+                    _QueryWords.Add(wordInfo);
+
+                    if (!_WordIndexDict.ContainsKey(wordInfo.Word))
+                    {
+                        _WordIndexList.Add(new WordIndexForQuery(InvertedIndex.GetWordIndex(wordInfo.Word)));
+                        _WordIndexDict.Add(wordInfo.Word, _WordIndexList.Count - 1);
+                    }
+                }
+
+                _QueryWords.Sort();
+            }
+        }
+
+
+        public IEnumerable<DocumentRank> GetRankEnumerable()
+        {
+            long docId;
+            IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
+
+            while (docId >= 0)
+            {
+                yield return new DocumentRank(docId, CaculateRank(wordInfoList));
+                wordInfoList = GetNextHitWords(out docId);
+            }
         }
 
         #endregion

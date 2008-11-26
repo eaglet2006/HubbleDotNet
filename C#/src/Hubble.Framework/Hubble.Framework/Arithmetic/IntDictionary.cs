@@ -671,6 +671,33 @@ namespace Hubble.Framework.Arithmetic
             return cur;
         }
 
+        private Node GetLastLeafNode()
+        {
+            if (_Root == null)
+            {
+                return null;
+            }
+
+            Node cur = _Root;
+
+            while (!cur.IsLeafNode)
+            {
+                for (int i = MaxChildren - 1; i >= 0; i--)
+                {
+                    Node node = cur.Children[i];
+                    
+                    if (node != null)
+                    {
+                        cur = node;
+                        break;
+                    }
+                }
+            }
+
+            return cur;
+        }
+
+
         private Node GetPrevLeafNode(Node curLeafNode)
         {
             Node cur = curLeafNode;
@@ -769,6 +796,25 @@ namespace Hubble.Framework.Arithmetic
                 }
 
                 cur = cur.Next;
+            }
+        }
+
+        public IEnumerable<TValue> GetValuesDesc()
+        {
+            Node cur = GetLastLeafNode();
+
+            while (cur != null)
+            {
+                for (int i = MaxChildren - 1; i >= 0; i--)
+                {
+                    DataEntity entity = cur.DataList[i];
+                    if (entity.Used != 0)
+                    {
+                        yield return entity.Value;
+                    }
+                }
+
+                cur = cur.Prev;
             }
         }
 
@@ -1127,6 +1173,13 @@ namespace Hubble.Framework.Arithmetic
 
         #region Public methods
 
+        public int SortInsert(int key, TValue value)
+        {
+            _MinFreeKey = key;
+
+            return Add(value);
+        }
+
         /// <summary>
         /// Add value by automatic key
         /// </summary>
@@ -1137,9 +1190,12 @@ namespace Hubble.Framework.Arithmetic
             Node leafNode;
             int index;
             int key = 0;
+            int existsKey;
 
             if (Get(_MinFreeKey, out leafNode, out index, Operator.Query))
             {
+                existsKey = _MinFreeKey;
+
                 Node cur = leafNode;
 
                 bool find = false;
@@ -1161,7 +1217,7 @@ namespace Hubble.Framework.Arithmetic
 
                         foreach (DataEntity entity in cur.DataList)
                         {
-                            if (entity.Used == 0)
+                            if (entity.Used == 0 && cur.FirstKey + i > existsKey)
                             {
                                 key = cur.FirstKey + i;
                                 find = true;
@@ -1171,7 +1227,10 @@ namespace Hubble.Framework.Arithmetic
                             i++;
                         }
 
-                        break;
+                        if (find)
+                        {
+                            break;
+                        }
                     }
 
                     lastKey = cur.FirstKey + MaxChildren;
