@@ -264,7 +264,15 @@ namespace Hubble.Core.Query
 
                     if (!wordIndexDict.ContainsKey(wordInfo.Word))
                     {
-                        _WordIndexList.Add(new WordIndexForQuery(InvertedIndex.GetWordIndex(wordInfo.Word),
+                     
+                        Hubble.Core.Index.InvertedIndex.WordIndex wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
+
+                        if (wordIndex == null)
+                        {
+                            continue;
+                        }
+
+                        _WordIndexList.Add(new WordIndexForQuery(wordIndex,
                             InvertedIndex.DocumentCount));
                         wordIndexDict.Add(wordInfo.Word, 0);
                     }

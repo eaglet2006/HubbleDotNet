@@ -6,7 +6,7 @@ namespace Hubble.Core.Query
 {
     public class Searcher
     {
-        List<DocumentRank> _DocRankList = new List<DocumentRank>();
+        Hubble.Framework.DataType.AppendList<DocumentRank> _DocRankList;
 
         int _TotalCount;
         int _MinRank = int.MaxValue;
@@ -25,6 +25,16 @@ namespace Hubble.Core.Query
         private void Sort()
         {
             _TotalCount = 0;
+
+            if (_SortedLength <= 1024)
+            {
+                _DocRankList = new Hubble.Framework.DataType.AppendList<DocumentRank>(_SortedLength * 2);
+            }
+            else
+            {
+                _DocRankList = new Hubble.Framework.DataType.AppendList<DocumentRank>();
+            }
+
             foreach (DocumentRank docRank in _Query.GetRankEnumerable())
             {
                 if (_MinRank > docRank.Rank)
@@ -33,8 +43,25 @@ namespace Hubble.Core.Query
                     {
                         _MinRank = docRank.Rank;
                     }
+                    else
+                    {
+                        _TotalCount++;
+                        continue;
+                    }
                 }
+
                 _DocRankList.Add(docRank);
+
+                if (_SortedLength <= 1024)
+                {
+                    if (_DocRankList.Count >= _SortedLength * 2)
+                    {
+                        _DocRankList.Sort();
+                        _DocRankList.ReduceSize(_SortedLength);
+                        _MinRank = _DocRankList[_DocRankList.Count - 1].Rank;
+                    }
+                }
+
                 _TotalCount++;
             }
 
@@ -72,7 +99,7 @@ namespace Hubble.Core.Query
                 Sort();
             }
 
-            for(int i = first; i < first + length; i++)
+            for(int i = first; i < Math.Min(_DocRankList.Count, first + length); i++)
             {
                 yield return _DocRankList[i];
             }

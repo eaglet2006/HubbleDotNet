@@ -95,6 +95,17 @@ namespace Hubble.Framework.DataType
             }
         }
 
+        public void ReduceSize(int targetSize)
+        {
+            if (targetSize >= _Size || targetSize <= 0)
+            {
+                return;
+            }
+
+            _Size = targetSize;
+            _Version++;
+        }
+
         // Sorts the elements in this list.  Uses the default comparer and
         // Array.Sort. 
         public void Sort()

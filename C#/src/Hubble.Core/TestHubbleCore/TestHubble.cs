@@ -129,6 +129,7 @@ namespace TestHubbleCore
 
                         if (count >= 100)
                         {
+                            Console.Write("");
                             break;
                         }
                     }
@@ -136,7 +137,9 @@ namespace TestHubbleCore
                 watch.Stop();
 
                 Console.WriteLine("单次的查询时间:" + ((double)watch.ElapsedMilliseconds / loopCount).ToString() + "ms");
-
+                
+                count = 0;
+                
                 watch.Reset();
                 watch.Start();
 
@@ -203,6 +206,7 @@ namespace TestHubbleCore
             catch (Exception e1)
             {
                 Console.WriteLine(e1.Message);
+                Console.WriteLine(e1.StackTrace);
             }
         }
     }

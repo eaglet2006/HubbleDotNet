@@ -131,6 +131,7 @@ namespace TestHubbleCore
 
 
                 StringBuilder report = new StringBuilder();
+                count = 0;
 
                 watch.Reset();
                 watch.Start();

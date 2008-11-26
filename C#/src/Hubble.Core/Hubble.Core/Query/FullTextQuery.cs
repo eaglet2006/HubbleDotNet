@@ -333,7 +333,14 @@ namespace Hubble.Core.Query
 
                     if (!_WordIndexDict.ContainsKey(wordInfo.Word))
                     {
-                        _WordIndexList.Add(new WordIndexForQuery(InvertedIndex.GetWordIndex(wordInfo.Word)));
+                        Hubble.Core.Index.InvertedIndex.WordIndex wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
+
+                        if (wordIndex == null)
+                        {
+                            continue;
+                        }
+
+                        _WordIndexList.Add(new WordIndexForQuery(wordIndex));
                         _WordIndexDict.Add(wordInfo.Word, _WordIndexList.Count - 1);
                     }
                 }
