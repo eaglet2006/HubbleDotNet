@@ -101,7 +101,7 @@ namespace Hubble.Core.Query
             if (!_HasSorted)
             {
                 //_SortedLength = 100;
-                Sort(100);
+                Sort(10);
             }
         }
 

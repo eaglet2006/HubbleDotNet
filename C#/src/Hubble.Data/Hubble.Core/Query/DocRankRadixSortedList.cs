@@ -5,15 +5,31 @@ using System.Diagnostics;
 
 namespace Hubble.Core.Query
 {
+
     public class DocRankRadixSortedList : IEnumerable<DocumentRank>
     {
+        class DescComparer : System.Collections.Generic.IComparer<int>
+        {
+            #region IComparer<int> ≥…‘±
+
+            public int Compare(int x, int y)
+            {
+                return y.CompareTo(x);
+            }
+
+            #endregion
+        }
+
         const int TableSize = 260;
         int _Count = 0;
         int _Top = int.MaxValue;
 
-        int _MaxRadix = -1;
+        //int _MaxRadix = -1;
         int _MinRadix = 0;
 
+        SortedList<int, List<DocumentRank>> _HitRadix;
+        static DescComparer descCompare = new DescComparer(); 
+            
         List<DocumentRank>[] _RadixTable = new List<DocumentRank>[TableSize];
         bool[] _RadixSortedTable = new bool[TableSize];
 
@@ -48,28 +64,58 @@ namespace Hubble.Core.Query
         private void CalculateMinRadix()
         {
             int count = 0;
-            for (int i = _MaxRadix; i >= _MinRadix; i--)
+
+            foreach (int radix in _HitRadix.Keys)
             {
-                if (_RadixTable[i] != null)
-                {
-                    count += _RadixTable[i].Count;
-                }
+                count += _RadixTable[radix].Count;
 
                 if (count > Top)
                 {
-                    _MinRadix = i;
+                    _MinRadix = radix;
                     break;
                 }
             }
+
+
+            //int count = 0;
+            //for (int i = _HitRadix.Count - 1; i >= 0; i--)
+            //{
+
+            //    if (_RadixTable[i] != null)
+            //    {
+            //        count += _RadixTable[i].Count;
+            //    }
+
+            //    if (count > Top)
+            //    {
+            //        _MinRadix = i;
+            //        break;
+            //    }
+            //}
         }
 
         public DocRankRadixSortedList(int top)
         {
+            Clear();
             _Top = top;
         }
 
         public DocRankRadixSortedList()
         {
+            Clear();
+        }
+
+        public void Clear()
+        {
+            _Count = 0;
+            _Top = int.MaxValue;
+
+            //_MaxRadix = -1;
+            _MinRadix = 0;
+
+            _HitRadix = new SortedList<int, List<DocumentRank>>(descCompare);
+            _RadixTable = new List<DocumentRank>[TableSize];
+            _RadixSortedTable = new bool[TableSize];
         }
 
         public void Add(DocumentRank docRank)
@@ -78,9 +124,13 @@ namespace Hubble.Core.Query
 
             int radix;
 
-            if (docRank.Rank < 65536)
+            if (docRank.Rank < 128 * 16)
             {
-                radix = docRank.Rank / 256;
+                radix = docRank.Rank / 128;
+            }
+            else if (docRank.Rank < 32768 + 128 * 16)
+            {
+                radix = (docRank.Rank - (128 * 16)) / 128;
             }
             else if (docRank.Rank < 100000)
             {
@@ -108,11 +158,12 @@ namespace Hubble.Core.Query
             if (_RadixTable[radix] == null)
             {
                 _RadixTable[radix] = new List<DocumentRank>();
+                _HitRadix.Add(radix, _RadixTable[radix]);
 
-                if (_MaxRadix < radix)
-                {
-                    _MaxRadix = radix;
-                }
+                //if (_MaxRadix < radix)
+                //{
+                //    _MaxRadix = radix;
+                //}
             }
 
             _RadixTable[radix].Add(docRank);
@@ -143,8 +194,12 @@ namespace Hubble.Core.Query
                 {
                     if (!_RadixSortedTable[radix])
                     {
-                        _RadixTable[radix].Sort();
                         _RadixSortedTable[radix] = true;
+
+                        if (_RadixTable[radix].Count > 1)
+                        {
+                            _RadixTable[radix].Sort();
+                        }
                     }
 
                     yield return _RadixTable[radix][curIndex];
