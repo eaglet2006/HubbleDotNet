@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.Framework", "Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj", "{21D12CAB-9917-432E-A54E-E432DA0F432A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.Core", "Hubble.Data\Hubble.Core\Hubble.Core.csproj", "{003F69CF-186C-45C9-85B6-96D175D56711}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hubble.Data", "Hubble.Data", "{BAABB321-C486-4D8D-A1C0-3D1690689A54}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hubble.Framework", "Hubble.Framework", "{3D6FD2A9-FC6A-4EF0-B63B-F39FADA47FA0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21D12CAB-9917-432E-A54E-E432DA0F432A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{003F69CF-186C-45C9-85B6-96D175D56711}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{003F69CF-186C-45C9-85B6-96D175D56711}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{003F69CF-186C-45C9-85B6-96D175D56711}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{003F69CF-186C-45C9-85B6-96D175D56711}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{003F69CF-186C-45C9-85B6-96D175D56711} = {BAABB321-C486-4D8D-A1C0-3D1690689A54}
+		{21D12CAB-9917-432E-A54E-E432DA0F432A} = {3D6FD2A9-FC6A-4EF0-B63B-F39FADA47FA0}
+	EndGlobalSection
+EndGlobal
