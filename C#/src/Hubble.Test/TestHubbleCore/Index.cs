@@ -261,8 +261,12 @@ namespace SimpleSearch
             return hits.Length();
         }
 
-
         public static IEnumerable<Hubble.Core.Query.DocumentRank> GetRankEnumerable(List<Hubble.Core.Entity.WordInfo> queryWords)
+        {
+            return GetRankEnumerable(queryWords, false);
+        }
+
+        public static IEnumerable<Hubble.Core.Query.DocumentRank> GetRankEnumerable(List<Hubble.Core.Entity.WordInfo> queryWords, bool getAll)
         {
             string keywords = "";
 
@@ -279,6 +283,11 @@ namespace SimpleSearch
             Hits hits = search.Search(query);
 
             int recCount = hits.Length();
+
+            if (getAll)
+            {
+                hits.Id(recCount - 1);
+            }
 
             for(int i = 0 ; i < recCount; i++)
             {

@@ -41,6 +41,7 @@
     <Compile Include="Query\FullTextQuery.cs" />
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\MutiStringQuery.cs" />
+    <Compile Include="Query\DocRankRadixSortedList.cs" />
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Relationship\Field.cs" />
     <Compile Include="Relationship\Document.cs" />

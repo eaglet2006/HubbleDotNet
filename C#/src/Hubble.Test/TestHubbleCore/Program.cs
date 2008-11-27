@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
+using Hubble.Core.Query;
 
 namespace TestHubbleCore
 {
@@ -9,20 +10,38 @@ namespace TestHubbleCore
     {
         static void Main(string[] args)
         {
-            //Random rand = new Random();
+            List<DocumentRank> docList = new List<DocumentRank>();
+            Random rand = new Random();
+            DocRankRadixSortedList docRankList = new DocRankRadixSortedList();
+            docRankList.Top = 100;
 
-            //List<int> testList = new List<int>();
+            System.Diagnostics.Stopwatch s = new System.Diagnostics.Stopwatch();
 
-            //while (testList.Count < 1000000)
+            s.Reset();
+            s.Start();
+
+            while (docRankList.Count < 1000000)
+            {
+                DocumentRank v = new DocumentRank(docRankList.Count, rand.Next(0, 10000));
+                docRankList.Add(v);
+            }
+
+            foreach (DocumentRank d in docRankList)
+            {
+                //docList.Add(d);
+            }
+
+            //while (docList.Count < 1000000)
             //{
-            //    int v = rand.Next(0, 10000000);
-            //    testList.Add(v);
+            //    DocumentRank v = new DocumentRank(docList.Count, rand.Next(0, 1000000));
+            //    docList.Add(v);
             //}
 
-            //System.Diagnostics.Stopwatch s = new System.Diagnostics.Stopwatch();
 
-            //s.Reset();
-            //s.Start();
+            //docList.Sort();
+            s.Stop();
+            Console.WriteLine(s.ElapsedMilliseconds);
+            Console.WriteLine(s.ElapsedMilliseconds);
 
             //Hubble.Framework.Arithmetic.IntDictionary<int> test = new Hubble.Framework.Arithmetic.IntDictionary<int>(64);
 

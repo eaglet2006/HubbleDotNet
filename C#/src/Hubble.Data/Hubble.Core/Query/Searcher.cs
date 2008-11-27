@@ -7,6 +7,7 @@ namespace Hubble.Core.Query
     public class Searcher
     {
         Hubble.Framework.DataStructure.AppendList<DocumentRank> _DocRankList;
+        DocRankRadixSortedList _DocRankRadixSortedList;
 
         int _TotalCount;
         int _MinRank = int.MaxValue;
@@ -18,11 +19,20 @@ namespace Hubble.Core.Query
         {
             get
             {
-                return _TotalCount;
+                //return _TotalCount;
+
+                if (_DocRankRadixSortedList == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return _DocRankRadixSortedList.Count;
+                }
             }
         }
 
-        private void Sort()
+        private void Sort1()
         {
             _TotalCount = 0;
 
@@ -69,6 +79,18 @@ namespace Hubble.Core.Query
             _HasSorted = true;
         }
 
+        public void Sort(int top)
+        {
+            _DocRankRadixSortedList = new DocRankRadixSortedList(top);
+            foreach (DocumentRank docRank in _Query.GetRankEnumerable())
+            {
+                _DocRankRadixSortedList.Add(docRank);
+            }
+
+            _HasSorted = true;
+
+        }
+
         public Searcher(IQuery query)
         {
             _Query = query;
@@ -78,8 +100,8 @@ namespace Hubble.Core.Query
         {
             if (!_HasSorted)
             {
-                _SortedLength = 100;
-                Sort();
+                //_SortedLength = 100;
+                Sort(100);
             }
         }
 
@@ -93,28 +115,57 @@ namespace Hubble.Core.Query
         /// <returns></returns>
         public IEnumerable<DocumentRank> Get(int first, int length)
         {
-            if (!_HasSorted || length > _SortedLength)
+            if (!_HasSorted)
             {
-                _SortedLength = length;
-                Sort();
+                _HasSorted = false;
+                Sort(first + length);
             }
 
-            for(int i = first; i < Math.Min(_DocRankList.Count, first + length); i++)
+            if (first + length > _DocRankRadixSortedList.Top)
             {
-                yield return _DocRankList[i];
+                _HasSorted = false;
+                Sort(first + length);
             }
+
+            int i = 0;
+            foreach (DocumentRank docRank in _DocRankRadixSortedList)
+            {
+                if (i < first)
+                {
+                    i++;
+                    continue;
+                }
+
+                if (i >= first + length)
+                {
+                    yield break;
+                }
+
+                yield return docRank;
+            }
+
+            //for(int i = first; i < Math.Min(_DocRankList.Count, first + length); i++)
+            //{
+            //    yield return _DocRankList[i];
+            //}
 
         }
 
         public IEnumerable<DocumentRank> Get()
         {
-            if (!_HasSorted || int.MaxValue != _SortedLength)
+            if (!_HasSorted)
             {
-                _SortedLength = int.MaxValue;
-                Sort();
+                _HasSorted = false;
+                Sort(int.MaxValue);
             }
 
-            foreach(DocumentRank docRank in _DocRankList)
+            if (int.MaxValue != _DocRankRadixSortedList.Top)
+            {
+                _HasSorted = false;
+                Sort(int.MaxValue);
+            }
+
+            foreach (DocumentRank docRank in _DocRankRadixSortedList)
             {
                 yield return docRank;
             }

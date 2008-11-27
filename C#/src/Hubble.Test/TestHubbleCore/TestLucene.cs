@@ -138,7 +138,7 @@ namespace TestHubbleCore
 
                 for (int i = 0; i < loopCount; i++)
                 {
-                    foreach (Hubble.Core.Query.DocumentRank docRank in Index.GetRankEnumerable(queryWords))
+                    foreach (Hubble.Core.Query.DocumentRank docRank in Index.GetRankEnumerable(queryWords, true))
                     {
                         if (!Global.Cfg.PerformanceTest)
                         {
