@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Hubble.Framework.DataType;
-using Hubble.Framework.Arithmetic;
+using Hubble.Framework.DataStructure;
 
 namespace TestFramework.Cases
 {

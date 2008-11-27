@@ -70,7 +70,7 @@ namespace TestFramework.Cases
 
             TestIDictionary(new Dictionary<int, int>(), MaxNum);
             TestIDictionary(new SortedDictionary<int, int>(), MaxNum);
-            TestIDictionary(new Hubble.Framework.Arithmetic.IntDictionary<int>(), MaxNum);
+            TestIDictionary(new Hubble.Framework.DataStructure.IntDictionary<int>(), MaxNum);
         }
     }
 }

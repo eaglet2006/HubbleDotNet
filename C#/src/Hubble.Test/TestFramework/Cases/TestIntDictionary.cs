@@ -6,7 +6,7 @@ namespace TestFramework.Cases
 {
     class TestIntDictionary : TestCaseBase
     {
-        private int TestAddContainGetCountOneKey(Hubble.Framework.Arithmetic.IntDictionary<int> intDict, int key, int value, int count)
+        private int TestAddContainGetCountOneKey(Hubble.Framework.DataStructure.IntDictionary<int> intDict, int key, int value, int count)
         {
             intDict.Add(key, value);
             AssignEquals(intDict.ContainsKey(key), true, "Test ContainsKey");
@@ -21,7 +21,7 @@ namespace TestFramework.Cases
 
         }
 
-        private int TestRemoveOneKey(Hubble.Framework.Arithmetic.IntDictionary<int> intDict, int key, int count)
+        private int TestRemoveOneKey(Hubble.Framework.DataStructure.IntDictionary<int> intDict, int key, int count)
         {
             AssignEquals(intDict.Remove(key), true, "Test ContainsKey");
             AssignEquals(intDict.ContainsKey(key), false, "Test ContainsKey");
@@ -35,7 +35,7 @@ namespace TestFramework.Cases
 
         public override void Test()
         {
-            Hubble.Framework.Arithmetic.IntDictionary<int> intDict = new Hubble.Framework.Arithmetic.IntDictionary<int>(4);
+            Hubble.Framework.DataStructure.IntDictionary<int> intDict = new Hubble.Framework.DataStructure.IntDictionary<int>(4);
 
             int count = 0;
 
@@ -104,7 +104,7 @@ namespace TestFramework.Cases
             }
 
 
-            intDict = new Hubble.Framework.Arithmetic.IntDictionary<int>();
+            intDict = new Hubble.Framework.DataStructure.IntDictionary<int>();
             count = 0;
 
             keyValues = new KeyValuePair<int,int>[]{

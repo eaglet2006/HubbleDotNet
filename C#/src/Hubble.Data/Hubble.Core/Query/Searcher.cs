@@ -6,7 +6,7 @@ namespace Hubble.Core.Query
 {
     public class Searcher
     {
-        Hubble.Framework.DataType.AppendList<DocumentRank> _DocRankList;
+        Hubble.Framework.DataStructure.AppendList<DocumentRank> _DocRankList;
 
         int _TotalCount;
         int _MinRank = int.MaxValue;
@@ -28,11 +28,11 @@ namespace Hubble.Core.Query
 
             if (_SortedLength <= 1024)
             {
-                _DocRankList = new Hubble.Framework.DataType.AppendList<DocumentRank>(_SortedLength * 2);
+                _DocRankList = new Hubble.Framework.DataStructure.AppendList<DocumentRank>(_SortedLength * 2);
             }
             else
             {
-                _DocRankList = new Hubble.Framework.DataType.AppendList<DocumentRank>();
+                _DocRankList = new Hubble.Framework.DataStructure.AppendList<DocumentRank>();
             }
 
             foreach (DocumentRank docRank in _Query.GetRankEnumerable())

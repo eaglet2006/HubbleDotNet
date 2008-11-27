@@ -21,7 +21,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-namespace Hubble.Framework.Arithmetic
+namespace Hubble.Framework.DataStructure
 {
     /// <summary>
     /// UIntDictinary is a special dictinary for UInt 
