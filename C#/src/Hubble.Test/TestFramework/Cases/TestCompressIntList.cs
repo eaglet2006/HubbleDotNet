@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Hubble.Framework.DataTypes;
+using Hubble.Framework.DataType;
 using Hubble.Framework.Arithmetic;
 
 namespace TestFramework.Cases
@@ -24,10 +24,10 @@ namespace TestFramework.Cases
                 input.Add(value);
             }
 
-            CompressIntList test = new CompressIntList(input);
+            CompressIntList test = new CompressIntList(input, 0);
 
             int j = 0;
-            foreach (int value in test.Values)
+            foreach (int value in test)
             {
                 AssignEquals(testData[j], value, "Test values");
                 j++;
@@ -54,7 +54,7 @@ namespace TestFramework.Cases
 
             for (int i = 0; i < 1 * 1024 * 1024; i++)
             {
-                CompressIntList compressList = new CompressIntList(input);
+                CompressIntList compressList = new CompressIntList(input, 0);
                 compressIntDict.Add(compressList);
             }
             stopwatch.Stop();
