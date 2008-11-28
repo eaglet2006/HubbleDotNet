@@ -38,6 +38,7 @@
     <Compile Include="Cases\TestCompressIntList.cs" />
     <Compile Include="Cases\TestIntDictionary.cs" />
     <Compile Include="Cases\TestIntDictionaryPerformance.cs" />
+    <Compile Include="Cases\TestSingleSortedLinkedTable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCaseBase.cs" />

@@ -111,6 +111,34 @@ namespace Hubble.Core.Index
 
             #endregion
 
+            #region Public methods
+
+            public long GetDocumentId(int index)
+            {
+                if (_IsRamIndex)
+                {
+                    return ListForWriter[index].DocumentId;
+                }
+                else
+                {
+                    return ListForReader[index].DocumentId;
+                }
+            }
+
+            public long GetHitCount(int index)
+            {
+                if (_IsRamIndex)
+                {
+                    return ListForWriter[index].Count;
+                }
+                else
+                {
+                    return ListForReader[index].Count;
+                }
+            }
+
+            #endregion
+
             #region internal properties
 
             internal bool Hit

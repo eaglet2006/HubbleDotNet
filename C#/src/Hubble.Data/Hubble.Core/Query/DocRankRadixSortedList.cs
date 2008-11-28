@@ -10,7 +10,7 @@ namespace Hubble.Core.Query
     {
         class DescComparer : System.Collections.Generic.IComparer<int>
         {
-            #region IComparer<int> ≥…‘±
+            #region IComparer<int> Members
 
             public int Compare(int x, int y)
             {
