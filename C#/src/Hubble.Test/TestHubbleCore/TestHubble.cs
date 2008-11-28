@@ -28,7 +28,7 @@ namespace TestHubbleCore
                 ktAnalyzer.Stopwatch.Reset();
                 long docId = 0;
                 int totalChars = 0;
-
+                int contentCount = 0;
                 foreach (XmlNode node in documentList)
                 {
                     String title = node.Attributes["Title"].Value;
@@ -40,10 +40,21 @@ namespace TestHubbleCore
 
                     watch.Start();
 
-                    invertedIndex.Index(content, docId++, ktAnalyzer);
+                    if (Global.Cfg.TestShortText)
+                    {
+                        for (int i = 0; i < content.Length / 100; i++)
+                        {
+                            invertedIndex.Index(content.Substring(i * 100, 100), docId++, ktAnalyzer);
+                        }
+                    }
+                    else
+                    {
+                        invertedIndex.Index(content, docId++, ktAnalyzer);
+                    }
                     watch.Stop();
+                    contentCount++;
 
-                    if (docId == Global.Cfg.TestRows)
+                    if (contentCount == Global.Cfg.TestRows)
                     {
                         break;
                     }

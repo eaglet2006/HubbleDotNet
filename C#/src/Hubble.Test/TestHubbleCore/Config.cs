@@ -14,6 +14,7 @@ namespace TestHubbleCore
         private bool _TestLucene;
         private int _TestRows;
         private bool _PerformanceTest;
+        private bool _TestShortText = false;
         private String _NewsXmlFilePath;
         private string _QueryString = "北京大学";
 
@@ -73,6 +74,19 @@ namespace TestHubbleCore
             set
             {
                 _TestRows = value;
+            }
+        }
+
+        public bool TestShortText
+        {
+            get
+            {
+                return _TestShortText;
+            }
+
+            set
+            {
+                _TestShortText = value;
             }
         }
 

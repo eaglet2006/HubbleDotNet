@@ -12,18 +12,6 @@ namespace Hubble.Core.Query
     /// </summary>
     public class MutiStringQuery : IQuery
     {
-        class LongComparer : IComparer<long>
-        {
-            #region IComparer<long> Members
-
-            public int Compare(long x, long y)
-            {
-                return x.CompareTo(y);
-            }
-
-            #endregion
-        }
-
         class WordIndexForQuery
         {
             private int _CurIndex;
@@ -169,15 +157,11 @@ namespace Hubble.Core.Query
         }
 
         string _FieldName;
-        
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
-        
         AppendList<Entity.WordInfo> _QueryWords = new AppendList<Hubble.Core.Entity.WordInfo>();
+        AppendList<WordIndexForQuery> _WordIndexList = new AppendList<WordIndexForQuery>();
 
-        AppendList<WordIndexForQuery> _IncWordIndexList = new AppendList<WordIndexForQuery>();
-
-        SingleSortedLinkedTable<long, WordIndexForQuery> _TempSelect = 
-            new SingleSortedLinkedTable<long, WordIndexForQuery>(new LongComparer());
+        AppendList<WordIndexForQuery> _TempSelect = new AppendList<WordIndexForQuery>();
 
         long _Norm_Ranks = 0; //sqrt(sum_t(rank)^2))
 
@@ -187,9 +171,8 @@ namespace Hubble.Core.Query
 
             int numDocWords = InvertedIndex.GetDocumentWordCount(docId);
 
-            foreach (SingleSortedLinkedTable<long, WordIndexForQuery>.Node wqNode in _TempSelect.GetFirstKeys())
+            foreach (WordIndexForQuery wq in _TempSelect)
             {
-                WordIndexForQuery wq = wqNode.Value;
                 rank += wq.Rank * wq.Idf_t * wq.CurWordCount * 1000000 / (_Norm_Ranks * wq.Norm_d_t * numDocWords);
             }
 
@@ -212,34 +195,51 @@ namespace Hubble.Core.Query
         /// </returns>
         private Query.DocumentRank GetNexDocumentRank()
         {
-            if (_TempSelect.IsEmpty)
+            if (_QueryWords.Count <= 0)
             {
                 return new DocumentRank(-1);
             }
 
-            long minDocId = _TempSelect.First.Key;
-            int rank = CaculateRank(minDocId);
+            long minDocId = long.MaxValue;
 
-            _IncWordIndexList.Clear();
-
-            foreach (SingleSortedLinkedTable<long, WordIndexForQuery>.Node wqNode in _TempSelect.GetFirstKeys())
+            //Get min document id
+            for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                wqNode.Value.IncCurIndex();
-                _IncWordIndexList.Add(wqNode.Value);
-            }
-
-            _TempSelect.RemoveFirstKeys();
-
-            foreach (WordIndexForQuery wq in _IncWordIndexList)
-            {
-                long curDocId = wq.CurDocumentId;
+                long curDocId = _WordIndexList[i].CurDocumentId;
 
                 if (curDocId < 0)
                 {
                     continue;
                 }
 
-                _TempSelect.Add(curDocId, wq);
+                if (minDocId > curDocId)
+                {
+                    minDocId = curDocId;
+                }
+            }
+
+            if (minDocId == long.MaxValue)
+            {
+                return new DocumentRank(-1);
+            }
+
+            //Put min doc id into _TempSelect
+            _TempSelect.Clear();
+            for (int i = 0; i < _WordIndexList.Count; i++)
+            {
+                long curDocId = _WordIndexList[i].CurDocumentId;
+
+                if (curDocId == minDocId)
+                {
+                    _TempSelect.Add(_WordIndexList[i]);
+                }
+            }
+
+            int rank = CaculateRank(minDocId);
+
+            foreach(WordIndexForQuery wq in _TempSelect)
+            {
+                wq.IncCurIndex();
             }
 
             return new DocumentRank(minDocId, rank);
@@ -283,10 +283,9 @@ namespace Hubble.Core.Query
             set
             {
                 Dictionary<string, int> wordIndexDict = new Dictionary<string, int>();
-                AppendList<WordIndexForQuery> wordIndexList = new AppendList<WordIndexForQuery>();
 
                 _QueryWords.Clear();
-                wordIndexList.Clear();
+                _WordIndexList.Clear();
                 wordIndexDict.Clear();
 
                 foreach (Hubble.Core.Entity.WordInfo wordInfo in value)
@@ -303,42 +302,21 @@ namespace Hubble.Core.Query
                             continue;
                         }
 
-                        wordIndexList.Add(new WordIndexForQuery(wordIndex,
+                        _WordIndexList.Add(new WordIndexForQuery(wordIndex,
                             InvertedIndex.DocumentCount));
                         wordIndexDict.Add(wordInfo.Word, 0);
                     }
 
-                    wordIndexList[wordIndexList.Count - 1].Rank += wordInfo.Rank;
+                    _WordIndexList[_WordIndexList.Count - 1].Rank += wordInfo.Rank;
                 }
 
                 _Norm_Ranks = 0;
-                foreach (WordIndexForQuery wq in wordIndexList)
+                foreach (WordIndexForQuery wq in _WordIndexList)
                 {
                     _Norm_Ranks += wq.Rank * wq.Rank;
                 }
 
                 _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
-
-                //Init _TempSelect
-                if (_QueryWords.Count <= 0)
-                {
-                    return;
-                }
-
-                _TempSelect.Clear();
-
-                //Get min document id
-                for (int i = 0; i < wordIndexList.Count; i++)
-                {
-                    long curDocId = wordIndexList[i].CurDocumentId;
-
-                    if (curDocId < 0)
-                    {
-                        continue;
-                    }
-
-                    _TempSelect.Add(curDocId, wordIndexList[i]);
-                }
             }
         }
 

@@ -35,7 +35,7 @@ namespace TestHubbleCore
                 Index.CreateIndex(Index.INDEX_DIR);
                 Index.MaxMergeFactor = 100;
                 Index.MinMergeDocs = 100;
-
+                long docId = 0;
                 foreach (XmlNode node in documentList)
                 {
                     String content = node.Attributes["Content"].Value;
@@ -44,7 +44,20 @@ namespace TestHubbleCore
 
                     watch.Start();
 
-                    Index.IndexString(content);
+                    if (Global.Cfg.TestShortText)
+                    {
+                        for (int i = 0; i < content.Length / 100; i++)
+                        {
+                            Index.IndexString(content.Substring(i * 100, 100));
+                            docId++;
+                        }
+                    }
+                    else
+                    {
+                        Index.IndexString(content);
+                        docId++;
+                    }
+
 
                     watch.Stop();
 
@@ -63,7 +76,7 @@ namespace TestHubbleCore
 
                 TimeSpan s = DateTime.Now - old;
                 Console.WriteLine(String.Format("Lucene.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒",
-                    count, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
+                    docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
                     Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration / 1000 + "." +
                     Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration % 1000));
 

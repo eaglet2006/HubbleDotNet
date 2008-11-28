@@ -143,12 +143,6 @@ namespace Hubble.Core.Query
 
                 yield return docRank;
             }
-
-            //for(int i = first; i < Math.Min(_DocRankList.Count, first + length); i++)
-            //{
-            //    yield return _DocRankList[i];
-            //}
-
         }
 
         public IEnumerable<DocumentRank> Get()

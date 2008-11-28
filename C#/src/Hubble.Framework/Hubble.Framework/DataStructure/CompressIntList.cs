@@ -32,8 +32,8 @@ namespace Hubble.Framework.DataStructure
     /// second int is 0x7f
     /// Input int must not be less then zero!
     /// </summary>
-    [StructLayout(LayoutKind.Sequential,Pack=4)]
-    public struct CompressIntList : IEnumerable<int>
+    //[StructLayout(LayoutKind.Sequential,Pack=4)]
+    public class CompressIntList : IEnumerable<int>
     {
         //[FieldOffset(0)]
         public long DocumentId;
@@ -42,14 +42,14 @@ namespace Hubble.Framework.DataStructure
         public int Count;
 
         //[FieldOffset(12)]
-        [MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
+        //[MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
         private byte[] Data;
 
         public int Size
         {
             get
             {
-                return Data.Length;
+                return 12 + Data.Length;
             }
         }
 
