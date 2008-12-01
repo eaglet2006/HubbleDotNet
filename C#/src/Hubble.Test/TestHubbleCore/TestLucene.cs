@@ -156,6 +156,16 @@ namespace TestHubbleCore
                         if (!Global.Cfg.PerformanceTest)
                         {
                             string content = documentList[(int)docRank.DocumentId].Attributes["Content"].Value.Replace("\r\n", "");
+
+                            int index = content.IndexOf(queryString);
+
+                            if (index >= 0)
+                            {
+                                int fst = Math.Max(0, index - 20);
+                                int len = Math.Min(content.Length - fst, 100);
+                                content = content.Substring(fst, len);
+                            }
+                            
                             string title = documentList[(int)docRank.DocumentId].Attributes["Title"].Value;
                             KTDictSeg.HighLight.SimpleHTMLFormatter simpleHTMLFormatter =
                                new KTDictSeg.HighLight.SimpleHTMLFormatter("<font color=\"red\">", "</font>");

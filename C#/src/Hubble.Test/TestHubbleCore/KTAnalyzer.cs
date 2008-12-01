@@ -64,7 +64,7 @@ namespace TestHubbleCore
             {
                 if (wordInfo != null)
                 {
-                    yield return new Hubble.Core.Entity.WordInfo(wordInfo.Word, wordInfo.Position); 
+                    yield return new Hubble.Core.Entity.WordInfo(wordInfo.Word, wordInfo.Position, wordInfo.Rank); 
                 }
             }
         }

@@ -99,7 +99,18 @@ namespace TestHubbleCore
 
                 for (int i = 0; i < loopCount; i++)
                 {
-                    Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
+                    Hubble.Core.Query.IQuery query;
+
+                    if (Global.Cfg.TestFullTextQuery)
+                    {
+                        query = new Hubble.Core.Query.FullTextQuery();
+                    }
+                    else
+                    {
+                        query = new Hubble.Core.Query.MutiStringQuery();
+                    }
+
+                    //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
                     //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.FullTextQuery();
 
                     query.FieldName = "";
@@ -125,7 +136,18 @@ namespace TestHubbleCore
                 watch.Start();
                 for (int i = 0; i < loopCount; i++)
                 {
-                    Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
+                    Hubble.Core.Query.IQuery query;
+
+                    if (Global.Cfg.TestFullTextQuery)
+                    {
+                        query = new Hubble.Core.Query.FullTextQuery();
+                    }
+                    else
+                    {
+                        query = new Hubble.Core.Query.MutiStringQuery();
+                    }
+
+                    //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
                     //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.FullTextQuery();
 
                     query.FieldName = "";
@@ -156,7 +178,18 @@ namespace TestHubbleCore
 
                 for (int i = 0; i < loopCount; i++)
                 {
-                    Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
+                    Hubble.Core.Query.IQuery query;
+
+                    if (Global.Cfg.TestFullTextQuery)
+                    {
+                        query = new Hubble.Core.Query.FullTextQuery();
+                    }
+                    else
+                    {
+                        query = new Hubble.Core.Query.MutiStringQuery();
+                    }
+
+                    //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
                     //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.FullTextQuery();
 
                     query.FieldName = "";
@@ -171,6 +204,16 @@ namespace TestHubbleCore
                         if (!Global.Cfg.PerformanceTest)
                         {
                             string content = documentList[(int)docRank.DocumentId].Attributes["Content"].Value.Replace("\r\n", "");
+
+                            int index = content.IndexOf(queryString);
+
+                            if (index >= 0)
+                            {
+                                int fst = Math.Max(0, index - 20);
+                                int len = Math.Min(content.Length - fst, 100);
+                                content = content.Substring(fst, len);
+                            }
+
                             string title = documentList[(int)docRank.DocumentId].Attributes["Title"].Value;
                              KTDictSeg.HighLight.SimpleHTMLFormatter simpleHTMLFormatter =
                                 new KTDictSeg.HighLight.SimpleHTMLFormatter("<font color=\"red\">", "</font>");
@@ -211,7 +254,6 @@ namespace TestHubbleCore
 
                 Console.WriteLine("取所有记录");
                 Console.WriteLine("单次的查询时间:" + ((double)watch.ElapsedMilliseconds / loopCount).ToString() + "ms");
-
 
             }
             catch (Exception e1)
