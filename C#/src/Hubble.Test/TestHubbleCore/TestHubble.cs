@@ -63,9 +63,13 @@ namespace TestHubbleCore
                 watch.Start();
                 watch.Stop();
 
-                Console.WriteLine(String.Format("Hubble.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒",
+                long indexElapsedMilliseconds = watch.ElapsedMilliseconds - ktAnalyzer.Stopwatch.ElapsedMilliseconds;
+
+                Console.WriteLine(String.Format("Hubble.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒 索引时间{4}秒",
                     docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
-                    ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000));
+                    ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000,
+                    indexElapsedMilliseconds / 1000 + "." + indexElapsedMilliseconds % 1000
+                    ));
 
                 //Begin test performance
                 int count = 0;
@@ -91,42 +95,6 @@ namespace TestHubbleCore
                 }
 
                 StringBuilder report = new StringBuilder();
-
-
-                count = 0;
-                watch.Reset();
-                watch.Start();
-
-                for (int i = 0; i < loopCount; i++)
-                {
-                    Hubble.Core.Query.IQuery query;
-
-                    if (Global.Cfg.TestFullTextQuery)
-                    {
-                        query = new Hubble.Core.Query.FullTextQuery();
-                    }
-                    else
-                    {
-                        query = new Hubble.Core.Query.MutiStringQuery();
-                    }
-
-                    //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.MutiStringQuery();
-                    //Hubble.Core.Query.IQuery query = new Hubble.Core.Query.FullTextQuery();
-
-                    query.FieldName = "";
-                    query.InvertedIndex = invertedIndex;
-                    query.QueryWords = queryWords;
-
-                    Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-
-                    searcher.Search();
-                    count = searcher.TotalCount;
-                }
-                watch.Stop();
-                Console.WriteLine("查询出来的文章总数:" + count.ToString());
-
-                Console.WriteLine("仅搜索不取记录数据");
-                Console.WriteLine("单次的查询时间:" + ((double)watch.ElapsedMilliseconds / loopCount).ToString() + "ms");
 
 
                 Console.WriteLine("取前100条记录");
@@ -231,7 +199,7 @@ namespace TestHubbleCore
                             report.AppendLine("</br>");
                             report.AppendLine("</br>");
 
-                            if (count > 10)
+                            if (count > 25)
                             {
                                 using (FileStream fs = new FileStream("hubble.htm", FileMode.Create, FileAccess.ReadWrite))
                                 {
@@ -255,6 +223,7 @@ namespace TestHubbleCore
                 Console.WriteLine("取所有记录");
                 Console.WriteLine("单次的查询时间:" + ((double)watch.ElapsedMilliseconds / loopCount).ToString() + "ms");
 
+                Console.WriteLine("查询出来的文章总数:" + (count / loopCount).ToString());
             }
             catch (Exception e1)
             {

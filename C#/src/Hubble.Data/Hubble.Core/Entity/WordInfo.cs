@@ -18,7 +18,7 @@ namespace Hubble.Core.Entity
         {
             Word = word;
             Position = position;
-            Rank = rank;
+            Rank = rank <= 0 ? 1 : rank;
         }
 
         public override string ToString()

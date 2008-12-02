@@ -12,11 +12,19 @@ namespace Hubble.Core.Query
     /// </summary>
     public class FullTextQuery : IQuery
     {
+        class SessionRank
+        {
+            public long Session;
+            public int Rank;
+        }
+
         class WordIndexForQuery
         {
             private int _CurPosition;
             private int _CurIndex;
             private Index.InvertedIndex.WordIndex _WordIndex;
+            private int _OldIndexForDoc = -1;
+            private long _CurDocmentId;
 
             public IEnumerator<int> _CurPositionValues;
 
@@ -68,7 +76,18 @@ namespace Hubble.Core.Query
                     }
                     else
                     {
-                        return WordIndex[CurIndex].DocumentId;
+                        //Because WordIndex.GetDocumentId excute slowly.
+                        if (CurIndex == _OldIndexForDoc)
+                        {
+                            return _CurDocmentId;
+                        }
+                        else
+                        {
+                            _OldIndexForDoc = CurIndex;
+                        }
+
+                        _CurDocmentId = WordIndex.GetDocumentId(CurIndex);
+                        return _CurDocmentId;
                     }
                 }
             }
@@ -84,6 +103,8 @@ namespace Hubble.Core.Query
             public WordIndexForQuery(Index.InvertedIndex.WordIndex wordIndex)
             {
                 _CurPositionValues = null;
+
+                _OldIndexForDoc = -1;
 
                 if (wordIndex.Count <= 0)
                 {
@@ -136,7 +157,12 @@ namespace Hubble.Core.Query
         AppendList<WordIndexForQuery> _TempSelect = new AppendList<WordIndexForQuery>();
         AppendList<int> _TempPositionList = new AppendList<int>();
 
+        Dictionary<string, SessionRank> _WordRank = new Dictionary<string, SessionRank>();
+        long _Session = 0;
+
+
         private int _QueryStringLength = 0;
+        private int _HoleNumber = 0; //If query string does not continue, the hole number will be large then 0
 
         private IList<Entity.WordInfo> GetNextHitWords(out long docId)
         {
@@ -304,7 +330,7 @@ namespace Hubble.Core.Query
                 {
                     List<Entity.WordInfo> queryWords;
 
-                    maxEndPosition = Math.Max(maxEndPosition, wordInfoList[i].Position + wordInfoList[i].Word.Length - 1);
+                    maxEndPosition = Math.Max(maxEndPosition, wordInfoList[i].Position + wordInfoList[i].Word.Length);
 
                     if (!_WordQueryWordTable.TryGetValue(wordInfoList[i].Word, out queryWords))
                     {
@@ -323,7 +349,7 @@ namespace Hubble.Core.Query
                                 minWordInfoRank = queryWordInfo.Rank;
                             }
 
-                            rank += queryWordInfo.Rank <= 0 ? 1 : queryWordInfo.Rank;
+                            rank += queryWordInfo.Rank;
                         }
                     }
                 }
@@ -373,6 +399,8 @@ namespace Hubble.Core.Query
                 return 0;
             }
 
+            _Session++;
+
             long rank = 0;
 
             int lastMinPosition = -1; //Last min position
@@ -383,11 +411,18 @@ namespace Hubble.Core.Query
             int continueTimes = 0;
             int distance;
             int fstStart = 0;
-            int maxEndPosition = 0;
+            int maxEndPosition = wordInfoList[0].Position + wordInfoList[0].Word.Length;
             int lastMaxEndPosition = 0;
+            int holeNumber = 0;
 
             while (end < wordInfoList.Count)
             {
+                SessionRank sRank;
+                if (_WordRank.TryGetValue(wordInfoList[end].Word, out sRank))
+                {
+                    sRank.Session = _Session;
+                }
+
                 if (wordInfoList[end].Position != lastScanPostition)
                 {
                     int r = CaculateRankSamePosition(wordInfoList, start, end - 1, ref lastMinPosition, out distance, out maxEndPosition);
@@ -399,11 +434,12 @@ namespace Hubble.Core.Query
                         continueTimes = 1;
                         lastMinPosition = -1;
                         fstStart = start;
+                        holeNumber = 0;
                         r = CaculateRankSamePosition(wordInfoList, start, end - 1, ref lastMinPosition, out distance, out maxEndPosition);
                     }
                     else
                     {
-                        if (distance < 8 && lastScanPostition > lastMaxEndPosition)
+                        if (distance < 8 && lastScanPostition >= lastMaxEndPosition)
                         {
                             continueTimes++;
                         }
@@ -418,9 +454,10 @@ namespace Hubble.Core.Query
 
                         if ((wordInfoList[start].Position + wordInfoList[start].Word.Length - 
                             wordInfoList[fstStart].Position ==  _QueryStringLength) &&
-                            end - fstStart == _QueryWords.Count)
+                            holeNumber == _HoleNumber)
                         {
-                            rank += 5000 * r;
+                            //Whole match
+                            rank += 1000 * r;
                         }
                         else
                         {
@@ -433,7 +470,19 @@ namespace Hubble.Core.Query
 
                 lastScanPostition = wordInfoList[end].Position;
                 lastMaxEndPosition = maxEndPosition;
+                if (lastScanPostition > lastMaxEndPosition)
+                {
+                    holeNumber = lastScanPostition - lastMaxEndPosition;
+                }
+
                 end++;
+            }
+
+
+            SessionRank sEndRank;
+            if (_WordRank.TryGetValue(wordInfoList[start].Word, out sEndRank))
+            {
+                sEndRank.Session = _Session;
             }
 
             //deal with end word
@@ -454,13 +503,37 @@ namespace Hubble.Core.Query
                     continueTimes = ContinueTimesBase.Length - 1;
                 }
 
-                rank += ContinueTimesBase[continueTimes] * r_End;
+                if ((wordInfoList[start].Position + wordInfoList[start].Word.Length -
+                    wordInfoList[fstStart].Position == _QueryStringLength) &&
+                    holeNumber == _HoleNumber)
+                {
+                    //Whole match
+                    rank += 1000 * r_End;
+                }
+                else
+                {
+                    rank += ContinueTimesBase[continueTimes] * r_End;
+                }
+
             }
             //end deal with end word
 
+            int queryRankSum = 0;
+            foreach (SessionRank sRank in _WordRank.Values)
+            {
+                if (sRank.Session == _Session)
+                {
+                    queryRankSum += sRank.Rank;
+                }
+            }
+
+            rank *= queryRankSum;
+
             if (rank > int.MaxValue - 4000000)
             {
-                return int.MaxValue - 4000000;
+                long high = rank % (int.MaxValue - 4000000);
+
+                return int.MaxValue - 4000000 + (int)(high / 1000);
             }
             else
             {
@@ -532,10 +605,27 @@ namespace Hubble.Core.Query
                 _QueryWords.Sort();
                 bool fst = true;
                 int fstPosition = 0;
+                int maxEndPosition = 0;
+
                 //Init _PositionQueryWordTable
                 //This table use to caculate the document rank
                 foreach (Entity.WordInfo wordInfo in _QueryWords)
                 {
+                    SessionRank sRank;
+                    if (!_WordRank.TryGetValue(wordInfo.Word, out sRank))
+                    {
+                        sRank = new SessionRank();
+                        sRank.Rank = wordInfo.Rank;
+                        sRank.Session = 0;
+                        _WordRank.Add(wordInfo.Word, sRank);
+                    }
+
+                    if (wordInfo.Rank > sRank.Rank)
+                    {
+                        sRank.Rank = wordInfo.Rank;
+                    }
+
+
                     if (fst)
                     {
                         fstPosition = wordInfo.Position;
@@ -543,6 +633,14 @@ namespace Hubble.Core.Query
                     }
 
                     _QueryStringLength = Math.Max(_QueryStringLength, wordInfo.Word.Length + wordInfo.Position - fstPosition);
+
+                    if (wordInfo.Position - maxEndPosition > 0)
+                    {
+                        _HoleNumber += wordInfo.Position - maxEndPosition;
+                    }
+
+                    maxEndPosition = Math.Max(maxEndPosition, wordInfo.Word.Length + wordInfo.Position);
+
 
                     if (!_WordQueryWordTable.ContainsKey(wordInfo.Word))
                     {

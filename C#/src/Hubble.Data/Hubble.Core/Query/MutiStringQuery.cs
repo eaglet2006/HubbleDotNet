@@ -178,7 +178,9 @@ namespace Hubble.Core.Query
 
             if (rank > int.MaxValue - 4000000)
             {
-                return int.MaxValue - 4000000;
+                long high = rank % (int.MaxValue - 4000000);
+
+                return int.MaxValue - 4000000 + (int)(high / 1000);
             }
             else
             {

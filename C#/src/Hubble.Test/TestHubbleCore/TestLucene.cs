@@ -74,11 +74,14 @@ namespace TestHubbleCore
 
                 watch.Stop();
 
-                TimeSpan s = DateTime.Now - old;
-                Console.WriteLine(String.Format("Lucene.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒",
+                long indexElapsedMilliseconds = watch.ElapsedMilliseconds - Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration;
+
+                Console.WriteLine(String.Format("Lucene.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒 索引时间{4}秒",
                     docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
                     Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration / 1000 + "." +
-                    Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration % 1000));
+                    Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration % 1000,
+                    indexElapsedMilliseconds / 1000 + "." + indexElapsedMilliseconds % 1000
+                    ));
 
                 //Begin test performance
 
@@ -104,22 +107,6 @@ namespace TestHubbleCore
                 {
                     queryWords.Add(wordInfo);
                 }
-
-
-                count = 0;
-                watch.Reset();
-                watch.Start();
-
-                for (int i = 0; i < loopCount; i++)
-                {
-                    count = Index.GetTotalCount(queryWords);
-                }
-                watch.Stop();
-                Console.WriteLine("查询出来的文章总数:" + count.ToString());
-
-                Console.WriteLine("仅搜索不取记录数据");
-                Console.WriteLine("单次的查询时间:" + ((double)watch.ElapsedMilliseconds / loopCount).ToString() + "ms");
-
 
                 Console.WriteLine("取前100条记录");
 
@@ -183,7 +170,7 @@ namespace TestHubbleCore
                             report.AppendLine("</br>");
                             report.AppendLine("</br>");
 
-                            if (count > 10)
+                            if (count > 25)
                             {
                                 using (FileStream fs = new FileStream("lucene.htm", FileMode.Create, FileAccess.ReadWrite))
                                 {
