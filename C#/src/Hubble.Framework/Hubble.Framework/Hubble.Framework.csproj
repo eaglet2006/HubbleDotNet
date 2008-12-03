@@ -37,7 +37,10 @@
     <Compile Include="DataStructure\CompressIntList.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
+    <Compile Include="IO\File.cs" />
+    <Compile Include="IO\LinkedSegmentFileStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Serialization\BinSerialization.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

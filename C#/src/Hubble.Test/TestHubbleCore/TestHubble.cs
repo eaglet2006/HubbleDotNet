@@ -20,6 +20,9 @@ namespace TestHubbleCore
         {
             try
             {
+                Hubble.Core.Store.IndexFile IndexFile = new Hubble.Core.Store.IndexFile();
+                IndexFile.Create("test.idx");
+
                 Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex();
 
                 KTAnalyzer ktAnalyzer = new KTAnalyzer();

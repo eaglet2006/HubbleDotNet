@@ -45,6 +45,9 @@
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Relationship\Field.cs" />
     <Compile Include="Relationship\Document.cs" />
+    <Compile Include="Store\IndexFile.cs" />
+    <Compile Include="Store\IndexHead.cs" />
+    <Compile Include="Store\StoreException.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
