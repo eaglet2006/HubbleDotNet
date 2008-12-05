@@ -5,11 +5,18 @@ using System.IO;
 
 namespace Hubble.Framework.IO
 {
+    /// <summary>
+    /// This stream manages the linked file system as a stream.
+    /// This stream only can be used for append.
+    /// It can't be used for update!
+    /// </summary>
     public class LinkedSegmentFileStream : Stream
     {
         private FileStream _FileStream;
         private int _SegmentSize;
         private byte[] _CurrentSegment;
+        private int _LastReadSegment = -1; //The segment that be read last time
+
         private int _BeginSegment;
         private int _BeginPositionInSegment;
         private int _CurSegment;
@@ -20,6 +27,8 @@ namespace Hubble.Framework.IO
         private int _LastReserveSegment;
         private int _LastSegment;
         private int _LastUsedSegment;
+
+
 
         #region private properties
         private int NextSegment
@@ -110,6 +119,7 @@ namespace Hubble.Framework.IO
         private void ReadOneSegment(int segment)
         {
             ReadFile(_CurrentSegment, _SegmentSize * segment, _CurrentSegment.Length);
+            _LastReadSegment = segment;
         }
 
         private void Init()
@@ -140,6 +150,17 @@ namespace Hubble.Framework.IO
                         continue;
                     }
                 }
+                else if (nextSegment == 0)
+                {
+                    if (curSegment == _LastReserveSegment + 1)
+                    {
+                        _LastUsedSegment = _LastReserveSegment + 1;
+                    }
+                    else if (curSegment == 1)
+                    {
+                        _LastUsedReserveSegment = 1;
+                    }
+                }
 
                 curSegment--;
             }
@@ -150,14 +171,16 @@ namespace Hubble.Framework.IO
         #region Public methods
 
         public LinkedSegmentFileStream(FileStream fs, int segmentSize,
-            int autoIncreaseBytes, long fileLength,
-            int lastReserveSegment          
+            int autoIncreaseBytes, int lastReserveSegment          
             )
         {
+            long fileLength = fs.Length;
+
             if (fileLength % segmentSize != 0 || segmentSize <= 0 || autoIncreaseBytes < 0)
             {
                 throw new ArgumentException("LinkedSegmentFileStream invalid parameter!");
             }
+
 
             _SegmentSize = segmentSize;
             _LastSegment = (int)(fileLength / SegmentSize) - 1;
@@ -188,6 +211,29 @@ namespace Hubble.Framework.IO
 
             _CurSegment = _BeginSegment = segment;
             _CurPositionInSegment = _BeginPositionInSegment = positionInSegment;
+        }
+
+        public void AllocNewSegment()
+        {
+            if (CurSegment < _LastReserveSegment &&
+                _LastUsedReserveSegment > 0 && _LastUsedReserveSegment < _LastReserveSegment)
+            {
+                //Alloc reserve segment
+                _LastUsedReserveSegment++;
+                _CurSegment = _LastUsedReserveSegment;
+            }
+            else if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
+            {
+                _LastUsedSegment++;
+                _CurSegment = _LastUsedSegment;
+            }
+            else
+            {
+                _LastUsedSegment = _LastSegment + 1;
+                _CurSegment = _LastUsedSegment;
+                _FileStream.SetLength((_LastSegment + 1) * SegmentSize + AutoIncreaseBytes);
+                _LastSegment += AutoIncreaseBytes / SegmentSize;
+            }
         }
 
         #endregion
@@ -255,6 +301,11 @@ namespace Hubble.Framework.IO
 
             if (_CurPositionInSegment >= SegmentSize - 4)
             {
+                if (_LastReadSegment != CurSegment)
+                {
+                    ReadOneSegment(CurSegment);
+                }
+
                 nextSegment = NextSegment;
 
                 if (nextSegment <= 0)
@@ -306,25 +357,7 @@ namespace Hubble.Framework.IO
 
         private void SetNextSegment(int relCount)
         {
-            if (CurSegment < _LastReserveSegment && 
-                _LastUsedReserveSegment > 0 && _LastUsedReserveSegment < _LastReserveSegment)
-            {
-                //Alloc reserve segment
-                _LastUsedReserveSegment++;
-                _CurSegment = _LastUsedReserveSegment;
-            }
-            else if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
-            {
-                _LastUsedSegment++;
-                _CurSegment = _LastUsedSegment;
-            }
-            else
-            {
-                _LastUsedSegment = _LastSegment;
-                _CurSegment = _LastUsedSegment;
-                _FileStream.SetLength(_LastSegment * SegmentSize + AutoIncreaseBytes);
-                _LastSegment += AutoIncreaseBytes / SegmentSize;
-            }
+            AllocNewSegment();
 
             if (relCount <= 0)
             {
