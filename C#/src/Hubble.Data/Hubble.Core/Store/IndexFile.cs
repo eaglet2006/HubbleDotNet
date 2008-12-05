@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Index;
+using Hubble.Framework.IO;
 
 namespace Hubble.Core.Store
 {
@@ -23,6 +24,7 @@ namespace Hubble.Core.Store
         private InvertedIndex _InvertedIndex;
         private int _LastWordIndexSegment = 0;
         private int _LastWordIndexPositionInSegment = 0;
+        private LinkedSegmentFileStream _SegmentFielStream;
         #endregion
 
         #region Private properties
@@ -142,6 +144,7 @@ namespace Hubble.Core.Store
             _InvertedIndex = new InvertedIndex();
 
             _CurrentSegment = new byte[Head.SegmentSize];
+
         }
 
         private void CreateNewIndex()

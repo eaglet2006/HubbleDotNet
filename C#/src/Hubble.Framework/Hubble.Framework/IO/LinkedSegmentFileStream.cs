@@ -95,39 +95,99 @@ namespace Hubble.Framework.IO
 
         #region Private methods
 
-        private void ReadOneSegment(int segment)
+        private void ReadFile(byte[] buf, int offset, int count)
         {
-            _FileStream.Seek(_SegmentSize * segment, System.IO.SeekOrigin.Begin);
+            _FileStream.Seek(offset, System.IO.SeekOrigin.Begin);
 
-            int len = _FileStream.Read(_CurrentSegment, 0, _CurrentSegment.Length);
-            int offset = len;
+            int len = _FileStream.Read(buf, 0, count);
 
-            while (offset < _CurrentSegment.Length)
+            while (len < count)
             {
-                len = _FileStream.Read(_CurrentSegment, offset, _CurrentSegment.Length - offset);
-                offset += len;
+                len += _FileStream.Read(_CurrentSegment, len, count - len);
             }
         }
+
+        private void ReadOneSegment(int segment)
+        {
+            ReadFile(_CurrentSegment, _SegmentSize * segment, _CurrentSegment.Length);
+        }
+
+        private void Init()
+        {
+            _LastUsedSegment = -1;
+            _LastUsedReserveSegment = -1;
+
+            int curSegment = _LastSegment;
+
+            byte[] buf = new byte[4];
+
+            while (curSegment > 0)
+            {
+                ReadFile(buf, curSegment * SegmentSize + SegmentSize - 4, 4);
+                int nextSegment = BitConverter.ToInt32(buf, 0);
+
+                if (nextSegment != 0)
+                {
+                    if (curSegment <= _LastReserveSegment)
+                    {
+                        _LastUsedReserveSegment = curSegment;
+                        break;
+                    }
+                    else
+                    {
+                        _LastUsedSegment = curSegment;
+                        curSegment = _LastReserveSegment;
+                        continue;
+                    }
+                }
+
+                curSegment--;
+            }
+        }
+
         #endregion
 
         #region Public methods
 
         public LinkedSegmentFileStream(FileStream fs, int segmentSize,
-            int segment, int positionInSegment, int autoIncreaseBytes, long fileLength,
-            int lastUsedReserveSegment, int lastReserveSegment, int lastUsedSegment          
+            int autoIncreaseBytes, long fileLength,
+            int lastReserveSegment          
             )
         {
-            _FileStream = fs;
+            if (fileLength % segmentSize != 0 || segmentSize <= 0 || autoIncreaseBytes < 0)
+            {
+                throw new ArgumentException("LinkedSegmentFileStream invalid parameter!");
+            }
+
             _SegmentSize = segmentSize;
+            _LastSegment = (int)(fileLength / SegmentSize) - 1;
+
+            if (lastReserveSegment > _LastSegment)
+            {
+                throw new ArgumentException("LinkedSegmentFileStream invalid parameter, lastReserveSegment large then LastSegment!");
+            }
+
+            _LastReserveSegment = lastReserveSegment;
+            
+            _FileStream = fs;
             _CurrentSegment = new byte[segmentSize];
-            _CurSegment = _BeginSegment = segment;
-            _CurPositionInSegment = _BeginPositionInSegment = positionInSegment;
+            _CurSegment = _BeginSegment = 1;
+            _CurPositionInSegment = _BeginPositionInSegment = 0;
             _AutoIncreaseBytes = autoIncreaseBytes;
 
-            _LastSegment = (int)(fileLength / SegmentSize) - 1;
-            _LastUsedReserveSegment = lastUsedReserveSegment;
-            _LastReserveSegment = lastReserveSegment;
-            _LastUsedSegment = lastUsedSegment;
+
+            Init();
+        }
+
+        public void Seek(int segment, int positionInSegment)
+        {
+            if (segment <= 0 || positionInSegment > SegmentSize - 4)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+
+            _CurSegment = _BeginSegment = segment;
+            _CurPositionInSegment = _BeginPositionInSegment = positionInSegment;
         }
 
         #endregion
@@ -186,6 +246,8 @@ namespace Hubble.Framework.IO
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            int nextSegment = 0;
+
             if (_CurPositionInSegment > SegmentSize - 4)
             {
                 throw new ArgumentOutOfRangeException();
@@ -193,6 +255,13 @@ namespace Hubble.Framework.IO
 
             if (_CurPositionInSegment >= SegmentSize - 4)
             {
+                nextSegment = NextSegment;
+
+                if (nextSegment <= 0)
+                {
+                    return 0;
+                }
+
                 _CurSegment = NextSegment;
                 _CurPositionInSegment = 0;
             }
@@ -204,7 +273,19 @@ namespace Hubble.Framework.IO
 
             ReadOneSegment(CurSegment);
 
-            int retCount = Math.Min(count, SegmentSize -4 - CurPositionInSegment);
+            int packetLength;
+            nextSegment = NextSegment;
+
+            if (nextSegment < 0)
+            {
+                packetLength = 0 - nextSegment - CurPositionInSegment;
+            }
+            else
+            {
+                packetLength = SegmentSize - 4 - CurPositionInSegment;
+            }
+
+            int retCount = Math.Min(count, packetLength);
 
             Array.Copy(_CurrentSegment, CurPositionInSegment, buffer, offset, retCount);
 
@@ -225,25 +306,24 @@ namespace Hubble.Framework.IO
 
         private void SetNextSegment(int relCount)
         {
-            if (CurSegment <= _LastReserveSegment)
+            if (CurSegment < _LastReserveSegment && 
+                _LastUsedReserveSegment > 0 && _LastUsedReserveSegment < _LastReserveSegment)
             {
+                //Alloc reserve segment
                 _LastUsedReserveSegment++;
-
-                if (_LastUsedReserveSegment > _LastReserveSegment)
-                {
-                    _LastUsedSegment++;
-                    _CurSegment = _LastUsedSegment;
-                }
-                else
-                {
-                    _CurSegment = _LastUsedReserveSegment;
-                }
-
-                if (CurSegment > _LastSegment)
-                {
-                    _FileStream.SetLength(_LastSegment * SegmentSize + AutoIncreaseBytes);
-                    _LastSegment += AutoIncreaseBytes / SegmentSize;
-                }
+                _CurSegment = _LastUsedReserveSegment;
+            }
+            else if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
+            {
+                _LastUsedSegment++;
+                _CurSegment = _LastUsedSegment;
+            }
+            else
+            {
+                _LastUsedSegment = _LastSegment;
+                _CurSegment = _LastUsedSegment;
+                _FileStream.SetLength(_LastSegment * SegmentSize + AutoIncreaseBytes);
+                _LastSegment += AutoIncreaseBytes / SegmentSize;
             }
 
             if (relCount <= 0)
@@ -281,10 +361,11 @@ namespace Hubble.Framework.IO
                     SetNextSegment(relCount);
                 }
 
-                relCount = Math.Min(count, SegmentSize - 4 - CurPositionInSegment);
+                relCount = Math.Min(remain, SegmentSize - 4 - CurPositionInSegment);
 
                 Array.Copy(buffer, offset, _CurrentSegment, 0, relCount);
-
+                
+                offset += relCount;
                 _CurPositionInSegment += relCount;
 
                 remain -= relCount;
@@ -293,6 +374,8 @@ namespace Hubble.Framework.IO
             if (relCount > 0)
             {
                 _FileStream.Write(_CurrentSegment, 0, relCount);
+                _FileStream.Seek(SegmentSize - 4 - relCount, SeekOrigin.Current);
+                _FileStream.Write(BitConverter.GetBytes(0 - relCount), 0, 4);
             }
 
         }

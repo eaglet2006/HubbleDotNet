@@ -12,7 +12,8 @@ namespace TestFramework
             List<TestCaseBase> testCases = new List<TestCaseBase>();
 
             //Add test cases
-            testCases.Add(new Cases.TestSingleSortedLinkedTable());
+            testCases.Add(new Cases.TestLinkedSegmentFileStream());
+            //testCases.Add(new Cases.TestSingleSortedLinkedTable());
             //testCases.Add(new Cases.TestCompressIntList());
             //testCases.Add(new Cases.TestIntDictionary());
             //testCases.Add(new Cases.TestIntDictionaryPerformance());
