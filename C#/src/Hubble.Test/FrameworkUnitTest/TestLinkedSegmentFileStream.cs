@@ -264,6 +264,39 @@ namespace FrameworkUnitTest
 
             ClearBuf(readBuf);
 
+            //Test over boundary but some segment that is not reserve segment has been used already
+            using (System.IO.FileStream fs = InitFile("test.db", segmentSize, lastReserveSegment + 1))
+            {
+                LinkedSegmentFileStream stream = new LinkedSegmentFileStream(fs, segmentSize,
+                    segmentSize * 2, lastReserveSegment);
+
+                int newSegment = stream.AllocSegment();
+
+                Assert.AreEqual(newSegment, lastReserveSegment + 1);
+
+
+                stream.Seek(newSegment, 0);
+                stream.Write(writeBuf, 0, 8);
+
+                stream.Seek(1, 0);
+                stream.Write(writeBuf, 0, writeBuf.Length);
+
+                stream.Seek(1, 0);
+                FillBuf(stream, readBuf);
+
+                CompareBuf(writeBuf, readBuf);
+
+                stream.Seek(newSegment, 0);
+                FillBuf(stream, readBuf);
+
+                CompareBuf(writeBuf, readBuf, 8);
+
+            
+            }
+
+            ClearBuf(readBuf);
+
+            //Test over boundary 
             using (System.IO.FileStream fs = InitFile("test.db", segmentSize, lastReserveSegment + 1))
             {
                 LinkedSegmentFileStream stream = new LinkedSegmentFileStream(fs, segmentSize,

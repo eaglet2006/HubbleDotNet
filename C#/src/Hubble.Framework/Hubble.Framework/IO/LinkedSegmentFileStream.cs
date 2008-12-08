@@ -166,6 +166,36 @@ namespace Hubble.Framework.IO
             }
         }
 
+        /// <summary>
+        /// Alloc new segment 
+        /// Include reserve segment and normal segment
+        /// </summary>
+        /// <returns></returns>
+        private int AllocNewSegment()
+        {
+            if (CurSegment < _LastReserveSegment &&
+                _LastUsedReserveSegment > 0 && _LastUsedReserveSegment < _LastReserveSegment)
+            {
+                //Alloc reserve segment
+                _LastUsedReserveSegment++;
+                _CurSegment = _LastUsedReserveSegment;
+            }
+            else if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
+            {
+                _LastUsedSegment++;
+                _CurSegment = _LastUsedSegment;
+            }
+            else
+            {
+                _LastUsedSegment = _LastSegment + 1;
+                _CurSegment = _LastUsedSegment;
+                _FileStream.SetLength((_LastSegment + 1) * SegmentSize + AutoIncreaseBytes);
+                _LastSegment += AutoIncreaseBytes / SegmentSize;
+            }
+
+            return CurSegment;
+        }
+
         #endregion
 
         #region Public methods
@@ -213,16 +243,14 @@ namespace Hubble.Framework.IO
             _CurPositionInSegment = _BeginPositionInSegment = positionInSegment;
         }
 
-        public void AllocNewSegment()
+        /// <summary>
+        /// Alloc new segment for the new data
+        /// Only alloc normal segment
+        /// </summary>
+        /// <returns></returns>
+        public int AllocSegment()
         {
-            if (CurSegment < _LastReserveSegment &&
-                _LastUsedReserveSegment > 0 && _LastUsedReserveSegment < _LastReserveSegment)
-            {
-                //Alloc reserve segment
-                _LastUsedReserveSegment++;
-                _CurSegment = _LastUsedReserveSegment;
-            }
-            else if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
+            if (_LastUsedSegment > 0 && _LastUsedSegment < _LastSegment)
             {
                 _LastUsedSegment++;
                 _CurSegment = _LastUsedSegment;
@@ -234,7 +262,10 @@ namespace Hubble.Framework.IO
                 _FileStream.SetLength((_LastSegment + 1) * SegmentSize + AutoIncreaseBytes);
                 _LastSegment += AutoIncreaseBytes / SegmentSize;
             }
+
+            return CurSegment;
         }
+
 
         #endregion
 
