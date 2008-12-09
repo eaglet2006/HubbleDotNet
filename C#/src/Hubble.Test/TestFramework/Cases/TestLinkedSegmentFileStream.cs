@@ -22,72 +22,75 @@ namespace TestFramework.Cases
             return fs;
         }
 
-        private void TestWrite(System.IO.FileStream fs, int segmentSize, int reserveSegment, int autoIncBytes,
+        private void TestWrite(string fileName, int segmentSize, int reserveSegment, int autoIncBytes,
             int segment, int positionInSeg, int lastReserveSegment)
         {
             byte[] _CurrentSegment = new byte[segmentSize];
 
-            LinkedSegmentFileStream _SegmentFielStream = new LinkedSegmentFileStream(fs, segmentSize, autoIncBytes,
-                lastReserveSegment);
-
-            for (int i = 0; i < segmentSize; i++)
+            using (LinkedSegmentFileStream _SegmentFielStream = new LinkedSegmentFileStream(fileName, true, segmentSize, autoIncBytes,
+                lastReserveSegment))
             {
-                _CurrentSegment[i] = (byte)i;
-            }
 
-            for (int i = 0; i < 10; i++)
-            {
-                _SegmentFielStream.Write(_CurrentSegment, 0, _CurrentSegment.Length);
-            }
-
-            byte[] buf = new byte[segmentSize];
-
-            System.IO.MemoryStream ms = new System.IO.MemoryStream();
-
-            int relCount = 0;
-            _SegmentFielStream.Seek(1, 0);
-
-            do
-            {
-                relCount = _SegmentFielStream.Read(buf, 0, buf.Length);
-
-                if (relCount > 0)
+                for (int i = 0; i < segmentSize; i++)
                 {
-                    ms.Write(buf, 0, relCount);
+                    _CurrentSegment[i] = (byte)i;
                 }
 
-            } while (relCount > 0);
-
-            ms.Position = 0;
-
-            int times = 0;
-
-            do
-            {
-                relCount = ms.Read(buf, 0, buf.Length);
-
-                if (relCount > 0)
+                for (int i = 0; i < 10; i++)
                 {
-                    times++;
+                    _SegmentFielStream.Write(_CurrentSegment, 0, _CurrentSegment.Length);
+                }
 
-                    for (int j = 0; j < buf.Length; j++)
+                byte[] buf = new byte[segmentSize];
+
+                System.IO.MemoryStream ms = new System.IO.MemoryStream();
+
+                int relCount = 0;
+                _SegmentFielStream.Seek(1, 0);
+
+                do
+                {
+                    relCount = _SegmentFielStream.Read(buf, 0, buf.Length);
+
+                    if (relCount > 0)
                     {
-                        AssignEquals(_CurrentSegment[j], buf[j], "Test read");
+                        ms.Write(buf, 0, relCount);
                     }
-                }
 
-            } while (relCount > 0);
+                } while (relCount > 0);
 
-            AssignEquals(times, 10, "Test times");
+                ms.Position = 0;
 
+                int times = 0;
+
+                do
+                {
+                    relCount = ms.Read(buf, 0, buf.Length);
+
+                    if (relCount > 0)
+                    {
+                        times++;
+
+                        for (int j = 0; j < buf.Length; j++)
+                        {
+                            AssignEquals(_CurrentSegment[j], buf[j], "Test read");
+                        }
+                    }
+
+                } while (relCount > 0);
+
+                AssignEquals(times, 10, "Test times");
+            }
+
+            if (System.IO.File.Exists("test.db"))
+            {
+                System.IO.File.Delete("test.db");
+            }
         }
 
         public override void Test()
         {
-            using (System.IO.FileStream fs = InitFile("test.db", 2048, 3))
-            {
-                TestWrite(fs, 2048, 32, 1 * 1024 * 1024, 1, 0, 2);
-            }
+            TestWrite("test.db", 2048, 32, 1 * 1024 * 1024, 1, 0, 2);
         }
     }
 }
