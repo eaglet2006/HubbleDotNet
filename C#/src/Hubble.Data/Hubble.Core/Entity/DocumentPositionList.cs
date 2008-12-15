@@ -20,10 +20,13 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using Hubble.Framework.Serialization;
 
-namespace Hubble.Framework.DataStructure
+namespace Hubble.Core.Entity
 {
     /// <summary>
+    /// This class record all the position for one word in one document.
+    /// 
     /// first bit of first byte is 1
     /// first bit of remain bytes is 0
     /// |11111111 01111111 00111111| 11111111|
@@ -33,15 +36,24 @@ namespace Hubble.Framework.DataStructure
     /// Input int must not be less then zero!
     /// </summary>
     //[StructLayout(LayoutKind.Sequential,Pack=4)]
-    public class CompressIntList : IEnumerable<int>
+    public class DocumentPositionList : IEnumerable<int>, IMySerialization<DocumentPositionList>, IMySerialization 
     {
         //[FieldOffset(0)]
         public long DocumentId;
 
         //[FieldOffset(8)]
+        /// <summary>
+        /// Count of items
+        /// </summary>
         public int Count;
 
         //[FieldOffset(12)]
+        /// <summary>
+        /// Document rank
+        /// </summary>
+        public int Rank;
+
+        //[FieldOffset(16)]
         //[MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
         private byte[] Data;
 
@@ -49,7 +61,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                return 12 + Data.Length;
+                return sizeof(long) + sizeof(int) * 2 + Data.Length;
             }
         }
 
@@ -83,7 +95,7 @@ namespace Hubble.Framework.DataStructure
         /// And the list must be sorted!
         /// The first element must be smallest!
         /// </remarks>
-        public CompressIntList(IList<int> input, long documentId)
+        public DocumentPositionList(IList<int> input, long documentId)
         {
             List<byte> tempBuf = new List<byte>(32);
             DocumentId = documentId;
@@ -180,6 +192,66 @@ namespace Hubble.Framework.DataStructure
         }
 
         #endregion
+
+        #region IMySerialization<CompressIntList> Members
+
+        public short Version
+        {
+            get 
+            {
+                return 1;
+            }
+        }
+
+        public void Serialize(System.IO.Stream s)
+        {
+            s.Write(BitConverter.GetBytes(Size), 0, sizeof(int));
+            s.Write(BitConverter.GetBytes(DocumentId), 0, sizeof(long));
+            s.Write(BitConverter.GetBytes(Count), 0, sizeof(int));
+            s.Write(BitConverter.GetBytes(Rank), 0, sizeof(int));
+            s.Write(Data, 0, Data.Length);
+        }
+
+        public DocumentPositionList Deserialize(System.IO.Stream s, short version)
+        {
+            switch (version)
+            {
+                case 1:
+                    byte[] buf = new byte[sizeof(long)];
+                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    int size = BitConverter.ToInt32(buf, 0);
+                    
+                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
+                    DocumentId = BitConverter.ToInt64(buf, 0);
+                    
+                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    Count = BitConverter.ToInt32(buf, 0);
+                    
+                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    Rank = BitConverter.ToInt32(buf, 0);
+
+                    buf = new byte[size - (sizeof(long) + sizeof(int) * 2)];
+                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, buf.Length);
+                    Data = buf;
+
+                    return this;
+                default:
+                    throw new System.Runtime.Serialization.SerializationException(
+                        string.Format("Invalid version:{0}", version));
+            }
+        }
+
+        #endregion
+
+        #region IMySerialization Members
+
+
+        object IMySerialization.Deserialize(System.IO.Stream s, short version)
+        {
+            return Deserialize(s, version);
+        }
+
+        #endregion
     }
 
     public class CCompressIntList
@@ -200,11 +272,11 @@ namespace Hubble.Framework.DataStructure
             {
                 if (lastData == -1)
                 {
-                    CompressIntList.Add(data, tempBuf);
+                    DocumentPositionList.Add(data, tempBuf);
                 }
                 else
                 {
-                    CompressIntList.Add(data - lastData, tempBuf);
+                    DocumentPositionList.Add(data - lastData, tempBuf);
                 }
 
                 lastData = data;

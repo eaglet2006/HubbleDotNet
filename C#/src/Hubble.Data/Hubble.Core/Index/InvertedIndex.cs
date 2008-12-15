@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Core.Entity;
 using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Index
@@ -26,15 +27,15 @@ namespace Hubble.Core.Index
             bool _Hit = false;
             bool _IsRamIndex = true;
 
-            List<CompressIntList> _ListForReader = new List<CompressIntList>();
-            List<CompressIntList> _ListForWriter = new List<CompressIntList>();
+            List<DocumentPositionList> _ListForReader = new List<DocumentPositionList>();
+            List<DocumentPositionList> _ListForWriter = new List<DocumentPositionList>();
 
             long _WordCount;
 
             #endregion
 
             #region Private properties
-            private List<CompressIntList> ListForReader
+            private List<DocumentPositionList> ListForReader
             {
                 get
                 {
@@ -42,7 +43,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            private List<CompressIntList> ListForWriter
+            private List<DocumentPositionList> ListForWriter
             {
                 get
                 {
@@ -94,7 +95,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public CompressIntList this[int index]
+            public DocumentPositionList this[int index]
             {
                 get
                 {
@@ -209,7 +210,7 @@ namespace Hubble.Core.Index
                         TempPositionList.Sort();
                     }
 
-                    _ListForWriter.Add(new CompressIntList(TempPositionList, TempDocumentId));
+                    _ListForWriter.Add(new DocumentPositionList(TempPositionList, TempDocumentId));
                     _WordCount += TempPositionList.Count;
                 }
                 finally

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.IO;
+//using System.IO;
 using System.Diagnostics;
 
 namespace Hubble.Framework.IO
@@ -11,7 +11,7 @@ namespace Hubble.Framework.IO
     /// This stream only can be used for append.
     /// It can't be used for update!
     /// </summary>
-    public class LinkedSegmentFileStream : Stream, IDisposable
+    public class LinkedSegmentFileStream : System.IO.Stream, IDisposable
     {
         public struct SegmentPosition
         {
@@ -30,7 +30,7 @@ namespace Hubble.Framework.IO
             }
         }
 
-        private FileStream _FileStream;
+        private System.IO.FileStream _FileStream;
         private int _SegmentSize;
         private byte[] _CurrentSegment;
         private int _LastReadSegment; //The segment that be read last time
@@ -130,7 +130,7 @@ namespace Hubble.Framework.IO
 
             while (read_offset < count && len > 0)
             {
-                len += _FileStream.Read(buf, read_offset, count - read_offset);
+                len = _FileStream.Read(buf, read_offset, count - read_offset);
                 read_offset += len;
             }
         }
@@ -380,7 +380,7 @@ namespace Hubble.Framework.IO
 
             do
             {
-                _FileStream.Seek(nextSegment * SegmentSize + SegmentSize - 4, SeekOrigin.Begin);
+                _FileStream.Seek(nextSegment * SegmentSize + SegmentSize - 4, System.IO.SeekOrigin.Begin);
                 _FileStream.Read(buf, 0, 4);
 
                 oldSegment = nextSegment;
@@ -389,14 +389,14 @@ namespace Hubble.Framework.IO
                 //Only distrustful file can raise this exception
                 if (nextSegment > LastSegment)
                 {
-                    throw new IOException(string.Format("Distrustful data, next segment large then LastSegment!, from segment {0} nextSegment {1}",
+                    throw new System.IO.IOException(string.Format("Distrustful data, next segment large then LastSegment!, from segment {0} nextSegment {1}",
                         segment, nextSegment));
                 }
 
                 //If segment point to a free segment block, raise this exception
                 if (nextSegment == 0)
                 {
-                    throw new IOException(string.Format("Distrustful data, next segment is zero!, from segment {0}",
+                    throw new System.IO.IOException(string.Format("Distrustful data, next segment is zero!, from segment {0}",
                         segment));
                 }
             } while (nextSegment > 0);
@@ -541,7 +541,7 @@ namespace Hubble.Framework.IO
             return retCount;
         }
 
-        public override long Seek(long offset, SeekOrigin origin)
+        public override long Seek(long offset, System.IO.SeekOrigin origin)
         {
             throw new Exception("The method or operation is not supported.");
         }
@@ -600,7 +600,7 @@ namespace Hubble.Framework.IO
             if (relCount > 0)
             {
                 _FileStream.Write(_CurrentSegment, 0, relCount);
-                _FileStream.Seek(SegmentSize - 4 - relCount, SeekOrigin.Current);
+                _FileStream.Seek(SegmentSize - 4 - relCount, System.IO.SeekOrigin.Current);
                 _FileStream.Write(BitConverter.GetBytes(0 - relCount), 0, 4);
             }
 
