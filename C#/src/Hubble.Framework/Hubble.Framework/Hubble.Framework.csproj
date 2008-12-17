@@ -48,6 +48,7 @@
     <Compile Include="Serialization\BinSerialization.cs" />
     <Compile Include="Serialization\IMySerialization.cs" />
     <Compile Include="Serialization\MySerialization.cs" />
+    <Compile Include="Threading\MessageQueue.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

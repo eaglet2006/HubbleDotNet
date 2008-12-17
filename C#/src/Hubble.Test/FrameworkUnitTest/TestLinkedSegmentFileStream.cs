@@ -11,6 +11,7 @@ namespace FrameworkUnitTest
     /// <summary>
     /// Summary description for UnitTest1
     /// </summary>
+    [Ignore]
     [TestClass]
     public class TestLinkedSegmentFileStream
     {
