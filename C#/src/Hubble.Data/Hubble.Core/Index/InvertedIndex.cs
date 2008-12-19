@@ -225,7 +225,6 @@ namespace Hubble.Core.Index
 
         #endregion
 
-
         Dictionary<string, WordIndex> _WordTable = new Dictionary<string, WordIndex>();
         Dictionary<long, int> _DocumentWordCountTable = new Dictionary<long, int>();
         long _DocumentCount;

@@ -600,8 +600,8 @@ namespace Hubble.Framework.IO
             if (relCount > 0)
             {
                 _FileStream.Write(_CurrentSegment, 0, relCount);
-                _FileStream.Seek(SegmentSize - 4 - relCount, System.IO.SeekOrigin.Current);
-                _FileStream.Write(BitConverter.GetBytes(0 - relCount), 0, 4);
+                _FileStream.Seek(_SegmentSize * (CurSegment + 1) - 4 , System.IO.SeekOrigin.Begin);
+                _FileStream.Write(BitConverter.GetBytes(0 - CurPositionInSegment), 0, 4);
             }
 
         }
