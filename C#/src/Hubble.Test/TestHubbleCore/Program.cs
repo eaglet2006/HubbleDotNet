@@ -105,7 +105,7 @@ namespace TestHubbleCore
 
             for (int i = 0; i < 100000; i++)
             {
-                indexFile.AddWordPosition(new Hubble.Core.Store.IndexFile.WordPosition(i.ToString(), i, i+1, i));
+                //indexFile.AddWordPosition(new Hubble.Core.Store.IndexFile.WordPosition(i.ToString(), i, i+1, i));
             }
 
             int j = 0;

@@ -43,7 +43,7 @@ namespace Hubble.Core.Store
             {
                 get
                 {
-                    return Word.Length + 3 * sizeof(int);
+                    return Word.Length + 1 * sizeof(int);
                 }
             }
 
@@ -75,8 +75,8 @@ namespace Hubble.Core.Store
                 s.Write(BitConverter.GetBytes(Size), 0, sizeof(int));
                 
                 s.Write(BitConverter.GetBytes(FirstSegment), 0, sizeof(int));
-                s.Write(BitConverter.GetBytes(LastSegment), 0, sizeof(int));
-                s.Write(BitConverter.GetBytes(LastPositionInSegment), 0, sizeof(int));
+                //s.Write(BitConverter.GetBytes(LastSegment), 0, sizeof(int));
+                //s.Write(BitConverter.GetBytes(LastPositionInSegment), 0, sizeof(int));
 
                 byte[] wordBuf = Encoding.UTF8.GetBytes(Word);
                 s.Write(wordBuf, 0, wordBuf.Length);
@@ -95,11 +95,11 @@ namespace Hubble.Core.Store
                         Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
                         FirstSegment = BitConverter.ToInt32(buf, 0);
 
-                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                        LastSegment = BitConverter.ToInt32(buf, 0);
+                        //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                        //LastSegment = BitConverter.ToInt32(buf, 0);
                         
-                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                        LastPositionInSegment = BitConverter.ToInt32(buf, 0);
+                        //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                        //LastPositionInSegment = BitConverter.ToInt32(buf, 0);
                         
                         buf = new byte[size - (sizeof(int) * 3)];
                         Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, buf.Length);
@@ -198,6 +198,16 @@ namespace Hubble.Core.Store
             OpenIndex();
         }
 
+        private void AddWordPosition(WordPosition wordPosition)
+        {
+            _SegmentFileStream.Seek(_LastWordIndexPosition.Segment, _LastWordIndexPosition.PositionInSegment);
+
+            Hubble.Framework.Serialization.MySerialization<WordPosition>.Serialize(_SegmentFileStream, wordPosition);
+
+            _LastWordIndexPosition.Segment = _SegmentFileStream.CurSegment;
+            _LastWordIndexPosition.PositionInSegment = _SegmentFileStream.CurPositionInSegment;
+
+        }
 
         #endregion
 
@@ -274,20 +284,66 @@ namespace Hubble.Core.Store
 
             do
             {
-                result.Add(Hubble.Framework.Serialization.MySerialization<WordPosition>.Deserialize(m, new WordPosition()));
+                try
+                {
+                    WordPosition wordPosition = Hubble.Framework.Serialization.MySerialization<WordPosition>.Deserialize(m, new WordPosition());
+                    LinkedSegmentFileStream.SegmentPosition segPosition = _SegmentFileStream.GetLastSegmentNumberFrom(wordPosition.FirstSegment);
+
+                    wordPosition.LastSegment = segPosition.Segment;
+                    wordPosition.LastPositionInSegment = segPosition.PositionInSegment;
+
+                    result.Add(wordPosition);
+
+                }
+                catch
+                {
+                }
+
             } while (m.Position < m.Length);
 
             return result;
         }
 
-        public void AddWordPosition(WordPosition wordPosition)
+        public LinkedSegmentFileStream.SegmentPosition AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
         {
-            _SegmentFileStream.Seek(_LastWordIndexPosition.Segment, _LastWordIndexPosition.PositionInSegment);
+            int newSegment = _SegmentFileStream.AllocSegment();
 
-            Hubble.Framework.Serialization.MySerialization<WordPosition>.Serialize(_SegmentFileStream, wordPosition);
+            System.IO.MemoryStream m = new System.IO.MemoryStream();
 
-            _LastWordIndexPosition.Segment = _SegmentFileStream.CurSegment;
-            _LastWordIndexPosition.PositionInSegment = _SegmentFileStream.CurPositionInSegment;
+            foreach (Entity.DocumentPositionList doc in docList)
+            {
+                Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(m, doc);
+            }
+
+            m.Position = 0;
+
+            _SegmentFileStream.Write(m.ToArray(), 0, (int)m.Length);
+
+            AddWordPosition(new WordPosition(word, newSegment, 0, 0));
+
+            return new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
+                _SegmentFileStream.CurPositionInSegment);
+
+        }
+
+        public LinkedSegmentFileStream.SegmentPosition AddDocList(LinkedSegmentFileStream.SegmentPosition segPosition, 
+            List<Entity.DocumentPositionList> docList)
+        {
+            _SegmentFileStream.Seek(segPosition.Segment, segPosition.PositionInSegment);
+
+            System.IO.MemoryStream m = new System.IO.MemoryStream();
+
+            foreach (Entity.DocumentPositionList doc in docList)
+            {
+                Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(m, doc);
+            }
+
+            m.Position = 0;
+
+            _SegmentFileStream.Write(m.ToArray(), 0, (int)m.Length);
+
+            return new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
+                _SegmentFileStream.CurPositionInSegment);
 
         }
 
