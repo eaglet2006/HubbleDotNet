@@ -234,5 +234,76 @@ namespace TestHubbleCore
                 Console.WriteLine(e1.StackTrace);
             }
         }
+
+        public void Test(List<XmlNode> documentList, String fileName, bool rebuild)
+        {
+            if (rebuild)
+            {
+                TestFileIndexRebuild(documentList, fileName);
+            }
+
+        }
+
+        private void TestFileIndexRebuild(List<XmlNode> documentList, String fileName)
+        {
+            try
+            {
+                Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex(fileName, true);
+
+                KTAnalyzer ktAnalyzer = new KTAnalyzer();
+
+                Stopwatch watch = new Stopwatch();
+                ktAnalyzer.Stopwatch.Reset();
+                long docId = 0;
+                int totalChars = 0;
+                int contentCount = 0;
+                foreach (XmlNode node in documentList)
+                {
+                    String title = node.Attributes["Title"].Value;
+                    DateTime time = DateTime.Parse(node.Attributes["Time"].Value);
+                    String Url = node.Attributes["Url"].Value;
+                    String content = node.Attributes["Content"].Value;
+
+                    totalChars += content.Length;
+
+                    watch.Start();
+
+                    if (Global.Cfg.TestShortText)
+                    {
+                        for (int i = 0; i < content.Length / 100; i++)
+                        {
+                            invertedIndex.Index(content.Substring(i * 100, 100), docId++, ktAnalyzer);
+                        }
+                    }
+                    else
+                    {
+                        invertedIndex.Index(content, docId++, ktAnalyzer);
+                    }
+                    watch.Stop();
+                    contentCount++;
+
+                    if (contentCount == Global.Cfg.TestRows)
+                    {
+                        break;
+                    }
+                }
+
+                watch.Start();
+                watch.Stop();
+
+                long indexElapsedMilliseconds = watch.ElapsedMilliseconds - ktAnalyzer.Stopwatch.ElapsedMilliseconds;
+
+                Console.WriteLine(String.Format("Hubble.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒 索引时间{4}秒",
+                    docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
+                    ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000,
+                    indexElapsedMilliseconds / 1000 + "." + indexElapsedMilliseconds % 1000
+                    ));
+            }
+            catch (Exception e1)
+            {
+                Console.WriteLine(e1.Message);
+                Console.WriteLine(e1.StackTrace);
+            }
+        }
     }
 }

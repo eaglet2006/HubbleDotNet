@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 using Hubble.Core.Entity;
+using Hubble.Core.Store;
 using Hubble.Framework.DataStructure;
+using Hubble.Framework.IO;
 
 namespace Hubble.Core.Index
 {
@@ -30,6 +33,8 @@ namespace Hubble.Core.Index
             List<DocumentPositionList> _ListForReader = new List<DocumentPositionList>();
             List<DocumentPositionList> _ListForWriter = new List<DocumentPositionList>();
 
+            LinkedSegmentFileStream.SegmentPosition _LastPosition = new LinkedSegmentFileStream.SegmentPosition(-1, -1);
+
             long _WordCount;
 
             object _WaitLock = new object();
@@ -49,7 +54,10 @@ namespace Hubble.Core.Index
             {
                 get
                 {
-                    return _ListForWriter;
+                    lock (this)
+                    {
+                        return _ListForWriter;
+                    }
                 }
             }
 
@@ -64,7 +72,10 @@ namespace Hubble.Core.Index
             {
                 get
                 {
-                    return _Word;
+                    lock (_WaitLock)
+                    {
+                        return _Word;
+                    }
                 }
             }
 
@@ -75,13 +86,16 @@ namespace Hubble.Core.Index
             {
                 get
                 {
-                    if (_IsRamIndex)
+                    lock (_WaitLock)
                     {
-                        return ListForWriter.Count;
-                    }
-                    else
-                    {
-                        return ListForReader.Count;
+                        if (_IsRamIndex)
+                        {
+                            return ListForWriter.Count;
+                        }
+                        else
+                        {
+                            return ListForReader.Count;
+                        }
                     }
                 }
             }
@@ -93,7 +107,10 @@ namespace Hubble.Core.Index
             {
                 get
                 {
-                    return _WordCount;
+                    lock (_WaitLock)
+                    {
+                        return _WordCount;
+                    }
                 }
             }
 
@@ -101,16 +118,20 @@ namespace Hubble.Core.Index
             {
                 get
                 {
-                    if (_IsRamIndex)
+                    lock (_WaitLock)
                     {
-                        return ListForWriter[index];
-                    }
-                    else
-                    {
-                        return ListForReader[index];
+                        if (_IsRamIndex)
+                        {
+                            return ListForWriter[index];
+                        }
+                        else
+                        {
+                            return ListForReader[index];
+                        }
                     }
                 }
             }
+
 
             #endregion
 
@@ -123,25 +144,31 @@ namespace Hubble.Core.Index
 
             public long GetDocumentId(int index)
             {
-                if (_IsRamIndex)
+                lock (_WaitLock)
                 {
-                    return ListForWriter[index].DocumentId;
-                }
-                else
-                {
-                    return ListForReader[index].DocumentId;
+                    if (_IsRamIndex)
+                    {
+                        return ListForWriter[index].DocumentId;
+                    }
+                    else
+                    {
+                        return ListForReader[index].DocumentId;
+                    }
                 }
             }
 
             public long GetHitCount(int index)
             {
-                if (_IsRamIndex)
+                lock (_WaitLock)
                 {
-                    return ListForWriter[index].Count;
-                }
-                else
-                {
-                    return ListForReader[index].Count;
+                    if (_IsRamIndex)
+                    {
+                        return ListForWriter[index].Count;
+                    }
+                    else
+                    {
+                        return ListForReader[index].Count;
+                    }
                 }
             }
 
@@ -187,11 +214,40 @@ namespace Hubble.Core.Index
                 }
             }
 
+            internal LinkedSegmentFileStream.SegmentPosition LastPosition
+            {
+                get
+                {
+                    lock (_WaitLock)
+                    {
+                        return _LastPosition;
+                    }
+                }
+
+                set
+                {
+                    lock (_WaitLock)
+                    {
+                        _LastPosition = value;
+                    }
+                }
+            }
+
             #endregion
 
             #region internal methods
 
-            public void Wait(long docId)
+            internal List<DocumentPositionList> GetDocListForWriter()
+            {
+                lock (this)
+                {
+                    List<DocumentPositionList> listForWriter = _ListForWriter;
+                    _ListForWriter = new List<DocumentPositionList>();
+                    return listForWriter;
+                }
+            }
+
+            internal void Wait(long docId)
             {
                 while (Hit && TempDocumentId != docId)
                 {
@@ -262,7 +318,7 @@ namespace Hubble.Core.Index
         private Dictionary<string, WordIndex> _WordTable = new Dictionary<string, WordIndex>();
         private Dictionary<long, int> _DocumentWordCountTable = new Dictionary<long, int>();
         private long _DocumentCount;
-        private string _FileName;
+        private string _FileName = null;
         private Store.IndexFileProxy _IndexFileProxy;
 
         private bool Closed
@@ -308,13 +364,6 @@ namespace Hubble.Core.Index
             {
                 return _FileName;
             }
-
-            set
-            {
-                _FileName = value;
-
-                _IndexFileProxy = new Hubble.Core.Store.IndexFileProxy(FileName);
-            }
         }
 
         #endregion
@@ -331,28 +380,92 @@ namespace Hubble.Core.Index
             }
         }
 
+        private void OnAddDocListFinished(object sender, Store.IndexFileProxy.AddDocListFinishedEventArgs e)
+        {
+            e.WordIndex.LastPosition = e.LastSegmentPosition;
+        }
+
         private void DoCollect()
         {
+            Stopwatch stopwatch = new Stopwatch();
+
             while (!Closed)
             {
-                System.Threading.Thread.Sleep(1000);
+                if (stopwatch.ElapsedMilliseconds < 1000)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
+                else
+                {
+                    GC.Collect();
+                    Console.WriteLine("GC.Collect");
+                }
+
+                stopwatch.Reset();
+                stopwatch.Start();
 
                 //Do Collect
 
                 foreach (WordIndex wordIndex in GetWordTableNeedCollectDict().Values)
                 {
+                    List<DocumentPositionList> docList = wordIndex.GetDocListForWriter();
 
+                    if (docList != null)
+                    {
+                        if (wordIndex.LastPosition.Segment < 0)
+                        {
+                            //Sync call
+                            wordIndex.LastPosition = _IndexFileProxy.AddWordPositionAndDocumentPositionList(wordIndex.Word, docList);
+                        }
+                        else
+                        {
+                            //Async call
+                            _IndexFileProxy.AddDocumentPositionList(wordIndex.LastPosition, wordIndex, docList);
+                        }
+                    }
+                    
                 }
+
+                stopwatch.Stop();
             }
         }
 
-        #endregion
-
-        public InvertedIndex()
+        private void InitCollectThread()
         {
             _CollectThread = new System.Threading.Thread(new System.Threading.ThreadStart(DoCollect));
             _CollectThread.IsBackground = true;
             _CollectThread.Start();
+        }
+
+        private void InitFileStore(string fileName, bool rebuild)
+        {
+            _FileName = fileName;
+
+            if (rebuild)
+            {
+                if (System.IO.File.Exists(fileName))
+                {
+                    System.IO.File.Delete(fileName);
+                }
+            }
+
+            _IndexFileProxy = new IndexFileProxy(fileName);
+            _IndexFileProxy.AddDocListFinishedEventHandler +=
+                new EventHandler<IndexFileProxy.AddDocListFinishedEventArgs>(OnAddDocListFinished);
+
+        }
+
+        #endregion
+
+        public InvertedIndex(string fileName, bool rebuild)
+        {
+            InitFileStore(fileName, rebuild);
+            InitCollectThread();
+        }
+
+        public InvertedIndex()
+        {
+            //InitCollectThread();
         }
 
 
@@ -448,6 +561,15 @@ namespace Hubble.Core.Index
             foreach (WordIndex wordIndex in hitIndexes)
             {
                 wordIndex.Index();
+
+                lock (this)
+                {
+                    if (!_WordTableNeedCollectDict.ContainsKey(wordIndex.Word))
+                    {
+                        _WordTableNeedCollectDict.Add(wordIndex.Word, wordIndex);
+                    }
+                }
+ 
             }
         }
 

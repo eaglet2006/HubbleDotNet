@@ -12,6 +12,15 @@ namespace Hubble.Core.Store
         public class AddDocListFinishedEventArgs : EventArgs
         {
             private LinkedSegmentFileStream.SegmentPosition _LastSegmentPosition;
+            private Hubble.Core.Index.InvertedIndex.WordIndex _WordIndex;
+
+            public Hubble.Core.Index.InvertedIndex.WordIndex WordIndex
+            {
+                get
+                {
+                    return _WordIndex;
+                }
+            }
 
             public LinkedSegmentFileStream.SegmentPosition LastSegmentPosition
             {
@@ -21,8 +30,10 @@ namespace Hubble.Core.Store
                 }
             }
 
-            public AddDocListFinishedEventArgs(LinkedSegmentFileStream.SegmentPosition position)
+            public AddDocListFinishedEventArgs(LinkedSegmentFileStream.SegmentPosition position,
+                Hubble.Core.Index.InvertedIndex.WordIndex wordIndex)
             {
+                _WordIndex = wordIndex;
                 _LastSegmentPosition = position;
             }
         }
@@ -68,11 +79,11 @@ namespace Hubble.Core.Store
         }
 
         public void AddDocumentPositionList(LinkedSegmentFileStream.SegmentPosition segPosition, 
-            List<Entity.DocumentPositionList> docList)
+            Hubble.Core.Index.InvertedIndex.WordIndex wordIndex, List<Entity.DocumentPositionList> docList)
         {
             LinkedSegmentFileStream.SegmentPosition position = _IndexFile.AddDocList(segPosition, docList);
 
-            OnAddDocListFinished(new AddDocListFinishedEventArgs(position));
+            OnAddDocListFinished(new AddDocListFinishedEventArgs(position, wordIndex));
 
         }
 

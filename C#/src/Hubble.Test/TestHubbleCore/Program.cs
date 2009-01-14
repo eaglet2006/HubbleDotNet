@@ -32,7 +32,15 @@ namespace TestHubbleCore
                 if (Global.Cfg.TestHubble)
                 {
                     TestHubble testHubble = new TestHubble();
-                    testHubble.Test(documentList);
+
+                    if (Global.Cfg.TestFile)
+                    {
+                        testHubble.Test(documentList, "test.idx", Global.Cfg.TestRebuild);
+                    }
+                    else
+                    {
+                        testHubble.Test(documentList);
+                    }
                 }
 
                 GC.Collect();
@@ -147,8 +155,8 @@ namespace TestHubbleCore
 
         static void Main(string[] args)
         {
-            TestIndexFile();
-            //SystemTest();
+            //TestIndexFile();
+            SystemTest();
         }
     }
 

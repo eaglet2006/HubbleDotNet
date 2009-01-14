@@ -10,6 +10,8 @@ namespace TestHubbleCore
     [ConfigurationPattern(TPattern.INI, "Test")]
     internal class Config : Configuration
     {
+        private bool _TestFile = false;
+        private bool _TestRebuild = true;
         private bool _TestHubble;
         private bool _TestLucene;
         private int _TestRows;
@@ -25,6 +27,32 @@ namespace TestHubbleCore
         }
 
         #region Public Propertys
+
+        public bool TestFile
+        {
+            get
+            {
+                return _TestFile;
+            }
+
+            set
+            {
+                _TestFile = value;
+            }
+        }
+
+        public bool TestRebuild
+        {
+            get
+            {
+                return _TestRebuild;
+            }
+
+            set
+            {
+                _TestRebuild = value;
+            }
+        }
 
         public bool TestHubble
         {

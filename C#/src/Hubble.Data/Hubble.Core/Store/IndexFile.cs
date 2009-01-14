@@ -319,11 +319,12 @@ namespace Hubble.Core.Store
 
             _SegmentFileStream.Write(m.ToArray(), 0, (int)m.Length);
 
-            AddWordPosition(new WordPosition(word, newSegment, 0, 0));
-
-            return new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
+            LinkedSegmentFileStream.SegmentPosition retVal = new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
                 _SegmentFileStream.CurPositionInSegment);
 
+            AddWordPosition(new WordPosition(word, newSegment, 0, 0));
+
+            return retVal;
         }
 
         public LinkedSegmentFileStream.SegmentPosition AddDocList(LinkedSegmentFileStream.SegmentPosition segPosition, 
