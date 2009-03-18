@@ -20,8 +20,8 @@ namespace TestHubbleCore
         {
             try
             {
-                Hubble.Core.Store.IndexFile IndexFile = new Hubble.Core.Store.IndexFile();
-                IndexFile.Create("test.idx");
+                //Hubble.Core.Store.IndexFile IndexFile = new Hubble.Core.Store.IndexFile();
+                //IndexFile.Create("test.idx");
 
                 Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex();
 
@@ -235,20 +235,20 @@ namespace TestHubbleCore
             }
         }
 
-        public void Test(List<XmlNode> documentList, String fileName, bool rebuild)
+        public void Test(List<XmlNode> documentList, String fieldName, bool rebuild)
         {
             if (rebuild)
             {
-                TestFileIndexRebuild(documentList, fileName);
+                TestFileIndexRebuild(documentList, fieldName);
             }
 
         }
 
-        private void TestFileIndexRebuild(List<XmlNode> documentList, String fileName)
+        private void TestFileIndexRebuild(List<XmlNode> documentList, String fieldName)
         {
             try
             {
-                Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex(fileName, true);
+                Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex(Environment.CurrentDirectory, fieldName, true);
 
                 KTAnalyzer ktAnalyzer = new KTAnalyzer();
 
@@ -282,6 +282,16 @@ namespace TestHubbleCore
                     watch.Stop();
                     contentCount++;
 
+                    if (contentCount % 100 == 0)
+                    {
+                        Console.WriteLine(contentCount);
+                    }
+
+                    if (contentCount % 5000 == 0)
+                    {
+                        invertedIndex.FinishIndex();
+                    }
+
                     if (contentCount == Global.Cfg.TestRows)
                     {
                         break;
@@ -290,6 +300,8 @@ namespace TestHubbleCore
 
                 watch.Start();
                 watch.Stop();
+
+                invertedIndex.FinishIndex();
 
                 long indexElapsedMilliseconds = watch.ElapsedMilliseconds - ktAnalyzer.Stopwatch.ElapsedMilliseconds;
 

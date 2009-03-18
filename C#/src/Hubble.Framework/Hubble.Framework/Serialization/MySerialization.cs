@@ -19,6 +19,11 @@ namespace Hubble.Framework.Serialization
 
         static public T Deserialize(Stream s, IMySerialization<T> iMySerialization)
         {
+            if (s.Length - s.Position < sizeof(Int16))
+            {
+                return default(T);
+            }
+
             byte[] buf = new byte[sizeof(Int16)];
 
             s.Read(buf, 0, sizeof(Int16));

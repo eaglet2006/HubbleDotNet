@@ -22,7 +22,7 @@ namespace Hubble.Core.Query
         {
             private int _CurPosition;
             private int _CurIndex;
-            private Index.InvertedIndex.WordIndex _WordIndex;
+            private Index.InvertedIndex.WordIndexReader _WordIndex;
             private int _OldIndexForDoc = -1;
             private long _CurDocmentId;
 
@@ -92,7 +92,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public Index.InvertedIndex.WordIndex WordIndex
+            public Index.InvertedIndex.WordIndexReader WordIndex
             {
                 get
                 {
@@ -100,7 +100,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public WordIndexForQuery(Index.InvertedIndex.WordIndex wordIndex)
+            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex)
             {
                 _CurPositionValues = null;
 
@@ -590,7 +590,7 @@ namespace Hubble.Core.Query
 
                     if (!_WordIndexDict.ContainsKey(wordInfo.Word))
                     {
-                        Hubble.Core.Index.InvertedIndex.WordIndex wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
+                        Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
 
                         if (wordIndex == null)
                         {

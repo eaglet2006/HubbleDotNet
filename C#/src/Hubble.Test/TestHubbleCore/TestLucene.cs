@@ -21,6 +21,86 @@ namespace TestHubbleCore
     {
         public string NewsXml = @"C:\ApolloWorkFolder\test\laboratory\Opensource\KTDictSeg\V1.4.01\Release\news.xml";
 
+        private void TestFileIndexRebuild(List<XmlNode> documentList, String fileName)
+        {
+            try
+            {
+                Stopwatch watch = new Stopwatch();
+                Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration = 0;
+
+                DateTime old = DateTime.Now;
+                int count = 0;
+
+                long totalChars = 0;
+                Index.Rebuild(Index.INDEX_DIR);
+                Index.MaxMergeFactor = 100;
+                Index.MinMergeDocs = 100;
+                long docId = 0;
+                foreach (XmlNode node in documentList)
+                {
+                    String content = node.Attributes["Content"].Value;
+
+                    totalChars += content.Length;
+
+                    watch.Start();
+
+                    if (Global.Cfg.TestShortText)
+                    {
+                        for (int i = 0; i < content.Length / 100; i++)
+                        {
+                            Index.IndexString(content.Substring(i * 100, 100));
+                            docId++;
+                        }
+                    }
+                    else
+                    {
+                        Index.IndexString(content);
+                        docId++;
+                    }
+
+
+                    watch.Stop();
+
+                    count++;
+
+                    if (count >= Global.Cfg.TestRows)
+                    {
+                        break;
+                    }
+                }
+
+                watch.Start();
+                Index.Close();
+
+                watch.Stop();
+
+                long indexElapsedMilliseconds = watch.ElapsedMilliseconds - Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration;
+
+                Console.WriteLine(String.Format("Lucene.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒 索引时间{4}秒",
+                    docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
+                    Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration / 1000 + "." +
+                    Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer.Duration % 1000,
+                    indexElapsedMilliseconds / 1000 + "." + indexElapsedMilliseconds % 1000
+                    ));
+
+
+            }
+            catch (Exception e1)
+            {
+                Console.WriteLine(e1.Message);
+            }
+
+        }
+
+        public void Test(List<XmlNode> documentList, String fileName, bool rebuild)
+        {
+            if (rebuild)
+            {
+                TestFileIndexRebuild(documentList, fileName);
+            }
+
+        }
+
         public void Test(List<XmlNode> documentList)
         {
             try
@@ -32,7 +112,7 @@ namespace TestHubbleCore
                 int count = 0;
 
                 long totalChars = 0;
-                Index.CreateIndex(Index.INDEX_DIR);
+                Index.CreateIndex(null);
                 Index.MaxMergeFactor = 100;
                 Index.MinMergeDocs = 100;
                 long docId = 0;

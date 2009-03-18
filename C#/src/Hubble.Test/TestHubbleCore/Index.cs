@@ -94,8 +94,15 @@ namespace SimpleSearch
             
             try
             {
-                //writer = new RAMDirectory
-                writer = new IndexWriter(_RamDirectory, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+                if (indexDir != null)
+                {
+                    writer = new IndexWriter(indexDir, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+                }
+                else
+                {
+                    //writer = new RAMDirectory
+                    writer = new IndexWriter(_RamDirectory, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+                }
             }
             catch
             {
@@ -108,7 +115,14 @@ namespace SimpleSearch
 
         public static void Rebuild(String indexDir)
         {
-            writer = new IndexWriter(_RamDirectory, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+            if (indexDir != null)
+            {
+                writer = new IndexWriter(indexDir, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+            }
+            else
+            {
+                writer = new IndexWriter(_RamDirectory, new Lucene.Net.Analysis.KTDictSeg.KTDictSegAnalyzer(), true);
+            }
             writer.Optimize();
             writer.Close();
         }
@@ -127,6 +141,7 @@ namespace SimpleSearch
             //doc.Add(field);
             Field field = new Field("contents", content, Field.Store.NO, Field.Index.TOKENIZED);
             doc.Add(field);
+
 
             writer.AddDocument(doc);
 

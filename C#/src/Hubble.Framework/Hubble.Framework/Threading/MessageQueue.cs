@@ -223,6 +223,19 @@ namespace Hubble.Framework.Threading
             }
         }
 
+        protected OnMessage OnMessageEvent
+        {
+            get
+            {
+                return _OnMessageEvent;
+            }
+
+            set
+            {
+                _OnMessageEvent = value;
+            }
+        }
+
         private System.Threading.ManualResetEvent _CloseEvent = new System.Threading.ManualResetEvent(false);
 
         #endregion
@@ -355,7 +368,15 @@ namespace Hubble.Framework.Threading
 
         #region Constructor
 
+        public MessageQueue()
+        {
+            _Sema = new System.Threading.Semaphore(0, int.MaxValue);
+            _Thread = new System.Threading.Thread(new System.Threading.ThreadStart(MessageProc));
+            _Thread.IsBackground = true;
+        }
+
         public MessageQueue(OnMessage onMessageEvent)
+            :this()
         {
             if (onMessageEvent == null)
             {
@@ -363,9 +384,6 @@ namespace Hubble.Framework.Threading
             }
 
             _OnMessageEvent = onMessageEvent;
-            _Sema = new System.Threading.Semaphore(0, int.MaxValue);
-            _Thread = new System.Threading.Thread(new System.Threading.ThreadStart(MessageProc));
-            _Thread.IsBackground = true;
         }
 
         #endregion

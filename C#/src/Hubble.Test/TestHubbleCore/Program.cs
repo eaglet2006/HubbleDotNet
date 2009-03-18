@@ -18,6 +18,11 @@ namespace TestHubbleCore
 
             try
             {
+                if (!System.IO.Directory.Exists(SimpleSearch.Index.INDEX_DIR))
+                {
+                    System.IO.Directory.CreateDirectory(SimpleSearch.Index.INDEX_DIR);
+                }
+
                 string NewsXml = Global.Cfg.NewsXmlFilePath;
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(NewsXml);
@@ -35,7 +40,7 @@ namespace TestHubbleCore
 
                     if (Global.Cfg.TestFile)
                     {
-                        testHubble.Test(documentList, "test.idx", Global.Cfg.TestRebuild);
+                        testHubble.Test(documentList, "test", Global.Cfg.TestRebuild);
                     }
                     else
                     {
@@ -48,7 +53,15 @@ namespace TestHubbleCore
                 if (Global.Cfg.TestLucene)
                 {
                     TestLucene testLucene = new TestLucene();
-                    testLucene.Test(documentList);
+
+                    if (Global.Cfg.TestFile)
+                    {
+                        testLucene.Test(documentList, "test.idx", Global.Cfg.TestRebuild);
+                    }
+                    else
+                    {
+                        testLucene.Test(documentList);
+                    }
                 }
 
                 while (true)
@@ -100,62 +113,8 @@ namespace TestHubbleCore
             }
         }
 
-        static private void TestIndexFile()
-        {
-            Hubble.Core.Store.IndexFile indexFile = new Hubble.Core.Store.IndexFile();
-
-            indexFile.CreateNew("Test.DB", new Hubble.Core.Store.IndexHead());
-
-            foreach (Hubble.Core.Store.IndexFile.WordPosition wordPosition in indexFile.GetWordPositionList())
-            {
-                Console.WriteLine(wordPosition);
-            }
-
-            for (int i = 0; i < 100000; i++)
-            {
-                //indexFile.AddWordPosition(new Hubble.Core.Store.IndexFile.WordPosition(i.ToString(), i, i+1, i));
-            }
-
-            int j = 0;
-
-            foreach (Hubble.Core.Store.IndexFile.WordPosition wordPosition in indexFile.GetWordPositionList())
-            {
-                if (wordPosition.Word != j.ToString())
-                {
-                    Console.WriteLine(j);
-                }
-
-                if (wordPosition.FirstSegment != j)
-                {
-                    Console.WriteLine(j);
-                }
-
-                if (wordPosition.LastSegment != j + 1)
-                {
-                    Console.WriteLine(j);
-                }
-
-                if (wordPosition.LastPositionInSegment != j)
-                {
-                    Console.WriteLine(j);
-                }
-
-                j++;
-            }
-
-            if (j != 100000)
-            {
-                Console.WriteLine(j);
-            }
-
-            indexFile.Close();
-
-            System.IO.File.Delete("Test.DB");
-        }
-
         static void Main(string[] args)
         {
-            //TestIndexFile();
             SystemTest();
         }
     }

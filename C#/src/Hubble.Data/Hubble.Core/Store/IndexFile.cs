@@ -6,6 +6,11 @@ using Hubble.Framework.IO;
 
 namespace Hubble.Core.Store
 {
+    public interface IIndexFile
+    {
+        void ImportWordFilePositionList(List<IndexFile.WordFilePosition> wordFilePositionList);
+    }
+
     /// <summary>
     /// Index file, Store one field's full text index
     /// File format:
@@ -16,6 +21,55 @@ namespace Hubble.Core.Store
     /// </summary>
     public class IndexFile 
     {
+        public struct IndexFileInfo : IComparable<IndexFileInfo>
+        {
+            public int Serial;
+
+            public long Size;
+
+            public IndexFileInfo(int serial, long size)
+            {
+                Serial = serial;
+                Size = size;
+            }
+
+            #region IComparable<IndexFileInfo> Members
+
+            public int CompareTo(IndexFileInfo other)
+            {
+                return Serial.CompareTo(other.Serial);
+            }
+
+            #endregion
+        }
+
+        public struct FilePosition
+        {
+            public int Serial;
+            public long Position;
+
+            public FilePosition(int serial, long position)
+            {
+                Serial = serial;
+                Position = position;
+            }
+        }
+
+        /// <summary>
+        /// For the hash table from word to position
+        /// </summary>
+        public struct WordFilePosition
+        {
+            public string Word;
+            public FilePosition Position;
+
+            public WordFilePosition(string word, int serial, long position)
+            {
+                Word = word;
+                Position = new FilePosition(serial, position);
+            }
+        }
+
         public struct WordPosition : Hubble.Framework.Serialization.IMySerialization<WordPosition>
         {
             /// <summary>
@@ -114,104 +168,156 @@ namespace Hubble.Core.Store
             #endregion
         }
 
+        const int MaxDocCountInSmallIndex = 5;
+
         #region Private fields
 
-        private string _FilePath;
-        private IndexHead _Head;
-        private LinkedSegmentFileStream _SegmentFileStream;
-        private LinkedSegmentFileStream.SegmentPosition _LastWordIndexPosition;
+        private string _FieldName;
+
+        private IndexWriter _IndexWriter;
+        private int _MaxSerial = 0;
+
+        private List<WordFilePosition> _WordFilePositionList = null;
+
+        private List<IndexFileInfo> _IndexFileList = new List<IndexFileInfo>();
+
+        private IIndexFile _IndexFileInterface;
+        private string _Path;
+
         #endregion
 
         #region Public properties
 
-        public string FilePath
+
+        public IIndexFile IndexFileInterface
         {
             get
             {
-                return _FilePath;
+                return _IndexFileInterface;
             }
-
-            set
+        }
+        /// <summary>
+        /// *.idx for normal index
+        /// </summary>
+        public string FieldName
+        {
+            get
             {
-                _FilePath = value;
+                return _FieldName;
             }
         }
 
-        public IndexHead Head
+        public List<WordFilePosition> WordFilePositionList
         {
             get
             {
-                if (_Head == null)
-                {
-                    _Head = new IndexHead();
-                }
-
-                return _Head;
+                return _WordFilePositionList;
             }
+        }
+
+        public void ClearWordFilePositionList()
+        {
+            _WordFilePositionList = new List<WordFilePosition>();
         }
 
         #endregion
 
         #region Private methods
 
-        private void OpenIndex()
+        private void LoadIndexFiles(bool createNew)
         {
-            using (System.IO.FileStream fs = new System.IO.FileStream(FilePath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
-            {
-                object head;
-                Hubble.Framework.Serialization.BinSerialization.DeserializeBinary(fs, out head);
-                _Head = head as IndexHead;
-            }
+            string[] files = System.IO.Directory.GetFiles(_Path, "????" + FieldName + ".hdx");
 
-            _SegmentFileStream = new LinkedSegmentFileStream(FilePath, Head.SegmentSize, Head.AutoIncreaseBytes, Head.ReserveSegments);
-
-            try
+            foreach (string file in files)
             {
-                _LastWordIndexPosition = _SegmentFileStream.GetLastSegmentNumberFrom(1);
-            }
-            catch (System.IO.IOException ioe)
-            {
-                if (ioe.Message == "Distrustful data, next segment is zero!, from segment 1")
+                try
                 {
-                    if (_SegmentFileStream.CurSegment == 1)
+                    string fileName = System.IO.Path.GetFileName(file);
+
+                    int serial = int.Parse(fileName.Substring(0, 4));
+
+                    string hFile = Path.AppendDivision(_Path, '\\') +
+                        string.Format("{0:D4}{1}.hdx", serial, FieldName);
+                    string iFile = Path.AppendDivision(_Path, '\\') +
+                        string.Format("{0:D4}{1}.idx", serial, FieldName);
+
+                    if (!System.IO.File.Exists(iFile))
                     {
-                        _LastWordIndexPosition = new LinkedSegmentFileStream.SegmentPosition(1, 0);
+                        System.IO.File.Delete(hFile);
+                    }
+                    else if (File.GetFileLength(hFile) == 0 || File.GetFileLength(iFile) == 0)
+                    {
+                        try
+                        {
+                            System.IO.File.Delete(hFile);
+                            System.IO.File.Delete(iFile);
+                        }
+                        catch (Exception e)
+                        {
+                        }
                     }
                     else
                     {
-                        throw ioe;
+                        if (createNew)
+                        {
+                            try
+                            {
+                                System.IO.File.Delete(hFile);
+                                System.IO.File.Delete(iFile);
+                            }
+                            catch (Exception e)
+                            {
+                            }
+                        }
+                        else
+                        {
+                            _IndexFileList.Add(new IndexFileInfo(serial, File.GetFileLength(iFile)));
+                        }
                     }
                 }
+                catch(Exception e)
+                {
+
+                }
             }
-        }
 
-        private void CreateNewIndex()
-        {
-            _SegmentFileStream = new LinkedSegmentFileStream(FilePath, true, Head.SegmentSize, Head.AutoIncreaseBytes, Head.ReserveSegments);
-            _SegmentFileStream.Close();
+            _IndexFileList.Sort();
 
-            using (System.IO.FileStream fs = new System.IO.FileStream(FilePath, System.IO.FileMode.Open, System.IO.FileAccess.ReadWrite))
+            foreach (IndexFileInfo fi in _IndexFileList)
             {
-                Hubble.Framework.Serialization.BinSerialization.SerializeBinary(this.Head, fs);
+                using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName))
+                {
+                    IndexFileInterface.ImportWordFilePositionList(ir.GetWordFilePositionList());
+                }
             }
 
-            OpenIndex();
+            if (_IndexFileList.Count == 0)
+            {
+                _MaxSerial = 0;
+            }
+            else
+            {
+                _MaxSerial = _IndexFileList[_IndexFileList.Count - 1].Serial + 1;
+            }
         }
 
-        private void AddWordPosition(WordPosition wordPosition)
+        private void CreateIndexFile()
         {
-            _SegmentFileStream.Seek(_LastWordIndexPosition.Segment, _LastWordIndexPosition.PositionInSegment);
+            _IndexWriter = new IndexWriter(_MaxSerial, _Path, FieldName);
 
-            Hubble.Framework.Serialization.MySerialization<WordPosition>.Serialize(_SegmentFileStream, wordPosition);
-
-            _LastWordIndexPosition.Segment = _SegmentFileStream.CurSegment;
-            _LastWordIndexPosition.PositionInSegment = _SegmentFileStream.CurPositionInSegment;
-
+            _WordFilePositionList = new List<WordFilePosition>();
         }
 
         #endregion
 
+
         #region Public methods
+
+        public IndexFile(string path, IIndexFile indexFileInterface)
+        {
+            _IndexFileInterface = indexFileInterface;
+            _Path = path;
+        }
 
         /// <summary>
         /// Create file
@@ -220,132 +326,108 @@ namespace Hubble.Core.Store
         /// if createNew is ture, delete index file and create a new file
         /// else if FilePath exist, open the index
         /// </param>
-        public void Create(bool createNew)
+        public void Create(string fieldName, bool createNew)
         {
-            //If file does not exist, create new
-            if (!System.IO.File.Exists(FilePath))
-            {
-                createNew = true;
-            }
+            _FieldName = fieldName;
 
-            if (createNew)
-            {
-                CreateNewIndex();
-            }
-            else
-            {
-                OpenIndex();
-            }
+            LoadIndexFiles(createNew);
+
+            CreateIndexFile();
         }
 
-        public void Create(string filePath)
+        public void Create(string fieldName)
         {
-            _FilePath = filePath;
-            Create(false);
-        }
-
-        public void CreateNew(string filePath, IndexHead head)
-        {
-            _Head = head;
-            _FilePath = filePath;
-            Create(true);
+            Create(fieldName, false);
         }
 
         public void Close()
         {
-            if (_SegmentFileStream != null)
-            {
-                _SegmentFileStream.Close();
-                _SegmentFileStream = null;
-            }
         }
 
         public List<WordPosition> GetWordPositionList()
         {
             List<WordPosition> result = new List<WordPosition>();
 
-            _SegmentFileStream.Seek(1);
+            //_SegmentFileStream.Seek(1);
 
-            byte[] buf = new byte[Head.SegmentSize - 4];
-            System.IO.MemoryStream m = new System.IO.MemoryStream(2048);
+            //byte[] buf = new byte[Head.SegmentSize - 4];
+            //System.IO.MemoryStream m = new System.IO.MemoryStream(2048);
 
-            int len = 0;
-            while ((len = _SegmentFileStream.Read(buf, 0, buf.Length)) > 0)
-            {
-                m.Write(buf, 0, len);
-            }
+            //int len = 0;
+            //while ((len = _SegmentFileStream.Read(buf, 0, buf.Length)) > 0)
+            //{
+            //    m.Write(buf, 0, len);
+            //}
 
-            if (m.Length == 0)
-            {
-                return result;
-            }
+            //if (m.Length == 0)
+            //{
+            //    return result;
+            //}
 
-            m.Position = 0;
+            //m.Position = 0;
 
-            do
-            {
-                try
-                {
-                    WordPosition wordPosition = Hubble.Framework.Serialization.MySerialization<WordPosition>.Deserialize(m, new WordPosition());
-                    LinkedSegmentFileStream.SegmentPosition segPosition = _SegmentFileStream.GetLastSegmentNumberFrom(wordPosition.FirstSegment);
+            //do
+            //{
+            //    try
+            //    {
+            //        WordPosition wordPosition = Hubble.Framework.Serialization.MySerialization<WordPosition>.Deserialize(m, new WordPosition());
+            //        LinkedSegmentFileStream.SegmentPosition segPosition = _SegmentFileStream.GetLastSegmentNumberFrom(wordPosition.FirstSegment);
 
-                    wordPosition.LastSegment = segPosition.Segment;
-                    wordPosition.LastPositionInSegment = segPosition.PositionInSegment;
+            //        wordPosition.LastSegment = segPosition.Segment;
+            //        wordPosition.LastPositionInSegment = segPosition.PositionInSegment;
 
-                    result.Add(wordPosition);
+            //        result.Add(wordPosition);
 
-                }
-                catch
-                {
-                }
+            //    }
+            //    catch
+            //    {
+            //    }
 
-            } while (m.Position < m.Length);
+            //} while (m.Position < m.Length);
 
             return result;
         }
 
-        public LinkedSegmentFileStream.SegmentPosition AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
+        public void AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
         {
-            int newSegment = _SegmentFileStream.AllocSegment();
-
-            System.IO.MemoryStream m = new System.IO.MemoryStream();
-
-            foreach (Entity.DocumentPositionList doc in docList)
-            {
-                Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(m, doc);
-            }
-
-            m.Position = 0;
-
-            _SegmentFileStream.Write(m.ToArray(), 0, (int)m.Length);
-
-            LinkedSegmentFileStream.SegmentPosition retVal = new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
-                _SegmentFileStream.CurPositionInSegment);
-
-            AddWordPosition(new WordPosition(word, newSegment, 0, 0));
-
-            return retVal;
+            _WordFilePositionList.Add(new WordFilePosition(word, _MaxSerial, _IndexWriter.AddWordAndDocList(word, docList)));
         }
 
         public LinkedSegmentFileStream.SegmentPosition AddDocList(LinkedSegmentFileStream.SegmentPosition segPosition, 
             List<Entity.DocumentPositionList> docList)
         {
-            _SegmentFileStream.Seek(segPosition.Segment, segPosition.PositionInSegment);
+            return new LinkedSegmentFileStream.SegmentPosition();
+        }
 
-            System.IO.MemoryStream m = new System.IO.MemoryStream();
+        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word, List<FilePosition> filePositionList)
+        {
+            List<Entity.DocumentPositionList> docList = new List<Hubble.Core.Entity.DocumentPositionList>();
 
-            foreach (Entity.DocumentPositionList doc in docList)
+            foreach (FilePosition filePosition in filePositionList)
             {
-                Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(m, doc);
+                using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName))
+                {
+                    foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position))
+                    {
+                        docList.Add(dList);
+                    }
+                }
             }
 
-            m.Position = 0;
+            return new InvertedIndex.WordIndexReader(word, docList);
+        }
 
-            _SegmentFileStream.Write(m.ToArray(), 0, (int)m.Length);
+        /// <summary>
+        /// Collect forcedly
+        /// </summary>
+        public void Collect()
+        {
+            _IndexWriter.Close();
+            
+            _MaxSerial++;
 
-            return new LinkedSegmentFileStream.SegmentPosition(_SegmentFileStream.CurSegment,
-                _SegmentFileStream.CurPositionInSegment);
-
+            _IndexWriter = new IndexWriter(_MaxSerial, Environment.CurrentDirectory,
+                System.IO.Path.GetFileNameWithoutExtension(_FieldName));
         }
 
         #endregion

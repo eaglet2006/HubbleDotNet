@@ -20,7 +20,7 @@ namespace Hubble.Core.Query
             private long _CurDocmentId;
             private int _CurWordCount;
 
-            private Index.InvertedIndex.WordIndex _WordIndex;
+            private Index.InvertedIndex.WordIndexReader _WordIndex;
             private int _Rank;
             private int _Norm_d_t;
             private int _Idf_t;
@@ -117,7 +117,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public Index.InvertedIndex.WordIndex WordIndex
+            public Index.InvertedIndex.WordIndexReader WordIndex
             {
                 get
                 {
@@ -125,7 +125,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public WordIndexForQuery(Index.InvertedIndex.WordIndex wordIndex, long totalDocuments)
+            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex, long totalDocuments)
             {
                 _OldIndexForDoc = -1;
                 _OldIndexForWordCount = -1;
@@ -297,7 +297,7 @@ namespace Hubble.Core.Query
                     if (!wordIndexDict.ContainsKey(wordInfo.Word))
                     {
                      
-                        Hubble.Core.Index.InvertedIndex.WordIndex wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
+                        Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
 
                         if (wordIndex == null)
                         {

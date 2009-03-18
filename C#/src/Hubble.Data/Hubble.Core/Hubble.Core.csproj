@@ -54,6 +54,8 @@
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
     <Compile Include="Store\IndexHead.cs" />
+    <Compile Include="Store\IndexReader.cs" />
+    <Compile Include="Store\IndexWriter.cs" />
     <Compile Include="Store\StoreException.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +63,9 @@
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
       <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Report\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -86,6 +86,10 @@ namespace Hubble.Core.Entity
             }
         }
 
+        public DocumentPositionList()
+        {
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -216,11 +220,24 @@ namespace Hubble.Core.Entity
         {
             switch (version)
             {
+                case 0:
+                    return null;
+
                 case 1:
+                    if (s.Length - s.Position < sizeof(long) + sizeof(int) * 2 + sizeof(int))
+                    {
+                        return null;
+                    }
+
                     byte[] buf = new byte[sizeof(long)];
                     Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
                     int size = BitConverter.ToInt32(buf, 0);
-                    
+
+                    if (size == 0)
+                    {
+                        return null;
+                    }
+
                     Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
                     DocumentId = BitConverter.ToInt64(buf, 0);
                     
