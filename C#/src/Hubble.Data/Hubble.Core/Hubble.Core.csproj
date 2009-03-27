@@ -39,8 +39,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analysis\IAnalyzer.cs" />
+    <Compile Include="Data\DataType.cs" />
+    <Compile Include="Data\Table.cs" />
+    <Compile Include="DBAdapter\IDBAdapter.cs" />
+    <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />
     <Compile Include="Entity\DocumentPositionList.cs" />
     <Compile Include="Entity\WordInfo.cs" />
+    <Compile Include="Global\Report.cs" />
+    <Compile Include="Global\Setting.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\DocumentRank.cs" />
@@ -49,8 +55,8 @@
     <Compile Include="Query\MutiStringQuery.cs" />
     <Compile Include="Query\DocRankRadixSortedList.cs" />
     <Compile Include="Query\Searcher.cs" />
-    <Compile Include="Relationship\Field.cs" />
-    <Compile Include="Relationship\Document.cs" />
+    <Compile Include="Data\Field.cs" />
+    <Compile Include="Data\Document.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
     <Compile Include="Store\IndexHead.cs" />
@@ -63,9 +69,6 @@
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
       <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Report\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

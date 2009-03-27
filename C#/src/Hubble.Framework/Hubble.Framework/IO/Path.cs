@@ -7,6 +7,16 @@ namespace Hubble.Framework.IO
 {
     public class Path
     {
+        static public string ProcessDirectory
+        {
+            get
+            {
+                string curFileName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+
+                return System.IO.Path.GetDirectoryName(curFileName);
+            }
+        }
+
         static public String AppendDivision(String path, char division)
         {
             Debug.Assert(path != null);

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 
-namespace Hubble.Core.Relationship
+namespace Hubble.Core.Data
 {
     public class Document
     {

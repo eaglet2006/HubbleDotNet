@@ -154,6 +154,10 @@ namespace Hubble.Core.Store
             return _IndexFile.GetWordPositionList();
         }
 
+        public void AddDocInfos(List<IndexFile.DocInfo> docInfos)
+        {
+        }
+
         public void AddWordPositionAndDocumentPositionList(string word,
             List<Entity.DocumentPositionList> docList)
         {

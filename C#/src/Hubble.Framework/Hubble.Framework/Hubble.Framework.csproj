@@ -38,17 +38,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\FingerPrintDictionary.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\LinkedSegmentFileStream.cs" />
+    <Compile Include="IO\LogFile.cs" />
     <Compile Include="IO\Path.cs" />
     <Compile Include="IO\Stream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Reflection\Instance.cs" />
     <Compile Include="Serialization\BinSerialization.cs" />
     <Compile Include="Serialization\IMySerialization.cs" />
     <Compile Include="Serialization\MySerialization.cs" />
+    <Compile Include="Serialization\XmlSerialization.cs" />
+    <Compile Include="Text\Regex.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

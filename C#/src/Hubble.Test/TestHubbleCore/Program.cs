@@ -113,8 +113,17 @@ namespace TestHubbleCore
             }
         }
 
+        static void InitConfigFile()
+        {
+            Hubble.Core.Global.Setting.Config = new Hubble.Core.Global.Setting();
+            Hubble.Core.Global.Setting.Config.Directories.LogDirectory = "Log";
+            Hubble.Core.Global.Setting.Save();
+        }
+
         static void Main(string[] args)
         {
+            //InitConfigFile();
+
             SystemTest();
         }
     }

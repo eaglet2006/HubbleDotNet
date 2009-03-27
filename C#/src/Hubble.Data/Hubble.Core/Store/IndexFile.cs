@@ -21,6 +21,64 @@ namespace Hubble.Core.Store
     /// </summary>
     public class IndexFile 
     {
+        public class DocInfo : Hubble.Framework.Serialization.IMySerialization<DocInfo>
+        {
+            public long DocId;
+            public int WordCount; //How many words in this document
+
+            public DocInfo()
+            {
+                DocId = 0;
+                WordCount = 0;
+            }
+
+            public DocInfo(long docId, int wordCount)
+            {
+                DocId = docId;
+                WordCount = wordCount;
+            }
+
+            #region IMySerialization<DocInfo> Members
+
+            public short Version
+            {
+                get
+                {
+                    return 1;
+                }
+            }
+
+            public void Serialize(System.IO.Stream s)
+            {
+                s.Write(BitConverter.GetBytes(DocId), 0, sizeof(long));
+                s.Write(BitConverter.GetBytes(WordCount), 0, sizeof(int));
+            }
+
+            public DocInfo Deserialize(System.IO.Stream s, short version)
+            {
+                switch (version)
+                {
+                    case 1:
+                        byte[] buf = new byte[sizeof(long)];
+                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
+                        DocId = BitConverter.ToInt64(buf, 0);
+
+                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+
+                        WordCount = BitConverter.ToInt32(buf, 0);
+
+                        return this;
+                    default:
+                        throw new System.Runtime.Serialization.SerializationException(
+                            string.Format("Invalid version:{0}", version));
+                }
+            }
+
+            #endregion
+        }
+
+
+
         public struct IndexFileInfo : IComparable<IndexFileInfo>
         {
             public int Serial;

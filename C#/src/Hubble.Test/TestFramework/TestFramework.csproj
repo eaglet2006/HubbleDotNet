@@ -46,6 +46,7 @@
     <Compile Include="Cases\TestLinkedSegmentFileStream.cs" />
     <Compile Include="Cases\TestMessageQueue.cs" />
     <Compile Include="Cases\TestSingleSortedLinkedTable.cs" />
+    <Compile Include="CodeTimer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCaseBase.cs" />
