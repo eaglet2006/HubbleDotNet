@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Framework.IO;
+using Hubble.Framework.Serialization;
 
 namespace Hubble.Core.Data
 {
+    
+    [Serializable, System.Xml.Serialization.XmlRoot(Namespace = "http://www.hubble.net")]
     public class Table
     {
         #region Private field
@@ -16,7 +20,7 @@ namespace Hubble.Core.Data
 
         List<Field> _Fields = new List<Field>();
 
-        DBAdapter.IDBAdapter _DBAdapter;
+        string _DBAdapterTypeName; //eg. SqlServer2005Adapter 
 
         string _SQLForCreate;
 
@@ -83,26 +87,17 @@ namespace Hubble.Core.Data
             }
         }
 
-        /// <summary>
-        /// Database adapter
-        /// </summary>
-        public DBAdapter.IDBAdapter DBAdapter
+        public string DBAdapterTypeName
         {
             get
             {
-                return _DBAdapter;
+                return _DBAdapterTypeName;
             }
 
             set
             {
-                _DBAdapter = value;
-
-                if (_DBAdapter != null)
-                {
-                    _DBAdapter.Table = this;
-                }
+                _DBAdapterTypeName = value;
             }
-
         }
 
         public string SQLForCreate
@@ -118,11 +113,29 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Create()
+        public void Save(string dir)
         {
-            if (DBAdapter != null)
+            dir = Path.AppendDivision(dir, '\\');
+
+            string fileName = dir + "tableinfo.xml";
+
+            using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create,
+                 System.IO.FileAccess.ReadWrite))
             {
-                DBAdapter.Create();
+                XmlSerialization<Table>.Serialize(this, Encoding.UTF8, fs);
+            }            
+        }
+
+        public static Table Load(string dir)
+        {
+            dir = Path.AppendDivision(dir, '\\');
+
+            string fileName = dir + "tableinfo.xml";
+
+            using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Open,
+                 System.IO.FileAccess.Read))
+            {
+                return XmlSerialization<Table>.Deserialize(fs);
             }
         }
 

@@ -6,11 +6,19 @@ namespace Hubble.Framework.Reflection
 {
     public class Instance
     {
-        static public object CreateInstance(Type type)
+        static public object CreateInstance(string typeName)
         {
+            object obj = null;
+            obj = System.Reflection.Assembly.GetCallingAssembly().CreateInstance(typeName);
+
+            if (obj != null)
+            {
+                return obj;
+            }
+
             foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
             {
-                object obj = asm.CreateInstance(type.FullName);
+                obj = asm.CreateInstance(typeName);
 
                 if (obj != null)
                 {
@@ -19,6 +27,13 @@ namespace Hubble.Framework.Reflection
             }
 
             return null;
+
+        }
+
+        static public object CreateInstance(Type type)
+        {
+            return type.Assembly.CreateInstance(type.FullName);
+
         }
 
         static public object CreateInstance(Type type, string assemblyFile)

@@ -112,6 +112,10 @@ namespace Hubble.Core.Data
 
         #region Constructor
 
+        public Field()
+        {
+        }
+
         public Field(string name, DataType dataType) :
             this(name, dataType, 0, true, Index.None)
         {
@@ -137,7 +141,7 @@ namespace Hubble.Core.Data
         public Field(string name, DataType dataType, int dataLength, bool store, Index indexType)
         {
             _Name = name;
-            _DataType = DataType;
+            _DataType = dataType;
             _DataLength = dataLength;
             _Store = store;
 

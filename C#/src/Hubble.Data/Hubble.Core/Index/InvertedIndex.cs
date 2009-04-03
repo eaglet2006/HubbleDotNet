@@ -554,7 +554,7 @@ namespace Hubble.Core.Index
 
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
-            _IndexFileProxy = new IndexFileProxy(path, fieldName);
+            _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild);
         }
 
         private void StoreIndexToFile()

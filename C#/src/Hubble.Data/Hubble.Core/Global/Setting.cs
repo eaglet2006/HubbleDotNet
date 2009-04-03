@@ -97,9 +97,26 @@ namespace Hubble.Core.Global
             }
         }
 
+        List<TableConfig> _Tables = new List<TableConfig>();
+
+        public List<TableConfig> Tables
+        {
+            get
+            {
+                return _Tables;
+            }
+
+            set
+            {
+                _Tables = value;
+            }
+        }
+
+
         #endregion
     }
 
+    [Serializable]
     public class Directories
     {
         private string _LogDirectory;
@@ -110,9 +127,7 @@ namespace Hubble.Core.Global
             {
                 if (string.IsNullOrEmpty(_LogDirectory))
                 {
-                    _LogDirectory = Path.ProcessDirectory;
-
-                    _LogDirectory = Path.AppendDivision(_LogDirectory, '\\') + @"Log\";
+                    return Path.AppendDivision(Path.ProcessDirectory, '\\') + @"Log\";
                 }
 
                 return Path.AppendDivision(System.IO.Path.GetFullPath(_LogDirectory), '\\');
@@ -127,6 +142,34 @@ namespace Hubble.Core.Global
         public Directories()
         {
             
+        }
+    }
+
+    [Serializable]
+    public class TableConfig
+    {
+        private string _Directory;
+
+        public string Directory
+        {
+            get
+            {
+                return Path.AppendDivision(System.IO.Path.GetFullPath(_Directory), '\\');
+            }
+
+            set
+            {
+                _Directory = value;
+            }
+        }
+
+        public TableConfig()
+        {
+        }
+
+        public TableConfig(string dir)
+        {
+            Directory = dir;
         }
     }
 }

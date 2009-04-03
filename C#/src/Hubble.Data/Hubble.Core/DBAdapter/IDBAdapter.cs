@@ -8,6 +8,8 @@ namespace Hubble.Core.DBAdapter
     {
         Data.Table Table { get; set; }
 
+        void Drop();
+
         void Create();
 
         void Insert(List<Data.Document> docs);

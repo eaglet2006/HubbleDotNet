@@ -40,6 +40,8 @@
   <ItemGroup>
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="Data\DataType.cs" />
+    <Compile Include="Data\DBAccess.cs" />
+    <Compile Include="Data\DBProvider.cs" />
     <Compile Include="Data\Table.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />

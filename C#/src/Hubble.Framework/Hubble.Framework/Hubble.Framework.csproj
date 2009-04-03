@@ -42,6 +42,7 @@
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
+    <Compile Include="Data\SQLDataProvider.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\LinkedSegmentFileStream.cs" />
     <Compile Include="IO\LogFile.cs" />

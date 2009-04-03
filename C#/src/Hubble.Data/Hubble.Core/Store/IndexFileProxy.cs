@@ -139,12 +139,19 @@ namespace Hubble.Core.Store
             return null;
         }
 
+
         public IndexFileProxy(string path, string fieldName)
+            : this(path, fieldName, false)
+        {
+
+        }
+
+        public IndexFileProxy(string path, string fieldName, bool rebuild)
             : base()
         {
             OnMessageEvent = ProcessMessage;
             _IndexFile = new IndexFile(path, this);
-            _IndexFile.Create(fieldName);
+            _IndexFile.Create(fieldName, rebuild);
 
             this.Start();
         }
