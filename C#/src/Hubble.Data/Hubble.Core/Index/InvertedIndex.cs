@@ -366,6 +366,8 @@ namespace Hubble.Core.Index
 
         private int _WriteCount = 0;
 
+        private int _ForceCollectCount = 5000;
+
         #endregion
 
         #region Private Properties
@@ -436,6 +438,26 @@ namespace Hubble.Core.Index
         #endregion
 
         #region Public properties
+
+        public int ForceCollectCount
+        {
+            get
+            {
+                return _ForceCollectCount;
+            }
+
+            set
+            {
+                if (value <= 0)
+                {
+                    _ForceCollectCount = 1;
+                }
+                else
+                {
+                    _ForceCollectCount = value;
+                }
+            }
+        }
 
         public int WordTableSize
         {
@@ -647,9 +669,10 @@ namespace Hubble.Core.Index
         /// <param name="text">text</param>
         /// <param name="documentId">document id</param>
         /// <param name="analyzer">analyzer</param>
-        public void Index(string text, long documentId, Analysis.IAnalyzer analyzer)
+        public int Index(string text, long documentId, Analysis.IAnalyzer analyzer)
         {
             List<WordIndexWriter> hitIndexes = new List<WordIndexWriter>(4192);
+            int retCount = 0;
 
             lock (this)
             {
@@ -694,6 +717,7 @@ namespace Hubble.Core.Index
                 }
 
                 _DocumentWordCountTable[documentId] = count;
+                retCount = count;
                 //_DocInfosNeedCollect.Add(new IndexFile.DocInfo(
             }
 
@@ -712,7 +736,7 @@ namespace Hubble.Core.Index
  
             }
 
-            if (WriteCount >= 5000)
+            if (WriteCount >= ForceCollectCount)
             {
                 WriteCount = 0;
                 StoreIndexToFile();
@@ -721,6 +745,8 @@ namespace Hubble.Core.Index
             {
                 WriteCount++;
             }
+
+            return retCount;
         }
 
         public void FinishIndex()

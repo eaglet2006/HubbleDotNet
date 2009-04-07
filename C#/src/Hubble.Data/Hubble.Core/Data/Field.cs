@@ -22,6 +22,9 @@ namespace Hubble.Core.Data
         int _DataLength = 0;
         bool _Store = true;
         Index _IndexType = Index.None;
+        int _TabIndex = 0;
+        string _AnalyzerName = null;
+        Analysis.IAnalyzer _Analyzer;
 
         #endregion
 
@@ -108,7 +111,53 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// Full name of analyzer class
+        /// </summary>
+        public string AnalyzerName
+        {
+            get
+            {
+                return _AnalyzerName;
+            }
+
+            set
+            {
+                _AnalyzerName = value;
+            }
+        }
+
+        /// <summary>
+        /// The index in Payload index
+        /// </summary>
+        public int TabIndex
+        {
+            get
+            {
+                return _TabIndex;
+            }
+
+            set
+            {
+                _TabIndex = value;
+            }
+        }
+
         #endregion
+
+        public Analysis.IAnalyzer GetAnalyzer()
+        {
+            if (string.IsNullOrEmpty(AnalyzerName))
+            {
+                _Analyzer = new Analysis.SimpleAnalyzer();
+            }
+            else
+            {
+                _Analyzer = (Analysis.IAnalyzer)Hubble.Framework.Reflection.Instance.CreateInstance(AnalyzerName);
+            }
+
+            return _Analyzer;
+        }
 
         #region Constructor
 

@@ -24,6 +24,8 @@ namespace Hubble.Core.Data
 
         string _SQLForCreate;
 
+        int _ForceCollectCount = 5000;
+
         #endregion
 
         #region Public properties
@@ -112,6 +114,29 @@ namespace Hubble.Core.Data
                 _SQLForCreate = value;
             }
         }
+
+
+
+        public int ForceCollectCount
+        {
+            get
+            {
+                return _ForceCollectCount;
+            }
+
+            set
+            {
+                if (value <= 0)
+                {
+                    _ForceCollectCount = 1;
+                }
+                else
+                {
+                    _ForceCollectCount = value;
+                }
+            }
+        }
+
 
         public void Save(string dir)
         {

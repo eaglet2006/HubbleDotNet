@@ -5,21 +5,31 @@ using System.Diagnostics;
 
 namespace Hubble.Core.Data
 {
-    public class Document
+    [Serializable]
+    public class FieldValue
     {
         #region Private
 
-        private string _Name;
+        private string _FieldName;
+        private string _Value;
 
         #endregion
 
         #region Public properties
 
-        public string Name
+        public string FieldName
         {
             get
             {
-                return _Name;
+                return _FieldName;
+            }
+        }
+
+        public string Value
+        {
+            get
+            {
+                return _Value;
             }
         }
 
@@ -27,13 +37,36 @@ namespace Hubble.Core.Data
 
         #region Constructor
 
-        public Document(string name)
+        public FieldValue(string name, string value)
         {
             Debug.Assert(name != null);
 
-            _Name = name;
+            _FieldName = name;
+            _Value = value;
         }
 
         #endregion
+    }
+
+    [Serializable]
+    public class Document
+    {
+        List<FieldValue> _FieldValues = new List<FieldValue>();
+
+        public List<FieldValue> FieldValues
+        {
+            get
+            {
+                return _FieldValues;
+            }
+        }
+
+
+        public void Add(string fieldName, string value)
+        {
+            _FieldValues.Add(new FieldValue(fieldName, value));
+        }
+
+
     }
 }
