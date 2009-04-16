@@ -127,17 +127,8 @@ namespace TestHubbleCore
             //InitConfigFile();
             //Hubble.Core.Global.Report.WriteErrorLog("Test");
 
-            DBAccess dbAccess = new DBAccess();
-            Table table = new Table();
-            table.ConnectionString = "Data Source=(local);Initial Catalog=Test;Integrated Security=True";
-            table.DBAdapterTypeName = typeof(SqlServer2005Adapter).FullName;
-            table.DBTableName = "News";
-            table.Fields.Add(new Field("title", DataType.String, 256, true, Field.Index.Tokenized));
-            table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized));
-            table.Name = "News";
-            table.SQLForCreate = "create index I_News_Title on News(title);";
+ 
 
-            dbAccess.CreateTable(table, @"D:\Test\News");
             SystemTest();
         }
     }

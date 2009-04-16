@@ -484,7 +484,7 @@ namespace Hubble.Core.Store
             
             _MaxSerial++;
 
-            _IndexWriter = new IndexWriter(_MaxSerial, Environment.CurrentDirectory,
+            _IndexWriter = new IndexWriter(_MaxSerial, _Path,
                 System.IO.Path.GetFileNameWithoutExtension(_FieldName));
         }
 

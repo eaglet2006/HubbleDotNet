@@ -67,6 +67,7 @@
     <Compile Include="Store\IndexHead.cs" />
     <Compile Include="Store\IndexReader.cs" />
     <Compile Include="Store\IndexWriter.cs" />
+    <Compile Include="Store\PayloadFile.cs" />
     <Compile Include="Store\StoreException.cs" />
   </ItemGroup>
   <ItemGroup>

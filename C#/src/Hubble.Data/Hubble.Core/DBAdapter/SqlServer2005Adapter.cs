@@ -115,7 +115,44 @@ namespace Hubble.Core.DBAdapter
 
         public void Insert(List<Hubble.Core.Data.Document> docs)
         {
-            throw new NotImplementedException();
+            StringBuilder insertString = new StringBuilder();
+
+            foreach (Hubble.Core.Data.Document doc in docs)
+            {
+                insertString.AppendFormat("Insert {0} ([DocId]", _Table.DBTableName);
+
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    insertString.AppendFormat(", [{0}]", fv.FieldName);
+                }
+
+                insertString.AppendFormat(") Values({0}", doc.DocId);
+                
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    switch (fv.Type)
+                    {
+                        case Hubble.Core.Data.DataType.String:
+                        case Hubble.Core.Data.DataType.DateTime:
+                        case Hubble.Core.Data.DataType.Data:
+                            insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
+                            break;
+                        default:
+                            insertString.AppendFormat(",{0}", fv.Value);
+                            break;
+                    }
+                }
+
+                insertString.Append(")\r\n");
+
+            }
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(insertString.ToString());
+            }
+
         }
 
         #endregion

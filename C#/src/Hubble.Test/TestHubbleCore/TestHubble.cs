@@ -5,12 +5,9 @@ using System.IO;
 using System.Xml;
 using System.Diagnostics;
 
-using Lucene.Net.Index;
-using Lucene.Net.Documents;
-using Lucene.Net.Analysis.Standard;
-using Lucene.Net.Search;
-using Lucene.Net.QueryParsers;
-using Lucene.Net.Analysis;
+using Hubble.Core.DBAdapter;
+using Hubble.Core.Query;
+using Hubble.Core.Data;
 
 namespace TestHubbleCore
 {
@@ -248,15 +245,29 @@ namespace TestHubbleCore
         {
             try
             {
-                Hubble.Core.Index.InvertedIndex invertedIndex = new Hubble.Core.Index.InvertedIndex(Environment.CurrentDirectory, fieldName, true);
+                string analyseName = "TestHubbleCore.KTAnalyzer";
 
-                KTAnalyzer ktAnalyzer = new KTAnalyzer();
+                DBAccess dbAccess = new DBAccess();
+                Table table = new Table();
+                table.ConnectionString = "Data Source=(local);Initial Catalog=Test;Integrated Security=True";
+                table.DBAdapterTypeName = typeof(SqlServer2005Adapter).FullName;
+                table.DBTableName = "News";
+                table.Fields.Add(new Field("title", DataType.String, 256, true, Field.Index.Tokenized, analyseName));
+                table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, analyseName));
+                table.Fields.Add(new Field("Url", DataType.String, true, Field.Index.None, analyseName));
+                table.Fields.Add(new Field("Time", DataType.DateTime, true, Field.Index.Untokenized, analyseName));
+                table.Name = "News";
+                //table.SQLForCreate = "create index I_News_Title on News(title);";
+
+                dbAccess.CreateTable(table, @"D:\Test\News");
 
                 Stopwatch watch = new Stopwatch();
-                ktAnalyzer.Stopwatch.Reset();
                 long docId = 0;
                 int totalChars = 0;
                 int contentCount = 0;
+
+                List<Document> docs = new List<Document>();
+
                 foreach (XmlNode node in documentList)
                 {
                     String title = node.Attributes["Title"].Value;
@@ -270,26 +281,36 @@ namespace TestHubbleCore
 
                     if (Global.Cfg.TestShortText)
                     {
+
                         for (int i = 0; i < content.Length / 100; i++)
                         {
-                            invertedIndex.Index(content.Substring(i * 100, 100), docId++, ktAnalyzer);
+                            Document doc = new Document();
+                            doc.FieldValues.Add(new FieldValue("title", title, DataType.String));
+                            doc.FieldValues.Add(new FieldValue("content", content.Substring(i * 100, 100), DataType.String));
+                            doc.FieldValues.Add(new FieldValue("Time", time.ToString("yyyy-MM-dd HH:mm:ss"), DataType.DateTime));
+                            doc.FieldValues.Add(new FieldValue("Url", Url, DataType.String));
+
+                            docs.Add(doc);
                         }
                     }
                     else
                     {
-                        invertedIndex.Index(content, docId++, ktAnalyzer);
+                        Document doc = new Document();
+                        doc.FieldValues.Add(new FieldValue("title", title, DataType.String));
+                        doc.FieldValues.Add(new FieldValue("content", content, DataType.String));
+                        doc.FieldValues.Add(new FieldValue("Time", time.ToString("yyyy-MM-dd HH:mm:ss"), DataType.String));
+                        doc.FieldValues.Add(new FieldValue("Url", Url, DataType.String));
+                        docs.Add(doc);
                     }
+
                     watch.Stop();
                     contentCount++;
 
                     if (contentCount % 100 == 0)
                     {
+                        dbAccess.Insert(table.Name, docs);
+                        docs.Clear();
                         Console.WriteLine(contentCount);
-                    }
-
-                    if (contentCount % 5000 == 0)
-                    {
-                        invertedIndex.FinishIndex();
                     }
 
                     if (contentCount == Global.Cfg.TestRows)
@@ -298,17 +319,13 @@ namespace TestHubbleCore
                     }
                 }
 
+                dbAccess.Collect();
+
                 watch.Start();
                 watch.Stop();
 
-                invertedIndex.FinishIndex();
-
-                long indexElapsedMilliseconds = watch.ElapsedMilliseconds - ktAnalyzer.Stopwatch.ElapsedMilliseconds;
-
-                Console.WriteLine(String.Format("Hubble.Net 插入{0}行数据,共{1}字符,用时{2}秒 分词用时{3}秒 索引时间{4}秒",
-                    docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000,
-                    ktAnalyzer.Stopwatch.ElapsedMilliseconds / 1000 + "." + ktAnalyzer.Stopwatch.ElapsedMilliseconds % 1000,
-                    indexElapsedMilliseconds / 1000 + "." + indexElapsedMilliseconds % 1000
+                Console.WriteLine(String.Format("Hubble.Net 插入{0}行数据,共{1}字符,用时{2}秒",
+                    docId, totalChars, watch.ElapsedMilliseconds / 1000 + "." + watch.ElapsedMilliseconds % 1000
                     ));
             }
             catch (Exception e1)

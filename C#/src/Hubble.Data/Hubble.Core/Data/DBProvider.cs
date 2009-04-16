@@ -39,7 +39,10 @@ namespace Hubble.Core.Data
         Dictionary<long, Payload> _DocPayload = new Dictionary<long, Payload>(); //DocId to payload
 
         int _PayloadLength = 0;
+        private string _PayloadFileName;
+        Store.PayloadFile _PayloadFile;
 
+        int _InsertCount = 0;
 
         #endregion
 
@@ -188,23 +191,38 @@ namespace Hubble.Core.Data
                 Setting.Config.Tables.Add(new TableConfig(directory));
                 Setting.Save();
 
+                //set payload file name
+                _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Payload.db";
+
+                //Delete payload file
+                if (System.IO.File.Exists(_PayloadFileName))
+                {
+                    System.IO.File.Delete(_PayloadFileName);
+                }
+
+                lock (this)
+                {
+                    //Reset last docid
+                    _LastDocId = 0;
+                    _Table = table;
+
+                    //Start payload message queue
+                    if (_PayloadFile == null)
+                    {
+                        _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
+                    }
+                }
+
                 //Add field inverted index 
                 foreach (Field field in table.Fields)
                 {
                     if (field.IndexType == Field.Index.Tokenized)
                     {
                         InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), true);
-                        AddFieldInvertedIndex(field.Name, new InvertedIndex());
+                        AddFieldInvertedIndex(field.Name, invertedIndex);
                     }
 
                     AddFieldIndex(field.Name, field);
-                }
-
-                //Reset last docid
-                lock (this)
-                {
-                    _LastDocId = 0;
-                    _Table = table;
                 }
             }
         }
@@ -215,17 +233,21 @@ namespace Hubble.Core.Data
 
             int[] data = new int[_PayloadLength];
 
+            lock (this)
+            {
+                foreach (Document doc in docs)
+                {
+                    doc.DocId = _LastDocId++;
+                }
+            }
+
+            _DBAdapter.Insert(docs);
+
             foreach (Document doc in docs)
             {
                 empty.CopyTo(data, 0);
 
-                int lastDocId;
-
-                lock (this)
-                {
-                    lastDocId = _LastDocId;
-                    _LastDocId++;
-                }
+                long docId = doc.DocId;
 
                 foreach (FieldValue fValue in doc.FieldValues)
                 {
@@ -260,13 +282,28 @@ namespace Hubble.Core.Data
 
                             InvertedIndex iIndex = GetInvertedIndex(field.Name);
 
-                            int count = iIndex.Index(fValue.Value, lastDocId, field.GetAnalyzer());
+                            int count = iIndex.Index(fValue.Value, docId, field.GetAnalyzer());
 
                             data[field.TabIndex] = count;
 
                             break;
                     }
                 }
+
+                lock (this)
+                {
+                    _InsertCount ++;
+
+                    if (_InsertCount > _Table.ForceCollectCount)
+                    {
+                        _PayloadFile.Collect();
+                        _InsertCount = 0;
+                    }
+                }
+
+                Payload payload = new Payload(data);
+                _DocPayload.Add(docId, payload);
+                _PayloadFile.Add(docId, payload);
             }
         }
 
@@ -276,6 +313,8 @@ namespace Hubble.Core.Data
             {
                 iIndex.FinishIndex();
             }
+
+            _PayloadFile.Collect();
         }
     }
 }

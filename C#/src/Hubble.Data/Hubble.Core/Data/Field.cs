@@ -154,6 +154,11 @@ namespace Hubble.Core.Data
             else
             {
                 _Analyzer = (Analysis.IAnalyzer)Hubble.Framework.Reflection.Instance.CreateInstance(AnalyzerName);
+
+                if (_Analyzer == null)
+                {
+                    throw new DataException(string.Format("Can't find class : {0}", AnalyzerName));
+                }
             }
 
             return _Analyzer;
@@ -166,33 +171,48 @@ namespace Hubble.Core.Data
         }
 
         public Field(string name, DataType dataType) :
-            this(name, dataType, 0, true, Index.None)
+            this(name, dataType, 0, true, Index.None, null)
         {
         }
 
 
         public Field(string name, DataType dataType, bool store) :
-            this(name, dataType, 0, store, Index.None)
+            this(name, dataType, 0, store, Index.None, null)
         {
         }
 
         public Field(string name, DataType dataType, Index indexType) :
-            this(name, dataType, 0, true, indexType)
+            this(name, dataType, 0, true, indexType, null)
         {
         }
 
         public Field(string name, DataType dataType, bool store, Index indexType) :
-            this(name, dataType, 0, store, indexType)
+            this(name, dataType, 0, store, indexType, null)
         {
         }
 
+        public Field(string name, DataType dataType, Index indexType, string analyzerName) :
+            this(name, dataType, 0, true, indexType, analyzerName)
+        {
+        }
 
-        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType)
+        public Field(string name, DataType dataType, bool store, Index indexType, string analyzerName) :
+            this(name, dataType, 0, store, indexType, analyzerName)
+        {
+        }
+
+        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType) :
+            this(name, dataType, dataLength, store, indexType, null)
+        {
+        }
+
+        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType, string analyzerName)
         {
             _Name = name;
             _DataType = dataType;
             _DataLength = dataLength;
             _Store = store;
+            _AnalyzerName = analyzerName;
 
             switch (indexType)
             {
@@ -202,7 +222,7 @@ namespace Hubble.Core.Data
                     _IndexType = DataType == DataType.String ? Index.Tokenized : Index.None;
                     break;
                 case Index.Untokenized:
-                    _IndexType = DataType == DataType.Data ? Index.None : Index.Tokenized;
+                    _IndexType = DataType == DataType.Data ? Index.None : Index.Untokenized;
                     break;
 
             }

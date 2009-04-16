@@ -12,6 +12,7 @@ namespace Hubble.Core.Data
 
         private string _FieldName;
         private string _Value;
+        private DataType _Type;
 
         #endregion
 
@@ -33,16 +34,25 @@ namespace Hubble.Core.Data
             }
         }
 
+        public DataType Type
+        {
+            get
+            {
+                return _Type;
+            }
+        }
+
         #endregion
 
         #region Constructor
 
-        public FieldValue(string name, string value)
+        public FieldValue(string name, string value, DataType type)
         {
             Debug.Assert(name != null);
 
             _FieldName = name;
             _Value = value;
+            _Type = type;
         }
 
         #endregion
@@ -53,6 +63,21 @@ namespace Hubble.Core.Data
     {
         List<FieldValue> _FieldValues = new List<FieldValue>();
 
+        private long _DocId;
+
+        public long DocId
+        {
+            get
+            {
+                return _DocId;
+            }
+
+            set
+            {
+                _DocId = value;
+            }
+        }
+
         public List<FieldValue> FieldValues
         {
             get
@@ -62,9 +87,9 @@ namespace Hubble.Core.Data
         }
 
 
-        public void Add(string fieldName, string value)
+        public void Add(string fieldName, string value, DataType type)
         {
-            _FieldValues.Add(new FieldValue(fieldName, value));
+            _FieldValues.Add(new FieldValue(fieldName, value, type));
         }
 
 

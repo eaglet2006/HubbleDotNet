@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 
 namespace Hubble.Core.Data
 {
@@ -34,6 +35,32 @@ namespace Hubble.Core.Data
             return Data[tabIndex];
         }
 
+        public void CopyTo(byte[] buf)
+        {
+            Debug.Assert(buf != null);
+            Debug.Assert(buf.Length == Data.Length * sizeof(int));
 
+            int start = 0;
+            foreach (int d in Data)
+            {
+                byte[] dBuf = BitConverter.GetBytes(d);
+                Array.Copy(dBuf, 0, buf, start, dBuf.Length);
+                start += dBuf.Length;
+            }
+        }
+
+        public void CopyFrom(byte[] buf)
+        {
+            Debug.Assert(buf != null);
+            Debug.Assert(buf.Length == Data.Length * sizeof(int));
+
+            int start = 0;
+            while (start < buf.Length)
+            {
+                int d = BitConverter.ToInt32(buf, start);
+                Data[start / sizeof(int)] = d;
+                start += sizeof(int);
+            }
+        }
     }
 }
