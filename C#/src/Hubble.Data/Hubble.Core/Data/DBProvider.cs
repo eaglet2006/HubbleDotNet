@@ -7,11 +7,12 @@ using Hubble.Framework.Reflection;
 
 namespace Hubble.Core.Data
 {
-    class DBProvider
+    public class DBProvider
     {
         #region Static members
         static Dictionary<string, DBProvider> _DBProviderTable = new Dictionary<string, DBProvider>();
         static object _LockObj = new object();
+        static Dictionary<string, Type> _QueryTable = new Dictionary<string, Type>();
 
         public static DBProvider GetDBProvider(string tableName)
         {
@@ -27,6 +28,57 @@ namespace Hubble.Core.Data
         {
             _DBProviderTable.Add(tableName.ToLower().Trim(), dbProvider);
         }
+
+        public static void Init()
+        {
+            //Build QueryTable
+
+            foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                foreach (Type type in asm.GetTypes())
+                {
+                    if (type.GetInterface("Hubble.Core.Query.IQuery") != null)
+                    {
+                        Hubble.Core.Query.IQuery iQuery = asm.CreateInstance(type.FullName) as 
+                            Hubble.Core.Query.IQuery;
+
+                        _QueryTable.Add(iQuery.Command.ToLower().Trim(), type);
+                    }
+                }
+            }
+
+            foreach (TableConfig tc in Setting.Config.Tables)
+            {
+                DBProvider dbProvider = InitTable(tc);
+                _DBProviderTable.Add(dbProvider.TableName.ToLower().Trim(), dbProvider);
+            }
+        }
+
+        private static DBProvider InitTable(TableConfig tableCfg)
+        {
+            DBProvider dbProvider = new DBProvider();
+
+            dbProvider.Open(tableCfg.Directory);
+
+            return dbProvider;
+        }
+
+        private static Hubble.Core.Query.IQuery GetQuery(string command)
+        {
+            Type type;
+
+            if (_QueryTable.TryGetValue(command.Trim().ToLower(), out type))
+            {
+                return Hubble.Framework.Reflection.Instance.CreateInstance(type)
+                    as Hubble.Core.Query.IQuery;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
         #endregion
 
         #region Private fields
@@ -48,7 +100,7 @@ namespace Hubble.Core.Data
 
         #region Properties
 
-        int _LastDocId = 0;
+        long _LastDocId = 0;
 
         DBAdapter.IDBAdapter _DBAdapter;
 
@@ -65,6 +117,22 @@ namespace Hubble.Core.Data
             set
             {
                 _DBAdapter = value;
+            }
+        }
+
+        public string TableName
+        {
+            get
+            {
+                return _Table.Name;
+            }
+        }
+
+        public int PayloadLength
+        {
+            get
+            {
+                return _PayloadLength;
             }
         }
 
@@ -123,8 +191,32 @@ namespace Hubble.Core.Data
             }
         }
 
+        private void OpenPayloadInformation(Table table)
+        {
+            _PayloadLength = 0;
+
+            foreach (Field field in table.Fields)
+            {
+                switch (field.IndexType)
+                {
+                    case Field.Index.Tokenized:
+                        _PayloadLength++;
+                        break;
+                    case Field.Index.Untokenized:
+                        _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                        break;
+                    default:
+                        continue;
+                }
+            }
+        }
+
+
+
         private void CreatePayloadInformation(Table table)
         {
+            _PayloadLength = 0;
+
             foreach (Field field in table.Fields)
             {
                 int tabIndex = -1;
@@ -150,6 +242,26 @@ namespace Hubble.Core.Data
 
         #endregion
 
+        public int GetDocWordsCount(long docId, int tabIndex)
+        {
+            int numDocWords = 1000000;
+
+            lock (this)
+            {
+                Payload payload;
+                _DocPayload.TryGetValue(docId, out payload);
+
+                if (payload != null)
+                {
+                    numDocWords = payload.WordCount(tabIndex);
+                }
+            }
+
+            return numDocWords;
+
+        }
+
+
         /// <summary>
         /// Create a table
         /// </summary>
@@ -172,6 +284,12 @@ namespace Hubble.Core.Data
                     DBAdapter.Drop();
                     DBAdapter.Create();
                 }
+                else
+                {
+                    throw new DataException(string.Format("Can't find DBAdapterTypeName : {0}",
+                        table.DBAdapterTypeName));
+                }
+
 
                 //Create payload information
                 CreatePayloadInformation(table);
@@ -210,15 +328,21 @@ namespace Hubble.Core.Data
                     if (_PayloadFile == null)
                     {
                         _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
+                        
+                        //Build Payload file head
+                        _PayloadFile.Create(table.Fields);
                     }
                 }
+
+                //Start payload file
+                _PayloadFile.Start();
 
                 //Add field inverted index 
                 foreach (Field field in table.Fields)
                 {
                     if (field.IndexType == Field.Index.Tokenized)
                     {
-                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), true);
+                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, true, this);
                         AddFieldInvertedIndex(field.Name, invertedIndex);
                     }
 
@@ -227,12 +351,69 @@ namespace Hubble.Core.Data
             }
         }
 
+        public void Open(string directory)
+        {
+            _Table = Table.Load(directory);
+            Table table = _Table;
+
+            lock (_LockObj)
+            {
+                //Get DB adapter
+                if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
+                {
+                    DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(table.DBAdapterTypeName);
+                }
+
+                //init db table
+                if (DBAdapter != null)
+                {
+                    DBAdapter.Table = table;
+                }
+                else
+                {
+                    throw new DataException(string.Format("Can't find DBAdapterTypeName : {0}",
+                        table.DBAdapterTypeName));
+                }
+
+                //Open payload information
+                OpenPayloadInformation(table);
+
+                //set payload file name
+                _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Payload.db";
+
+                lock (this)
+                {
+                    //Start payload message queue
+                    if (_PayloadFile == null)
+                    {
+                        _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
+
+                        //Open Payload file
+                        _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
+                    }
+                }
+
+
+                //Start payload file
+                _PayloadFile.Start();
+
+                //Add field inverted index 
+                foreach (Field field in table.Fields)
+                {
+                    if (field.IndexType == Field.Index.Tokenized)
+                    {
+                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, false, this);
+                        AddFieldInvertedIndex(field.Name, invertedIndex);
+                    }
+
+                    AddFieldIndex(field.Name, field);
+                }
+            }
+
+        }
+
         public void Insert(List<Document> docs)
         {
-            int[] empty = new int[_PayloadLength];
-
-            int[] data = new int[_PayloadLength];
-
             lock (this)
             {
                 foreach (Document doc in docs)
@@ -245,7 +426,7 @@ namespace Hubble.Core.Data
 
             foreach (Document doc in docs)
             {
-                empty.CopyTo(data, 0);
+                int[] data = new int[_PayloadLength];
 
                 long docId = doc.DocId;
 
@@ -315,6 +496,59 @@ namespace Hubble.Core.Data
             }
 
             _PayloadFile.Collect();
+        }
+
+        public System.Data.DataSet Select(string sql, int first, int length)
+        {
+            Hubble.Core.Query.IQuery query;
+
+            string[] words = sql.Split(new string[] { " " }, StringSplitOptions.None);
+
+            if (words.Length <= 2)
+            {
+                return null;
+            }
+
+            string fieldName = words[0];
+
+            query = GetQuery(words[1]);
+
+            if (query == null)
+            {
+                throw new DataException(string.Format("Can't find the command: {0}", words[1]));
+            }
+
+            query.InvertedIndex = GetInvertedIndex(fieldName);
+
+            List<Hubble.Core.Entity.WordInfo> queryWords = new List<Hubble.Core.Entity.WordInfo>();
+
+            int position = 0;
+
+            for(int i = 2; i < words.Length; i++)
+            {
+                Hubble.Core.Entity.WordInfo wordInfo = new Hubble.Core.Entity.WordInfo(words[i], position);
+                queryWords.Add(wordInfo);
+                position += words.Length + 1;
+            }
+
+            query.QueryWords = queryWords;
+            query.DBProvider = this;
+            query.TabIndex = GetField(fieldName).TabIndex;
+
+            Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
+            searcher.Search();
+
+            //foreach (Hubble.Core.Query.DocumentRank docRank in searcher.Get(first, length))
+            //{
+                
+            //}
+
+            return null;
+        }
+
+        public int GetTabIndex(string fieldName)
+        {
+            return GetField(fieldName).TabIndex;
         }
     }
 }

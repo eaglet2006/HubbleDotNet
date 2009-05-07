@@ -98,11 +98,18 @@ namespace Hubble.Core.Query
 
         public void Search()
         {
-            if (!_HasSorted)
+            Dictionary<long, DocumentRank> docRankTbl = _Query.Search();
+
+            if (docRankTbl.Count == 0)
             {
-                //_SortedLength = 100;
-                Sort(10);
+                docRankTbl = new Dictionary<long, DocumentRank>();
             }
+
+            //if (!_HasSorted)
+            //{
+            //    //_SortedLength = 100;
+            //    Sort(10);
+            //}
         }
 
         /// <summary>

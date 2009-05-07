@@ -20,11 +20,24 @@ namespace Hubble.Core.Index
 
         public class WordIndexReader
         {
+            struct DocScore
+            {
+                public long DocId;
+                public long Score;
+
+                public DocScore(long docId, long score)
+                {
+                    DocId = docId;
+                    Score = score;
+                }
+            }
+
             #region Private fields
             string _Word;
 
-            List<DocumentPositionList> _ListForReader = new List<DocumentPositionList>();
+            DocScore[] _DocScoreList;
 
+            List<DocumentPositionList> _ListForReader = new List<DocumentPositionList>();
             long _WordCount;
 
             #endregion
@@ -124,6 +137,40 @@ namespace Hubble.Core.Index
                 }
             }
 
+            public void Calculate(Dictionary<long, Query.DocumentRank> docIdRank, int wordRank, long Norm_Ranks)
+            {
+                lock (this)
+                {
+                    foreach (DocScore docScore in _DocScoreList)
+                    {
+                        long rank = docScore.Score * wordRank / Norm_Ranks;
+                        int score = 0;
+                        if (rank > int.MaxValue - 4000000)
+                        {
+                            long high = rank % (int.MaxValue - 4000000);
+
+                            score = int.MaxValue - 4000000 + (int)(high / 1000);
+                        }
+                        else
+                        {
+                            score = (int)rank;
+                        }
+
+                        Query.DocumentRank docRank;
+
+                        if (docIdRank.TryGetValue(docScore.DocId, out docRank))
+                        {
+                            docRank.Rank += score;
+                        }
+                        else
+                        {
+                            docRank = new Query.DocumentRank(docScore.DocId, score);
+                            docIdRank.Add(docScore.DocId, docRank);
+                        }
+                    }
+                }
+            }
+
             #endregion
 
             #region internal properties
@@ -132,16 +179,43 @@ namespace Hubble.Core.Index
 
             #region internal methods
 
-            internal WordIndexReader(string word, List<DocumentPositionList> docList)
+            internal WordIndexReader(string word, List<DocumentPositionList> docList, long totalDocs, 
+                Data.DBProvider dbProvider, int tabIndex)
             {
                 _Word = word;
                 _ListForReader = docList;
 
                 _WordCount = 0;
+                _DocScoreList = new DocScore[docList.Count];
+
+                int _Norm_d_t;
+                int _Idf_t;
 
                 foreach (DocumentPositionList dList in docList)
                 {
                     _WordCount += dList.Count;
+                }
+
+                _Norm_d_t = (int)Math.Sqrt(_WordCount);
+                _Idf_t = (int)Math.Log10((double)totalDocs / (double)_WordCount + 1) + 1;
+
+                int i = 0;
+
+                foreach (DocumentPositionList dList in docList)
+                {
+                    int numDocWords = dbProvider.GetDocWordsCount(dList.DocumentId, tabIndex);
+
+                    int docRank = 1;
+                    if (dList.Rank > 0)
+                    {
+                        docRank = dList.Rank;
+                    }
+
+                    long score = docRank * _Idf_t * dList.Count * 1000000 / (_Norm_d_t * numDocWords);
+
+                    _DocScoreList[i] = new DocScore(dList.DocumentId, score);
+
+                    i++;
                 }
 
             }
@@ -350,7 +424,8 @@ namespace Hubble.Core.Index
         #endregion
 
         #region Private fields
-
+        private string _FieldName;
+        private int _TabIndex;
         private System.Threading.Thread _CollectThread; //Collect Thread collect the WordTable that need write to index file,and write the index to file
         private bool _Closed = false;
         private Dictionary<string, WordIndexWriter> _WordTableNeedCollectDict = new Dictionary<string, WordIndexWriter>();
@@ -368,6 +443,7 @@ namespace Hubble.Core.Index
 
         private int _ForceCollectCount = 5000;
 
+        private Data.DBProvider _DBProvider;
         #endregion
 
         #region Private Properties
@@ -608,14 +684,18 @@ namespace Hubble.Core.Index
 
         #endregion
 
-        public InvertedIndex(string path, string fieldName, bool rebuild)
+        public InvertedIndex(string path, string fieldName, int tabIndex, bool rebuild, Data.DBProvider dbProvider)
         {
+            _FieldName = fieldName;
+            _TabIndex = tabIndex;
+            _DBProvider = dbProvider;
             InitFileStore(path, fieldName, rebuild);
             //InitCollectThread();
         }
 
-        public InvertedIndex()
+        public InvertedIndex(Data.DBProvider dbProvider)
         {
+            _DBProvider = dbProvider;
             //InitCollectThread();
         }
 
@@ -650,7 +730,8 @@ namespace Hubble.Core.Index
                 return retVal;
             }
 
-            WordIndexReader wIndex = _IndexFileProxy.GetWordIndex(word);
+            WordIndexReader wIndex = _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, 
+                _TabIndex));
 
             if (wIndex != null)
             {

@@ -457,7 +457,8 @@ namespace Hubble.Core.Store
             return new LinkedSegmentFileStream.SegmentPosition();
         }
 
-        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word, List<FilePosition> filePositionList)
+        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word, 
+            List<FilePosition> filePositionList, long totalDocs, Data.DBProvider dbProvider, int tabIndex)
         {
             List<Entity.DocumentPositionList> docList = new List<Hubble.Core.Entity.DocumentPositionList>();
 
@@ -472,7 +473,7 @@ namespace Hubble.Core.Store
                 }
             }
 
-            return new InvertedIndex.WordIndexReader(word, docList);
+            return new InvertedIndex.WordIndexReader(word, docList, totalDocs, dbProvider, tabIndex);
         }
 
         /// <summary>

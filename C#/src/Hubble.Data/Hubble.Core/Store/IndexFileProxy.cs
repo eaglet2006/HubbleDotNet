@@ -13,6 +13,55 @@ namespace Hubble.Core.Store
         {
             Add = 1,
             Collect = 2,
+            Get = 3,
+        }
+
+        public class GetInfo
+        {
+            string _Word;
+            long _TotalDocs;
+            private Data.DBProvider _DBProvider;
+            private int _TabIndex;
+
+            public string Word
+            {
+                get
+                {
+                    return _Word;
+                }
+            }
+
+            public long TotalDocs
+            {
+                get
+                {
+                    return _TotalDocs;
+                }
+            }
+
+            public Data.DBProvider DBProvider
+            {
+                get
+                {
+                    return _DBProvider;
+                }
+            }
+
+            public int TabIndex
+            {
+                get
+                {
+                    return _TabIndex;
+                }
+            }
+
+            public GetInfo(string word, long totalDocs, Data.DBProvider dbProvider, int tabIndex)
+            {
+                _Word = word;
+                _TotalDocs = totalDocs;
+                _DBProvider = dbProvider;
+                _TabIndex = tabIndex;
+            }
         }
 
         class WordDocList
@@ -132,8 +181,12 @@ namespace Hubble.Core.Store
                     _IndexFile.Collect();
                     PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
                     _IndexFile.ClearWordFilePositionList();
-
                     break;
+                case Event.Get:
+                    GetInfo getInfo = data as GetInfo;
+                    List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
+                    return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                        getInfo.DBProvider, getInfo.TabIndex);
             }
 
             return null;
@@ -172,11 +225,13 @@ namespace Hubble.Core.Store
         }
 
 
-        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word)
+        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(GetInfo getInfo)
         {
-            List<IndexFile.FilePosition> pList = GetFilePositionListByWord(word);
+            return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
+                Hubble.Core.Index.InvertedIndex.WordIndexReader;
+            //List<IndexFile.FilePosition> pList = GetFilePositionListByWord(word);
 
-            return _IndexFile.GetWordIndex(word, pList);
+            //return _IndexFile.GetWordIndex(word, pList);
         }
 
         public void Collect()

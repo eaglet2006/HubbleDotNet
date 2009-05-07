@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
+using Hubble.Core.Data;
+
 
 namespace Hubble.Core.Query
 {
@@ -160,6 +162,8 @@ namespace Hubble.Core.Query
         Dictionary<string, SessionRank> _WordRank = new Dictionary<string, SessionRank>();
         long _Session = 0;
 
+        private int _TabIndex;
+        private DBProvider _DBProvider;
 
         private int _QueryStringLength = 0;
         private int _HoleNumber = 0; //If query string does not continue, the hole number will be large then 0
@@ -558,6 +562,39 @@ namespace Hubble.Core.Query
             }
         }
 
+
+        public int TabIndex
+        {
+            get
+            {
+                return _TabIndex;
+            }
+            set
+            {
+                _TabIndex = value;
+            }
+        }
+
+        public string Command
+        {
+            get
+            {
+                return "Like";
+            }
+        }
+
+        public DBProvider DBProvider
+        {
+            get
+            {
+                return _DBProvider;
+            }
+            set
+            {
+                _DBProvider = value;
+            }
+        }
+
         public Hubble.Core.Index.InvertedIndex InvertedIndex
         {
             get
@@ -677,6 +714,16 @@ namespace Hubble.Core.Query
                 yield return new DocumentRank(docId, CaculateRank(wordInfoList));
                 wordInfoList = GetNextHitWords(out docId);
             }
+        }
+
+        #endregion
+
+        #region IQuery Members
+
+
+        public Dictionary<long, DocumentRank> Search()
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

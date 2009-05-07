@@ -79,12 +79,12 @@ namespace Hubble.Core.Store
 
             List<Entity.DocumentPositionList> result = new List<Hubble.Core.Entity.DocumentPositionList>();
 
-            Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
-
             do
             {
                 try
                 {
+                    Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
+
                     Entity.DocumentPositionList docList = 
                         Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
                         _IndexFile, iDocList);

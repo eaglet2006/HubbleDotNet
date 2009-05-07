@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
@@ -11,7 +11,7 @@ namespace Hubble.Core.Query
     /// tf/idf. The poisition informations are no useful.
     /// Syntax: MutiStringQuery('xxx','yyy','zzz')
     /// </summary>
-    public class MutiStringQuery : IQuery
+    public class MatchQuery : IQuery
     {
         class WordIndexForQuery
         {
@@ -155,6 +155,11 @@ namespace Hubble.Core.Query
                     CurIndex = -1;
                 }
             }
+
+            public void Calculate(Dictionary<long, Query.DocumentRank> docIdRank, long Norm_Ranks)
+            {
+                _WordIndex.Calculate(docIdRank, Rank, Norm_Ranks);
+            }
         }
 
         string _FieldName;
@@ -266,7 +271,7 @@ namespace Hubble.Core.Query
 
             int rank = CaculateRank(minDocId);
 
-            foreach(WordIndexForQuery wq in _TempSelect)
+            foreach (WordIndexForQuery wq in _TempSelect)
             {
                 wq.IncCurIndex();
             }
@@ -303,9 +308,9 @@ namespace Hubble.Core.Query
 
         public string Command
         {
-            get 
+            get
             {
-                return "Muti";
+                return "Match";
             }
         }
 
@@ -355,7 +360,7 @@ namespace Hubble.Core.Query
 
                     if (!wordIndexDict.ContainsKey(wordInfo.Word))
                     {
-                     
+
                         Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word);
 
                         if (wordIndex == null)
@@ -384,7 +389,7 @@ namespace Hubble.Core.Query
         public Dictionary<long, DocumentRank> Search()
         {
             Dictionary<long, DocumentRank> result = new Dictionary<long, DocumentRank>();
-            
+
             if (_QueryWords.Count <= 0)
             {
                 return result;
@@ -393,30 +398,9 @@ namespace Hubble.Core.Query
             //Get min document id
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                long curDocId = _WordIndexList[i].CurDocumentId;
-
-                while (curDocId >= 0)
-                {
-                    int rank = CaculateRank(curDocId, _WordIndexList[i]);
-
-                    DocumentRank docRank;
-
-                    if (result.TryGetValue(curDocId, out docRank))
-                    {
-                        docRank.Rank += rank;
-                    }
-                    else
-                    {
-                        docRank = new DocumentRank(curDocId, rank);
-                        result.Add(curDocId, docRank);
-                    }
-
-                    _WordIndexList[i].IncCurIndex();
-                    curDocId = _WordIndexList[i].CurDocumentId;
-                }
-
+                _WordIndexList[i].Calculate(result, _Norm_Ranks);
             }
-            
+
             return result;
         }
 
