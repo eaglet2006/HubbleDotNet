@@ -33,6 +33,21 @@ namespace Hubble.Core.Data
         {
             if (string.IsNullOrEmpty(Host))
             {
+                if (table.Name == null)
+                {
+                    throw new System.ArgumentNullException("Null table name");
+                }
+
+                if (table.Name.Trim() == "")
+                {
+                    throw new System.ArgumentException("Empty table name");
+                }
+
+                if (DBProvider.DBProviderExists(table.Name))
+                {
+                    throw new DataException(string.Format("Table {0} exists already!", table.Name));
+                }
+
                 directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
 
                 if (!System.IO.Directory.Exists(directory))
@@ -41,7 +56,16 @@ namespace Hubble.Core.Data
                 }
 
                 DBProvider.NewDBProvider(table.Name, new DBProvider());
-                DBProvider.GetDBProvider(table.Name).Create(table, directory);
+
+                try
+                {
+                    DBProvider.GetDBProvider(table.Name).Create(table, directory);
+                }
+                catch 
+                {
+                    DBProvider.Drop(table.Name);
+                    throw;
+                }
             }
         }
 
@@ -71,12 +95,16 @@ namespace Hubble.Core.Data
             }
         }
 
+        public void Close()
+        {
+            Collect();
+        }
 
         #region IDisposable Members
 
         public void Dispose()
         {
-            Collect();
+            //Collect();
         }
 
         #endregion

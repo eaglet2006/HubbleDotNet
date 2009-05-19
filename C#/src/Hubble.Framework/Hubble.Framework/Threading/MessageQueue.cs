@@ -457,7 +457,8 @@ namespace Hubble.Framework.Threading
         {
             if (Closing)
             {
-                throw new Exception("MessageQueue is closing");
+                return;
+                //throw new Exception("MessageQueue is closing");
             }
 
             Message msg = new Message(evt, MessageFlag.None, data);
@@ -478,7 +479,8 @@ namespace Hubble.Framework.Threading
         {
             if (Closing)
             {
-                throw new Exception("MessageQueue is closing");
+                return;
+                //throw new Exception("MessageQueue is closing");
             }
 
 

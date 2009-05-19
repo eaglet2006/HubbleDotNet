@@ -39,6 +39,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormCreate.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCreate.Designer.cs">
+      <DependentUpon>FormCreate.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormLogin.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -53,6 +59,10 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="FormCreate.resx">
+      <DependentUpon>FormCreate.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormLogin.resx">
       <DependentUpon>FormLogin.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -82,6 +92,10 @@
     <Compile Include="QueryPerfCounter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Hubble.Analyzer\Hubble.Analyzer.csproj">
+      <Project>{D94FD044-AC5D-4EF0-891B-019491461A16}</Project>
+      <Name>Hubble.Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Hubble.Data\Hubble.Core\Hubble.Core.csproj">
       <Project>{003F69CF-186C-45C9-85B6-96D175D56711}</Project>
       <Name>Hubble.Core</Name>

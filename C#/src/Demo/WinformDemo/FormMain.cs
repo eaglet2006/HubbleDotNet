@@ -24,7 +24,14 @@ namespace WinformDemo
 
         private void buttonOpen_Click(object sender, EventArgs e)
         {
-            _CurDBProvider = Hubble.Core.Data.DBProvider.GetDBProvider("News");
+            try
+            {
+                _CurDBProvider = Hubble.Core.Data.DBProvider.GetDBProvider("News");
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message + "\r\n" + e1.StackTrace, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void FormMain_Load(object sender, EventArgs e)
@@ -47,5 +54,33 @@ namespace WinformDemo
                 labelDuration.Text = (ns / (1000 * 1000)).ToString() + " ms"; 
             }
         }
+
+        private void buttonCreate_Click(object sender, EventArgs e)
+        {
+            FormCreate frmCreate = new FormCreate();
+            frmCreate.ShowDialog();
+            GC.Collect();
+        }
+
+        private List<byte[]> GetArray()
+        {
+            List<byte[]> Test = new List<byte[]>();
+
+            for (int i = 0; i < 300000; i++)
+            {
+                Test.Add(new byte[10]);
+            }
+
+            return Test;
+        }
+
+        private void buttonDrop_Click(object sender, EventArgs e)
+        {
+            Hubble.Core.Data.DBProvider.Drop("News");
+            GC.Collect();
+            _CurDBProvider = null;
+        }
+
+
     }
 }

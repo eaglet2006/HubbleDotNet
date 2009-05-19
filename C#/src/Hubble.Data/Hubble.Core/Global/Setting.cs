@@ -50,6 +50,16 @@ namespace Hubble.Core.Global
             }
         }
 
+        static public void RemoveTableConfig(string tableDir)
+        {
+            Setting cfg = Config;
+            lock (_LockObj)
+            {
+                cfg.Tables.Remove(new TableConfig(tableDir));
+            }
+        }
+
+
         static public void Load()
         {
             string fileName = Path.AppendDivision(Path.ProcessDirectory, '\\') + FileName;
@@ -170,6 +180,16 @@ namespace Hubble.Core.Global
         public TableConfig(string dir)
         {
             Directory = dir;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            return this.Directory.Trim().ToLower() == ((TableConfig)obj).Directory.Trim().ToLower();
         }
     }
 }

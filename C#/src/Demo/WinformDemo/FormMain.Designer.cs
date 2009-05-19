@@ -36,6 +36,7 @@
             this.buttonSearch = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.labelDuration = new System.Windows.Forms.Label();
+            this.buttonDrop = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -62,6 +63,7 @@
             this.buttonCreate.TabIndex = 2;
             this.buttonCreate.Text = "Create";
             this.buttonCreate.UseVisualStyleBackColor = true;
+            this.buttonCreate.Click += new System.EventHandler(this.buttonCreate_Click);
             // 
             // buttonOpen
             // 
@@ -109,11 +111,22 @@
             this.labelDuration.TabIndex = 7;
             this.labelDuration.Text = "0 ms";
             // 
+            // buttonDrop
+            // 
+            this.buttonDrop.Location = new System.Drawing.Point(201, 42);
+            this.buttonDrop.Name = "buttonDrop";
+            this.buttonDrop.Size = new System.Drawing.Size(75, 23);
+            this.buttonDrop.TabIndex = 8;
+            this.buttonDrop.Text = "Drop";
+            this.buttonDrop.UseVisualStyleBackColor = true;
+            this.buttonDrop.Click += new System.EventHandler(this.buttonDrop_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(446, 352);
+            this.Controls.Add(this.buttonDrop);
             this.Controls.Add(this.labelDuration);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.buttonSearch);
@@ -141,5 +154,6 @@
         private System.Windows.Forms.Button buttonSearch;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label labelDuration;
+        private System.Windows.Forms.Button buttonDrop;
     }
 }

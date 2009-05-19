@@ -13,6 +13,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Demo", "Demo", "{82BF9CFF-A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformDemo", "Demo\WinformDemo\WinformDemo.csproj", "{83A80DAE-D638-4722-B19E-97F52F1627E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.Analyzer", "Hubble.Analyzer\Hubble.Analyzer.csproj", "{D94FD044-AC5D-4EF0-891B-019491461A16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hubble.Analysis", "Hubble.Analysis", "{70BF7819-6D26-4E25-90DE-3A18F7E729DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +35,10 @@ Global
 		{83A80DAE-D638-4722-B19E-97F52F1627E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83A80DAE-D638-4722-B19E-97F52F1627E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83A80DAE-D638-4722-B19E-97F52F1627E1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D94FD044-AC5D-4EF0-891B-019491461A16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D94FD044-AC5D-4EF0-891B-019491461A16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D94FD044-AC5D-4EF0-891B-019491461A16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D94FD044-AC5D-4EF0-891B-019491461A16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,5 +47,6 @@ Global
 		{003F69CF-186C-45C9-85B6-96D175D56711} = {BAABB321-C486-4D8D-A1C0-3D1690689A54}
 		{21D12CAB-9917-432E-A54E-E432DA0F432A} = {3D6FD2A9-FC6A-4EF0-B63B-F39FADA47FA0}
 		{83A80DAE-D638-4722-B19E-97F52F1627E1} = {82BF9CFF-A1ED-4A81-99F0-5D63C0137143}
+		{D94FD044-AC5D-4EF0-891B-019491461A16} = {70BF7819-6D26-4E25-90DE-3A18F7E729DB}
 	EndGlobalSection
 EndGlobal

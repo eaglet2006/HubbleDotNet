@@ -15,6 +15,12 @@ namespace Hubble.Core.Data
             Untokenized = 2,
         }
 
+        public enum IndexMode
+        {
+            Complex = 0,
+            Simple  = 1,
+        }
+
         #region Private field
 
         string _Name;
@@ -22,6 +28,7 @@ namespace Hubble.Core.Data
         int _DataLength = 0;
         bool _Store = true;
         Index _IndexType = Index.None;
+        IndexMode _IndexMode = IndexMode.Complex;
         int _TabIndex = 0;
         string _AnalyzerName = null;
         Analysis.IAnalyzer _Analyzer;
@@ -112,6 +119,22 @@ namespace Hubble.Core.Data
         }
 
         /// <summary>
+        /// Index mode
+        /// </summary>
+        public IndexMode Mode
+        {
+            get
+            {
+                return _IndexMode;
+            }
+
+            set
+            {
+                _IndexMode = value;
+            }
+        }
+
+        /// <summary>
         /// Full name of analyzer class
         /// </summary>
         public string AnalyzerName
@@ -171,48 +194,59 @@ namespace Hubble.Core.Data
         }
 
         public Field(string name, DataType dataType) :
-            this(name, dataType, 0, true, Index.None, null)
+            this(name, dataType, 0, true, Index.None, IndexMode.Complex, null)
         {
         }
 
 
         public Field(string name, DataType dataType, bool store) :
-            this(name, dataType, 0, store, Index.None, null)
+            this(name, dataType, 0, store, Index.None, IndexMode.Complex, null)
         {
         }
 
         public Field(string name, DataType dataType, Index indexType) :
-            this(name, dataType, 0, true, indexType, null)
+            this(name, dataType, 0, true, indexType, IndexMode.Complex, null)
         {
         }
 
         public Field(string name, DataType dataType, bool store, Index indexType) :
-            this(name, dataType, 0, store, indexType, null)
+            this(name, dataType, 0, store, indexType, IndexMode.Complex, null)
         {
         }
 
         public Field(string name, DataType dataType, Index indexType, string analyzerName) :
-            this(name, dataType, 0, true, indexType, analyzerName)
+            this(name, dataType, 0, true, indexType, IndexMode.Complex, analyzerName)
         {
         }
 
         public Field(string name, DataType dataType, bool store, Index indexType, string analyzerName) :
-            this(name, dataType, 0, store, indexType, analyzerName)
+            this(name, dataType, 0, store, indexType, IndexMode.Complex, analyzerName)
+        {
+        }
+
+        public Field(string name, DataType dataType, bool store, Index indexType, IndexMode mode, string analyzerName) :
+            this(name, dataType, 0, store, indexType, mode, analyzerName)
         {
         }
 
         public Field(string name, DataType dataType, int dataLength, bool store, Index indexType) :
-            this(name, dataType, dataLength, store, indexType, null)
+            this(name, dataType, dataLength, store, indexType, IndexMode.Complex, null)
         {
         }
 
-        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType, string analyzerName)
+        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType, string analyzerName) :
+            this(name, dataType, dataLength, store, indexType, IndexMode.Complex, analyzerName)
+        {
+        }
+
+        public Field(string name, DataType dataType, int dataLength, bool store, Index indexType, IndexMode mode, string analyzerName)
         {
             _Name = name;
             _DataType = dataType;
             _DataLength = dataLength;
             _Store = store;
             _AnalyzerName = analyzerName;
+            _IndexMode = mode;
 
             switch (indexType)
             {

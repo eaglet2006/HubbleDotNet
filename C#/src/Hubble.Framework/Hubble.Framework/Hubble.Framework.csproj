@@ -42,6 +42,8 @@
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
+    <Compile Include="DataStructure\VInt.cs" />
+    <Compile Include="DataStructure\VLong.cs" />
     <Compile Include="Data\SQLDataProvider.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\LinkedSegmentFileStream.cs" />
@@ -56,6 +58,7 @@
     <Compile Include="Serialization\MySerialization.cs" />
     <Compile Include="Serialization\XmlSerialization.cs" />
     <Compile Include="Text\Regex.cs" />
+    <Compile Include="Threading\Lock.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

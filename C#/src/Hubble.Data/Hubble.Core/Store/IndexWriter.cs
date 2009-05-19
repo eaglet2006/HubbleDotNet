@@ -44,23 +44,28 @@ namespace Hubble.Core.Store
 
         }
 
-        public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
+        public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList, out long length)
         {
             long position = _IndexFile.Position;
             byte[] wordBuf = Encoding.UTF8.GetBytes(word);
 
-            _HeadFile.Write(BitConverter.GetBytes(wordBuf.Length + sizeof(long)), 0, sizeof(int)); //Size
+            _HeadFile.Write(BitConverter.GetBytes(wordBuf.Length + sizeof(long) + sizeof(long)), 0, sizeof(int)); //Size
             _HeadFile.Write(BitConverter.GetBytes(position), 0, sizeof(long)); //doc position in index file
 
-            _HeadFile.Write(wordBuf, 0, wordBuf.Length);
-
+         
             foreach (Entity.DocumentPositionList doc in docList)
             {
                 Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(_IndexFile, doc);
             }
 
             _IndexFile.WriteByte(0);
-            _IndexFile.WriteByte(0);
+            //_IndexFile.WriteByte(0);
+
+            length = _IndexFile.Position - position;
+
+            _HeadFile.Write(BitConverter.GetBytes(length), 0, sizeof(long)); //word index data length
+
+            _HeadFile.Write(wordBuf, 0, wordBuf.Length);
 
             return position;
         }

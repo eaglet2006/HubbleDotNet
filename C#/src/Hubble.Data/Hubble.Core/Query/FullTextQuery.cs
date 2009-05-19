@@ -700,32 +700,30 @@ namespace Hubble.Core.Query
 
             while (docId >= 0)
             {
-                if (docId == 971)
-                {
-                    docId = 971;
-                }
-
-                if (docId == 809)
-                {
-                    docId = 809;
-                }
-
-
                 yield return new DocumentRank(docId, CaculateRank(wordInfoList));
                 wordInfoList = GetNextHitWords(out docId);
             }
         }
 
-        #endregion
-
-        #region IQuery Members
-
 
         public Dictionary<long, DocumentRank> Search()
         {
-            throw new NotImplementedException();
+            Dictionary<long, DocumentRank> result = new Dictionary<long,DocumentRank>();
+            long docId;
+
+            IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
+
+            while (docId >= 0)
+            {
+                result.Add(docId, new DocumentRank(docId, CaculateRank(wordInfoList)));
+                wordInfoList = GetNextHitWords(out docId);
+            }
+
+            return result;
         }
 
+
         #endregion
+
     }
 }

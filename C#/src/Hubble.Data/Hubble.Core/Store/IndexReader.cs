@@ -59,15 +59,18 @@ namespace Hubble.Core.Store
 
                 int size = BitConverter.ToInt32(buf, 0);
 
-                byte[] wordBuf = new byte[size - sizeof(long)];
+                byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
 
                 _HeadFile.Read(buf, 0, sizeof(long));
                 long position = BitConverter.ToInt64(buf, 0);
 
-                _HeadFile.Read(wordBuf, 0, wordBuf.Length);
-                string word = string.Intern(Encoding.UTF8.GetString(wordBuf));
+                _HeadFile.Read(buf, 0, sizeof(long));
+                long length = BitConverter.ToInt64(buf, 0);
 
-                list.Add(new IndexFile.WordFilePosition(word, _Serial, position));
+                _HeadFile.Read(wordBuf, 0, wordBuf.Length);
+                string word = Encoding.UTF8.GetString(wordBuf);
+
+                list.Add(new IndexFile.WordFilePosition(word, _Serial, position, length));
             }
 
             return list;

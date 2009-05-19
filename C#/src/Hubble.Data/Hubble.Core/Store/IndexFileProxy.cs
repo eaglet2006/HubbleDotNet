@@ -239,6 +239,16 @@ namespace Hubble.Core.Store
             ASendMessage((int)Event.Collect, null);
         }
 
+        new public void Close(int millisecondsTimeout)
+        {
+            base.Close(millisecondsTimeout);
+
+            _WordFilePositionTable.Clear();
+            _IndexFile.Close();
+            _IndexFile = null;
+            GC.Collect();
+        }
+
         #region IndexFileInit Members
 
         public void ImportWordFilePositionList(List<IndexFile.WordFilePosition> wordFilePositionList)
@@ -247,6 +257,7 @@ namespace Hubble.Core.Store
         }
 
         #endregion
+
     }
 
 }

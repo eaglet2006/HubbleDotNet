@@ -21,6 +21,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Hubble.Framework.Serialization;
+using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Entity
 {
@@ -127,6 +128,13 @@ namespace Hubble.Core.Entity
             tempBuf.CopyTo(Data);
         }
 
+        public DocumentPositionList(int count, long documentId)
+        {
+            DocumentId = documentId;
+            Count = count;
+            Data = new byte[0];
+        }
+
         public IEnumerator<int> Values
         {
             get
@@ -199,7 +207,7 @@ namespace Hubble.Core.Entity
 
         #region IMySerialization<CompressIntList> Members
 
-        public short Version
+        public byte Version
         {
             get 
             {
@@ -209,11 +217,24 @@ namespace Hubble.Core.Entity
 
         public void Serialize(System.IO.Stream s)
         {
-            s.Write(BitConverter.GetBytes(Size), 0, sizeof(int));
-            s.Write(BitConverter.GetBytes(DocumentId), 0, sizeof(long));
-            s.Write(BitConverter.GetBytes(Count), 0, sizeof(int));
-            s.Write(BitConverter.GetBytes(Rank), 0, sizeof(int));
-            s.Write(Data, 0, Data.Length);
+            //s.Write(BitConverter.GetBytes(Size), 0, sizeof(int));
+            //s.Write(BitConverter.GetBytes(DocumentId), 0, sizeof(long));
+            //s.Write(BitConverter.GetBytes(Count), 0, sizeof(int));
+            //s.Write(BitConverter.GetBytes(Rank), 0, sizeof(int));
+
+            VInt size = Data.Length;
+            size.WriteToStream(s);
+            VLong docId = DocumentId;
+            docId.WriteToStream(s);
+            VInt count = Count;
+            count.WriteToStream(s);
+            VInt rank = Rank;
+            rank.WriteToStream(s);
+
+            if (Data.Length > 0)
+            {
+                s.Write(Data, 0, Data.Length);
+            }
         }
 
         public DocumentPositionList Deserialize(System.IO.Stream s, short version)
@@ -224,31 +245,54 @@ namespace Hubble.Core.Entity
                     return null;
 
                 case 1:
-                    if (s.Length - s.Position < sizeof(long) + sizeof(int) * 2 + sizeof(int))
+                    //if (s.Length - s.Position < sizeof(long) + sizeof(int) * 2 + sizeof(int))
+                    //{
+                    //    return null;
+                    //}
+
+                    VInt vsize = new VInt();
+                    vsize.ReadFromStream(s);
+
+                    int size = (int)vsize;
+
+                    VLong docId = new VLong();
+                    docId.ReadFromStream(s);
+                    VInt count = new VInt();
+                    count.ReadFromStream(s);
+                    VInt rank = new VInt();
+                    rank.ReadFromStream(s);
+
+                    //byte[] buf = new byte[sizeof(long)];
+                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    //int size = BitConverter.ToInt32(buf, 0);
+
+                    //if (size == 0)
+                    //{
+                    //    return null;
+                    //}
+
+                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
+                    //DocumentId = BitConverter.ToInt64(buf, 0);
+                    
+                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    //Count = BitConverter.ToInt32(buf, 0);
+                    
+                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+                    //Rank = BitConverter.ToInt32(buf, 0);
+
+                    //buf = new byte[size - (sizeof(long) + sizeof(int) * 2)];
+
+                    DocumentId = (long)docId;
+                    Count = (int)count;
+                    Rank = (int)rank;
+
+                    byte[] buf = new byte[size];
+
+                    if (size > 0)
                     {
-                        return null;
+                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, buf.Length);
                     }
 
-                    byte[] buf = new byte[sizeof(long)];
-                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    int size = BitConverter.ToInt32(buf, 0);
-
-                    if (size == 0)
-                    {
-                        return null;
-                    }
-
-                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
-                    DocumentId = BitConverter.ToInt64(buf, 0);
-                    
-                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    Count = BitConverter.ToInt32(buf, 0);
-                    
-                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    Rank = BitConverter.ToInt32(buf, 0);
-
-                    buf = new byte[size - (sizeof(long) + sizeof(int) * 2)];
-                    Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, buf.Length);
                     Data = buf;
 
                     return this;
