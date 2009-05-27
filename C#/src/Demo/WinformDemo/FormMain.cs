@@ -45,13 +45,16 @@ namespace WinformDemo
             {
                 QueryPerfCounter qp = new QueryPerfCounter();
                 qp.Start();
+                
+                int count;
 
-                _CurDBProvider.Select(textBoxSearch.Text, 0, 100);
+                _CurDBProvider.Select(textBoxSearch.Text, 0, 100, out count);
 
                 qp.Stop();
                 double ns = qp.Duration(1);
 
-                labelDuration.Text = (ns / (1000 * 1000)).ToString() + " ms"; 
+                labelDuration.Text = (ns / (1000 * 1000)).ToString() + " ms";
+                labelCount.Text = count.ToString();
             }
         }
 
@@ -79,6 +82,12 @@ namespace WinformDemo
             Hubble.Core.Data.DBProvider.Drop("News");
             GC.Collect();
             _CurDBProvider = null;
+        }
+
+        private void buttonAppend_Click(object sender, EventArgs e)
+        {
+            FormAppend frmAppend = new FormAppend();
+            frmAppend.Show();
         }
 
 

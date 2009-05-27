@@ -13,5 +13,8 @@ namespace Hubble.Core.DBAdapter
         void Create();
 
         void Insert(List<Data.Document> docs);
+
+        long MaxDocId { get; }
+
     }
 }

@@ -117,7 +117,23 @@ namespace Hubble.Core.Store
                 }
             }
         }
+
+        private Index.DelegateWordUpdate _WordUpdateDelegate;
+
         #region Public properties
+
+        public Index.DelegateWordUpdate WordUpdateDelegate
+        {
+            get
+            {
+                return _WordUpdateDelegate;
+            }
+
+            set
+            {
+                _WordUpdateDelegate = value;
+            }
+        }
 
         public int WordTableSize
         {
@@ -176,6 +192,11 @@ namespace Hubble.Core.Store
                 case Event.Add:
                     WordDocList wl = (WordDocList)data;
                     _IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
+                    if (WordUpdateDelegate != null)
+                    {
+                        WordUpdateDelegate(wl.Word, wl.DocList);
+                    }
+
                     break;
                 case Event.Collect:
                     _IndexFile.Collect();

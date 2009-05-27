@@ -40,6 +40,8 @@
   <ItemGroup>
     <Compile Include="Analysis\IAnalyzer.cs" />
     <Compile Include="Analysis\SimpleAnalyzer.cs" />
+    <Compile Include="Cache\CacheManager.cs" />
+    <Compile Include="Cache\IManagedCache.cs" />
     <Compile Include="Data\DataException.cs" />
     <Compile Include="Data\DataType.cs" />
     <Compile Include="Data\DBAccess.cs" />

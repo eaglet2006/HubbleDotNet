@@ -17,6 +17,8 @@ namespace WinformDemo
 
         private void buttonLogin_Click(object sender, EventArgs e)
         {
+            Hubble.Analyzer.KTAnalyzer ktAnalyzer = new Hubble.Analyzer.KTAnalyzer();
+
             FormMain frmMain = new FormMain();
 
             frmMain.Show();

@@ -96,14 +96,19 @@ namespace Hubble.Core.Query
             _Query = query;
         }
 
-        public void Search()
+        public int Search()
         {
             Dictionary<long, DocumentRank> docRankTbl = _Query.Search();
 
-            if (docRankTbl.Count == 0)
+            if (docRankTbl != null)
             {
-                docRankTbl = new Dictionary<long, DocumentRank>();
+                return docRankTbl.Count;
             }
+            else
+            {
+                return 0;
+            }
+            
 
             //if (!_HasSorted)
             //{

@@ -37,6 +37,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.labelDuration = new System.Windows.Forms.Label();
             this.buttonDrop = new System.Windows.Forms.Button();
+            this.labelCount = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.buttonAppend = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -96,7 +99,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(19, 126);
+            this.label2.Location = new System.Drawing.Point(18, 149);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(47, 13);
             this.label2.TabIndex = 6;
@@ -105,7 +108,7 @@
             // labelDuration
             // 
             this.labelDuration.AutoSize = true;
-            this.labelDuration.Location = new System.Drawing.Point(72, 126);
+            this.labelDuration.Location = new System.Drawing.Point(71, 149);
             this.labelDuration.Name = "labelDuration";
             this.labelDuration.Size = new System.Drawing.Size(29, 13);
             this.labelDuration.TabIndex = 7;
@@ -121,11 +124,42 @@
             this.buttonDrop.UseVisualStyleBackColor = true;
             this.buttonDrop.Click += new System.EventHandler(this.buttonDrop_Click);
             // 
+            // labelCount
+            // 
+            this.labelCount.AutoSize = true;
+            this.labelCount.Location = new System.Drawing.Point(71, 126);
+            this.labelCount.Name = "labelCount";
+            this.labelCount.Size = new System.Drawing.Size(13, 13);
+            this.labelCount.TabIndex = 10;
+            this.labelCount.Text = "0";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(18, 126);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(35, 13);
+            this.label4.TabIndex = 9;
+            this.label4.Text = "Count";
+            // 
+            // buttonAppend
+            // 
+            this.buttonAppend.Location = new System.Drawing.Point(291, 42);
+            this.buttonAppend.Name = "buttonAppend";
+            this.buttonAppend.Size = new System.Drawing.Size(75, 23);
+            this.buttonAppend.TabIndex = 11;
+            this.buttonAppend.Text = "Append";
+            this.buttonAppend.UseVisualStyleBackColor = true;
+            this.buttonAppend.Click += new System.EventHandler(this.buttonAppend_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(446, 352);
+            this.Controls.Add(this.buttonAppend);
+            this.Controls.Add(this.labelCount);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.buttonDrop);
             this.Controls.Add(this.labelDuration);
             this.Controls.Add(this.label2);
@@ -155,5 +189,8 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label labelDuration;
         private System.Windows.Forms.Button buttonDrop;
+        private System.Windows.Forms.Label labelCount;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Button buttonAppend;
     }
 }

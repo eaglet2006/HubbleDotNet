@@ -10,15 +10,17 @@ using Hubble.Framework.IO;
 namespace Hubble.Core.Index
 {
 
+    public delegate void DelegateWordUpdate(string word, List<DocumentPositionList> docList);
+
     /// <summary>
     /// This class helps to build and query 
     /// a inverted index
     /// </summary>
-    public class InvertedIndex
+    public class InvertedIndex : Cache.IManagedCache
     {
         #region WordIndex
 
-        public class WordIndexReader
+        public class WordIndexReader : IComparable<WordIndexReader>
         {
             struct DocScore
             {
@@ -40,9 +42,27 @@ namespace Hubble.Core.Index
             List<DocumentPositionList> _ListForReader = new List<DocumentPositionList>();
             long _WordCount;
 
+            Data.DBProvider _DBProvider;
+            int _TabIndex;
+            long _TotalDocs;
+
+            long _HitCount = 0;
+
             #endregion
 
             #region Private properties
+
+            private long HitCount
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        return _HitCount;
+                    }
+                }
+            }
+
             private List<DocumentPositionList> ListForReader
             {
                 get
@@ -57,6 +77,23 @@ namespace Hubble.Core.Index
             #endregion
 
             #region Public Properties
+
+            public long MemorySize
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        long size = 0;
+                        foreach (DocumentPositionList docPList in _ListForReader)
+                        {
+                            size += docPList.Size;
+                        }
+
+                        return _DocScoreList.Length * (sizeof(long)*2) + size;
+                    }
+                }
+            }
 
             /// <summary>
             /// Word
@@ -117,9 +154,54 @@ namespace Hubble.Core.Index
 
             #region Private methods
 
+            private void UpdateDocScoreList()
+            {
+                _WordCount = 0;
+                _DocScoreList = new DocScore[_ListForReader.Count];
+
+                int _Norm_d_t;
+                int _Idf_t;
+
+                foreach (DocumentPositionList dList in _ListForReader)
+                {
+                    _WordCount += dList.Count;
+                }
+
+                _Norm_d_t = (int)Math.Sqrt(_WordCount);
+                _Idf_t = (int)Math.Log10((double)_TotalDocs / (double)_WordCount + 1) + 1;
+
+                int i = 0;
+
+                foreach (DocumentPositionList dList in _ListForReader)
+                {
+                    int numDocWords = _DBProvider.GetDocWordsCount(dList.DocumentId, _TabIndex);
+
+                    int docRank = 1;
+                    if (dList.Rank > 0)
+                    {
+                        docRank = dList.Rank;
+                    }
+
+                    long score = docRank * _Idf_t * dList.Count * 1000000 / (_Norm_d_t * numDocWords);
+
+                    _DocScoreList[i] = new DocScore(dList.DocumentId, score);
+
+                    i++;
+                }
+            }
+
+
             #endregion
 
             #region Public methods
+
+            public void Hit()
+            {
+                lock (this)
+                {
+                    _HitCount++;
+                }
+            }
 
             public long GetDocumentId(int index)
             {
@@ -179,45 +261,54 @@ namespace Hubble.Core.Index
 
             #region internal methods
 
+            internal void WordUpdate(string word, List<DocumentPositionList> docList)
+            {
+                lock (this)
+                {
+                    _ListForReader.AddRange(docList);
+                    UpdateDocScoreList();
+                }
+            }
+
             internal WordIndexReader(string word, List<DocumentPositionList> docList, long totalDocs, 
                 Data.DBProvider dbProvider, int tabIndex)
             {
                 _Word = word;
                 _ListForReader = docList;
+                _DBProvider = dbProvider;
+                _TabIndex = tabIndex;
+                _TotalDocs = totalDocs;
+                UpdateDocScoreList();
+            }
 
-                _WordCount = 0;
-                _DocScoreList = new DocScore[docList.Count];
+            #endregion
 
-                int _Norm_d_t;
-                int _Idf_t;
+            public override string ToString()
+            {
+                return Word + "," + HitCount.ToString();
+            }
 
-                foreach (DocumentPositionList dList in docList)
+            #region IComparable<WordIndexReader> Members
+
+            public int CompareTo(WordIndexReader other)
+            {
+                if (other == null)
                 {
-                    _WordCount += dList.Count;
+                    return 1;
                 }
 
-                _Norm_d_t = (int)Math.Sqrt(_WordCount);
-                _Idf_t = (int)Math.Log10((double)totalDocs / (double)_WordCount + 1) + 1;
-
-                int i = 0;
-
-                foreach (DocumentPositionList dList in docList)
+                if (this.HitCount > other.HitCount)
                 {
-                    int numDocWords = dbProvider.GetDocWordsCount(dList.DocumentId, tabIndex);
-
-                    int docRank = 1;
-                    if (dList.Rank > 0)
-                    {
-                        docRank = dList.Rank;
-                    }
-
-                    long score = docRank * _Idf_t * dList.Count * 1000000 / (_Norm_d_t * numDocWords);
-
-                    _DocScoreList[i] = new DocScore(dList.DocumentId, score);
-
-                    i++;
+                    return 1;
                 }
-
+                else if (this.HitCount == other.HitCount)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return -1;
+                }
             }
 
             #endregion
@@ -663,6 +754,7 @@ namespace Hubble.Core.Index
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
             _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild);
+            _IndexFileProxy.WordUpdateDelegate = WordUpdateDelegate;
         }
 
         private void StoreIndexToFile()
@@ -692,6 +784,21 @@ namespace Hubble.Core.Index
             _IndexFileProxy.Collect();
         }
 
+        void WordUpdateDelegate(string word, List<DocumentPositionList> docList)
+        {
+            WordIndexReader wr;
+
+            lock (this)
+            {
+                if (!_WordTableReader.TryGetValue(word, out wr))
+                {
+                    return;
+                }
+            }
+
+            wr.WordUpdate(word, docList);
+        }
+
         #endregion
 
         public InvertedIndex(string path, string fieldName, int tabIndex, Data.Field.IndexMode mode, bool rebuild, Data.DBProvider dbProvider)
@@ -701,12 +808,14 @@ namespace Hubble.Core.Index
             _IndexMode = mode;
             _DBProvider = dbProvider;
             InitFileStore(path, fieldName, rebuild);
+            Cache.CacheManager.Register(this);
             //InitCollectThread();
         }
 
         public InvertedIndex(Data.DBProvider dbProvider)
         {
             _DBProvider = dbProvider;
+            Cache.CacheManager.Register(this);
             //InitCollectThread();
         }
 
@@ -715,6 +824,8 @@ namespace Hubble.Core.Index
 
         public void Close()
         {
+            Cache.CacheManager.UnRegister(this);
+
             Closed = true;
 
             _IndexFileProxy.Close(2000);
@@ -737,24 +848,29 @@ namespace Hubble.Core.Index
 
         public WordIndexReader GetWordIndex(string word)
         {
-            WordIndexReader retVal;
-
-            if (_WordTableReader.TryGetValue(word, out retVal))
+            lock (this)
             {
-                return retVal;
-            }
+                WordIndexReader retVal;
 
-            WordIndexReader wIndex = _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, 
-                _TabIndex));
+                if (_WordTableReader.TryGetValue(word, out retVal))
+                {
+                    retVal.Hit();
+                    return retVal;
+                }
 
-            if (wIndex != null)
-            {
-                _WordTableReader.Add(word, wIndex);
-                return wIndex;
-            }
-            else
-            {
-                return null;
+                WordIndexReader wIndex = _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider,
+                    _TabIndex));
+
+                if (wIndex != null)
+                {
+                    _WordTableReader.Add(word, wIndex);
+                    wIndex.Hit();
+                    return wIndex;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
@@ -814,40 +930,93 @@ namespace Hubble.Core.Index
                 _DocumentWordCountTable[documentId] = count;
                 retCount = count;
                 //_DocInfosNeedCollect.Add(new IndexFile.DocInfo(
-            }
 
-
-            foreach (WordIndexWriter wordIndex in hitIndexes)
-            {
-                wordIndex.Index();
-
-                lock (this)
+                foreach (WordIndexWriter wordIndex in hitIndexes)
                 {
+                    wordIndex.Index();
+                    wordIndex.Hit = false;
+
                     if (!_WordTableNeedCollectDict.ContainsKey(wordIndex.Word))
                     {
                         _WordTableNeedCollectDict.Add(wordIndex.Word, wordIndex);
                     }
                 }
- 
-            }
 
-            if (WriteCount >= ForceCollectCount)
-            {
-                WriteCount = 0;
-                StoreIndexToFile();
-            }
-            else
-            {
-                WriteCount++;
-            }
 
-            return retCount;
+                if (WriteCount >= ForceCollectCount)
+                {
+                    WriteCount = 0;
+                    StoreIndexToFile();
+                }
+                else
+                {
+                    WriteCount++;
+                }
+
+                return retCount;
+            }
         }
 
         public void FinishIndex()
         {
             WriteCount = 0;
             StoreIndexToFile();
+        }
+
+        #endregion
+
+        #region IManagedCache Members
+
+        public long CacheSize
+        {
+            get 
+            {
+                lock (this)
+                {
+                    long size = 0;
+
+                    foreach (WordIndexReader ir in _WordTableReader.Values)
+                    {
+                        size += ir.MemorySize;
+                    }
+
+                    return size;
+                }
+             }
+        }
+
+        public void ReduceMemory(int percentage)
+        {
+            lock (this)
+            {
+                if (_WordTableReader.Count <= 0)
+                {
+                    return;
+                }
+
+                int count = _WordTableReader.Count * percentage / 100;
+
+                if (count == 0 && _WordTableReader.Count < 10)
+                {
+                    _WordTableReader.Clear();
+                    return;
+                }
+                
+                List<WordIndexReader> indexReaderList = new List<WordIndexReader>();
+
+
+                foreach (WordIndexReader ir in _WordTableReader.Values)
+                {
+                    indexReaderList.Add(ir);
+                }
+
+                indexReaderList.Sort();
+
+                for (int i = 0; i < count; i++)
+                {
+                    _WordTableReader.Remove(indexReaderList[i].Word);
+                }
+            }
         }
 
         #endregion

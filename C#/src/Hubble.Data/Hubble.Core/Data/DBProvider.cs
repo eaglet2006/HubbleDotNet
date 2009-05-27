@@ -161,7 +161,6 @@ namespace Hubble.Core.Data
         private Store.PayloadFile _PayloadFile;
 
         private int _InsertCount = 0;
-
         #endregion
 
         #region Properties
@@ -376,6 +375,7 @@ namespace Hubble.Core.Data
 
             _Table = Table.Load(directory);
             Table table = _Table;
+            long dbMaxDocId = 0;
 
             lock (_LockObj)
             {
@@ -389,6 +389,7 @@ namespace Hubble.Core.Data
                 if (DBAdapter != null)
                 {
                     DBAdapter.Table = table;
+                    dbMaxDocId = DBAdapter.MaxDocId;
                 }
                 else
                 {
@@ -411,6 +412,12 @@ namespace Hubble.Core.Data
 
                         //Open Payload file
                         _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
+                        _LastDocId++;
+
+                        if (_LastDocId <= dbMaxDocId)
+                        {
+                            _LastDocId = dbMaxDocId + 1;
+                        }
                     }
                 }
 
@@ -645,9 +652,10 @@ namespace Hubble.Core.Data
             }
         }
 
-        public System.Data.DataSet Select(string sql, int first, int length)
+        public System.Data.DataSet Select(string sql, int first, int length, out int count)
         {
             Hubble.Core.Query.IQuery query;
+            count = 0;
 
             string[] words = sql.Split(new string[] { " " }, StringSplitOptions.None);
 
@@ -683,7 +691,7 @@ namespace Hubble.Core.Data
             query.TabIndex = GetField(fieldName).TabIndex;
 
             Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-            searcher.Search();
+            count = searcher.Search();
 
             //foreach (Hubble.Core.Query.DocumentRank docRank in searcher.Get(first, length))
             //{

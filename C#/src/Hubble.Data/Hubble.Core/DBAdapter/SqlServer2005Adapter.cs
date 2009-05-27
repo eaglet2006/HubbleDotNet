@@ -60,6 +60,35 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+
+        public long MaxDocId
+        {
+            get 
+            {
+                using (SQLDataProvider sqlData = new SQLDataProvider())
+                {
+                    sqlData.Connect(Table.ConnectionString);
+                    System.Data.DataSet ds = sqlData.QuerySql("select max(DocId) as MaxDocId from " + Table.DBTableName);
+
+                    if (ds.Tables[0].Rows.Count <= 0)
+                    {
+                        return 0;
+                    }
+
+                    if (ds.Tables[0].Rows[0][0] == System.DBNull.Value)
+                    {
+                        return 0;
+                    }
+                    else
+                    {
+                        return (long)ds.Tables[0].Rows[0][0];
+                    }
+
+                } 
+            }
+        }
+
+
         public void Drop()
         {
             Debug.Assert(Table != null);

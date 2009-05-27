@@ -7,16 +7,19 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Diagnostics;
+
 using Hubble.Core.Data;
 
 namespace WinformDemo
 {
-    public partial class FormCreate : Form
+    public partial class FormAppend : Form
     {
         XmlNodeList _DocumentList;
 
+        decimal _From;
+        decimal _To;
 
-        public FormCreate()
+        public FormAppend()
         {
             InitializeComponent();
         }
@@ -33,18 +36,13 @@ namespace WinformDemo
                     xmlDoc.Load(textBoxNewsXml.Text);
                     XmlNodeList nodes = xmlDoc.SelectNodes(@"News/Item");
 
-                    numericUpDownCount.Value = nodes.Count;
+                    numericUpDownTo.Value = nodes.Count;
                 }
                 catch (Exception e1)
                 {
                     MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-        }
-
-        private void FormCreate_Load(object sender, EventArgs e)
-        {
-            buttonCreate.Enabled = false;
         }
 
         private void buttonLoad_Click(object sender, EventArgs e)
@@ -57,7 +55,7 @@ namespace WinformDemo
                     xmlDoc.Load(textBoxNewsXml.Text);
                     _DocumentList = xmlDoc.SelectNodes(@"News/Item");
 
-                    buttonCreate.Enabled = true;
+                    buttonAppend.Enabled = true;
                 }
                 else
                 {
@@ -72,36 +70,25 @@ namespace WinformDemo
             }
         }
 
-        private void buttonCreate_Click(object sender, EventArgs e)
+        delegate void ShowProgressDelegate(int newPos);
+        private void ShowProgress(int newPos)
+        {
+            if (!progressBar1.InvokeRequired)
+            {
+                progressBar1.Value = newPos;
+            }
+            else
+            {
+                ShowProgressDelegate showProgress = new ShowProgressDelegate(ShowProgress);
+                this.BeginInvoke(showProgress, new object[] { newPos });
+            }
+        }
+
+        private void RunAppend(Object stateInfo)
         {
             try
             {
-                Hubble.Core.Data.DBProvider.Drop("News");
-
-                string analyseName = "Hubble.Analyzer.KTAnalyzer";
-
                 DBAccess dbAccess = new DBAccess();
-                Table table = new Table();
-                table.ConnectionString = textBoxConnectionString.Text;
-                table.DBAdapterTypeName = typeof(Hubble.Core.DBAdapter.SqlServer2005Adapter).FullName;
-                table.DBTableName = textBoxTableName.Text;
-                table.Fields.Add(new Field("title", DataType.String, 256, true, Field.Index.Tokenized, analyseName));
-
-                if (checkBoxComplexIndex.Checked)
-                {
-                    table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, Field.IndexMode.Complex, analyseName));
-                }
-                else
-                {
-                    table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, Field.IndexMode.Simple, analyseName));
-                }
-
-                table.Fields.Add(new Field("Url", DataType.String, true, Field.Index.None, analyseName));
-                table.Fields.Add(new Field("Time", DataType.DateTime, true, Field.Index.Untokenized, analyseName));
-                table.Name = textBoxTableName.Text;
-                //table.SQLForCreate = "create index I_News_Title on News(title);";
-
-                dbAccess.CreateTable(table, @"D:\Test\News");
 
                 Stopwatch watch = new Stopwatch();
                 long docId = 0;
@@ -109,9 +96,15 @@ namespace WinformDemo
                 int contentCount = 0;
 
                 List<Document> docs = new List<Document>();
+                int i = 0;
 
                 foreach (XmlNode node in _DocumentList)
                 {
+                    if (i++ < numericUpDownFrom.Value)
+                    {
+                        continue;
+                    }
+
                     String title = node.Attributes["Title"].Value;
                     DateTime time = DateTime.Parse(node.Attributes["Time"].Value);
                     String Url = node.Attributes["Url"].Value;
@@ -132,31 +125,18 @@ namespace WinformDemo
                     if (contentCount % 100 == 0)
                     {
                         watch.Start();
-                        dbAccess.Insert(table.Name, docs);
+                        dbAccess.Insert("News", docs);
                         watch.Stop();
 
                         docs.Clear();
-                        progressBar1.Value =(int)(contentCount * 100 / numericUpDownCount.Value);
-                        Application.DoEvents();
+                        ShowProgress((int)(contentCount * 100 / (_To - _From)));
                     }
 
-                    if (contentCount == (int)numericUpDownCount.Value)
+                    if (contentCount == (int)(_To - _From))
                     {
                         break;
                     }
                 }
-
-                if (docs.Count > 0)
-                {
-                    watch.Start();
-                    dbAccess.Insert(table.Name, docs);
-                    watch.Stop();
-
-                    docs.Clear();
-                    progressBar1.Value = (int)(contentCount * 100 / numericUpDownCount.Value);
-                    Application.DoEvents();
-                }
-
 
                 watch.Start();
                 dbAccess.Close();
@@ -170,7 +150,18 @@ namespace WinformDemo
             {
                 MessageBox.Show(e1.Message + "\r\n" + e1.StackTrace, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
 
+
+        private void buttonAppend_Click(object sender, EventArgs e)
+        {
+            progressBar1.Value = 0;
+            _From = numericUpDownFrom.Value;
+            _To = numericUpDownTo.Value;
+
+            System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(RunAppend));
+
+            buttonAppend.Enabled = false;
         }
     }
 }

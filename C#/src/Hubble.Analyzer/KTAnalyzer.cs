@@ -13,8 +13,6 @@ namespace Hubble.Analyzer
         private static CSimpleDictSeg _SimpleDictSeg;
         private static object _LockObj = new object();
 
-        public Stopwatch Stopwatch = new Stopwatch();
-
         private string GetAssemblyPath()
         {
             const string _PREFIX = @"file:///";
@@ -56,9 +54,12 @@ namespace Hubble.Analyzer
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
-            Stopwatch.Start();
-            List<T_WordInfo> wordInfos = _SimpleDictSeg.SegmentToWordInfos(text);
-            Stopwatch.Stop();
+            List<T_WordInfo> wordInfos;
+
+            lock (_LockObj)
+            {
+                wordInfos = _SimpleDictSeg.SegmentToWordInfos(text);
+            }
 
             foreach (T_WordInfo wordInfo in wordInfos)
             {

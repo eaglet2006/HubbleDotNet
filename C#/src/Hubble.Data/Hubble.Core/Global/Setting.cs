@@ -92,6 +92,26 @@ namespace Hubble.Core.Global
 
         #region Public properties
 
+        long _MemoryLimited = 800 * 1024 * 1024;
+
+        public long MemoryLimited
+        {
+            get
+            {
+                return _MemoryLimited;
+            }
+
+            set
+            {
+                _MemoryLimited = value;
+
+                if (_MemoryLimited < 1 * 1024 * 1024)
+                {
+                    _MemoryLimited = 1 * 1024 * 1024;
+                }
+            }
+        }
+
         Directories _Directories;
 
         public Directories Directories
