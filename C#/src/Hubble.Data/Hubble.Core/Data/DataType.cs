@@ -35,6 +35,115 @@ namespace Hubble.Core.Data
 
     public class DataTypeConvert
     {
+        static public Type GetClrType(DataType type)
+        {
+            switch (type)
+            {
+                case DataType.Data:
+
+                    throw new Exception("Not finished!");
+
+                case DataType.String:
+                    return typeof(string);
+
+                case DataType.Int32:
+                    return typeof(int);
+
+                case DataType.Int64:
+                    return typeof(long);
+
+                case DataType.Date:
+                case DataType.SmallDateTime:
+                case DataType.DateTime:
+                    return typeof(DateTime);
+
+
+                case DataType.Float:
+                    return typeof(float);
+                default:
+                    throw new ArgumentException(string.Format("Invalid type:{0}", type));
+            }
+        }
+
+        static public string GetString(DataType type, int[] buf, int from, int len)
+        {
+            switch (type)
+            {
+                case DataType.Data:
+
+                    throw new Exception("Not finished!");
+
+                case DataType.String:
+
+                    StringBuilder str = new StringBuilder();
+
+                    for (int i = from; i < from + len; i++)
+                    {
+                        char c;
+
+                        if (i % 2 == 0)
+                        {
+                            c = (char)(buf[i] >> 16);
+                        }
+                        else
+                        {
+                            c = (char)(buf[i] % 65536);
+                        }
+
+                        if (c == 0)
+                        {
+                            break;
+                        }
+
+                        str.Append(c);
+                    }
+
+                    return str.ToString();
+                case DataType.Date:
+                    {
+                        DateTime date = IntToDate(buf[from]);
+                        return date.ToString("yyyy-MM-dd");
+                    }
+                case DataType.SmallDateTime:
+                    {
+                        DateTime date = IntToSmallDatetime(buf[from]);
+                        return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
+                    }
+                case DataType.Int32:
+                    return buf[from].ToString();
+
+                case DataType.Int64:
+                    {
+                        long l;
+                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        return l.ToString();
+                    }
+
+                case DataType.DateTime:
+                    {
+                        long l;
+                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        DateTime date = LongToDateTime(l);
+                        return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
+                    }
+
+                case DataType.Float:
+                    {
+                        long l;
+                        l = ((long)buf[from]) << 32 + buf[from + 1];
+
+                        float f = l;
+                        l = ((long)buf[from + 2]) << 32 + buf[from + 3];
+
+                        f += (float)l / 1000000000000000000;
+
+                        return f.ToString();
+                    }
+                default:
+                    throw new ArgumentException(string.Format("Invalid type:{0}", type));
+            }
+        }
+
         static public int[] GetData(DataType type, string value)
         {
             int[] ret;
@@ -59,16 +168,21 @@ namespace Hubble.Core.Data
                     int i = 0;
                     int d = 0;
 
-                    foreach (char c in value)
+                    foreach(int c in value)
                     {
                         if (i % 2 == 0)
                         {
-                            d = c;
+                            d = c << 16;
+
+                            if (i == value.Length - 1)
+                            {
+                                ret[i / 2] = d;
+                            }
                         }
                         else
                         {
-                            d += c << 16;
-                            ret[i / 2] = d;
+                            ret[i / 2] = d + c;
+                            d = 0;
                         }
 
                         i++;

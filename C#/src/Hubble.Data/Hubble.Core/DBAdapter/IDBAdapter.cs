@@ -31,6 +31,8 @@ namespace Hubble.Core.DBAdapter
 
         void Insert(List<Data.Document> docs);
 
+        System.Data.DataTable Query(List<Data.Field> selectFields, List<long> docs);
+
         long MaxDocId { get; }
 
     }

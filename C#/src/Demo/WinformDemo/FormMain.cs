@@ -90,6 +90,12 @@ namespace WinformDemo
             frmAppend.Show();
         }
 
+        private void buttonDelete_Click(object sender, EventArgs e)
+        {
+            FormDelete frmDelete = new FormDelete();
+            frmDelete.Show();
+        }
+
 
     }
 }

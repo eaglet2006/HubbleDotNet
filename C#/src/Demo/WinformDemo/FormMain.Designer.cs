@@ -40,6 +40,7 @@
             this.labelCount = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.buttonAppend = new System.Windows.Forms.Button();
+            this.buttonDelete = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -152,11 +153,22 @@
             this.buttonAppend.UseVisualStyleBackColor = true;
             this.buttonAppend.Click += new System.EventHandler(this.buttonAppend_Click);
             // 
+            // buttonDelete
+            // 
+            this.buttonDelete.Location = new System.Drawing.Point(385, 42);
+            this.buttonDelete.Name = "buttonDelete";
+            this.buttonDelete.Size = new System.Drawing.Size(75, 23);
+            this.buttonDelete.TabIndex = 12;
+            this.buttonDelete.Text = "Delete";
+            this.buttonDelete.UseVisualStyleBackColor = true;
+            this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(446, 352);
+            this.ClientSize = new System.Drawing.Size(472, 352);
+            this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.buttonAppend);
             this.Controls.Add(this.labelCount);
             this.Controls.Add(this.label4);
@@ -192,5 +204,6 @@
         private System.Windows.Forms.Label labelCount;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button buttonAppend;
+        private System.Windows.Forms.Button buttonDelete;
     }
 }

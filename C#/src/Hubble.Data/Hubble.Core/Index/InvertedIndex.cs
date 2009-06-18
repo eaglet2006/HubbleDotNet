@@ -4,6 +4,7 @@ using System.Text;
 using System.Diagnostics;
 using Hubble.Core.Entity;
 using Hubble.Core.Store;
+using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
 using Hubble.Framework.IO;
 
@@ -22,7 +23,7 @@ namespace Hubble.Core.Index
 
         public class WordIndexReader : IComparable<WordIndexReader>
         {
-            struct DocScore
+            public struct DocScore
             {
                 public long DocId;
                 public long Score;
@@ -48,6 +49,10 @@ namespace Hubble.Core.Index
 
             long _HitCount = 0;
 
+            //delete
+            DeleteProvider _DelProvider = null;
+            int _DeleteStamp = -1;
+
             #endregion
 
             #region Private properties
@@ -69,6 +74,13 @@ namespace Hubble.Core.Index
                 {
                     lock (this)
                     {
+                        int deleStamp = _DelProvider.DeleteStamp;
+                        if (deleStamp != _DeleteStamp)
+                        {
+                            _ListForReader = _DelProvider.GetDocumentPositionList(_ListForReader);
+                            _DeleteStamp = deleStamp;
+                        }
+
                         return _ListForReader;
                     }
                 }
@@ -223,8 +235,21 @@ namespace Hubble.Core.Index
             {
                 lock (this)
                 {
-                    foreach (DocScore docScore in _DocScoreList)
+                    int deleStamp = _DelProvider.DeleteStamp;
+                    if (deleStamp != _DeleteStamp)
                     {
+                        _DelProvider.FilterDocScore(_DocScoreList);
+                        _DeleteStamp = deleStamp;
+                    }
+                    
+                    for(int i = 0; i < _DocScoreList.Length; i++)
+                    {
+                        DocScore docScore = _DocScoreList[i];
+                        if (docScore.DocId < 0)
+                        {
+                            continue;
+                        }
+
                         long rank = docScore.Score * wordRank / Norm_Ranks;
                         int score = 0;
                         if (rank > int.MaxValue - 4000000)
@@ -276,6 +301,7 @@ namespace Hubble.Core.Index
                 _Word = word;
                 _ListForReader = docList;
                 _DBProvider = dbProvider;
+                _DelProvider = _DBProvider.DelProvider;
                 _TabIndex = tabIndex;
                 _TotalDocs = totalDocs;
                 UpdateDocScoreList();

@@ -102,6 +102,22 @@ namespace Hubble.Core.Data
             _LastTableName = tableName;
         }
 
+        public void Delete(string tableName, List<long> docs)
+        {
+            if (string.IsNullOrEmpty(Host))
+            {
+                if (_DBInsertProvider != null && _LastTableName != tableName)
+                {
+                    _DBInsertProvider.Collect();
+                }
+
+                _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+                _DBInsertProvider.Delete(docs);
+            }
+
+            _LastTableName = tableName;
+        }
+
         public void Collect()
         {
             if (_DBInsertProvider != null)

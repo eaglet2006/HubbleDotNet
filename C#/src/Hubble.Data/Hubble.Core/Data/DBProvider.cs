@@ -178,6 +178,7 @@ namespace Hubble.Core.Data
         private Store.PayloadFile _PayloadFile;
 
         private int _InsertCount = 0;
+        private DeleteProvider _DelProvider;
         #endregion
 
         #region Properties
@@ -223,6 +224,14 @@ namespace Hubble.Core.Data
             get
             {
                 return _PayloadLength;
+            }
+        }
+
+        internal DeleteProvider DelProvider
+        {
+            get
+            {
+                return _DelProvider;
             }
         }
 
@@ -377,6 +386,11 @@ namespace Hubble.Core.Data
                 System.IO.File.Delete(file);
             }
 
+            foreach (string file in System.IO.Directory.GetFiles(dir, "Delete.db"))
+            {
+                System.IO.File.Delete(file);
+            }
+
             foreach (string file in System.IO.Directory.GetFiles(dir, "tableinfo.xml"))
             {
                 System.IO.File.Delete(file);
@@ -389,6 +403,7 @@ namespace Hubble.Core.Data
         private void Open(string directory)
         {
             _Directory = directory;
+            _DelProvider = new DeleteProvider();
 
             _Table = Table.Load(directory);
             Table table = _Table;
@@ -413,6 +428,9 @@ namespace Hubble.Core.Data
                     throw new DataException(string.Format("Can't find DBAdapterTypeName : {0}",
                         table.DBAdapterTypeName));
                 }
+
+                //Open delete provider
+                _DelProvider.Open(_Directory);
 
                 //Open payload information
                 OpenPayloadInformation(table);
@@ -457,6 +475,111 @@ namespace Hubble.Core.Data
 
         }
 
+        private List<Document> Query(List<Field> selectFields, List<long> docs)
+        {
+            List<Field> dbFields = new List<Field>();
+            Dictionary<long, Document> docIdToDocumnet = null;
+
+            List<Document> result;
+
+            result = new List<Document>(docs.Count);
+
+            foreach (Field field in selectFields)
+            {
+                if (field.Store && field.IndexType != Field.Index.Untokenized)
+                {
+                    dbFields.Add(field);
+                }
+            }
+
+            if (dbFields.Count > 0)
+            {
+                docIdToDocumnet = new Dictionary<long,Document>();
+            }
+
+            foreach (long docId in docs)
+            {
+                Document doc = new Document();
+                result.Add(doc);
+                doc.DocId = docId;
+
+                if (docIdToDocumnet != null)
+                {
+                    if (!docIdToDocumnet.ContainsKey(docId))
+                    {
+                        docIdToDocumnet.Add(docId, doc);
+                    }
+                }
+
+                Payload payload;
+                
+                if (!_DocPayload.TryGetValue(docId, out payload))
+                {
+                    payload = null;
+                }
+
+                foreach(Field field in selectFields)
+                {
+                    string value = null;
+
+                    if (payload != null)
+                    {
+                        if (field.IndexType == Field.Index.Untokenized)
+                        {
+                            value = DataTypeConvert.GetString(field.DataType,
+                                payload.Data, field.TabIndex, field.DataLength);
+                        }
+                    }
+                    
+                    if (field.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        value = docId.ToString();
+                    }
+
+                    doc.Add(field.Name, value, field.DataType, 
+                        field.Store && field.IndexType != Field.Index.Untokenized);
+
+                    
+                }
+            }
+
+            if (dbFields.Count > 0)
+            {
+                dbFields.Add(new Field("DocId", DataType.Int64));
+                System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs);
+
+                foreach (System.Data.DataRow row in dt.Rows)
+                {
+                    long docId = (long)row["DocId"];
+
+                    Document doc ;
+
+                    if (docIdToDocumnet.TryGetValue(docId, out doc))
+                    {
+                        foreach (FieldValue fv in doc.FieldValues)
+                        {
+                            if (fv.FromDB)
+                            {
+                                object obj = row[fv.FieldName];
+                                if (obj == System.DBNull.Value)
+                                {
+                                    fv.Value = null;
+                                }
+                                else
+                                {
+                                    fv.Value = obj.ToString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result; 
+
+        }
+
+
         #endregion
 
         #region internal methods
@@ -491,6 +614,7 @@ namespace Hubble.Core.Data
             lock (_LockObj)
             {
                 _Directory = directory;
+                _DelProvider = new DeleteProvider();
 
                 //Get DB adapter
                 if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
@@ -511,6 +635,8 @@ namespace Hubble.Core.Data
                         table.DBAdapterTypeName));
                 }
 
+                //Open delete provider
+                _DelProvider.Open(_Directory);
 
                 //Create payload information
                 CreatePayloadInformation(table);
@@ -656,6 +782,11 @@ namespace Hubble.Core.Data
             }
         }
 
+        public void Delete(IList<long> docs)
+        {
+            _DelProvider.Delete(docs);
+        }
+
         public void Collect()
         {
             foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
@@ -708,14 +839,39 @@ namespace Hubble.Core.Data
             query.TabIndex = GetField(fieldName).TabIndex;
 
             Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-            count = searcher.Search();
+            Dictionary<long, Query.DocumentRank> docRankTbl = searcher.Search();
+
+            List<long> docs = new List<long>();
+
+            if (docRankTbl != null)
+            {
+                foreach (Hubble.Core.Query.DocumentRank docRank in docRankTbl.Values)
+                {
+                    docs.Add(docRank.DocumentId);
+
+                    if (docs.Count > 10)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            List<Field> selectFields = new List<Field>();
+
+            foreach (Field field in _FieldIndex.Values)
+            {
+                selectFields.Add(field);
+            }
+
+            List<Document> docResult = Query(selectFields, docs);
+
+            return Document.ToDataSet(selectFields, docResult);
 
             //foreach (Hubble.Core.Query.DocumentRank docRank in searcher.Get(first, length))
             //{
                 
             //}
 
-            return null;
         }
 
         #endregion

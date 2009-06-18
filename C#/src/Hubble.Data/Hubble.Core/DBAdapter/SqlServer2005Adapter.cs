@@ -201,6 +201,52 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+
+        public System.Data.DataTable Query(List<Hubble.Core.Data.Field> selectFields, List<long> docs)
+        {
+            StringBuilder sql = new StringBuilder();
+
+            sql.Append("select ");
+
+            int i = 0;
+            foreach (Hubble.Core.Data.Field field in selectFields)
+            {
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("[{0}]", field.Name);
+                }
+                else
+                {
+                    sql.AppendFormat(",[{0}]", field.Name);
+                }
+            }
+
+            sql.AppendFormat(" from {0} where docId in (", Table.DBTableName);
+
+            i = 0;
+
+            foreach (long docId in docs)
+            {
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("{0}", docId);
+                }
+                else
+                {
+                    sql.AppendFormat(",{0}", docId);
+                }
+            }
+
+            sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                return sqlData.QuerySql(sql.ToString()).Tables[0];
+            }
+        }
+
         #endregion
+
     }
 }

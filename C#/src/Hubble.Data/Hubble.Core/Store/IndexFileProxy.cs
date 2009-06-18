@@ -72,7 +72,8 @@ namespace Hubble.Core.Store
                 }
             }
 
-            public GetInfo(string word, long totalDocs, Data.DBProvider dbProvider, int tabIndex)
+            public GetInfo(string word, long totalDocs, Data.DBProvider dbProvider, 
+                int tabIndex)
             {
                 _Word = word;
                 _TotalDocs = totalDocs;

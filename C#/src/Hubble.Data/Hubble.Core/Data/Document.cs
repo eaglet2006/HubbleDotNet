@@ -28,8 +28,8 @@ namespace Hubble.Core.Data
         #region Private
 
         private string _FieldName;
-        private string _Value;
         private DataType _Type;
+        private bool _FromDB;
 
         #endregion
 
@@ -43,14 +43,6 @@ namespace Hubble.Core.Data
             }
         }
 
-        public string Value
-        {
-            get
-            {
-                return _Value;
-            }
-        }
-
         public DataType Type
         {
             get
@@ -59,17 +51,35 @@ namespace Hubble.Core.Data
             }
         }
 
+        public string Value;
+
+        public bool FromDB
+        {
+            get
+            {
+                return _FromDB;
+            }
+        }
+
         #endregion
+
+
 
         #region Constructor
 
         public FieldValue(string name, string value, DataType type)
+            :this(name, value, type, false)
+        {
+        }
+
+        public FieldValue(string name, string value, DataType type, bool fromDB)
         {
             Debug.Assert(name != null);
 
             _FieldName = name;
-            _Value = value;
+            Value = value;
             _Type = type;
+            _FromDB = fromDB;
         }
 
         #endregion
@@ -104,11 +114,50 @@ namespace Hubble.Core.Data
         }
 
 
-        public void Add(string fieldName, string value, DataType type)
+        public void Add(string fieldName, string value, DataType type, bool fromDB)
         {
-            _FieldValues.Add(new FieldValue(fieldName, value, type));
+            _FieldValues.Add(new FieldValue(fieldName, value, type, fromDB));
         }
 
+        #region static methods
+
+        public static System.Data.DataSet ToDataSet(List<Field> schema, List<Document> docs)
+        {
+            System.Data.DataTable dt = new System.Data.DataTable();
+
+            foreach(Field field in  schema)
+            {
+                System.Data.DataColumn col = new System.Data.DataColumn(field.Name,
+                    DataTypeConvert.GetClrType(field.DataType));
+                dt.Columns.Add(col);
+            }
+
+            foreach (Document doc in docs)
+            {
+                System.Data.DataRow row = dt.NewRow();
+
+                foreach (FieldValue fv in doc.FieldValues)
+                {
+                    if (fv.Value == null)
+                    {
+                        row[fv.FieldName] = System.DBNull.Value;
+                    }
+                    else
+                    {
+                        Type type = DataTypeConvert.GetClrType(fv.Type);
+
+                        row[fv.FieldName] =
+                            System.ComponentModel.TypeDescriptor.GetConverter(type).ConvertFrom(fv.Value);
+                    }
+                }
+            }
+
+            System.Data.DataSet ds = new System.Data.DataSet();
+            ds.Tables.Add(dt);
+            return ds;
+        }
+
+        #endregion
 
     }
 }
