@@ -159,7 +159,7 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public void Insert(List<Hubble.Core.Data.Document> docs)
+        public void Insert(IList<Hubble.Core.Data.Document> docs)
         {
             StringBuilder insertString = new StringBuilder();
 
@@ -201,8 +201,89 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+        public void Delete(IList<long> docIds)
+        {
+            StringBuilder sql = new StringBuilder();
 
-        public System.Data.DataTable Query(List<Hubble.Core.Data.Field> selectFields, List<long> docs)
+            sql.Append("delete ");
+
+            sql.AppendFormat(" {0} where docId in (", Table.DBTableName);
+
+            int i = 0;
+            foreach (long docId in docIds)
+            {
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("{0}", docId);
+                }
+                else
+                {
+                    sql.AppendFormat(",{0}", docId);
+                }
+            }
+
+            sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
+
+        }
+
+        public void Update(Data.Document doc, IList<long> docIds)
+        {
+            StringBuilder sql = new StringBuilder();
+
+            sql.AppendFormat("update {0} set ", Table.DBTableName);
+
+            int i = 0;
+
+            foreach (Data.FieldValue fv in doc.FieldValues)
+            {
+                string value = fv.Type == Data.DataType.String ||
+                    fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
+                    fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ? 
+                    fv.Value.Replace("'", "''") : fv.Value;
+
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("[{0}]={1}", fv.FieldName, value);
+                }
+                else
+                {
+                    sql.AppendFormat(",[{0}]={1}", fv.FieldName, value);
+                }
+            }
+
+            sql.Append(" where docId in (");
+
+            i = 0;
+
+            foreach (long docId in docIds)
+            {
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("{0}", docId);
+                }
+                else
+                {
+                    sql.AppendFormat(",{0}", docId);
+                }
+            }
+
+            sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
+
+        }
+
+        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<long> docs)
         {
             StringBuilder sql = new StringBuilder();
 

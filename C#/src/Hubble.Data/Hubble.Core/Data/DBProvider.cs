@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
+
 using Hubble.Core.Index;
 using Hubble.Core.Global;
 using Hubble.Framework.Reflection;
@@ -159,6 +161,22 @@ namespace Hubble.Core.Data
         }
 
 
+
+        #endregion
+
+        #region structure
+
+        struct PayloadSegment
+        {
+            public int TabIndex;
+            public int[] Data;
+
+            public PayloadSegment(int tabIndex, int[] data)
+            {
+                TabIndex = tabIndex;
+                Data = data;
+            }
+        }
 
         #endregion
 
@@ -475,7 +493,7 @@ namespace Hubble.Core.Data
 
         }
 
-        private List<Document> Query(List<Field> selectFields, List<long> docs)
+        private List<Document> Query(List<Field> selectFields, IList<long> docs)
         {
             List<Field> dbFields = new List<Field>();
             Dictionary<long, Document> docIdToDocumnet = null;
@@ -512,10 +530,13 @@ namespace Hubble.Core.Data
                 }
 
                 Payload payload;
-                
-                if (!_DocPayload.TryGetValue(docId, out payload))
+
+                lock (this)
                 {
-                    payload = null;
+                    if (!_DocPayload.TryGetValue(docId, out payload))
+                    {
+                        payload = null;
+                    }
                 }
 
                 foreach(Field field in selectFields)
@@ -748,7 +769,7 @@ namespace Hubble.Core.Data
                                 }
                             }
 
-                            fieldPayload = DataTypeConvert.GetData(field.DataType, fValue.Value);
+                            fieldPayload = DataTypeConvert.GetData(field.DataType, field.DataLength, fValue.Value);
 
                             Array.Copy(fieldPayload, 0, data, field.TabIndex, fieldPayload.Length);
 
@@ -777,15 +798,138 @@ namespace Hubble.Core.Data
                 }
 
                 Payload payload = new Payload(data);
-                _DocPayload.Add(docId, payload);
+
+                lock (this)
+                {
+                    _DocPayload.Add(docId, payload);
+                }
+
                 _PayloadFile.Add(docId, payload);
             }
         }
 
+        public void Update(IList<FieldValue> fieldValues, IList<long> docs)
+        {
+            Debug.Assert(fieldValues != null && docs != null);
+
+            if (docs.Count <= 0)
+            {
+                return;
+            }
+
+            if (fieldValues.Count <= 0)
+            {
+                return;
+            }
+
+            bool needDel = false;
+
+            Document doc = new Document();
+
+            List<PayloadSegment> payloadSegment = new List<PayloadSegment>();
+
+            foreach (FieldValue fv in fieldValues)
+            {
+                Field field = _FieldIndex[fv.FieldName.ToLower().Trim()];
+
+                if (field.IndexType == Field.Index.Tokenized)
+                {
+                    needDel = true;
+                }
+
+                if (field.Store)
+                {
+                    doc.FieldValues.Add(fv);
+                }
+
+                if (field.IndexType == Field.Index.Untokenized)
+                {
+                    int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, fv.Value);
+                    payloadSegment.Add(new PayloadSegment(field.TabIndex, data));   
+                }
+            }
+
+            if (needDel)
+            {
+                List<Field> selectFields = new List<Field>();
+
+                foreach (Field field in _FieldIndex.Values)
+                {
+                    selectFields.Add(field);
+                }
+
+                List<long> doDocs = new List<long>();
+
+                int i = 0;
+                foreach (long docId in docs)
+                {
+                    doDocs.Add(docId);
+
+                    if (++i % 100 == 0)
+                    {
+                        List<Document> docResult = Query(selectFields, doDocs);
+                        Insert(docResult);
+                        Delete(doDocs);
+                        doDocs.Clear();
+                    }
+                }
+
+                if (doDocs.Count > 0)
+                {
+                    List<Document> docResult = Query(selectFields, doDocs);
+                    Insert(docResult);
+                    Delete(doDocs);
+                }
+
+            }
+            else
+            {
+                _DBAdapter.Update(doc, docs);
+                
+                List<long> updateIds = new List<long>();
+                List<Payload> updatePayloads = new List<Payload>(); 
+
+                foreach (long docId in docs)
+                {
+                    Payload payLoad;
+
+                    lock (this)
+                    {
+                        if (_DocPayload.TryGetValue(docId, out payLoad))
+                        {
+                            foreach (PayloadSegment ps in payloadSegment)
+                            {
+                                Array.Copy(ps.Data, ps.TabIndex, payLoad.Data, ps.TabIndex, ps.Data.Length);
+                            }
+
+                            updateIds.Add(docId);
+                            updatePayloads.Add(payLoad.Clone());
+                        }
+                    }
+
+                    if (updateIds.Count >= 1000)
+                    {
+                        _PayloadFile.Update(updateIds, updatePayloads);
+                        updateIds.Clear();
+                        updatePayloads.Clear();
+                    }
+                }
+
+                if (updateIds.Count > 0)
+                {
+                    _PayloadFile.Update(updateIds, updatePayloads);
+                }
+            }
+        }
+
+
         public void Delete(IList<long> docs)
         {
+            _DBAdapter.Delete(docs);
+
             _DelProvider.Delete(docs);
         }
+
 
         public void Collect()
         {

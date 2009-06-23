@@ -144,7 +144,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        static public int[] GetData(DataType type, string value)
+        static public int[] GetData(DataType type, int dataLength, string value)
         {
             int[] ret;
             long l;
@@ -156,12 +156,22 @@ namespace Hubble.Core.Data
                     throw new Exception("Not finished!");
 
                 case DataType.String:
-                    if (value.Length > 32 || value.Length <= 0)
+                    if (dataLength <= 0)
                     {
-                        throw new ArgumentException("Data index length must less then 64!");
+                        throw new ArgumentException("String data length must larger then 0!");
                     }
 
-                    int len = value.Length % 2 == 0 ? value.Length / 2 : value.Length / 2 + 1;
+                    if (dataLength > 32)
+                    {
+                        throw new ArgumentException("String data length must less then 32!");
+                    }
+
+                    if (value.Length > dataLength)
+                    {
+                        throw new ArgumentException("String value larger then data length!");
+                    }
+
+                    int len = dataLength % 2 == 0 ? dataLength / 2 : dataLength / 2 + 1;
 
                     ret = new int[len];
 

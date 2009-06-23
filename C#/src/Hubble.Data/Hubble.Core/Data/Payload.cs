@@ -27,39 +27,17 @@ namespace Hubble.Core.Data
     /// </summary>
     public class Payload
     {
-        int _FileIndex = -1;
-
-        public int FileIndex
-        {
-            get
-            {
-                return _FileIndex;
-            }
-
-            set
-            {
-                _FileIndex = value;
-            }
-        }
-
-        int[] _Data;
-
-        public int[] Data
-        {
-            get
-            {
-                return _Data;
-            }
-        }
+        public int FileIndex = -1;
+        public int[] Data;
 
         public Payload(int dataLength)
         {
-            _Data = new int[dataLength];
+            Data = new int[dataLength];
         }
 
         public Payload(int[] data)
         {
-            _Data = data;
+            Data = data;
         }
 
         /// <summary>
@@ -98,6 +76,17 @@ namespace Hubble.Core.Data
                 Data[start / sizeof(int)] = d;
                 start += sizeof(int);
             }
+        }
+
+        public Payload Clone()
+        {
+            Payload payload = new Payload(Data.Length);
+
+            this.Data.CopyTo(payload.Data, 0);
+
+            payload.FileIndex = this.FileIndex;
+
+            return payload;
         }
     }
 }
