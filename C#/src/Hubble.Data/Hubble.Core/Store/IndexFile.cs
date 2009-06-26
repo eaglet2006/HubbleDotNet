@@ -94,8 +94,6 @@ namespace Hubble.Core.Store
             #endregion
         }
 
-
-
         public struct IndexFileInfo : IComparable<IndexFileInfo>
         {
             public int Serial;
@@ -273,6 +271,15 @@ namespace Hubble.Core.Store
                 return _IndexFileInterface;
             }
         }
+
+        public List<IndexFileInfo> IndexFileList
+        {
+            get
+            {
+                return _IndexFileList;
+            }
+        }
+
         /// <summary>
         /// *.idx for normal index
         /// </summary>
@@ -314,9 +321,9 @@ namespace Hubble.Core.Store
                     int serial = int.Parse(fileName.Substring(0, 4));
 
                     string hFile = Path.AppendDivision(_Path, '\\') +
-                        string.Format("{0:D4}{1}.hdx", serial, FieldName);
+                        GetHeadFileName(serial);
                     string iFile = Path.AppendDivision(_Path, '\\') +
-                        string.Format("{0:D4}{1}.idx", serial, FieldName);
+                        GetIndexFileName(serial);
 
                     if (!System.IO.File.Exists(iFile))
                     {
@@ -511,13 +518,24 @@ namespace Hubble.Core.Store
         public void Collect()
         {
             _IndexWriter.Close();
-            
+
+            _IndexFileList.Add(new IndexFileInfo(_MaxSerial, File.GetFileLength(_IndexWriter.IndexFilePath)));
+
             _MaxSerial++;
 
             _IndexWriter = new IndexWriter(_MaxSerial, _Path,
                 System.IO.Path.GetFileNameWithoutExtension(_FieldName));
         }
 
+        public string GetHeadFileName(int serialNo)
+        {
+            return string.Format("{0:D4}{1}.hdx", serialNo, FieldName);
+        }
+
+        public string GetIndexFileName(int serialNo)
+        {
+            return string.Format("{0:D4}{1}.idx", serialNo, FieldName);
+        }
 
         #endregion
 

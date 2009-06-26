@@ -96,6 +96,14 @@ namespace WinformDemo
             frmDelete.Show();
         }
 
+        private void buttonOptimize_Click(object sender, EventArgs e)
+        {
+            if (_CurDBProvider != null)
+            {
+                _CurDBProvider.Optimize();
+            }
+        }
+
 
     }
 }

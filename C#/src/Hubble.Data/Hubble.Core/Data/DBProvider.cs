@@ -930,6 +930,13 @@ namespace Hubble.Core.Data
             _DelProvider.Delete(docs);
         }
 
+        public void Optimize()
+        {
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                iIndex.Optimize();
+            }
+        }
 
         public void Collect()
         {
@@ -989,6 +996,8 @@ namespace Hubble.Core.Data
 
             if (docRankTbl != null)
             {
+                count = docRankTbl.Count;
+
                 foreach (Hubble.Core.Query.DocumentRank docRank in docRankTbl.Values)
                 {
                     docs.Add(docRank.DocumentId);

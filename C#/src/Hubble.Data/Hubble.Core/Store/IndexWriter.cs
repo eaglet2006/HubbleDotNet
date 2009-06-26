@@ -30,7 +30,7 @@ namespace Hubble.Core.Store
         System.IO.FileStream _HeadFile;
         System.IO.FileStream _IndexFile;
 
-        private string HeadFilePath
+        public string HeadFilePath
         {
             get
             {
@@ -38,7 +38,7 @@ namespace Hubble.Core.Store
             }
         }
 
-        private string IndexFilePath
+        public string IndexFilePath
         {
             get
             {
@@ -64,25 +64,18 @@ namespace Hubble.Core.Store
         public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList, out long length)
         {
             long position = _IndexFile.Position;
-            byte[] wordBuf = Encoding.UTF8.GetBytes(word);
 
-            _HeadFile.Write(BitConverter.GetBytes(wordBuf.Length + sizeof(long) + sizeof(long)), 0, sizeof(int)); //Size
-            _HeadFile.Write(BitConverter.GetBytes(position), 0, sizeof(long)); //doc position in index file
-
-         
             foreach (Entity.DocumentPositionList doc in docList)
             {
                 Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(_IndexFile, doc);
             }
 
-            _IndexFile.WriteByte(0);
+            _IndexFile.WriteByte(0); //End flag, 1 byte
             //_IndexFile.WriteByte(0);
 
             length = _IndexFile.Position - position;
 
-            _HeadFile.Write(BitConverter.GetBytes(length), 0, sizeof(long)); //word index data length
-
-            _HeadFile.Write(wordBuf, 0, wordBuf.Length);
+            WriteHeadFile(_HeadFile, word, position, length);
 
             return position;
         }
@@ -92,5 +85,21 @@ namespace Hubble.Core.Store
             _HeadFile.Close();
             _IndexFile.Close();
         }
+
+        #region static methods
+        public static void WriteHeadFile(System.IO.FileStream fs, string word, long position, long length)
+        {
+            byte[] wordBuf = Encoding.UTF8.GetBytes(word);
+
+            fs.Write(BitConverter.GetBytes(wordBuf.Length + sizeof(long) + sizeof(long)), 0, sizeof(int)); //Size
+            fs.Write(BitConverter.GetBytes(position), 0, sizeof(long)); //doc position in index file
+
+            fs.Write(BitConverter.GetBytes(length), 0, sizeof(long)); //word index data length
+
+            fs.Write(wordBuf, 0, wordBuf.Length);
+
+        }
+
+        #endregion
     }
 }

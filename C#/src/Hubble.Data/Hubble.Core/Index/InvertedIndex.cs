@@ -573,6 +573,9 @@ namespace Hubble.Core.Index
         private int _ForceCollectCount = 5000;
 
         private Data.DBProvider _DBProvider;
+
+        private IndexMerge _IndexMerge = null;
+
         #endregion
 
         #region Private Properties
@@ -835,6 +838,8 @@ namespace Hubble.Core.Index
             _DBProvider = dbProvider;
             InitFileStore(path, fieldName, rebuild);
             Cache.CacheManager.Register(this);
+            _IndexMerge = new IndexMerge(path, _IndexFileProxy);
+
             //InitCollectThread();
         }
 
@@ -987,6 +992,14 @@ namespace Hubble.Core.Index
         {
             WriteCount = 0;
             StoreIndexToFile();
+        }
+
+        public void Optimize()
+        {
+            if (_IndexMerge != null)
+            {
+                _IndexMerge.Optimize();
+            }
         }
 
         #endregion

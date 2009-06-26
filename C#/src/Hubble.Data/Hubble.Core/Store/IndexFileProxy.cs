@@ -24,13 +24,14 @@ using Hubble.Framework.Threading;
 
 namespace Hubble.Core.Store
 {
-    class IndexFileProxy : MessageQueue, IIndexFile
+    public class IndexFileProxy : MessageQueue, IIndexFile
     {
         enum Event
         {
             Add = 1,
             Collect = 2,
             Get = 3,
+            GetFilePositionList = 4,
         }
 
         public class GetInfo
@@ -109,6 +110,147 @@ namespace Hubble.Core.Store
                 _Word = word;
                 _DocList = docList;
             }
+        }
+
+        public class MergeInfos
+        {
+            private int _BeginSerial; // Begin file serial;
+
+            public int BeginSerial
+            {
+                get
+                {
+                    return _BeginSerial;
+                }
+            }
+
+            private int _EndSerial; // End file serial;
+
+            public int EndSerial
+            {
+                get
+                {
+                    return _EndSerial;
+                }
+            }
+
+            string _MergeHeadFileName;
+
+            public string MergeHeadFileName
+            {
+                get
+                {
+                    return _MergeHeadFileName;
+                }
+            }
+
+            string _MergeIndexFileName;
+
+            public string MergeIndexFileName
+            {
+                get
+                {
+                    return _MergeIndexFileName;
+                }
+            }
+
+            List<WordFilePostionList> _WordFilePostionList;
+
+            public List<WordFilePostionList> WordFilePostionList
+            {
+                get
+                {
+                    return _WordFilePostionList;
+                }
+            }
+
+            public MergeInfos(string headFileName, string indexFileName,
+                List<WordFilePostionList> list, int begin, int end)
+            {
+                _MergeHeadFileName = headFileName;
+                _MergeIndexFileName = indexFileName;
+                _WordFilePostionList = list;
+                _BeginSerial = begin;
+                _EndSerial = end;
+            }
+        }
+
+        public class WordFilePostionList : IComparable<WordFilePostionList>
+        {
+            private string _Word;
+
+            public string Word
+            {
+                get
+                {
+                    return _Word;
+                }
+            }
+
+            private List<IndexFile.FilePosition> _FilePositionList;
+
+            public List<IndexFile.FilePosition> FilePositionList
+            {
+                get
+                {
+                    return _FilePositionList;
+                }
+            }
+
+            public WordFilePostionList(string word)
+            {
+                _Word = word;
+                _FilePositionList = new List<IndexFile.FilePosition>();
+            }
+
+            #region IComparable<WordFilePostionList> Members
+
+            public int CompareTo(WordFilePostionList other)
+            {
+                if (other == null)
+                {
+                    return 1;
+                }
+
+                if (this.FilePositionList.Count == 0 && other.FilePositionList.Count == 0)
+                {
+                    return 0;
+                }
+
+                if (other.FilePositionList.Count == 0)
+                {
+                    return 1;
+                }
+
+                if (this.FilePositionList[0].Serial > other.FilePositionList[0].Serial)
+                {
+                    return 1;
+                }
+                else if (this.FilePositionList[0].Serial < other.FilePositionList[0].Serial)
+                {
+                    return -1;
+                }
+                else
+                {
+                    long myPosition = this.FilePositionList[0].Position;
+                    long otherPosition = other.FilePositionList[0].Position;
+
+                    if (myPosition > otherPosition)
+                    {
+                        return 1;
+                    }
+                    else if (myPosition < otherPosition)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+            }
+
+            #endregion
         }
 
         private IndexFile _IndexFile;
@@ -222,10 +364,96 @@ namespace Hubble.Core.Store
                     _IndexFile.ClearWordFilePositionList();
                     break;
                 case Event.Get:
-                    GetInfo getInfo = data as GetInfo;
-                    List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
-                    return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
-                        getInfo.DBProvider, getInfo.TabIndex);
+                    {
+                        GetInfo getInfo = data as GetInfo;
+                        List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
+                        return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                            getInfo.DBProvider, getInfo.TabIndex);
+                    }
+                case Event.GetFilePositionList:
+                    {
+                        List<WordFilePostionList> result = new List<WordFilePostionList>();
+
+                        if (_IndexFile.IndexFileList.Count <= 2)
+                        {
+                            return null;
+                        }
+
+                        int i = 0;
+                        long fstFileSize = 0;
+                        long secFileSize = 0;
+                        long otherFileSize = 0;
+
+                        foreach (IndexFile.IndexFileInfo ifi in _IndexFile.IndexFileList)
+                        {
+                            if (i == 0)
+                            {
+                                fstFileSize = ifi.Size;
+                            }
+                            else if (i == 1)
+                            {
+                                secFileSize = ifi.Size;
+                            }
+                            else
+                            {
+                                otherFileSize += ifi.Size;
+                            }
+                                                        
+                            i++;
+                        }
+
+                        int begin;
+                        int end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+
+                        if (fstFileSize < otherFileSize + secFileSize)
+                        {
+                            begin = _IndexFile.IndexFileList[0].Serial;
+                        }
+                        else
+                        {
+                            begin = _IndexFile.IndexFileList[1].Serial;
+
+                            if (secFileSize > otherFileSize * 10 && _IndexFile.IndexFileList.Count < 32)
+                            {
+                                //If the index file count < 32 and all other files is small file
+                                //Does not need optimize
+                                return null;
+                            }
+                        }
+
+                        lock (this)
+                        {
+                            foreach (string word in _WordFilePositionTable.Keys)
+                            {
+                                WordFilePostionList wfpl = new WordFilePostionList(word);
+                                List<IndexFile.FilePosition> pList = _WordFilePositionTable[word];
+
+                                foreach (IndexFile.FilePosition fp in pList)
+                                {
+                                    if (fp.Serial >= begin && fp.Serial <= end)
+                                    {
+                                        wfpl.FilePositionList.Add(new IndexFile.FilePosition(fp.Serial, fp.Position, fp.Length));
+                                    }
+                                }
+
+                                result.Add(wfpl);
+                            }
+                        }
+
+                        int serial;
+
+                        if (begin == _IndexFile.IndexFileList[0].Serial)
+                        {
+                            serial = 0;
+                        }
+                        else
+                        {
+                            serial = 1;
+                        }
+
+                        return new MergeInfos(_IndexFile.GetHeadFileName(serial),
+                            _IndexFile.GetIndexFileName(serial), result, begin, end);
+                    }
             }
 
             return null;
@@ -257,6 +485,12 @@ namespace Hubble.Core.Store
         {
         }
 
+        public MergeInfos GetMergeInfos()
+        {
+            return SSendMessage((int)Event.GetFilePositionList, 
+                null, 30 * 1000) as MergeInfos;
+        }
+
         public void AddWordPositionAndDocumentPositionList(string word,
             List<Entity.DocumentPositionList> docList)
         {
@@ -286,6 +520,16 @@ namespace Hubble.Core.Store
             _IndexFile.Close();
             _IndexFile = null;
             GC.Collect();
+        }
+
+        public string GetHeadFileName(int serialNo)
+        {
+            return _IndexFile.GetHeadFileName(serialNo);
+        }
+
+        public string GetIndexFileName(int serialNo)
+        {
+            return _IndexFile.GetIndexFileName(serialNo);
         }
 
         #region IndexFileInit Members

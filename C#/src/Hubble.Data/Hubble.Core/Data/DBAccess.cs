@@ -50,38 +50,41 @@ namespace Hubble.Core.Data
         {
             if (string.IsNullOrEmpty(Host))
             {
-                if (table.Name == null)
+                lock (this)
                 {
-                    throw new System.ArgumentNullException("Null table name");
-                }
+                    if (table.Name == null)
+                    {
+                        throw new System.ArgumentNullException("Null table name");
+                    }
 
-                if (table.Name.Trim() == "")
-                {
-                    throw new System.ArgumentException("Empty table name");
-                }
+                    if (table.Name.Trim() == "")
+                    {
+                        throw new System.ArgumentException("Empty table name");
+                    }
 
-                if (DBProvider.DBProviderExists(table.Name))
-                {
-                    throw new DataException(string.Format("Table {0} exists already!", table.Name));
-                }
+                    if (DBProvider.DBProviderExists(table.Name))
+                    {
+                        throw new DataException(string.Format("Table {0} exists already!", table.Name));
+                    }
 
-                directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
+                    directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
 
-                if (!System.IO.Directory.Exists(directory))
-                {
-                    System.IO.Directory.CreateDirectory(directory);
-                }
+                    if (!System.IO.Directory.Exists(directory))
+                    {
+                        System.IO.Directory.CreateDirectory(directory);
+                    }
 
-                DBProvider.NewDBProvider(table.Name, new DBProvider());
+                    DBProvider.NewDBProvider(table.Name, new DBProvider());
 
-                try
-                {
-                    DBProvider.GetDBProvider(table.Name).Create(table, directory);
-                }
-                catch 
-                {
-                    DBProvider.Drop(table.Name);
-                    throw;
+                    try
+                    {
+                        DBProvider.GetDBProvider(table.Name).Create(table, directory);
+                    }
+                    catch
+                    {
+                        DBProvider.Drop(table.Name);
+                        throw;
+                    }
                 }
             }
         }
@@ -90,13 +93,20 @@ namespace Hubble.Core.Data
         {
             if (string.IsNullOrEmpty(Host))
             {
-                if (_DBInsertProvider != null && _LastTableName != tableName)
+                DBProvider dbProvider;
+
+                lock (this)
                 {
-                    _DBInsertProvider.Collect();
+                    if (_DBInsertProvider != null && _LastTableName != tableName)
+                    {
+                        _DBInsertProvider.Collect();
+                    }
+
+                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+                    dbProvider = _DBInsertProvider;
                 }
 
-                _DBInsertProvider = DBProvider.GetDBProvider(tableName);
-                _DBInsertProvider.Insert(docs);
+                dbProvider.Insert(docs);
             }
 
             _LastTableName = tableName;
@@ -106,13 +116,20 @@ namespace Hubble.Core.Data
         {
             if (string.IsNullOrEmpty(Host))
             {
-                if (_DBInsertProvider != null && _LastTableName != tableName)
+                DBProvider dbProvider;
+
+                lock (this)
                 {
-                    _DBInsertProvider.Collect();
+                    if (_DBInsertProvider != null && _LastTableName != tableName)
+                    {
+                        _DBInsertProvider.Collect();
+                    }
+
+                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+                    dbProvider = _DBInsertProvider;
                 }
 
-                _DBInsertProvider = DBProvider.GetDBProvider(tableName);
-                _DBInsertProvider.Delete(docs);
+                dbProvider.Delete(docs);
             }
 
             _LastTableName = tableName;
@@ -120,12 +137,38 @@ namespace Hubble.Core.Data
 
         public void Collect()
         {
-            if (_DBInsertProvider != null)
+            lock (this)
             {
-                _DBInsertProvider.Collect();
-                _DBInsertProvider = null;
-                _LastTableName = null;
+                if (_DBInsertProvider != null)
+                {
+                    _DBInsertProvider.Collect();
+                    _DBInsertProvider = null;
+                    _LastTableName = null;
+                }
             }
+        }
+
+        public void Optimize(string tableName)
+        {
+            if (string.IsNullOrEmpty(Host))
+            {
+                DBProvider dbProvider;
+
+                lock (this)
+                {
+                    if (_DBInsertProvider != null && _LastTableName != tableName)
+                    {
+                        _DBInsertProvider.Collect();
+                    }
+
+                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+                    dbProvider = _DBInsertProvider;
+                }
+
+                dbProvider.Optimize();
+            }
+
+            _LastTableName = tableName;
         }
 
         public void Close()

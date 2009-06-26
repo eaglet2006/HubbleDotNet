@@ -41,6 +41,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.buttonAppend = new System.Windows.Forms.Button();
             this.buttonDelete = new System.Windows.Forms.Button();
+            this.buttonOptimize = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -163,11 +164,22 @@
             this.buttonDelete.UseVisualStyleBackColor = true;
             this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
             // 
+            // buttonOptimize
+            // 
+            this.buttonOptimize.Location = new System.Drawing.Point(480, 42);
+            this.buttonOptimize.Name = "buttonOptimize";
+            this.buttonOptimize.Size = new System.Drawing.Size(75, 23);
+            this.buttonOptimize.TabIndex = 13;
+            this.buttonOptimize.Text = "Optimize";
+            this.buttonOptimize.UseVisualStyleBackColor = true;
+            this.buttonOptimize.Click += new System.EventHandler(this.buttonOptimize_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(472, 352);
+            this.ClientSize = new System.Drawing.Size(567, 352);
+            this.Controls.Add(this.buttonOptimize);
             this.Controls.Add(this.buttonDelete);
             this.Controls.Add(this.buttonAppend);
             this.Controls.Add(this.labelCount);
@@ -205,5 +217,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button buttonAppend;
         private System.Windows.Forms.Button buttonDelete;
+        private System.Windows.Forms.Button buttonOptimize;
     }
 }
