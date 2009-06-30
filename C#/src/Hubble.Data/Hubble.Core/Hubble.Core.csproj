@@ -47,6 +47,7 @@
     <Compile Include="Data\DBAccess.cs" />
     <Compile Include="Data\DBProvider.cs" />
     <Compile Include="Data\DeleteProvider.cs" />
+    <Compile Include="Data\OptimizationOption.cs" />
     <Compile Include="Data\Payload.cs" />
     <Compile Include="Data\Table.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />

@@ -34,7 +34,8 @@ namespace Hubble.Core.Cache
             {
                 System.Threading.Thread.Sleep(10000);
 
-                if (System.Diagnostics.Process.GetCurrentProcess().PagedMemorySize64 < Global.Setting.Config.MemoryLimited)
+                long pageSize = System.Diagnostics.Process.GetCurrentProcess().PagedMemorySize64 ;
+                if (pageSize < Global.Setting.Config.MemoryLimited)
                 {
                     continue;
                 }

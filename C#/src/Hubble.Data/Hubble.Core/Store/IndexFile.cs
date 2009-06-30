@@ -38,61 +38,61 @@ namespace Hubble.Core.Store
     /// </summary>
     public class IndexFile 
     {
-        public class DocInfo : Hubble.Framework.Serialization.IMySerialization<DocInfo>
-        {
-            public long DocId;
-            public int WordCount; //How many words in this document
+        //public class DocInfo : Hubble.Framework.Serialization.IMySerialization<DocInfo>
+        //{
+        //    public long DocId;
+        //    public int WordCount; //How many words in this document
 
-            public DocInfo()
-            {
-                DocId = 0;
-                WordCount = 0;
-            }
+        //    public DocInfo()
+        //    {
+        //        DocId = 0;
+        //        WordCount = 0;
+        //    }
 
-            public DocInfo(long docId, int wordCount)
-            {
-                DocId = docId;
-                WordCount = wordCount;
-            }
+        //    public DocInfo(long docId, int wordCount)
+        //    {
+        //        DocId = docId;
+        //        WordCount = wordCount;
+        //    }
 
-            #region IMySerialization<DocInfo> Members
+        //    #region IMySerialization<DocInfo> Members
 
-            public byte Version
-            {
-                get
-                {
-                    return 1;
-                }
-            }
+        //    public byte Version
+        //    {
+        //        get
+        //        {
+        //            return 1;
+        //        }
+        //    }
 
-            public void Serialize(System.IO.Stream s)
-            {
-                s.Write(BitConverter.GetBytes(DocId), 0, sizeof(long));
-                s.Write(BitConverter.GetBytes(WordCount), 0, sizeof(int));
-            }
+        //    public void Serialize(System.IO.Stream s)
+        //    {
+        //        s.Write(BitConverter.GetBytes(DocId), 0, sizeof(long));
+        //        s.Write(BitConverter.GetBytes(WordCount), 0, sizeof(int));
+        //    }
 
-            public DocInfo Deserialize(System.IO.Stream s, short version)
-            {
-                switch (version)
-                {
-                    case 1:
-                        byte[] buf = new byte[sizeof(long)];
-                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
-                        DocId = BitConverter.ToInt64(buf, 0);
+        //    public DocInfo Deserialize(System.IO.Stream s, short version)
+        //    {
+        //        switch (version)
+        //        {
+        //            case 1:
+        //                byte[] buf = new byte[sizeof(long)];
+        //                Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
+        //                DocId = BitConverter.ToInt64(buf, 0);
 
-                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
+        //                Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
 
-                        WordCount = BitConverter.ToInt32(buf, 0);
+        //                WordCount = BitConverter.ToInt32(buf, 0);
 
-                        return this;
-                    default:
-                        throw new System.Runtime.Serialization.SerializationException(
-                            string.Format("Invalid version:{0}", version));
-                }
-            }
+        //                return this;
+        //            default:
+        //                throw new System.Runtime.Serialization.SerializationException(
+        //                    string.Format("Invalid version:{0}", version));
+        //        }
+        //    }
 
-            #endregion
-        }
+        //    #endregion
+        //}
 
         public struct IndexFileInfo : IComparable<IndexFileInfo>
         {
@@ -263,6 +263,13 @@ namespace Hubble.Core.Store
 
         #region Public properties
 
+        public string IndexDir
+        {
+            get
+            {
+                return _Path;
+            }
+        }
 
         public IIndexFile IndexFileInterface
         {
@@ -402,7 +409,7 @@ namespace Hubble.Core.Store
         public IndexFile(string path, IIndexFile indexFileInterface)
         {
             _IndexFileInterface = indexFileInterface;
-            _Path = path;
+            _Path = Hubble.Framework.IO.Path.AppendDivision(path, '\\');
         }
 
         /// <summary>
@@ -434,50 +441,6 @@ namespace Hubble.Core.Store
             }
         }
 
-        public List<WordPosition> GetWordPositionList()
-        {
-            List<WordPosition> result = new List<WordPosition>();
-
-            //_SegmentFileStream.Seek(1);
-
-            //byte[] buf = new byte[Head.SegmentSize - 4];
-            //System.IO.MemoryStream m = new System.IO.MemoryStream(2048);
-
-            //int len = 0;
-            //while ((len = _SegmentFileStream.Read(buf, 0, buf.Length)) > 0)
-            //{
-            //    m.Write(buf, 0, len);
-            //}
-
-            //if (m.Length == 0)
-            //{
-            //    return result;
-            //}
-
-            //m.Position = 0;
-
-            //do
-            //{
-            //    try
-            //    {
-            //        WordPosition wordPosition = Hubble.Framework.Serialization.MySerialization<WordPosition>.Deserialize(m, new WordPosition());
-            //        LinkedSegmentFileStream.SegmentPosition segPosition = _SegmentFileStream.GetLastSegmentNumberFrom(wordPosition.FirstSegment);
-
-            //        wordPosition.LastSegment = segPosition.Segment;
-            //        wordPosition.LastPositionInSegment = segPosition.PositionInSegment;
-
-            //        result.Add(wordPosition);
-
-            //    }
-            //    catch
-            //    {
-            //    }
-
-            //} while (m.Position < m.Length);
-
-            return result;
-        }
-
         public void AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
         {
             long length;
@@ -502,7 +465,7 @@ namespace Hubble.Core.Store
             {
                 using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName))
                 {
-                    foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position))
+                    foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
                     {
                         docList.Add(dList);
                     }
@@ -525,6 +488,54 @@ namespace Hubble.Core.Store
 
             _IndexWriter = new IndexWriter(_MaxSerial, _Path,
                 System.IO.Path.GetFileNameWithoutExtension(_FieldName));
+        }
+
+        public void AfterMerge(int beginSerial, int endSerial, int mergedSerial)
+        {
+            int i = 0;
+            bool fst = true;
+
+            while (i < IndexFileList.Count)
+            {
+                if (IndexFileList[i].Serial >= beginSerial && IndexFileList[i].Serial <= endSerial)
+                {
+                    if (fst)
+                    {
+                        IndexFileList[i] = new IndexFile.IndexFileInfo(mergedSerial,
+                            File.GetFileLength(IndexDir + GetIndexFileName(mergedSerial)));
+                        fst = false;
+                        i++;
+                    }
+                    else
+                    {
+                        IndexFileList.RemoveAt(i);
+                    }
+                }
+                else
+                {
+                    i++;
+                }
+            }
+
+            //No longer insert after optimize
+            if (IndexFileList[IndexFileList.Count - 1].Serial == mergedSerial)
+            {
+                _IndexWriter.Close();
+
+                if (System.IO.File.Exists(_IndexWriter.HeadFilePath))
+                {
+                    System.IO.File.Delete(_IndexWriter.HeadFilePath);
+                }
+
+                if (System.IO.File.Exists(_IndexWriter.IndexFilePath))
+                {
+                    System.IO.File.Delete(_IndexWriter.IndexFilePath);
+                }
+
+                _MaxSerial = mergedSerial + 1;
+                _IndexWriter = new IndexWriter(_MaxSerial, _Path, 
+                    System.IO.Path.GetFileNameWithoutExtension(_FieldName));
+            }
         }
 
         public string GetHeadFileName(int serialNo)

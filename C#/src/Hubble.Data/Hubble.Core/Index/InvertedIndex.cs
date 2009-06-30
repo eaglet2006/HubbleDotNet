@@ -558,7 +558,7 @@ namespace Hubble.Core.Index
         //private System.Threading.Thread _CollectThread; //Collect Thread collect the WordTable that need write to index file,and write the index to file
         private bool _Closed = false;
         private Dictionary<string, WordIndexWriter> _WordTableNeedCollectDict = new Dictionary<string, WordIndexWriter>();
-        private List<IndexFile.DocInfo> _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
+        //private List<IndexFile.DocInfo> _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
 
         private Dictionary<string, WordIndexReader> _WordTableReader = new Dictionary<string, WordIndexReader>();
         private Dictionary<string, WordIndexWriter> _WordTableWriter = new Dictionary<string, WordIndexWriter>();
@@ -687,17 +687,17 @@ namespace Hubble.Core.Index
 
         #region Private Metheds
 
-        private List<IndexFile.DocInfo> GetDocInfosNeedCollect()
-        {
-            lock (this)
-            {
-                List<IndexFile.DocInfo> docInfos = _DocInfosNeedCollect;
+        //private List<IndexFile.DocInfo> GetDocInfosNeedCollect()
+        //{
+        //    lock (this)
+        //    {
+        //        List<IndexFile.DocInfo> docInfos = _DocInfosNeedCollect;
 
-                _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
+        //        _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
 
-                return docInfos;
-            }
-        }
+        //        return docInfos;
+        //    }
+        //}
 
         private List<WordIndexWriter> GetWordTableNeedCollectDict(bool forceCollect)
         {
@@ -808,7 +808,7 @@ namespace Hubble.Core.Index
 
             tempWordTableWriter = null;
 
-            _IndexFileProxy.AddDocInfos(GetDocInfosNeedCollect());
+            //_IndexFileProxy.AddDocInfos(GetDocInfosNeedCollect());
 
             _IndexFileProxy.Collect();
         }

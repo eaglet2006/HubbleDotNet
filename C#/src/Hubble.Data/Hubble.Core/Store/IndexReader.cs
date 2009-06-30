@@ -70,22 +70,24 @@ namespace Hubble.Core.Store
 
             while (_HeadFile.Position < _HeadFile.Length)
             {
-                byte[] buf = new byte[sizeof(long)];
+                byte[] buf = new byte[sizeof(int)];
 
                 _HeadFile.Read(buf, 0, sizeof(int));
 
                 int size = BitConverter.ToInt32(buf, 0);
 
-                byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
+                //byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
+                byte[] wordBuf = new byte[size];
+                _HeadFile.Read(wordBuf, 0, size);
 
-                _HeadFile.Read(buf, 0, sizeof(long));
-                long position = BitConverter.ToInt64(buf, 0);
+                //_HeadFile.Read(buf, 0, sizeof(long));
+                long position = BitConverter.ToInt64(wordBuf, 0);
 
-                _HeadFile.Read(buf, 0, sizeof(long));
-                long length = BitConverter.ToInt64(buf, 0);
+                //_HeadFile.Read(buf, 0, sizeof(long));
+                long length = BitConverter.ToInt64(wordBuf, sizeof(long));
 
-                _HeadFile.Read(wordBuf, 0, wordBuf.Length);
-                string word = Encoding.UTF8.GetString(wordBuf);
+                //_HeadFile.Read(wordBuf, 0, wordBuf.Length);
+                string word = Encoding.UTF8.GetString(wordBuf, 2 * sizeof(long), size - 2 * sizeof(long));
 
                 list.Add(new IndexFile.WordFilePosition(word, _Serial, position, length));
             }
@@ -93,34 +95,35 @@ namespace Hubble.Core.Store
             return list;
         }
 
-        public List<Entity.DocumentPositionList> GetDocList(long position)
+        public List<Entity.DocumentPositionList> GetDocList(long position, long length)
         {
             _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
+
+            //byte[] buf = new byte[length];
+            //System.IO.MemoryStream ms = new System.IO.MemoryStream(buf);
+            //Hubble.Framework.IO.Stream.ReadToBuf(_IndexFile, buf, 0, buf.Length);
+            //ms.Position = 0;
 
             List<Entity.DocumentPositionList> result = new List<Hubble.Core.Entity.DocumentPositionList>();
 
             do
             {
-                try
+                Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
+
+                Entity.DocumentPositionList docList =
+                    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
+                    _IndexFile, iDocList);
+
+                //Entity.DocumentPositionList docList =
+                //    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
+                //    ms, iDocList);
+
+                if (docList == null)
                 {
-                    Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
-
-                    Entity.DocumentPositionList docList = 
-                        Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
-                        _IndexFile, iDocList);
-
-                    if (docList == null)
-                    {
-                        break;
-                    }
-
-                    result.Add(docList);
-
-                }
-                catch
-                {
+                    break;
                 }
 
+                result.Add(docList);
             } while (true);
 
             return result;

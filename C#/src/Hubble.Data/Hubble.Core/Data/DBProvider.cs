@@ -1016,6 +1016,8 @@ namespace Hubble.Core.Data
                 selectFields.Add(field);
             }
 
+            return new System.Data.DataSet();
+
             List<Document> docResult = Query(selectFields, docs);
 
             return Document.ToDataSet(selectFields, docResult);

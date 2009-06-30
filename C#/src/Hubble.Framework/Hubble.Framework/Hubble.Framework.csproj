@@ -45,6 +45,7 @@
     <Compile Include="DataStructure\VInt.cs" />
     <Compile Include="DataStructure\VLong.cs" />
     <Compile Include="Data\SQLDataProvider.cs" />
+    <Compile Include="IO\BufFileStream.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\LinkedSegmentFileStream.cs" />
     <Compile Include="IO\LogFile.cs" />
