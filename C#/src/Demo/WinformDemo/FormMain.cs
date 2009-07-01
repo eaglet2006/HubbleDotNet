@@ -104,6 +104,15 @@ namespace WinformDemo
             }
         }
 
+        private void buttonOptimizeMin_Click(object sender, EventArgs e)
+        {
+            if (_CurDBProvider != null)
+            {
+                _CurDBProvider.Optimize(Hubble.Core.Data.OptimizationOption.Minimum);
+            }
+
+        }
+
 
     }
 }

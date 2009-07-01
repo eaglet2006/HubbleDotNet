@@ -386,6 +386,7 @@ namespace Hubble.Core.Data
             _PayloadFile.Close(2000);
 
             string dir = Directory;
+            string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "Optimize";
 
             //Delete files
 
@@ -410,6 +411,16 @@ namespace Hubble.Core.Data
             }
 
             foreach (string file in System.IO.Directory.GetFiles(dir, "tableinfo.xml"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.hdx"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.idx"))
             {
                 System.IO.File.Delete(file);
             }
@@ -935,6 +946,14 @@ namespace Hubble.Core.Data
             foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
             {
                 iIndex.Optimize();
+            }
+        }
+
+        public void Optimize(OptimizationOption option)
+        {
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                iIndex.Optimize(option);
             }
         }
 

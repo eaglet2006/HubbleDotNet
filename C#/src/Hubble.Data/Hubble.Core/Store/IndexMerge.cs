@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -16,6 +33,8 @@ namespace Hubble.Core.Store
         OptimizationOption _Option;
 
         Thread _Thread;
+
+        bool _Closed = false;
 
         public string IndexDir
         {
@@ -69,6 +88,15 @@ namespace Hubble.Core.Store
                         {
                             foreach (IndexFile.FilePosition fp in wpl.FilePositionList)
                             {
+                                lock (this)
+                                {
+                                    if (_Closed)
+                                    {
+                                        _Thread = null;
+                                        return false;
+                                    }
+                                }
+
                                 if (fp.Length <= 0)
                                 {
                                     continue;
@@ -164,6 +192,12 @@ namespace Hubble.Core.Store
 
                 lock (this)
                 {
+                    if (_Closed)
+                    {
+                        _Thread = null;
+                        return;
+                    }
+
                     option = _Option;
                     _Option = OptimizationOption.Idle;
 
@@ -196,6 +230,11 @@ namespace Hubble.Core.Store
         {
             lock (this)
             {
+                if (_Closed)
+                {
+                    return;
+                }
+
                 _Option = option;
 
                 if (_Thread == null)
@@ -205,6 +244,46 @@ namespace Hubble.Core.Store
                     _Thread.Start();
                 }
             }
+        }
+
+        public void Close()
+        {
+            lock (this)
+            {
+                _Closed = true;
+            }
+
+            int i = 0;
+            while (i++ < 100)
+            {
+                lock (this)
+                {
+                    if (_Thread == null)
+                    {
+                        return;
+                    }
+                }
+
+                Thread.Sleep(50);
+            }
+
+            Thread t;
+            lock (this)
+            {
+                t = _Thread;
+            }
+
+            if (t != null)
+            {
+                try
+                {
+                    t.Abort();
+                }
+                catch
+                {
+                }
+            }
+
         }
     }
 }

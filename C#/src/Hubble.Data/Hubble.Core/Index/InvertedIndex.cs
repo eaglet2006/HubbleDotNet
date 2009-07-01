@@ -555,7 +555,6 @@ namespace Hubble.Core.Index
         private string _FieldName;
         private Data.Field.IndexMode _IndexMode;
         private int _TabIndex;
-        //private System.Threading.Thread _CollectThread; //Collect Thread collect the WordTable that need write to index file,and write the index to file
         private bool _Closed = false;
         private Dictionary<string, WordIndexWriter> _WordTableNeedCollectDict = new Dictionary<string, WordIndexWriter>();
         //private List<IndexFile.DocInfo> _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
@@ -728,58 +727,6 @@ namespace Hubble.Core.Index
             }
         }
 
-
-        private void DoCollect()
-        {
-            Stopwatch stopwatch = new Stopwatch();
-
-            int DoCollectTimes = 0;
-
-            while (!Closed)
-            {
-                if (stopwatch.ElapsedMilliseconds < 100)
-                {
-                    System.Threading.Thread.Sleep(100);
-                }
-
-                if (DoCollectTimes++ > 100)
-                {
-                    DoCollectTimes = 0;
-                }
-
-                stopwatch.Reset();
-                stopwatch.Start();
-
-                //Do Collect
-                bool indexFinished = IndexFinished;
-
-                List<WordIndexWriter> wordIndexList = GetWordTableNeedCollectDict(indexFinished);
-
-                foreach (WordIndexWriter wordIndex in wordIndexList)
-                {
-                    List<DocumentPositionList> docList = wordIndex.GetDocListForWriter();
-
-                    if (docList != null)
-                    {
-                        //Sync call
-                        _IndexFileProxy.AddWordPositionAndDocumentPositionList(wordIndex.Word, docList);
-                    }
-                    
-                }
-
-                wordIndexList = null;
-
-                stopwatch.Stop();
-            }
-        }
-
-        private void InitCollectThread()
-        {
-            //_CollectThread = new System.Threading.Thread(new System.Threading.ThreadStart(DoCollect));
-            //_CollectThread.IsBackground = true;
-            //_CollectThread.Start();
-        }
-
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
             _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild);
@@ -811,6 +758,8 @@ namespace Hubble.Core.Index
             //_IndexFileProxy.AddDocInfos(GetDocInfosNeedCollect());
 
             _IndexFileProxy.Collect();
+
+            _IndexMerge.Optimize(OptimizationOption.Speedy);
         }
 
         void WordUpdateDelegate(string word, List<DocumentPositionList> docList)
@@ -859,6 +808,7 @@ namespace Hubble.Core.Index
 
             Closed = true;
 
+            _IndexMerge.Close();
             _IndexFileProxy.Close(2000);
 
         }
@@ -999,6 +949,14 @@ namespace Hubble.Core.Index
             if (_IndexMerge != null)
             {
                 _IndexMerge.Optimize();
+            }
+        }
+
+        public void Optimize(OptimizationOption option)
+        {
+            if (_IndexMerge != null)
+            {
+                _IndexMerge.Optimize(option);
             }
         }
 
