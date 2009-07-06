@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\DFA.cs" />
     <Compile Include="DataStructure\FingerPrintDictionary.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
