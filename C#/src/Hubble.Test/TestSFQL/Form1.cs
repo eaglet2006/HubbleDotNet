@@ -22,8 +22,13 @@ namespace TestSFQL
             Lexical.Initialize();
         }
 
-        private void AddToken(StringBuilder outputText, Lexical.Token token)
+        private void AddToken(StringBuilder outputText, Lexical.Token token, bool testPerformance)
         {
+            if (testPerformance)
+            {
+                return;
+            }
+
             wordNumber++;
 
             outputText.AppendFormat("Word {0}: Type={1} Row={2} Col={3} Text={4}", wordNumber,
@@ -31,10 +36,9 @@ namespace TestSFQL
             outputText.AppendLine();
         }
 
-        private void LexicalAnalyse()
+        private void LexicalAnalyse(string text, bool testPerformance)
         {
             wordNumber = 0;
-            string text = textBoxSFQL.Text;
 
             Lexical lexical = new Lexical(text);
 
@@ -53,13 +57,14 @@ namespace TestSFQL
                         case DFAResult.Continue:
                             continue;
                         case DFAResult.Quit:
-                            AddToken(outputText, lexical.OutputToken);
+                            AddToken(outputText, lexical.OutputToken, testPerformance);
                             break;
                         case DFAResult.ElseQuit:
-                            AddToken(outputText, lexical.OutputToken);
+                            AddToken(outputText, lexical.OutputToken, testPerformance);
                             i--;
                             break;
                     }
+                    
                 }
 
 
@@ -70,10 +75,10 @@ namespace TestSFQL
                     case DFAResult.Continue:
                         throw new DFAException("Lexical abort at the end of sql");
                     case DFAResult.Quit:
-                        AddToken(outputText, lexical.OutputToken);
+                        AddToken(outputText, lexical.OutputToken, testPerformance);
                         break;
                     case DFAResult.ElseQuit:
-                        AddToken(outputText, lexical.OutputToken);
+                        AddToken(outputText, lexical.OutputToken, testPerformance);
                         break;
                 }
 
@@ -87,17 +92,22 @@ namespace TestSFQL
 
         private void buttonLexical_Click(object sender, EventArgs e)
         {
-            //Stopwatch sw = new Stopwatch();
-            //sw.Start();
+            string text = textBoxSFQL.Text;
+            LexicalAnalyse(text, false);
+        }
 
-            //for (int i = 0; i < 1000; i++)
-            //{
-            //    LexicalAnalyse();
-            //}
-            //sw.Stop();
-            //textBoxOutput.Text = sw.ElapsedMilliseconds.ToString();
+        private void buttonLexicalPerformance_Click(object sender, EventArgs e)
+        {
+            string text = textBoxSFQL.Text;
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
 
-            LexicalAnalyse();
+            for (int i = 0; i < 10000; i++)
+            {
+                LexicalAnalyse(text, true);
+            }
+            sw.Stop();
+            textBoxOutput.Text = ((double)(sw.ElapsedMilliseconds) / 10000).ToString();
         }
     }
 }

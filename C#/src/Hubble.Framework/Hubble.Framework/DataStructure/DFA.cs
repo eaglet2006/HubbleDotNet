@@ -180,7 +180,7 @@ namespace Hubble.Framework.DataStructure
 
     public abstract class DFA <Token, Function>
     {
-        protected static List<DFAState<Token, Function>> States = new List<DFAState<Token,Function>>();
+        protected static DFAState<Token, Function>[] States = new DFAState<Token, Function>[32];
 
         protected static bool Inited = false;
         protected static object InitLockObj = new object();
@@ -195,12 +195,32 @@ namespace Hubble.Framework.DataStructure
 
         public static DFAState<Token, Function> AddState(DFAState<Token, Function> state)
         {
-            if (state.Id != States.Count)
+            if (state.Id >= States.Length)
+            {
+                int newLength;
+
+                if (state.Id < 2 * States.Length)
+                {
+                    newLength = 2 * States.Length;
+                }
+                else
+                {
+                    newLength = state.Id + 1;
+                }
+
+                DFAState<Token, Function>[] oldStates = States;
+
+                States = new DFAState<Token, Function>[newLength];
+
+                oldStates.CopyTo(States, 0);
+            }
+
+            if (States[state.Id] != null)
             {
                 throw new DFAException("state.Id must be equal to States index!");
             }
 
-            States.Add(state);
+            States[state.Id] = state;
 
             return state;
         }
@@ -216,7 +236,7 @@ namespace Hubble.Framework.DataStructure
         {
             Debug.Assert(States != null);
 
-            if (States.Count == 0)
+            if (States.Length == 0)
             {
                 return DFAResult.Continue;
             }
@@ -243,7 +263,7 @@ namespace Hubble.Framework.DataStructure
                 throw new DFAException(string.Format("Invalid next DFA state! action={0} currentstate={1}", action,oldState));
             }
 
-            if (CurrentState >= States.Count)
+            if (CurrentState >= States.Length)
             {
                 throw new DFAException("Bad DFA state!");
             }

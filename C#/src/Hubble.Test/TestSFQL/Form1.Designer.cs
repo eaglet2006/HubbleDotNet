@@ -32,6 +32,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxOutput = new System.Windows.Forms.TextBox();
             this.buttonLexical = new System.Windows.Forms.Button();
+            this.buttonLexicalPerformance = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxSFQL
@@ -69,11 +70,22 @@
             this.buttonLexical.UseVisualStyleBackColor = true;
             this.buttonLexical.Click += new System.EventHandler(this.buttonLexical_Click);
             // 
+            // buttonLexicalPerformance
+            // 
+            this.buttonLexicalPerformance.Location = new System.Drawing.Point(342, 133);
+            this.buttonLexicalPerformance.Name = "buttonLexicalPerformance";
+            this.buttonLexicalPerformance.Size = new System.Drawing.Size(75, 23);
+            this.buttonLexicalPerformance.TabIndex = 4;
+            this.buttonLexicalPerformance.Text = "Lexical P";
+            this.buttonLexicalPerformance.UseVisualStyleBackColor = true;
+            this.buttonLexicalPerformance.Click += new System.EventHandler(this.buttonLexicalPerformance_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(759, 444);
+            this.Controls.Add(this.buttonLexicalPerformance);
             this.Controls.Add(this.buttonLexical);
             this.Controls.Add(this.textBoxOutput);
             this.Controls.Add(this.label1);
@@ -91,6 +103,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBoxOutput;
         private System.Windows.Forms.Button buttonLexical;
+        private System.Windows.Forms.Button buttonLexicalPerformance;
     }
 }
 
