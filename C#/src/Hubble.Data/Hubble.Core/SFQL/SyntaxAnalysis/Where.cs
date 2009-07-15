@@ -174,6 +174,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                 (int)SyntaxType.Numeric, (int)SyntaxType.String, (int)SyntaxType.LSquareBracket, (int)SyntaxType.RSquareBracket }, s2.Id);
             s2.AddNextState((int)SyntaxType.Plus, (int)SyntaxType.Mod, s2.Id);
             s2.AddNextState((int)SyntaxType.NotEqual, (int)SyntaxType.LargethanEqual, s3.Id);
+            s2.AddNextState(new int[] { (int)SyntaxType.LIKE, (int)SyntaxType.MATCH, (int)SyntaxType.CONTAINS,
+                (int)SyntaxType.CONTAINS1, (int)SyntaxType.CONTAINS2, (int)SyntaxType.CONTAINS3} , s3.Id);
 
             s3.AddNextState(new int[] { (int)SyntaxType.Identifer, 
                 (int)SyntaxType.Numeric, (int)SyntaxType.String }, s4.Id);
