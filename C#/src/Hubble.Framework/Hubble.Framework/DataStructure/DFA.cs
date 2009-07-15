@@ -36,6 +36,8 @@ namespace Hubble.Framework.DataStructure
                 return m_Id;
             }
         }
+
+
              
         public virtual void AddNextState(int action, int nextstate)
         {
@@ -191,6 +193,8 @@ namespace Hubble.Framework.DataStructure
 
         protected int CurrentState = 0;
 
+        public bool QuitManually = false;
+
         public Token CurrentToken;
 
         public static DFAState<Token, Function> AddState(DFAState<Token, Function> state)
@@ -217,7 +221,7 @@ namespace Hubble.Framework.DataStructure
 
             if (States[state.Id] != null)
             {
-                throw new DFAException("state.Id must be equal to States index!");
+                throw new DFAException("state.Id must be equal to States index!", 0, state.Id);
             }
 
             States[state.Id] = state;
@@ -260,17 +264,18 @@ namespace Hubble.Framework.DataStructure
             if (CurrentState < 0)
             {
                 CurrentState = 0;
-                throw new DFAException(string.Format("Invalid next DFA state! action={0} currentstate={1}", action,oldState));
+                throw new DFAException(string.Format("Invalid next DFA state! action={0} currentstate={1}", action,oldState),
+                    action, oldState);
             }
 
             if (CurrentState >= States.Length)
             {
-                throw new DFAException("Bad DFA state!");
+                throw new DFAException("Bad DFA state!", action, CurrentState);
             }
 
             if (States[CurrentState] == null)
             {
-                throw new DFAException("Bad DFA state!");
+                throw new DFAException("Bad DFA state!", action, CurrentState);
             }
 
             if (!States[CurrentState].NoFunction)
@@ -278,12 +283,13 @@ namespace Hubble.Framework.DataStructure
                 States[CurrentState].DoThings(action, this);
             }
 
-            if (!States[CurrentState].IsQuitState)
+            if (!States[CurrentState].IsQuitState && !QuitManually)
             {
                 return DFAResult.Continue;
             }
             else
             {
+                QuitManually = false;
                 CurrentState = 0;
 
                 if (isElseAction)
@@ -305,9 +311,31 @@ namespace Hubble.Framework.DataStructure
 
     public class DFAException : Exception
     {
-        public DFAException(string message)
+        private int _Action;
+
+        public int Action
+        {
+            get
+            {
+                return _Action;
+            }
+        }
+
+        private int _State;
+
+        public int State
+        {
+            get
+            {
+                return _State;
+            }
+        }
+
+        public DFAException(string message, int action, int state)
             : base(message)
         {
+            _Action = action;
+            _State = state;
         }
     }
 }

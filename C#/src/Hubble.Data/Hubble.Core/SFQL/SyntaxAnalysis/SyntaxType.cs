@@ -52,6 +52,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         //Keywords
         BEGIN_KEYWORD = 36,
         ALTER     , 
+        AS        ,
+        ASC       ,
         AVG       ,
         BEGIN     ,
         BETWEEN   ,
@@ -62,6 +64,13 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         COALESCE  ,
         COMMIT    ,
         COMMITTED ,
+
+        //for user query interface
+        CONTAINS  ,
+        CONTAINS1 ,
+        CONTAINS2 ,
+        CONTAINS3 ,
+
         COUNT     ,
         CREATE    ,
         DATABASE  ,
@@ -90,6 +99,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         JOIN      ,
         KEY      ,
         LEFT      ,
+        LIKE     ,
+        MATCH    ,
         MAX      ,
         MIN      ,
         NOCHECK      ,

@@ -466,5 +466,17 @@ namespace Hubble.Core.SFQL.LexicalAnalysis
         {
             InputText = inputText;
         }
+
+        new public DFAResult Input(int action, int token)
+        {
+            try
+            {
+                return base.Input(action, token);
+            }
+            catch (DFAException dfaEx)
+            {
+                throw new LexicalException(dfaEx.Message, dfaEx, Row, beginIndex - LastLineStart);
+            }
+        }
     }
 }
