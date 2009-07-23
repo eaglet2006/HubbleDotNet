@@ -16,6 +16,13 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         Quit = 7,
     }
 
+    public enum LogicFunc
+    {
+        None = 0,
+        And = 1,
+        Or = 2,
+    }
+
     class WhereState : SyntaxState<WhereStateFunction>
     {
         public WhereState(int id, bool isQuit, WhereStateFunction function, IDictionary<int, int> nextStateIdDict)
@@ -65,11 +72,14 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             switch (Func)
             {
                 case WhereStateFunction.LBracket:
+                    where.LastLogicFunc = LogicFunc.None;
+
                     where.ExpressionTreeStack.Push(where.CurrentExpressionTree);
                     where.CurrentExpressionTree = new ExpressionTree(null);
-
                     break;
                 case WhereStateFunction.RBracket:
+                    where.LastLogicFunc = LogicFunc.None;
+
                     if (where.ExpressionTreeStack.Count <= 0)
                     {
                         throw new SyntaxException("Half-baked bracket", where,
@@ -105,12 +115,30 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                     switch (dfa.CurrentToken.SyntaxType)
                     {
                         case SyntaxType.AND:
+                            if (where.LastLogicFunc == LogicFunc.Or)
+                            {
+                                throw new SyntaxException("And Or can't in same short sentence without bracket. Eg. a > 0 and c < 10 or b > 0 must be a > 0 and c < 10 or (b > 0) ", 
+                                    where, new Hubble.Framework.DataStructure.DFAException("Half-baked bracket",
+                                        action, -1), dfa.CurrentToken);
+                            }
+
+                            where.LastLogicFunc = LogicFunc.And;
                             where.CurrentExpressionTree.AndChild = new ExpressionTree(where.CurrentExpressionTree);
                             where.CurrentExpressionTree = where.CurrentExpressionTree.AndChild;
 
                             break;
 
                         case SyntaxType.OR:
+                            if (where.LastLogicFunc == LogicFunc.And)
+                            {
+                                throw new SyntaxException("And Or can't in same short sentence without bracket. Eg. a > 0 and c < 10 or b > 0 must be a > 0 and c < 10 or (b > 0) ",
+                                    where, new Hubble.Framework.DataStructure.DFAException("Half-baked bracket",
+                                        action, -1), dfa.CurrentToken);
+                            }
+
+                            where.LastLogicFunc = LogicFunc.Or;
+
+
                             where.CurrentExpressionTree.OrChild = new ExpressionTree(where.CurrentExpressionTree);
                             where.CurrentExpressionTree = where.CurrentExpressionTree.OrChild;
                             break;
@@ -130,6 +158,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
     public class Where : Syntax<WhereStateFunction>, Hubble.Core.SFQL.SyntaxAnalysis.ITokenInput
     {
+        public LogicFunc LastLogicFunc = LogicFunc.None;
+
         private static SyntaxState<WhereStateFunction> s0 = AddSyntaxState(new WhereState(0)); //Start state;
         private static SyntaxState<WhereStateFunction> squit = AddSyntaxState(new WhereState(30, true, WhereStateFunction.Quit)); //quit state;
 

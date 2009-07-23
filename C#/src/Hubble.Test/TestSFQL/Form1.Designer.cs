@@ -34,6 +34,7 @@
             this.buttonLexical = new System.Windows.Forms.Button();
             this.buttonLexicalPerformance = new System.Windows.Forms.Button();
             this.buttonSyntax = new System.Windows.Forms.Button();
+            this.buttonParse = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBoxSFQL
@@ -91,11 +92,22 @@
             this.buttonSyntax.UseVisualStyleBackColor = true;
             this.buttonSyntax.Click += new System.EventHandler(this.buttonSyntax_Click);
             // 
+            // buttonParse
+            // 
+            this.buttonParse.Location = new System.Drawing.Point(342, 223);
+            this.buttonParse.Name = "buttonParse";
+            this.buttonParse.Size = new System.Drawing.Size(75, 23);
+            this.buttonParse.TabIndex = 6;
+            this.buttonParse.Text = "Parse";
+            this.buttonParse.UseVisualStyleBackColor = true;
+            this.buttonParse.Click += new System.EventHandler(this.buttonParse_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(759, 444);
+            this.Controls.Add(this.buttonParse);
             this.Controls.Add(this.buttonSyntax);
             this.Controls.Add(this.buttonLexicalPerformance);
             this.Controls.Add(this.buttonLexical);
@@ -117,6 +129,7 @@
         private System.Windows.Forms.Button buttonLexical;
         private System.Windows.Forms.Button buttonLexicalPerformance;
         private System.Windows.Forms.Button buttonSyntax;
+        private System.Windows.Forms.Button buttonParse;
     }
 }
 

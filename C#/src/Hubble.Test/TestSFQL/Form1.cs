@@ -9,6 +9,7 @@ using System.Diagnostics;
 
 using Hubble.Core.SFQL.LexicalAnalysis;
 using Hubble.Core.SFQL.SyntaxAnalysis;
+using Hubble.Core.SFQL.Parse;
 using Hubble.Framework.DataStructure;
 
 namespace TestSFQL
@@ -203,9 +204,16 @@ namespace TestSFQL
 
         private void buttonSyntax_Click(object sender, EventArgs e)
         {
+            textBoxOutput.Text = "";
             _SFQLSentence = null;
 
             SyntaxAnalyse(textBoxSFQL.Text, false);
+        }
+
+        private void buttonParse_Click(object sender, EventArgs e)
+        {
+            SFQLParse parse = new SFQLParse();
+            parse.Query(textBoxSFQL.Text);
         }
     }
 }
