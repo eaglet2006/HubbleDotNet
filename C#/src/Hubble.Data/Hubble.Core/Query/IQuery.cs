@@ -40,7 +40,7 @@ namespace Hubble.Core.Query
         //Analysis.IAnalyzer Analyzer { get; set;}
 
         //output
-        Dictionary<long, DocumentRank> Search();
+        Dictionary<long, DocumentResult> Search();
         IEnumerable<DocumentRank> GetRankEnumerable();
         //IList<Entity.WordInfo> GetQueryWords();
         //IList<Entity.WordInfo> GetNextHitWords(out long docId);

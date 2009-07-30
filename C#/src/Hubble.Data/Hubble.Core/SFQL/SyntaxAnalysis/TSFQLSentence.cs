@@ -62,6 +62,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                     ((TSFQLSentence)dfa).CurrentSyntax = new TSFQLAttribute();
                     break;
                 case TSFQLSentenceFunction.Select:
+                    ((TSFQLSentence)dfa).SentenceType = SentenceType.SELECT;
                     ((TSFQLSentence)dfa).CurrentSyntax = new Select.Select(); 
                     break;
             }
@@ -146,6 +147,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         }
 
         #region public Fields
+
+        public SentenceType SentenceType = SentenceType.NONE;
 
         public List<TSFQLAttribute> Attributes = new List<TSFQLAttribute>();
 

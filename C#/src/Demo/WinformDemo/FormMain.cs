@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using Hubble.Core.SFQL.Parse;
 
 namespace WinformDemo
 {
@@ -111,6 +112,51 @@ namespace WinformDemo
                 _CurDBProvider.Optimize(Hubble.Core.Data.OptimizationOption.Minimum);
             }
 
+        }
+
+        private void buttonExcute_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                QueryPerfCounter qp = new QueryPerfCounter();
+                qp.Start();
+
+                int count = 0;
+
+                SFQLParse sfqlParse = new SFQLParse();
+                QueryResult queryResult = sfqlParse.Query(textBoxSql.Text);
+
+                System.Data.DataTable table = null;
+
+                if (queryResult.DataSet.Tables.Count > 0)
+                {
+                    table = queryResult.DataSet.Tables[0];
+                    count = table.MinimumCapacity;
+                }
+
+                qp.Stop();
+                double ns = qp.Duration(1);
+
+                labelDuration.Text = (ns / (1000 * 1000)).ToString("0.00") + " ms";
+                labelCount.Text = count.ToString();
+                
+                if (queryResult.DataSet.Tables.Count > 0)
+                {
+                    dataGridViewResult.DataSource = table;
+                }
+            }
+            catch (Hubble.Core.SFQL.LexicalAnalysis.LexicalException lexicalEx)
+            {
+                 MessageBox.Show(lexicalEx.ToString(), "Lexical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Hubble.Core.SFQL.SyntaxAnalysis.SyntaxException syntaxEx)
+            {
+                 MessageBox.Show(syntaxEx.ToString(), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception e1)
+            {
+                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
 

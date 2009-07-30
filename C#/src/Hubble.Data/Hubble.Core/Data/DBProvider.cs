@@ -55,7 +55,7 @@ namespace Hubble.Core.Data
             return dbProvider;
         }
 
-        private static Hubble.Core.Query.IQuery GetQuery(string command)
+        internal static Hubble.Core.Query.IQuery GetQuery(string command)
         {
             Type type;
 
@@ -266,7 +266,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        private InvertedIndex GetInvertedIndex(string fieldName)
+        internal InvertedIndex GetInvertedIndex(string fieldName)
         {
             lock (this)
             {
@@ -302,7 +302,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        private Field GetField(string fieldName)
+        internal Field GetField(string fieldName)
         {
             lock (this)
             {
@@ -504,7 +504,12 @@ namespace Hubble.Core.Data
 
         }
 
-        private List<Document> Query(List<Field> selectFields, IList<long> docs)
+        public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs)
+        {
+            return Query(selectFields, docs, 0, docs.Count - 1);
+        }
+
+        public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
         {
             List<Field> dbFields = new List<Field>();
             Dictionary<long, Document> docIdToDocumnet = null;
@@ -517,7 +522,10 @@ namespace Hubble.Core.Data
             {
                 if (field.Store && field.IndexType != Field.Index.Untokenized)
                 {
-                    dbFields.Add(field);
+                    if (!field.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        dbFields.Add(field);
+                    }
                 }
             }
 
@@ -526,8 +534,15 @@ namespace Hubble.Core.Data
                 docIdToDocumnet = new Dictionary<long,Document>();
             }
 
-            foreach (long docId in docs)
+            for(int i = begin; i <= end; i++)
             {
+                if (i >= docs.Count)
+                {
+                    break;
+                }
+                
+                long docId = docs[i].DocId;
+
                 Document doc = new Document();
                 result.Add(doc);
                 doc.DocId = docId;
@@ -566,11 +581,20 @@ namespace Hubble.Core.Data
                     if (field.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                     {
                         value = docId.ToString();
+
+                        doc.Add(field.Name, value, field.DataType, false);
                     }
+                    else if (field.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        value = docs[i].Score.ToString();
 
-                    doc.Add(field.Name, value, field.DataType, 
-                        field.Store && field.IndexType != Field.Index.Untokenized);
-
+                        doc.Add(field.Name, value, field.DataType, false);
+                    }
+                    else
+                    {
+                        doc.Add(field.Name, value, field.DataType,
+                            field.Store && field.IndexType != Field.Index.Untokenized);
+                    }
                     
                 }
             }
@@ -578,7 +602,7 @@ namespace Hubble.Core.Data
             if (dbFields.Count > 0)
             {
                 dbFields.Add(new Field("DocId", DataType.Int64));
-                System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs);
+                System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs, begin, end);
 
                 foreach (System.Data.DataRow row in dt.Rows)
                 {
@@ -635,6 +659,21 @@ namespace Hubble.Core.Data
 
         }
 
+        internal Payload GetPayload(long docId)
+        {
+            lock (this)
+            {
+                Payload payload;
+                if (_DocPayload.TryGetValue(docId, out payload))
+                {
+                    return payload;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Create a table
@@ -819,7 +858,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Update(IList<FieldValue> fieldValues, IList<long> docs)
+        public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
         {
             Debug.Assert(fieldValues != null && docs != null);
 
@@ -869,12 +908,14 @@ namespace Hubble.Core.Data
                     selectFields.Add(field);
                 }
 
-                List<long> doDocs = new List<long>();
+                List<Query.DocumentResult> doDocs = new List<Query.DocumentResult>();
 
                 int i = 0;
-                foreach (long docId in docs)
+                foreach (Query.DocumentResult dResult in docs)
                 {
-                    doDocs.Add(docId);
+                    //long docId = dResult.DocId;
+
+                    doDocs.Add(dResult);
 
                     if (++i % 100 == 0)
                     {
@@ -900,8 +941,9 @@ namespace Hubble.Core.Data
                 List<long> updateIds = new List<long>();
                 List<Payload> updatePayloads = new List<Payload>(); 
 
-                foreach (long docId in docs)
+                foreach (Query.DocumentResult docResult in docs)
                 {
+                    long docId = docResult.DocId;
                     Payload payLoad;
 
                     lock (this)
@@ -933,12 +975,23 @@ namespace Hubble.Core.Data
             }
         }
 
-
         public void Delete(IList<long> docs)
         {
             _DBAdapter.Delete(docs);
 
             _DelProvider.Delete(docs);
+        }
+
+        public void Delete(IList<Query.DocumentResult> docs)
+        {
+            List<long> docIds = new List<long>();
+
+            foreach (Query.DocumentResult docResult in docs)
+            {
+                docIds.Add(docResult.DocId);
+            }
+
+            Delete(docIds);
         }
 
         public void Optimize()
@@ -1009,7 +1062,7 @@ namespace Hubble.Core.Data
             query.TabIndex = GetField(fieldName).TabIndex;
 
             Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-            Dictionary<long, Query.DocumentRank> docRankTbl = searcher.Search();
+            Dictionary<long, Query.DocumentResult> docRankTbl = searcher.Search();
 
             List<long> docs = new List<long>();
 
@@ -1017,9 +1070,9 @@ namespace Hubble.Core.Data
             {
                 count = docRankTbl.Count;
 
-                foreach (Hubble.Core.Query.DocumentRank docRank in docRankTbl.Values)
+                foreach (Hubble.Core.Query.DocumentResult docResult in docRankTbl.Values)
                 {
-                    docs.Add(docRank.DocumentId);
+                    docs.Add(docResult.DocId);
 
                     if (docs.Count > 10)
                     {
@@ -1037,9 +1090,9 @@ namespace Hubble.Core.Data
 
             return new System.Data.DataSet();
 
-            List<Document> docResult = Query(selectFields, docs);
+            //List<Query.DocumentResult> docResult = Query(selectFields, docs);
 
-            return Document.ToDataSet(selectFields, docResult);
+            //return Document.ToDataSet(selectFields, docResult);
 
             //foreach (Hubble.Core.Query.DocumentRank docRank in searcher.Get(first, length))
             //{

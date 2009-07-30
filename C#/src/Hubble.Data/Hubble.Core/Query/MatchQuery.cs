@@ -173,7 +173,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public void Calculate(Dictionary<long, Query.DocumentRank> docIdRank, long Norm_Ranks)
+            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
             {
                 _WordIndex.Calculate(docIdRank, Rank, Norm_Ranks);
             }
@@ -403,9 +403,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        public Dictionary<long, DocumentRank> Search()
+        public Dictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentRank> result = new Dictionary<long, DocumentRank>();
+            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
 
             if (_QueryWords.Count <= 0)
             {

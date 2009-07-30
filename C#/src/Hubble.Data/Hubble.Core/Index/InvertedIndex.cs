@@ -231,7 +231,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public void Calculate(Dictionary<long, Query.DocumentRank> docIdRank, int wordRank, long Norm_Ranks)
+            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, int wordRank, long Norm_Ranks)
             {
                 lock (this)
                 {
@@ -263,16 +263,16 @@ namespace Hubble.Core.Index
                             score = (int)rank;
                         }
 
-                        Query.DocumentRank docRank;
+                        Query.DocumentResult docResult;
 
-                        if (docIdRank.TryGetValue(docScore.DocId, out docRank))
+                        if (docIdRank.TryGetValue(docScore.DocId, out docResult))
                         {
-                            docRank.Rank += score;
+                            docResult.Score += score;
                         }
                         else
                         {
-                            docRank = new Query.DocumentRank(docScore.DocId, score);
-                            docIdRank.Add(docScore.DocId, docRank);
+                            docResult = new Query.DocumentResult(docScore.DocId, score);
+                            docIdRank.Add(docScore.DocId, docResult);
                         }
                     }
                 }

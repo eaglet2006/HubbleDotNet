@@ -81,7 +81,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
          * s2 -- AS -- s3
          * s2 -- Identitier -- s4
          * s2 -- , From -- squit
-         * s3 -- Identitier -- s4
+         * s3 -- Identitier, String -- s4
          * s4 -- , From -- squit
          * **************************************************/
 
@@ -100,7 +100,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             s2.AddNextState((int)SyntaxType.Identifer, s4.Id);
             s2.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.FROM }, squit.Id);
 
-            s3.AddNextState((int)SyntaxType.Identifer, s4.Id);
+            s3.AddNextState(new int[] {(int)SyntaxType.Identifer, (int)SyntaxType.String}, s4.Id);
 
             s4.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.FROM }, squit.Id);
         }

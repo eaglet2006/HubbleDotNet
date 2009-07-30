@@ -150,6 +150,8 @@ namespace Hubble.Core.Data
                             System.ComponentModel.TypeDescriptor.GetConverter(type).ConvertFrom(fv.Value);
                     }
                 }
+
+                dt.Rows.Add(row);
             }
 
             System.Data.DataSet ds = new System.Data.DataSet();

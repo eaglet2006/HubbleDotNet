@@ -398,9 +398,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        public Dictionary<long, DocumentRank> Search()
+        public Dictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentRank> result = new Dictionary<long, DocumentRank>();
+            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
             
             if (_QueryWords.Count <= 0)
             {
@@ -416,16 +416,16 @@ namespace Hubble.Core.Query
                 {
                     int rank = CaculateRank(curDocId, _WordIndexList[i]);
 
-                    DocumentRank docRank;
+                    DocumentResult docResult;
 
-                    if (result.TryGetValue(curDocId, out docRank))
+                    if (result.TryGetValue(curDocId, out docResult))
                     {
-                        docRank.Rank += rank;
+                        docResult.Score += rank;
                     }
                     else
                     {
-                        docRank = new DocumentRank(curDocId, rank);
-                        result.Add(curDocId, docRank);
+                        docResult = new DocumentResult(curDocId, rank);
+                        result.Add(curDocId, docResult);
                     }
 
                     _WordIndexList[i].IncCurIndex();

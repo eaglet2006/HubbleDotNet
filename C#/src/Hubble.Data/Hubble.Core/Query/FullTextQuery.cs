@@ -723,16 +723,16 @@ namespace Hubble.Core.Query
         }
 
 
-        public Dictionary<long, DocumentRank> Search()
+        public Dictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentRank> result = new Dictionary<long,DocumentRank>();
+            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
             long docId;
 
             IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
 
             while (docId >= 0)
             {
-                result.Add(docId, new DocumentRank(docId, CaculateRank(wordInfoList)));
+                result.Add(docId, new DocumentResult(docId, CaculateRank(wordInfoList)));
                 wordInfoList = GetNextHitWords(out docId);
             }
 

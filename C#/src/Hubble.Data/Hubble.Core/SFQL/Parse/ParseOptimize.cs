@@ -68,14 +68,20 @@ namespace Hubble.Core.SFQL.Parse
 
         public TSFQLSentence Optimize(TSFQLSentence sentence)
         {
-            if (sentence.SyntaxEntity is SyntaxAnalysis.Select.Select)
+            switch (sentence.SentenceType)
             {
-                SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as SyntaxAnalysis.Select.Select;
+                case SentenceType.SELECT:
+                    SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as SyntaxAnalysis.Select.Select;
 
-                if (select.Where != null)
-                {
-                    select.Where = Optimize(select.Where);
-                }
+                    if (select.Where != null)
+                    {
+                        select.Where = Optimize(select.Where);
+                    }
+
+                    break;
+
+                default:
+                    throw new SyntaxException(string.Format("Unknow sentence {0}", sentence.SentenceType));
             }
 
             return sentence;

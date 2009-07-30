@@ -13,6 +13,14 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
     public class Expression : IExpression
     {
+        //For parse
+        public int FieldTab = -1;
+        public int PayloadLength = 0;
+        public Data.DataType DataType;
+        public int[] ComparisionData = null;
+
+
+        //For Syntax
         public List<LexicalAnalysis.Lexical.Token> Left; //Left of Comparison Operators
         public LexicalAnalysis.Lexical.Token Operator; //Comparison Operators
         public List<LexicalAnalysis.Lexical.Token> Right; //Right of Comparison Operators

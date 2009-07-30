@@ -65,6 +65,72 @@ namespace Hubble.Core.Data
             }
         }
 
+        static public Query.SortInfo GetSortInfo(bool asc, DataType type, int[] buf, int from, int len)
+        {
+            switch (type)
+            {
+                case DataType.Data:
+
+                    throw new Exception("Not finished!");
+
+                case DataType.String:
+
+                    StringBuilder str = new StringBuilder();
+
+                    for (int i = from; i < from + len; i++)
+                    {
+                        char c;
+
+                        if (i % 2 == 0)
+                        {
+                            c = (char)(buf[i] >> 16);
+                        }
+                        else
+                        {
+                            c = (char)(buf[i] % 65536);
+                        }
+
+                        if (c == 0)
+                        {
+                            break;
+                        }
+
+                        str.Append(c);
+                    }
+
+                    return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.String, str.ToString());
+                case DataType.Date:
+                case DataType.SmallDateTime:
+                case DataType.Int32:
+                    {
+                        return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, buf[from]);
+                    }
+
+                case DataType.Int64:
+                case DataType.DateTime:
+                    {
+                        long l;
+                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
+                        return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Long, l);
+                    }
+
+                case DataType.Float:
+                    {
+                        long l;
+                        l = ((long)buf[from]) << 32 + buf[from + 1];
+
+                        float f = l;
+                        l = ((long)buf[from + 2]) << 32 + buf[from + 3];
+
+                        f += (float)l / 1000000000000000000;
+
+                        return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Double, (double)f);
+                    }
+                default:
+                    throw new ArgumentException(string.Format("Invalid type:{0}", type));
+            }
+        }
+
         static public string GetString(DataType type, int[] buf, int from, int len)
         {
             switch (type)
@@ -115,14 +181,14 @@ namespace Hubble.Core.Data
                 case DataType.Int64:
                     {
                         long l;
-                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
                         return l.ToString();
                     }
 
                 case DataType.DateTime:
                     {
                         long l;
-                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
                         DateTime date = LongToDateTime(l);
                         return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
                     }
@@ -200,15 +266,31 @@ namespace Hubble.Core.Data
                     return ret;
 
                 case DataType.Date:
-                case DataType.Int32:
-                case DataType.SmallDateTime:
+                    DateTime date = DateTime.Parse(value);
                     ret = new int[1];
-                    ret[0] = int.Parse(value);
+                    ret[0] = DateToInt(date);
+                    return ret;
+                case DataType.SmallDateTime:
+                    DateTime smalldate = DateTime.Parse(value);
+                    ret = new int[1];
+                    ret[0] = SmallDateTimeToInt(smalldate);
+                    return ret;
+                case DataType.Int32:
+                    ret = new int[1];
+                    if (!int.TryParse(value, out ret[0]))
+                    {
+                        ret[0] = (int)double.Parse(value);
+                    }
                     return ret;
 
                 case DataType.Int64:
                     ret = new int[2];
-                    l = long.Parse(value);
+
+                    if (!long.TryParse(value, out l))
+                    {
+                        l = (long)double.Parse(value);
+                    }
+
                     ret[0] = (int)(l >> 32);
                     ret[1] = (int)(l & 0xFFFFFFFF);
                     return ret;

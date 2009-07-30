@@ -232,7 +232,7 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public void Update(Data.Document doc, IList<long> docIds)
+        public void Update(Data.Document doc, IList<Query.DocumentResult> docs)
         {
             StringBuilder sql = new StringBuilder();
 
@@ -261,8 +261,10 @@ namespace Hubble.Core.DBAdapter
 
             i = 0;
 
-            foreach (long docId in docIds)
+            foreach (Query.DocumentResult docResult in docs)
             {
+                long docId = docResult.DocId;
+
                 if (i++ == 0)
                 {
                     sql.AppendFormat("{0}", docId);
@@ -283,7 +285,12 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<long> docs)
+        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResult> docs)
+        {
+            return Query(selectFields, docs, 0, docs.Count - 1);
+        }
+
+        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
         {
             StringBuilder sql = new StringBuilder();
 
@@ -306,8 +313,15 @@ namespace Hubble.Core.DBAdapter
 
             i = 0;
 
-            foreach (long docId in docs)
+            for (int j = begin; j <= end; j++)
             {
+                if (j >= docs.Count)
+                {
+                    break;
+                }
+
+                long docId = docs[j].DocId;
+
                 if (i++ == 0)
                 {
                     sql.AppendFormat("{0}", docId);

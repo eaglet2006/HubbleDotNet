@@ -13,6 +13,9 @@ namespace Hubble.Core.SFQL.Parse
         List<TSFQLSentence> _SFQLSentenceList;
         TSFQLSentence _SFQLSentence;
 
+        public int Begin = 0;
+        public int End = 99;
+
         private void InputLexicalToken(Lexical.Token token)
         {
             if (token.SyntaxType == SyntaxType.Space)
@@ -82,10 +85,78 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private System.Data.DataSet ExecuteTSFQLSentence(TSFQLSentence sentence)
+        private QueryResult ExcuteSelect(TSFQLSentence sentence)
+        {
+            SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
+                SyntaxAnalysis.Select.Select;
+
+            ParseWhere parseWhere = new ParseWhere(select.SelectFroms[0].Name);
+
+            parseWhere.Begin = this.Begin;
+            parseWhere.End = this.End;
+            Query.DocumentResult[] result = parseWhere.Parse((sentence.SyntaxEntity as
+                SyntaxAnalysis.Select.Select).Where.ExpressionTree);
+
+            //Sort
+            Data.DBProvider dBProvider =  Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
+
+            QueryResultSort qSort = new QueryResultSort(select.OrderBys, dBProvider);
+            qSort.Sort(result);
+
+            List<Data.Field> selectFields = new List<Data.Field>();
+            
+
+            foreach (SyntaxAnalysis.Select.SelectField selectField in select.SelectFields)
+            {
+                Data.Field field = dBProvider.GetField(selectField.Name);
+
+                if (field == null)
+                {
+
+                    if (selectField.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.Int64));
+                    }
+                    else if (selectField.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.Int64));
+                    }
+                    else
+                    {
+                        throw new ParseException(string.Format("Unknown field name:{0}", selectField.Name));
+                    }
+                }
+                else
+                {
+                    selectFields.Add(field);
+                }
+            }
+
+            List<Data.Document> docResult = dBProvider.Query(selectFields, result, Begin, End);
+            System.Data.DataSet ds = Data.Document.ToDataSet(selectFields, docResult);
+            ds.Tables[0].TableName = select.SelectFroms[0].Name;
+
+            for (int i = 0; i < select.SelectFields.Count; i++)
+            {
+                ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i].Alias;
+            }
+            
+            ds.Tables[0].MinimumCapacity = result.Length;
+
+            return new QueryResult(ds);
+        }
+
+        private QueryResult ExecuteTSFQLSentence(TSFQLSentence sentence)
         {
             ParseOptimize pOptimize = new ParseOptimize();
             sentence = pOptimize.Optimize(sentence);
+
+            switch (sentence.SentenceType)
+            {
+                case SentenceType.SELECT:
+                    return ExcuteSelect(sentence);
+            }
+
             return null;
         }
 
@@ -95,23 +166,35 @@ namespace Hubble.Core.SFQL.Parse
             Query(sql);
         }
 
-        public System.Data.DataSet Query(string sql)
+        public QueryResult Query(string sql)
         {
             _SFQLSentenceList = new List<TSFQLSentence>();
 
-            System.Data.DataSet result = new System.Data.DataSet();
+            QueryResult result = new QueryResult();
 
             SyntaxAnalyse(sql);
 
             foreach (TSFQLSentence sentence in _SFQLSentenceList)
             {
-                System.Data.DataSet ds = ExecuteTSFQLSentence(sentence);
+                QueryResult queryResult = ExecuteTSFQLSentence(sentence);
 
-                if (ds != null)
+                if (queryResult != null)
                 {
-                    foreach (System.Data.DataTable table in ds.Tables)
+                    List<System.Data.DataTable> tables = new List<System.Data.DataTable>();
+
+                    foreach (System.Data.DataTable table in queryResult.DataSet.Tables)
                     {
-                        result.Tables.Add(table);
+                        tables.Add(table);
+                    }
+
+                    foreach (System.Data.DataTable table in tables)
+                    {
+                        queryResult.DataSet.Tables.Remove(table);
+                    }
+
+                    foreach (System.Data.DataTable table in tables)
+                    {
+                        result.DataSet.Tables.Add(table);
                     }
                 }
             }

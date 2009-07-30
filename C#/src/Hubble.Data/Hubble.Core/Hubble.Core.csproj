@@ -59,6 +59,7 @@
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\DocumentRank.cs" />
+    <Compile Include="Query\DocumentResult.cs" />
     <Compile Include="Query\FullTextQuery.cs" />
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\MatchQuery.cs" />
@@ -69,7 +70,11 @@
     <Compile Include="Data\Document.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
+    <Compile Include="SFQL\Parse\ParseException.cs" />
     <Compile Include="SFQL\Parse\ParseOptimize.cs" />
+    <Compile Include="SFQL\Parse\ParseWhere.cs" />
+    <Compile Include="SFQL\Parse\QueryResult.cs" />
+    <Compile Include="SFQL\Parse\QueryResultSort.cs" />
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ExpressionTree.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ISyntaxEntity.cs" />
@@ -78,6 +83,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Select\SelectField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Select\Select.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Select\SelectFrom.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\SentenceType.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\SyntaxException.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\TSFQLAttribute.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Syntax.cs" />

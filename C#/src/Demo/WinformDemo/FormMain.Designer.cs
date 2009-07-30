@@ -43,6 +43,10 @@
             this.buttonDelete = new System.Windows.Forms.Button();
             this.buttonOptimize = new System.Windows.Forms.Button();
             this.buttonOptimizeMin = new System.Windows.Forms.Button();
+            this.textBoxSql = new System.Windows.Forms.TextBox();
+            this.buttonExcute = new System.Windows.Forms.Button();
+            this.dataGridViewResult = new System.Windows.Forms.DataGridView();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).BeginInit();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -83,26 +87,28 @@
             // 
             // textBoxSearch
             // 
-            this.textBoxSearch.Location = new System.Drawing.Point(21, 90);
+            this.textBoxSearch.Location = new System.Drawing.Point(135, 71);
             this.textBoxSearch.Name = "textBoxSearch";
             this.textBoxSearch.Size = new System.Drawing.Size(231, 20);
             this.textBoxSearch.TabIndex = 4;
             this.textBoxSearch.Text = "Content Match 大学";
+            this.textBoxSearch.Visible = false;
             // 
             // buttonSearch
             // 
-            this.buttonSearch.Location = new System.Drawing.Point(271, 88);
+            this.buttonSearch.Location = new System.Drawing.Point(385, 69);
             this.buttonSearch.Name = "buttonSearch";
             this.buttonSearch.Size = new System.Drawing.Size(75, 23);
             this.buttonSearch.TabIndex = 5;
             this.buttonSearch.Text = "Search";
             this.buttonSearch.UseVisualStyleBackColor = true;
+            this.buttonSearch.Visible = false;
             this.buttonSearch.Click += new System.EventHandler(this.buttonSearch_Click);
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(18, 149);
+            this.label2.Location = new System.Drawing.Point(115, 99);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(47, 13);
             this.label2.TabIndex = 6;
@@ -111,7 +117,7 @@
             // labelDuration
             // 
             this.labelDuration.AutoSize = true;
-            this.labelDuration.Location = new System.Drawing.Point(71, 149);
+            this.labelDuration.Location = new System.Drawing.Point(168, 99);
             this.labelDuration.Name = "labelDuration";
             this.labelDuration.Size = new System.Drawing.Size(29, 13);
             this.labelDuration.TabIndex = 7;
@@ -130,7 +136,7 @@
             // labelCount
             // 
             this.labelCount.AutoSize = true;
-            this.labelCount.Location = new System.Drawing.Point(71, 126);
+            this.labelCount.Location = new System.Drawing.Point(71, 99);
             this.labelCount.Name = "labelCount";
             this.labelCount.Size = new System.Drawing.Size(13, 13);
             this.labelCount.TabIndex = 10;
@@ -139,7 +145,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(18, 126);
+            this.label4.Location = new System.Drawing.Point(18, 99);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(35, 13);
             this.label4.TabIndex = 9;
@@ -185,11 +191,41 @@
             this.buttonOptimizeMin.UseVisualStyleBackColor = true;
             this.buttonOptimizeMin.Click += new System.EventHandler(this.buttonOptimizeMin_Click);
             // 
+            // textBoxSql
+            // 
+            this.textBoxSql.Location = new System.Drawing.Point(21, 118);
+            this.textBoxSql.Multiline = true;
+            this.textBoxSql.Name = "textBoxSql";
+            this.textBoxSql.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxSql.Size = new System.Drawing.Size(458, 100);
+            this.textBoxSql.TabIndex = 15;
+            // 
+            // buttonExcute
+            // 
+            this.buttonExcute.Location = new System.Drawing.Point(485, 118);
+            this.buttonExcute.Name = "buttonExcute";
+            this.buttonExcute.Size = new System.Drawing.Size(75, 23);
+            this.buttonExcute.TabIndex = 16;
+            this.buttonExcute.Text = "Excute";
+            this.buttonExcute.UseVisualStyleBackColor = true;
+            this.buttonExcute.Click += new System.EventHandler(this.buttonExcute_Click);
+            // 
+            // dataGridViewResult
+            // 
+            this.dataGridViewResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewResult.Location = new System.Drawing.Point(12, 224);
+            this.dataGridViewResult.Name = "dataGridViewResult";
+            this.dataGridViewResult.Size = new System.Drawing.Size(569, 198);
+            this.dataGridViewResult.TabIndex = 17;
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(567, 352);
+            this.ClientSize = new System.Drawing.Size(587, 434);
+            this.Controls.Add(this.dataGridViewResult);
+            this.Controls.Add(this.buttonExcute);
+            this.Controls.Add(this.textBoxSql);
             this.Controls.Add(this.buttonOptimizeMin);
             this.Controls.Add(this.buttonOptimize);
             this.Controls.Add(this.buttonDelete);
@@ -209,6 +245,7 @@
             this.Text = "Main";
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -231,5 +268,8 @@
         private System.Windows.Forms.Button buttonDelete;
         private System.Windows.Forms.Button buttonOptimize;
         private System.Windows.Forms.Button buttonOptimizeMin;
+        private System.Windows.Forms.TextBox textBoxSql;
+        private System.Windows.Forms.Button buttonExcute;
+        private System.Windows.Forms.DataGridView dataGridViewResult;
     }
 }

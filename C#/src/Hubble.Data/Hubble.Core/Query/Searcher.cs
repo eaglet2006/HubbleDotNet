@@ -113,7 +113,7 @@ namespace Hubble.Core.Query
             _Query = query;
         }
 
-        public Dictionary<long, DocumentRank> Search()
+        public Dictionary<long, DocumentResult> Search()
         {
             return _Query.Search();
 

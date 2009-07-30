@@ -33,9 +33,10 @@ namespace Hubble.Core.DBAdapter
 
         void Delete(IList<long> docIds);
 
-        void Update(Data.Document doc, IList<long> docIds);
+        void Update(Data.Document doc, IList<Query.DocumentResult> docs);
 
-        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<long> docs);
+        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
+        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
 
         long MaxDocId { get; }
 
