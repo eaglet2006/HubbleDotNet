@@ -42,6 +42,7 @@ namespace Hubble.Core.Query
             private int _Rank;
             private int _Norm_d_t;
             private int _Idf_t;
+            private int _FieldRank;
 
             public int CurIndex
             {
@@ -95,17 +96,17 @@ namespace Hubble.Core.Query
             {
                 get
                 {
-                    if (_Rank <= 0)
-                    {
-                        return 1;
-                    }
-
-                    return _Rank;
+                     return _Rank;
                 }
 
                 set
                 {
                     _Rank = value;
+
+                    if (_Rank <= 0)
+                    {
+                        _Rank = 1;
+                    }
                 }
             }
 
@@ -143,10 +144,11 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex, long totalDocuments)
+            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex, long totalDocuments, int fieldRank)
             {
                 _OldIndexForDoc = -1;
                 _OldIndexForWordCount = -1;
+                _FieldRank = fieldRank;
 
                 if (wordIndex.Count <= 0)
                 {
@@ -175,7 +177,7 @@ namespace Hubble.Core.Query
 
             public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
             {
-                _WordIndex.Calculate(docIdRank, Rank, Norm_Ranks);
+                _WordIndex.Calculate(docIdRank, _FieldRank, Rank, Norm_Ranks);
             }
         }
 
@@ -343,6 +345,23 @@ namespace Hubble.Core.Query
             }
         }
 
+        private int _FieldRank = 1;
+        public int FieldRank
+        {
+            get
+            {
+                return _FieldRank;
+            }
+            set
+            {
+                _FieldRank = value;
+                if (_FieldRank <= 0)
+                {
+                    _FieldRank = 1;
+                }
+            }
+        }
+
         public Hubble.Core.Index.InvertedIndex InvertedIndex
         {
             get
@@ -386,7 +405,7 @@ namespace Hubble.Core.Query
                         }
 
                         _WordIndexList.Add(new WordIndexForQuery(wordIndex,
-                            InvertedIndex.DocumentCount));
+                            InvertedIndex.DocumentCount, this.FieldRank));
                         wordIndexDict.Add(wordInfo.Word, 0);
                     }
 

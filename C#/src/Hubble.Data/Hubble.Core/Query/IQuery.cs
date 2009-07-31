@@ -32,6 +32,8 @@ namespace Hubble.Core.Query
 
         DBProvider DBProvider { get; set; }
 
+        int FieldRank { get; set; }
+
         IList<Entity.WordInfo> QueryWords { get; set; }
 
         //Inner parameters

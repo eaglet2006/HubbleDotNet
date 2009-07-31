@@ -231,7 +231,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, int wordRank, long Norm_Ranks)
+            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
             {
                 lock (this)
                 {
@@ -250,7 +250,7 @@ namespace Hubble.Core.Index
                             continue;
                         }
 
-                        long rank = docScore.Score * wordRank / Norm_Ranks;
+                        long rank = docScore.Score;// / Norm_Ranks;
                         int score = 0;
                         if (rank > int.MaxValue - 4000000)
                         {
@@ -263,15 +263,19 @@ namespace Hubble.Core.Index
                             score = (int)rank;
                         }
 
+                        rank = fieldRank * wordRank * score;
+
                         Query.DocumentResult docResult;
 
                         if (docIdRank.TryGetValue(docScore.DocId, out docResult))
                         {
-                            docResult.Score += score;
+                            //docResult.Score += score;
+                            docResult.Score += rank;
                         }
                         else
                         {
-                            docResult = new Query.DocumentResult(docScore.DocId, score);
+                            //docResult = new Query.DocumentResult(docScore.DocId, score);
+                            docResult = new Query.DocumentResult(docScore.DocId, rank);
                             docIdRank.Add(docScore.DocId, docResult);
                         }
                     }

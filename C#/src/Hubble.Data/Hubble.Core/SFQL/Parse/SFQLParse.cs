@@ -13,9 +13,6 @@ namespace Hubble.Core.SFQL.Parse
         List<TSFQLSentence> _SFQLSentenceList;
         TSFQLSentence _SFQLSentence;
 
-        public int Begin = 0;
-        public int End = 99;
-
         private void InputLexicalToken(Lexical.Token token)
         {
             if (token.SyntaxType == SyntaxType.Space)
@@ -92,22 +89,68 @@ namespace Hubble.Core.SFQL.Parse
 
             ParseWhere parseWhere = new ParseWhere(select.SelectFroms[0].Name);
 
-            parseWhere.Begin = this.Begin;
-            parseWhere.End = this.End;
-            Query.DocumentResult[] result = parseWhere.Parse((sentence.SyntaxEntity as
-                SyntaxAnalysis.Select.Select).Where.ExpressionTree);
+            parseWhere.Begin = select.Begin;
+            parseWhere.End = select.End;
+            Query.DocumentResult[] result;
+
+            if (select.Where == null)
+            {
+                result = parseWhere.Parse(null);
+            }
+            else
+            {
+                result = parseWhere.Parse(select.Where.ExpressionTree);
+            }
 
             //Sort
             Data.DBProvider dBProvider =  Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
+
+            //Document rank
+            //If has rank field and datatype is int32, do document rank
+
+            Data.Field rankField = dBProvider.GetField("Rank");
+
+            if (rankField != null)
+            {
+                if (rankField.DataType == Hubble.Core.Data.DataType.Int32 &&
+                    rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
+                {
+                    int rankTab = rankField.TabIndex;
+
+                    foreach (Query.DocumentResult dr in result)
+                    {
+                        int docRank = dBProvider.GetPayload(dr.DocId).Data[rankTab];
+                        if (docRank < 0)
+                        {
+                            docRank = 0;
+                        }
+                        else if (docRank > 65535)
+                        {
+                            docRank = 65535;
+                        }
+
+                        dr.Score *= docRank;
+                    }
+                }
+            }
 
             QueryResultSort qSort = new QueryResultSort(select.OrderBys, dBProvider);
             qSort.Sort(result);
 
             List<Data.Field> selectFields = new List<Data.Field>();
-            
+
+            int allFieldsCount = 0;
 
             foreach (SyntaxAnalysis.Select.SelectField selectField in select.SelectFields)
             {
+                if (selectField.Name == "*")
+                {
+                    List<Data.Field> allFields = dBProvider.GetAllSelectFields();
+                    selectFields.AddRange(allFields);
+                    allFieldsCount += allFields.Count;
+                    continue;
+                }
+
                 Data.Field field = dBProvider.GetField(selectField.Name);
 
                 if (field == null)
@@ -132,13 +175,18 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            List<Data.Document> docResult = dBProvider.Query(selectFields, result, Begin, End);
+            List<Data.Document> docResult = dBProvider.Query(selectFields, result, select.Begin, select.End);
             System.Data.DataSet ds = Data.Document.ToDataSet(selectFields, docResult);
             ds.Tables[0].TableName = select.SelectFroms[0].Name;
 
             for (int i = 0; i < select.SelectFields.Count; i++)
             {
-                ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i].Alias;
+                if (select.SelectFields[i].Name == "*")
+                {
+                    continue;
+                }
+
+                ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i + allFieldsCount].Alias;
             }
             
             ds.Tables[0].MinimumCapacity = result.Length;

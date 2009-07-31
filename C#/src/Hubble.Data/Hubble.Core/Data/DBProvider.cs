@@ -319,6 +319,27 @@ namespace Hubble.Core.Data
             }
         }
 
+
+        internal List<Field> GetAllSelectFields()
+        {
+            lock (this)
+            {
+                List<Field> selectFields = new List<Field>();
+
+                selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.Int64));
+
+                foreach (Field field in _FieldIndex.Values)
+                {
+                    selectFields.Add(field);
+                }
+
+                selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.Int64));
+
+                return selectFields;
+            }
+
+        }
+
         private void OpenPayloadInformation(Table table)
         {
             _PayloadLength = 0;
@@ -532,6 +553,16 @@ namespace Hubble.Core.Data
             if (dbFields.Count > 0)
             {
                 docIdToDocumnet = new Dictionary<long,Document>();
+            }
+
+            if (end < 0)
+            {
+                end = docs.Count - 1;
+            }
+
+            if (begin < 0)
+            {
+                throw new DataException("Query error, begin less then 0!");
             }
 
             for(int i = begin; i <= end; i++)

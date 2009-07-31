@@ -612,6 +612,24 @@ namespace Hubble.Core.Query
             }
         }
 
+        private int _FieldRank = 1;
+        public int FieldRank
+        {
+            get
+            {
+                return _FieldRank;
+            }
+            set
+            {
+                _FieldRank = value;
+                if (_FieldRank <= 0)
+                {
+                    _FieldRank = 1;
+                }
+            }
+        }
+
+
         public Hubble.Core.Index.InvertedIndex InvertedIndex
         {
             get
@@ -717,7 +735,7 @@ namespace Hubble.Core.Query
 
             while (docId >= 0)
             {
-                yield return new DocumentRank(docId, CaculateRank(wordInfoList));
+                yield return new DocumentRank(docId, FieldRank * CaculateRank(wordInfoList));
                 wordInfoList = GetNextHitWords(out docId);
             }
         }
@@ -732,7 +750,7 @@ namespace Hubble.Core.Query
 
             while (docId >= 0)
             {
-                result.Add(docId, new DocumentResult(docId, CaculateRank(wordInfoList)));
+                result.Add(docId, new DocumentResult(docId, FieldRank * CaculateRank(wordInfoList)));
                 wordInfoList = GetNextHitWords(out docId);
             }
 

@@ -38,6 +38,8 @@ namespace Hubble.Core.DBAdapter
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
 
+        Dictionary<long, Query.DocumentResult> GetDocumentResults(string where);
+
         long MaxDocId { get; }
 
     }

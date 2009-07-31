@@ -338,6 +338,23 @@ namespace Hubble.Core.Query
             }
         }
 
+        private int _FieldRank = 1;
+        public int FieldRank
+        {
+            get
+            {
+                return _FieldRank;
+            }
+            set
+            {
+                _FieldRank = value;
+                if (_FieldRank <= 0)
+                {
+                    _FieldRank = 1;
+                }
+            }
+        }
+
         public Hubble.Core.Index.InvertedIndex InvertedIndex
         {
             get

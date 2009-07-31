@@ -341,6 +341,34 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        public Dictionary<long, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
+        {
+            string sql;
+
+            if (string.IsNullOrEmpty(where))
+            {
+                sql = string.Format("select docid from {0} ", Table.DBTableName);
+            }
+            else
+            {
+                sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
+            }
+
+            Dictionary<long, Hubble.Core.Query.DocumentResult> result = new Dictionary<long, Hubble.Core.Query.DocumentResult>();
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
+                {
+                    long docId = (long)row[0];
+                    result.Add(docId, new Hubble.Core.Query.DocumentResult(docId));
+                }
+            }
+
+            return result;
+        }
+
         #endregion
 
     }

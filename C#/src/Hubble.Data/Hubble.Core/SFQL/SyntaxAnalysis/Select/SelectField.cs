@@ -9,6 +9,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         None = 0,
         Name = 1,
         Alias= 2,
+        Begin = 3,
+        End = 4,
     }
 
     class SelectFieldState : SyntaxState<SelectFieldFunction>
@@ -66,6 +68,17 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
                 case SelectFieldFunction.Alias:
                     selectField.Alias = dfa.CurrentToken.Text;
                     break;
+                case SelectFieldFunction.End:
+                    if (dfa.CurrentToken.SyntaxType == SyntaxType.Numeric)
+                    {
+                        selectField.BetweenRecord = true;
+                        selectField.End = int.Parse(dfa.CurrentToken.Text);
+                    }
+                    break;
+                case SelectFieldFunction.Begin:
+                    selectField.BetweenRecord = true;
+                    selectField.Begin = int.Parse(dfa.CurrentToken.Text);
+                    break;
             }
         }
     }
@@ -77,24 +90,34 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
         /*****************************************************
          * s0 -- Select , -- s1
-         * s1 -- Identitier -- s2
+         * s1 -- Identitier * -- s2
+         * s1 -- Top -- s5
+         * s1 -- Between --s6 
          * s2 -- AS -- s3
          * s2 -- Identitier -- s4
          * s2 -- , From -- squit
          * s3 -- Identitier, String -- s4
          * s4 -- , From -- squit
+         * s5 -- Numeric -- s1
+         * s6 -- Numeric -- s7
+         * s7 -- To -- s5
          * **************************************************/
 
         private static void InitDFAStates()
         {
-            SyntaxState<SelectFieldFunction> s1 = AddSyntaxState(new SelectFieldState(1)); //Attribute start state;
+            SyntaxState<SelectFieldFunction> s1 = AddSyntaxState(new SelectFieldState(1, false, SelectFieldFunction.End)); //Attribute start state;
             SyntaxState<SelectFieldFunction> s2 = AddSyntaxState(new SelectFieldState(2, false, SelectFieldFunction.Name));
             SyntaxState<SelectFieldFunction> s3 = AddSyntaxState(new SelectFieldState(3));
             SyntaxState<SelectFieldFunction> s4 = AddSyntaxState(new SelectFieldState(4, false, SelectFieldFunction.Alias));
+            SyntaxState<SelectFieldFunction> s5 = AddSyntaxState(new SelectFieldState(5, false));
+            SyntaxState<SelectFieldFunction> s6 = AddSyntaxState(new SelectFieldState(6, false));
+            SyntaxState<SelectFieldFunction> s7 = AddSyntaxState(new SelectFieldState(7, false, SelectFieldFunction.Begin));
 
             s0.AddNextState(new int[]{(int)SyntaxType.SELECT, (int)SyntaxType.Comma}, s1.Id);
 
-            s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s1.AddNextState(new int[] {(int)SyntaxType.Identifer, (int)SyntaxType.Multiply}, s2.Id);
+            s1.AddNextState((int)SyntaxType.TOP, s5.Id);
+            s1.AddNextState((int)SyntaxType.BETWEEN, s6.Id);
 
             s2.AddNextState((int)SyntaxType.AS, s3.Id);
             s2.AddNextState((int)SyntaxType.Identifer, s4.Id);
@@ -103,6 +126,13 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             s3.AddNextState(new int[] {(int)SyntaxType.Identifer, (int)SyntaxType.String}, s4.Id);
 
             s4.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.FROM }, squit.Id);
+
+            s5.AddNextState((int)SyntaxType.Numeric, s1.Id);
+
+            s6.AddNextState((int)SyntaxType.Numeric, s7.Id);
+
+            s7.AddNextState((int)SyntaxType.TO, s5.Id);
+
         }
 
         public static void Initialize()
@@ -123,6 +153,10 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         }
 
         #region public Fields
+
+        public bool BetweenRecord = false;
+        public int Begin = 0;
+        public int End = -1;
 
         public string Name;
 

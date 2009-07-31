@@ -7,6 +7,13 @@ namespace Hubble.Core.SFQL.Parse
 {
     class ParseWhere
     {
+        enum QueryStringState
+        {
+            Word = 0,
+            Boost = 1,
+            Position = 2,
+        }
+
         string _TableName;
         DBProvider _DBProvider;
 
@@ -33,7 +40,98 @@ namespace Hubble.Core.SFQL.Parse
         private Dictionary<long, Query.DocumentResult> GetResultFromDatabase(
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            return null;
+            string whereSql;
+
+            if (expressionTree == null)
+            {
+                whereSql = "";
+            }
+            else
+            {
+                whereSql = expressionTree.SqlText;
+            }
+
+            return _DBProvider.DBAdapter.GetDocumentResults(whereSql);
+        }
+
+        private List<Entity.WordInfo> GetWordInfoList(string queryStr)
+        {
+            List<Entity.WordInfo> result = new List<Hubble.Core.Entity.WordInfo>();
+
+            string[] words = queryStr.Split(new string[] { " " }, StringSplitOptions.None);
+
+            if (words.Length <= 0)
+            {
+                throw new ParseException("Empty match string");
+            }
+
+            int lastPosition = 0;
+            
+            foreach (string word in words)
+            {
+                QueryStringState state = QueryStringState.Word;
+
+                string w = word;
+                int boost = 1;
+                int position = -1;
+                int begin = 0;
+
+                for (int i = 0; i < word.Length; i++)
+                {
+                    switch (state)
+                    {
+                        case QueryStringState.Word:
+                            if (word[i] == '^')
+                            {
+                                state = QueryStringState.Boost;
+                                w = word.Substring(begin, i - begin);
+                                begin = i + 1;
+                            }
+
+                            break;
+                        case QueryStringState.Boost:
+                            if (word[i] == '^')
+                            {
+                                state = QueryStringState.Position;
+                                boost = int.Parse(word.Substring(begin, i - begin));
+                                begin = i + 1;
+                            }
+
+                            break;
+                        case QueryStringState.Position:
+                            break;
+                    }
+                }
+
+                switch (state)
+                {
+                    case QueryStringState.Word:
+                        w = word;
+                        break;
+                    case QueryStringState.Boost:
+                        boost = int.Parse(word.Substring(begin, word.Length - begin));
+                        break;
+                    case QueryStringState.Position:
+                        position = int.Parse(word.Substring(begin, word.Length - begin));
+                        break;
+                }
+
+                if (boost < 0 || boost > 65535)
+                {
+                    throw new ParseException("Boost must be between 0 to 65535!");
+                }
+
+                if (position < 0)
+                {
+                    position = lastPosition;
+                }
+
+                result.Add(new Hubble.Core.Entity.WordInfo(w, position, boost));
+
+                lastPosition = position + w.Length;
+            }
+
+            return result;
         }
 
         private Dictionary<long, Query.DocumentResult> GetResultFromQuery(
@@ -69,14 +167,21 @@ namespace Hubble.Core.SFQL.Parse
 
                 Hubble.Core.Query.IQuery query;
 
-                string[] words = cur.Right[0].Text.Split(new string[] { " " }, StringSplitOptions.None);
-
-                if (words.Length <= 0)
-                {
-                    throw new ParseException("Empty match string");
-                }
-
                 string fieldName = cur.Left[0].Text;
+                int fieldRank = 1;
+
+                if (cur.Left.Count == 3)
+                {
+                    if (cur.Left[1].SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Up)
+                    {
+                        fieldRank = int.Parse(cur.Left[2].Text);
+
+                        if (fieldRank < 0 || fieldRank > 65535)
+                        {
+                            throw new ParseException("Field boost must be from 0 to 65535");
+                        }
+                    }
+                }
 
                 query = DBProvider.GetQuery(cur.Operator.Text);
 
@@ -84,6 +189,8 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     throw new ParseException(string.Format("Can't find the command: {0}", cur.Operator.ToString()));
                 }
+
+                query.FieldRank = fieldRank;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
 
@@ -93,16 +200,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
 
-                List<Hubble.Core.Entity.WordInfo> queryWords = new List<Hubble.Core.Entity.WordInfo>();
-
-                int position = 0;
-
-                for (int i = 0; i < words.Length; i++)
-                {
-                    Hubble.Core.Entity.WordInfo wordInfo = new Hubble.Core.Entity.WordInfo(words[i], position);
-                    queryWords.Add(wordInfo);
-                    position += words.Length + 1;
-                }
+                List<Hubble.Core.Entity.WordInfo> queryWords = GetWordInfoList(cur.Right[0].Text);
 
                 query.QueryWords = queryWords;
                 query.DBProvider = _DBProvider;
@@ -499,7 +597,11 @@ namespace Hubble.Core.SFQL.Parse
         {
             Dictionary<long, Query.DocumentResult> dict;
 
-            if (!expressionTree.NeedTokenize)
+            if (expressionTree == null)
+            {
+                dict = GetResultFromDatabase(expressionTree);
+            }
+            else if (!expressionTree.NeedTokenize)
             {
                 dict = GetResultFromDatabase(expressionTree);
             }

@@ -145,7 +145,15 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             {
                 if (obj is SelectField)
                 {
-                    SelectFields.Add(obj as SelectField);
+                    SelectField selectField = obj as SelectField;
+                    
+                    if (selectField.BetweenRecord)
+                    {
+                        this.Begin = selectField.Begin;
+                        this.End = selectField.End;
+                    }
+
+                    SelectFields.Add(selectField);
                 }
                 else if (obj is SelectFrom)
                 {
@@ -163,6 +171,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         }
 
         #region public Fields
+
+        public int Begin = 0;
+        public int End = -1;
 
         public List<SelectField> SelectFields = new List<SelectField>();
         public List<SelectFrom> SelectFroms = new List<SelectFrom>();

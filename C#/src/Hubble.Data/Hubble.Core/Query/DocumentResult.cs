@@ -60,7 +60,7 @@ namespace Hubble.Core.Query
         public List<SortInfo> SortInfoList = null;
 
         public DocumentResult(long docId)
-            :this(docId, 0)
+            :this(docId, 1)
         {
         }
 
