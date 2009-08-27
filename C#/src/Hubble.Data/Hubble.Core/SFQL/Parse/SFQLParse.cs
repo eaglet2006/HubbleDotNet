@@ -82,6 +82,63 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private void ExcuteUpdate(TSFQLSentence sentence)
+        {
+            SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
+                SyntaxAnalysis.Update.Update;
+
+            ParseWhere parseWhere = new ParseWhere(update.TableName);
+
+            parseWhere.Begin = update.Begin;
+            parseWhere.End = update.End;
+            Query.DocumentResult[] result;
+
+            if (update.Where == null)
+            {
+                result = parseWhere.Parse(null);
+            }
+            else
+            {
+                result = parseWhere.Parse(update.Where.ExpressionTree);
+            }
+
+            Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(update.TableName);
+            List<Data.FieldValue> fieldValues = new List<Hubble.Core.Data.FieldValue>();
+
+            foreach (SyntaxAnalysis.Update.UpdateField field in update.Fields)
+            {
+                fieldValues.Add(new Hubble.Core.Data.FieldValue(field.Name, field.Value)); 
+            }
+
+            dBProvider.Update(fieldValues, result);
+
+        }
+
+        private void ExcuteDelete(TSFQLSentence sentence)
+        {
+            SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as
+                SyntaxAnalysis.Delete.Delete;
+
+            ParseWhere parseWhere = new ParseWhere(delete.TableName);
+
+            parseWhere.Begin = delete.Begin;
+            parseWhere.End = delete.End;
+            Query.DocumentResult[] result;
+
+            if (delete.Where == null)
+            {
+                result = parseWhere.Parse(null);
+            }
+            else
+            {
+                result = parseWhere.Parse(delete.Where.ExpressionTree);
+            }
+
+            Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(delete.TableName);
+
+            dBProvider.Delete(result);
+        }
+
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
@@ -203,6 +260,13 @@ namespace Hubble.Core.SFQL.Parse
             {
                 case SentenceType.SELECT:
                     return ExcuteSelect(sentence);
+                case SentenceType.DELETE:
+                    ExcuteDelete(sentence);
+                    break;
+                case SentenceType.UPDATE:
+                    ExcuteUpdate(sentence);
+                    break;
+
             }
 
             return null;

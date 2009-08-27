@@ -31,20 +31,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DictSeg, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="PanGu, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\References\DictSeg.dll</HintPath>
-    </Reference>
-    <Reference Include="FTAlgorithm, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\References\FTAlgorithm.dll</HintPath>
+      <HintPath>..\..\References\PanGu.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KTAnalyzer.cs" />
+    <Compile Include="PanGuAnalyzer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

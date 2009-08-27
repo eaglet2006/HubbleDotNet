@@ -76,6 +76,8 @@
     <Compile Include="SFQL\Parse\QueryResult.cs" />
     <Compile Include="SFQL\Parse\QueryResultSort.cs" />
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Delete\Delete.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Delete\DeleteFrom.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ExpressionTree.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ISyntaxEntity.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ITokenInput.cs" />
@@ -91,6 +93,9 @@
     <Compile Include="SFQL\SyntaxAnalysis\SyntaxState.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\SyntaxType.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\TSFQLSentence.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Update\Update.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />

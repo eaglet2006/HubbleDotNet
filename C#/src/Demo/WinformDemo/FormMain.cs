@@ -155,7 +155,7 @@ namespace WinformDemo
             }
             catch (Exception e1)
             {
-                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                 MessageBox.Show(e1.Message + "\r\n" + e1.StackTrace, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

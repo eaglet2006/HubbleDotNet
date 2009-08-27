@@ -30,6 +30,11 @@ namespace Hubble.Core.Analysis
             throw new NotImplementedException();
         }
 
+        public void Init()
+        {
+            throw new NotImplementedException();
+        }
+
         #endregion
     }
 }

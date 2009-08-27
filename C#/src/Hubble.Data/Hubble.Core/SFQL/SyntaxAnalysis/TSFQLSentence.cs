@@ -9,7 +9,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         None = 0,
         Attribute = 1,
         Select = 2,
-
+        Delete = 3,
+        Update = 4,
+        Insert = 5,
     }
 
     class TSFQLState : SyntaxState<TSFQLSentenceFunction>
@@ -65,6 +67,14 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                     ((TSFQLSentence)dfa).SentenceType = SentenceType.SELECT;
                     ((TSFQLSentence)dfa).CurrentSyntax = new Select.Select(); 
                     break;
+                case TSFQLSentenceFunction.Delete:
+                    ((TSFQLSentence)dfa).SentenceType = SentenceType.DELETE;
+                    ((TSFQLSentence)dfa).CurrentSyntax = new Delete.Delete();
+                    break;
+                case TSFQLSentenceFunction.Update:
+                    ((TSFQLSentence)dfa).SentenceType = SentenceType.UPDATE;
+                    ((TSFQLSentence)dfa).CurrentSyntax = new Update.Update();
+                    break;
             }
         }
     }
@@ -80,12 +90,17 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         /***********************************************************
          * s0 -- [ -- s1
          * s0 -- Select --s3
+         * s0 -- Delete --s4
+         * s0 -- Update --s5
          * s1 -- ] -- s2
          * s2 -- [ -- s1
          * s2 -- EOF ; -- squit
          * s2 -- Select -- s3
+         * s2 -- Delete -- s4
+         * s2 -- Update -- s5
          * s3 -- EOF ; -- squit
-         * 
+         * s4 -- EOF ; -- squit
+         * s5 -- EOF ; -- squit
          * ********************************************************/
 
         private static void InitDFAStates()
@@ -93,17 +108,25 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             SyntaxState<TSFQLSentenceFunction> s1 = AddSyntaxState(new TSFQLState(1, false, TSFQLSentenceFunction.Attribute)); //Attribute start state;
             SyntaxState<TSFQLSentenceFunction> s2 = AddSyntaxState(new TSFQLState(2)); //Attribute end state;
             SyntaxState<TSFQLSentenceFunction> s3 = AddSyntaxState(new TSFQLState(3, false, TSFQLSentenceFunction.Select)); //select state;
+            SyntaxState<TSFQLSentenceFunction> s4 = AddSyntaxState(new TSFQLState(4, false, TSFQLSentenceFunction.Delete)); //delete state;
+            SyntaxState<TSFQLSentenceFunction> s5 = AddSyntaxState(new TSFQLState(5, false, TSFQLSentenceFunction.Update)); //update state;
 
             s0.AddNextState((int)SyntaxType.LSquareBracket, s1.Id);
             s0.AddNextState((int)SyntaxType.SELECT, s3.Id);
+            s0.AddNextState((int)SyntaxType.DELETE, s4.Id);
+            s0.AddNextState((int)SyntaxType.UPDATE, s5.Id);
 
             s1.AddNextState((int)SyntaxType.RSquareBracket, s2.Id);
             
             s2.AddNextState((int)SyntaxType.LSquareBracket, s1.Id);
             s2.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon}, squit.Id);
             s2.AddNextState((int)SyntaxType.SELECT, s3.Id);
+            s2.AddNextState((int)SyntaxType.DELETE, s4.Id);
+            s2.AddNextState((int)SyntaxType.UPDATE, s5.Id);
 
             s3.AddNextState(new int[] { (int)SyntaxType.FROM, (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
+            s4.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
+            s5.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
 
             //s1.AddNextState((int)SyntaxType.RSquareBracket, s2.Id);
 

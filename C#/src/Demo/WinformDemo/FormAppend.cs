@@ -114,10 +114,10 @@ namespace WinformDemo
 
 
                     Document doc = new Document();
-                    doc.FieldValues.Add(new FieldValue("title", title, DataType.String));
-                    doc.FieldValues.Add(new FieldValue("content", content, DataType.String));
-                    doc.FieldValues.Add(new FieldValue("Time", time.ToString("yyyy-MM-dd HH:mm:ss"), DataType.String));
-                    doc.FieldValues.Add(new FieldValue("Url", Url, DataType.String));
+                    doc.FieldValues.Add(new FieldValue("title", title));
+                    doc.FieldValues.Add(new FieldValue("content", content));
+                    doc.FieldValues.Add(new FieldValue("Time", time.ToString("yyyy-MM-dd HH:mm:ss")));
+                    doc.FieldValues.Add(new FieldValue("Url", Url));
                     docs.Add(doc);
 
                     contentCount++;

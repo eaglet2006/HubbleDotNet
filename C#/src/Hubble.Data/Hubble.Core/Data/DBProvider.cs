@@ -533,11 +533,17 @@ namespace Hubble.Core.Data
         public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
         {
             List<Field> dbFields = new List<Field>();
+
             Dictionary<long, Document> docIdToDocumnet = null;
 
             List<Document> result;
 
             result = new List<Document>(docs.Count);
+
+            if (docs.Count <= 0)
+            {
+                return result;
+            }
 
             foreach (Field field in selectFields)
             {
@@ -815,6 +821,19 @@ namespace Hubble.Core.Data
                 foreach (Document doc in docs)
                 {
                     doc.DocId = _LastDocId++;
+
+                    foreach (FieldValue fValue in doc.FieldValues)
+                    {
+                        Field field = GetField(fValue.FieldName);
+
+                        if (field == null)
+                        {
+                            throw new DataException(string.Format("Field:{0} is not in the table {1}",
+                                fValue.FieldName, _Table.Name));
+                        }
+
+                        fValue.Type = field.DataType;
+                    }
                 }
             }
 
@@ -829,12 +848,6 @@ namespace Hubble.Core.Data
                 foreach (FieldValue fValue in doc.FieldValues)
                 {
                     Field field = GetField(fValue.FieldName);
-
-                    if (field == null)
-                    {
-                        throw new DataException(string.Format("Field:{0} is not in the table {1}",
-                            fValue.FieldName, _Table.Name));
-                    }
 
                     int[] fieldPayload;
 
@@ -893,11 +906,6 @@ namespace Hubble.Core.Data
         {
             Debug.Assert(fieldValues != null && docs != null);
 
-            if (docs.Count <= 0)
-            {
-                return;
-            }
-
             if (fieldValues.Count <= 0)
             {
                 return;
@@ -911,12 +919,25 @@ namespace Hubble.Core.Data
 
             foreach (FieldValue fv in fieldValues)
             {
-                Field field = _FieldIndex[fv.FieldName.ToLower().Trim()];
+                string fieldNameKey = fv.FieldName.ToLower().Trim();
+                if (fieldNameKey == "docid")
+                {
+                    throw new DataException("DocId field is fixed field, can't update it manually!");
+                }
+                
+                Field field;
+
+                if (!_FieldIndex.TryGetValue(fieldNameKey, out field))
+                {
+                    throw new DataException(string.Format("Invalid column name '{0}'", fv.FieldName));
+                }
 
                 if (field.IndexType == Field.Index.Tokenized)
                 {
                     needDel = true;
                 }
+
+                fv.Type = field.DataType;
 
                 if (field.Store)
                 {
@@ -930,8 +951,20 @@ namespace Hubble.Core.Data
                 }
             }
 
+            if (docs.Count <= 0)
+            {
+                return;
+            }
+
             if (needDel)
             {
+                Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
+
+                foreach (FieldValue fv in fieldValues)
+                {
+                    fieldNameValue.Add(fv.FieldName.ToLower().Trim(), fv.Value);
+                }
+
                 List<Field> selectFields = new List<Field>();
 
                 foreach (Field field in _FieldIndex.Values)
@@ -951,6 +984,19 @@ namespace Hubble.Core.Data
                     if (++i % 100 == 0)
                     {
                         List<Document> docResult = Query(selectFields, doDocs);
+
+                        foreach (Document updatedoc in docResult)
+                        {
+                            foreach (FieldValue fv in updatedoc.FieldValues)
+                            {
+                                string value;
+                                if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                {
+                                    fv.Value = value;
+                                }
+                            }
+                        }
+
                         Insert(docResult);
                         Delete(doDocs);
                         doDocs.Clear();
@@ -960,10 +1006,24 @@ namespace Hubble.Core.Data
                 if (doDocs.Count > 0)
                 {
                     List<Document> docResult = Query(selectFields, doDocs);
+
+                    foreach (Document updatedoc in docResult)
+                    {
+                        foreach (FieldValue fv in updatedoc.FieldValues)
+                        {
+                            string value;
+                            if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                            {
+                                fv.Value = value;
+                            }
+                        }
+                    }
+
                     Insert(docResult);
                     Delete(doDocs);
                 }
 
+                
             }
             else
             {
@@ -983,7 +1043,7 @@ namespace Hubble.Core.Data
                         {
                             foreach (PayloadSegment ps in payloadSegment)
                             {
-                                Array.Copy(ps.Data, ps.TabIndex, payLoad.Data, ps.TabIndex, ps.Data.Length);
+                                Array.Copy(ps.Data, 0, payLoad.Data, ps.TabIndex, ps.Data.Length);
                             }
 
                             updateIds.Add(docId);
@@ -1004,10 +1064,17 @@ namespace Hubble.Core.Data
                     _PayloadFile.Update(updateIds, updatePayloads);
                 }
             }
+
+            Collect();
         }
 
         public void Delete(IList<long> docs)
         {
+            if (docs.Count <= 0)
+            {
+                return;
+            }
+
             _DBAdapter.Delete(docs);
 
             _DelProvider.Delete(docs);
@@ -1015,6 +1082,11 @@ namespace Hubble.Core.Data
 
         public void Delete(IList<Query.DocumentResult> docs)
         {
+            if (docs.Count <= 0)
+            {
+                return;
+            }
+
             List<long> docIds = new List<long>();
 
             foreach (Query.DocumentResult docResult in docs)

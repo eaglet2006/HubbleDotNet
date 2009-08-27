@@ -24,6 +24,7 @@ namespace Hubble.Core.Analysis
 {
     public interface IAnalyzer
     {
+        void Init();
         IEnumerable<WordInfo> Tokenize(string text);
     }
 }

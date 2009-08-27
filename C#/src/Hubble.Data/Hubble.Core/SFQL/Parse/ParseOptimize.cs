@@ -79,7 +79,25 @@ namespace Hubble.Core.SFQL.Parse
                     }
 
                     break;
+                case SentenceType.DELETE:
+                    SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as SyntaxAnalysis.Delete.Delete;
 
+                    if (delete.Where != null)
+                    {
+                        delete.Where = Optimize(delete.Where);
+                    }
+
+                    break;
+
+                case SentenceType.UPDATE:
+                    SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as SyntaxAnalysis.Update.Update;
+
+                    if (update.Where != null)
+                    {
+                        update.Where = Optimize(update.Where);
+                    }
+
+                    break;
                 default:
                     throw new SyntaxException(string.Format("Unknow sentence {0}", sentence.SentenceType));
             }

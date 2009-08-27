@@ -49,6 +49,11 @@ namespace Hubble.Core.Data
             {
                 return _Type;
             }
+
+            set
+            {
+                _Type = value;
+            }
         }
 
         public string Value;
@@ -67,8 +72,8 @@ namespace Hubble.Core.Data
 
         #region Constructor
 
-        public FieldValue(string name, string value, DataType type)
-            :this(name, value, type, false)
+        public FieldValue(string name, string value)
+            : this(name, value, DataType.String, false)
         {
         }
 

@@ -180,6 +180,8 @@ namespace Hubble.Core.DBAdapter
                     {
                         case Hubble.Core.Data.DataType.String:
                         case Hubble.Core.Data.DataType.DateTime:
+                        case Hubble.Core.Data.DataType.Date:
+                        case Hubble.Core.Data.DataType.SmallDateTime:
                         case Hubble.Core.Data.DataType.Data:
                             insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
                             break;
@@ -245,7 +247,7 @@ namespace Hubble.Core.DBAdapter
                 string value = fv.Type == Data.DataType.String ||
                     fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
                     fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ? 
-                    fv.Value.Replace("'", "''") : fv.Value;
+                    string.Format("'{0}'", fv.Value.Replace("'", "''"))  : fv.Value;
 
                 if (i++ == 0)
                 {
