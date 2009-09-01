@@ -79,6 +79,10 @@
     <Compile Include="SFQL\SyntaxAnalysis\Delete\Delete.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\DeleteFrom.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ExpressionTree.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Insert\InsertField.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Insert\Insert.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Insert\InsertTableName.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Insert\InsertValue.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ISyntaxEntity.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ITokenInput.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Select\OrderBy.cs" />

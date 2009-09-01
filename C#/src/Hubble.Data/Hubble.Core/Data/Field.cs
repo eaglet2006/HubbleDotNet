@@ -49,6 +49,8 @@ namespace Hubble.Core.Data
         int _TabIndex = 0;
         string _AnalyzerName = null;
         Analysis.IAnalyzer _Analyzer;
+        bool _CanNull = false;
+        string _DefaultValue = null;
 
         #endregion
 
@@ -180,6 +182,38 @@ namespace Hubble.Core.Data
             set
             {
                 _TabIndex = value;
+            }
+        }
+
+        /// <summary>
+        /// This field can be null
+        /// </summary>
+        public bool CanNull
+        {
+            get
+            {
+                return _CanNull;
+            }
+
+            set
+            {
+                _CanNull = value;
+            }
+        }
+
+        /// <summary>
+        /// Default Value of this field
+        /// </summary>
+        public string DefaultValue
+        {
+            get
+            {
+                return _DefaultValue;
+            }
+
+            set
+            {
+                _DefaultValue = value;
             }
         }
 

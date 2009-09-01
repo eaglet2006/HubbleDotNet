@@ -4,6 +4,7 @@ using System.Text;
 
 using Hubble.Core.SFQL.LexicalAnalysis;
 using Hubble.Core.SFQL.SyntaxAnalysis;
+using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.SFQL.Parse
@@ -12,6 +13,8 @@ namespace Hubble.Core.SFQL.Parse
     {
         List<TSFQLSentence> _SFQLSentenceList;
         TSFQLSentence _SFQLSentence;
+        private bool _NeedCollect = false;
+        private Dictionary<string, List<Document>> _InsertTables = new Dictionary<string, List<Document>>();
 
         private void InputLexicalToken(Lexical.Token token)
         {
@@ -103,6 +106,12 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(update.TableName);
+
+            if (dBProvider == null)
+            {
+                throw new DataException(string.Format("Table: {0} does not exist!", update.TableName));
+            }
+
             List<Data.FieldValue> fieldValues = new List<Hubble.Core.Data.FieldValue>();
 
             foreach (SyntaxAnalysis.Update.UpdateField field in update.Fields)
@@ -136,7 +145,65 @@ namespace Hubble.Core.SFQL.Parse
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(delete.TableName);
 
+            if (dBProvider == null)
+            {
+                throw new DataException(string.Format("Table: {0} does not exist!", delete.TableName));
+            }
+
             dBProvider.Delete(result);
+        }
+
+        private void ExcuteInsert(TSFQLSentence sentence)
+        {
+            Document document = new Document();
+
+            SyntaxAnalysis.Insert.Insert insert = sentence.SyntaxEntity as SyntaxAnalysis.Insert.Insert;
+
+            string tableName = insert.TableName.ToLower().Trim();
+            
+            Data.DBProvider dBProvider =  Data.DBProvider.GetDBProvider(tableName);
+
+            if (dBProvider == null)
+            {
+                throw new DataException(string.Format("Table: {0} does not exist!", tableName));
+            }
+
+            if (insert.Fields.Count == 0)
+            {
+                List<Field> fields = dBProvider.GetAllFields();
+
+                foreach(Field field in fields)
+                {
+                    SyntaxAnalysis.Insert.InsertField insertField = new SyntaxAnalysis.Insert.InsertField();
+                    insertField.Name = field.Name;
+                    insert.Fields.Add(insertField);
+                }
+            }
+
+            if (insert.Fields.Count > insert.Values.Count)
+            {
+                throw new DataException("There are more columns in the INSERT statement than values specified in the VALUES clause. The number of values in the VALUES clause must match the number of columns specified in the INSERT statement.");
+            }
+            else if (insert.Fields.Count < insert.Values.Count)
+            {
+                throw new DataException("There are fewer columns in the INSERT statement than values specified in the VALUES clause. The number of values in the VALUES clause must match the number of columns specified in the INSERT statement.");
+            }
+
+
+            for(int i = 0; i < insert.Fields.Count; i++)
+            {
+                document.FieldValues.Add(new FieldValue(insert.Fields[i].Name, insert.Values[i].Value));
+            }
+
+            List<Document> docs;
+            if (!_InsertTables.TryGetValue(tableName, out docs))
+            {
+                docs = new List<Document>();
+                _InsertTables.Add(tableName, docs);
+            }
+
+            docs.Add(document);
+
         }
 
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
@@ -161,6 +228,11 @@ namespace Hubble.Core.SFQL.Parse
 
             //Sort
             Data.DBProvider dBProvider =  Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
+
+            if (dBProvider == null)
+            {
+                throw new DataException(string.Format("Table: {0} does not exist!", select.SelectFroms[0].Name));
+            }
 
             //Document rank
             //If has rank field and datatype is int32, do document rank
@@ -266,12 +338,15 @@ namespace Hubble.Core.SFQL.Parse
                 case SentenceType.UPDATE:
                     ExcuteUpdate(sentence);
                     break;
+                case SentenceType.INSERT:
+                    _NeedCollect = true;
+                    ExcuteInsert(sentence);
+                    break;
 
             }
 
             return null;
         }
-
 
         public void ExecuteNonQuery(string sql)
         {
@@ -280,6 +355,9 @@ namespace Hubble.Core.SFQL.Parse
 
         public QueryResult Query(string sql)
         {
+            _NeedCollect = false;
+            _InsertTables.Clear();
+
             _SFQLSentenceList = new List<TSFQLSentence>();
 
             QueryResult result = new QueryResult();
@@ -310,6 +388,21 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
             }
+
+            //Collect
+            if (_NeedCollect)
+            {
+                _NeedCollect = false;
+
+                foreach (string tableName in _InsertTables.Keys)
+                {
+                    DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
+
+                    dbProvider.Insert(_InsertTables[tableName]);
+                    dbProvider.Collect();
+                }
+            }
+
 
             return result;
         }

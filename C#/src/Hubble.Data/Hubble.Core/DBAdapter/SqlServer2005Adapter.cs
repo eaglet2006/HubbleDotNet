@@ -169,6 +169,11 @@ namespace Hubble.Core.DBAdapter
 
                 foreach (Data.FieldValue fv in doc.FieldValues)
                 {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
                     insertString.AppendFormat(", [{0}]", fv.FieldName);
                 }
 
@@ -176,6 +181,11 @@ namespace Hubble.Core.DBAdapter
                 
                 foreach (Data.FieldValue fv in doc.FieldValues)
                 {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
                     switch (fv.Type)
                     {
                         case Hubble.Core.Data.DataType.String:

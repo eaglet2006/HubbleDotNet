@@ -320,6 +320,22 @@ namespace Hubble.Core.Data
         }
 
 
+        internal List<Field> GetAllFields()
+        {
+            lock (this)
+            {
+                List<Field> selectFields = new List<Field>();
+
+                foreach (Field field in _FieldIndex.Values)
+                {
+                    selectFields.Add(field);
+                }
+
+                return selectFields;
+            }
+
+        }
+
         internal List<Field> GetAllSelectFields()
         {
             lock (this)
@@ -818,9 +834,13 @@ namespace Hubble.Core.Data
         {
             lock (this)
             {
+                List<Field> fields = GetAllFields();
+
                 foreach (Document doc in docs)
                 {
                     doc.DocId = _LastDocId++;
+
+                    Dictionary<string, FieldValue> notnullFields = new Dictionary<string, FieldValue>();
 
                     foreach (FieldValue fValue in doc.FieldValues)
                     {
@@ -833,7 +853,45 @@ namespace Hubble.Core.Data
                         }
 
                         fValue.Type = field.DataType;
+
+                        if (fValue.Value != null)
+                        {
+                            if (notnullFields.ContainsKey(fValue.FieldName.ToLower().Trim()))
+                            {
+                                throw new DataException(string.Format("Field:{0} in table {1} repeats in one insert sentence",
+                                    fValue.FieldName, _Table.Name));
+                            }
+
+                            notnullFields.Add(fValue.FieldName.ToLower().Trim(), fValue);
+                        }
                     }
+
+                    foreach (Field field in fields)
+                    {
+                        if (!notnullFields.ContainsKey(field.Name.ToLower().Trim()))
+                        {
+                            if (!field.CanNull)
+                            {
+                                throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
+                                    field.Name, _Table.Name));
+                            }
+
+                            if (field.DefaultValue != null)
+                            {
+                                FieldValue fv = new FieldValue(field.Name, field.DefaultValue);
+                                fv.Type = field.DataType;
+                            }
+                            else
+                            {
+                                if (field.IndexType != Field.Index.None)
+                                {
+                                    throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
+                                        field.Name, _Table.Name));
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
 
