@@ -227,7 +227,7 @@ namespace Hubble.Core.Data
             }
             else
             {
-                _Analyzer = (Analysis.IAnalyzer)Hubble.Framework.Reflection.Instance.CreateInstance(AnalyzerName);
+                _Analyzer = DBProvider.GetAnalyzer(AnalyzerName);
 
                 if (_Analyzer == null)
                 {

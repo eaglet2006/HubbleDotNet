@@ -38,8 +38,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analysis\HighLight\Formatter.cs" />
+    <Compile Include="Analysis\HighLight\Fragment.cs" />
+    <Compile Include="Analysis\HighLight\Highlighter.cs" />
+    <Compile Include="Analysis\HighLight\SimpleHTMLFormatter.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
+    <Compile Include="Analysis\Framework\Lexical.cs" />
     <Compile Include="Analysis\SimpleAnalyzer.cs" />
+    <Compile Include="Analysis\Framework\WordAttribute.cs" />
+    <Compile Include="Analysis\Framework\WordInfo.cs" />
     <Compile Include="Cache\CacheManager.cs" />
     <Compile Include="Cache\IManagedCache.cs" />
     <Compile Include="Data\DataException.cs" />
@@ -47,6 +54,7 @@
     <Compile Include="Data\DBAccess.cs" />
     <Compile Include="Data\DBProvider.cs" />
     <Compile Include="Data\DeleteProvider.cs" />
+    <Compile Include="Data\INamedExternalReference.cs" />
     <Compile Include="Data\OptimizationOption.cs" />
     <Compile Include="Data\Payload.cs" />
     <Compile Include="Data\Table.cs" />
@@ -54,6 +62,7 @@
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />
     <Compile Include="Entity\DocumentPositionList.cs" />
     <Compile Include="Entity\WordInfo.cs" />
+    <Compile Include="Global\ExternalReference.cs" />
     <Compile Include="Global\Report.cs" />
     <Compile Include="Global\Setting.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
@@ -78,6 +87,8 @@
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\Delete.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\DeleteFrom.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Exec\Exec.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\Exec\ExecParameter.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\ExpressionTree.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Insert\InsertField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Insert\Insert.cs" />
@@ -101,6 +112,14 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\IStoredProc.cs" />
+    <Compile Include="StoredProcedure\SP_AddExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_Configure.cs" />
+    <Compile Include="StoredProcedure\SP_DeleteExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_ExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_Version.cs" />
+    <Compile Include="StoredProcedure\StoredProcedure.cs" />
+    <Compile Include="StoredProcedure\StoredProcException.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
     <Compile Include="Store\IndexHead.cs" />

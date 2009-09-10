@@ -38,6 +38,16 @@ namespace Hubble.Core.Entity
             Rank = rank <= 0 ? 1 : rank;
         }
 
+        public void SetWord(string word)
+        {
+            this.Word = word;
+        }
+
+        public int GetEndPositon()
+        {
+            return this.Position + this.Word.Length;
+        }
+
         public override string ToString()
         {
             return string.Format("{0} {1} {2}", Word, Position, Rank) ;

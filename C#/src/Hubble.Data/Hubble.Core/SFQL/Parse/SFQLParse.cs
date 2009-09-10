@@ -85,6 +85,30 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private QueryResult ExcuteExec(TSFQLSentence sentence)
+        {
+            SyntaxAnalysis.Exec.Exec exec = sentence.SyntaxEntity as
+                SyntaxAnalysis.Exec.Exec;
+            StoredProcedure.IStoredProc sp = DBProvider.GetStoredProc(exec.StoredProcedureName);
+
+            if (sp == null)
+            {
+                throw new ParseException(string.Format("Stored procedure {0} does not exist.",
+                    exec.StoredProcedureName));
+            }
+
+            foreach (SyntaxAnalysis.Exec.ExecParameter para in exec.ExecParameters)
+            {
+                sp.Parameters.Add(para.Value);
+            }
+
+            sp.Run();
+
+            return sp.Result;
+        }
+
+
+
         private void ExcuteUpdate(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
@@ -342,7 +366,8 @@ namespace Hubble.Core.SFQL.Parse
                     _NeedCollect = true;
                     ExcuteInsert(sentence);
                     break;
-
+                case SentenceType.EXEC:
+                    return ExcuteExec(sentence);
             }
 
             return null;
@@ -385,6 +410,11 @@ namespace Hubble.Core.SFQL.Parse
                     foreach (System.Data.DataTable table in tables)
                     {
                         result.DataSet.Tables.Add(table);
+                    }
+
+                    foreach (string message in queryResult.PrintMessages)
+                    {
+                        result.PrintMessages.Add(message);
                     }
                 }
             }

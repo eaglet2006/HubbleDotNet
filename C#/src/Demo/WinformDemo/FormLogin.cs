@@ -17,8 +17,8 @@ namespace WinformDemo
 
         private void buttonLogin_Click(object sender, EventArgs e)
         {
-            Hubble.Analyzer.PanGuAnalyzer panguAnalyzer = new Hubble.Analyzer.PanGuAnalyzer();
-            panguAnalyzer.Init();
+            //Hubble.Analyzer.PanGuAnalyzer panguAnalyzer = new Hubble.Analyzer.PanGuAnalyzer();
+            //panguAnalyzer.Init();
 
             FormMain frmMain = new FormMain();
 

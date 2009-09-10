@@ -191,6 +191,8 @@ namespace Hubble.Framework.DataStructure
 
         protected abstract void Init();
 
+        public int OldState = 0;
+
         protected int CurrentState = 0;
 
         public bool QuitManually = false;
@@ -258,14 +260,16 @@ namespace Hubble.Framework.DataStructure
             }
 
             bool isElseAction;
-            int oldState = CurrentState;
+
+            OldState = CurrentState;
+            //int oldState = CurrentState;
             CurrentState = States[CurrentState].NextState(action, this, out isElseAction);
 
             if (CurrentState < 0)
             {
                 CurrentState = 0;
-                throw new DFAException(string.Format("Invalid next DFA state! action={0} currentstate={1}", action,oldState),
-                    action, oldState);
+                throw new DFAException(string.Format("Invalid next DFA state! action={0} currentstate={1}", action, OldState),
+                    action, OldState);
             }
 
             if (CurrentState >= States.Length)
@@ -290,6 +294,8 @@ namespace Hubble.Framework.DataStructure
             else
             {
                 QuitManually = false;
+
+                OldState = CurrentState;
                 CurrentState = 0;
 
                 if (isElseAction)

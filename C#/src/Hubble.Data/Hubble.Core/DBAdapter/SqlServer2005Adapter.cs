@@ -20,10 +20,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using Hubble.Framework.Data;
+using Hubble.Core.Data;
 
 namespace Hubble.Core.DBAdapter
 {
-    public class SqlServer2005Adapter : IDBAdapter
+    public class SqlServer2005Adapter : IDBAdapter, INamedExternalReference
     {
         private string GetFieldLine(Data.Field field)
         {
@@ -383,5 +384,17 @@ namespace Hubble.Core.DBAdapter
 
         #endregion
 
+
+        #region INamedExternalReference Members
+
+        public string Name
+        {
+            get 
+            {
+                return "SQLSERVER2005";
+            }
+        }
+
+        #endregion
     }
 }

@@ -29,7 +29,7 @@ namespace Hubble.Core.Query
     /// belong to the input words.
     /// Syntax: FullTextQuery('xxxyyyzzz')
     /// </summary>
-    public class FullTextQuery : IQuery
+    public class FullTextQuery : IQuery, INamedExternalReference
     {
         class SessionRank
         {
@@ -760,5 +760,17 @@ namespace Hubble.Core.Query
 
         #endregion
 
+
+        #region INamedExternalReference Members
+
+        public string Name
+        {
+            get 
+            {
+                return Command;
+            }
+        }
+
+        #endregion
     }
 }

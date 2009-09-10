@@ -19,15 +19,13 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hubble.Core.SFQL.SyntaxAnalysis
+namespace Hubble.Core.StoredProcedure
 {
-    public enum SentenceType
+    public class StoredProcException: Exception
     {
-        NONE   = 0,
-        SELECT = 1,
-        UPDATE = 2,
-        DELETE = 3,
-        INSERT = 4,
-        EXEC   = 5,
+        public StoredProcException(string message)
+            : base(message)
+        {
+        }
     }
 }

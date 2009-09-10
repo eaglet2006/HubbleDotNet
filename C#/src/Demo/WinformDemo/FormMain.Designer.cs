@@ -46,7 +46,14 @@
             this.textBoxSql = new System.Windows.Forms.TextBox();
             this.buttonExcute = new System.Windows.Forms.Button();
             this.dataGridViewResult = new System.Windows.Forms.DataGridView();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabPageResults = new System.Windows.Forms.TabPage();
+            this.tabPageMessages = new System.Windows.Forms.TabPage();
+            this.textBoxMessages = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).BeginInit();
+            this.tabControl1.SuspendLayout();
+            this.tabPageResults.SuspendLayout();
+            this.tabPageMessages.SuspendLayout();
             this.SuspendLayout();
             // 
             // textBoxNewsTableDir
@@ -213,17 +220,61 @@
             // dataGridViewResult
             // 
             this.dataGridViewResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewResult.Location = new System.Drawing.Point(12, 224);
+            this.dataGridViewResult.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewResult.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewResult.Name = "dataGridViewResult";
-            this.dataGridViewResult.Size = new System.Drawing.Size(569, 198);
+            this.dataGridViewResult.Size = new System.Drawing.Size(600, 257);
             this.dataGridViewResult.TabIndex = 17;
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Controls.Add(this.tabPageResults);
+            this.tabControl1.Controls.Add(this.tabPageMessages);
+            this.tabControl1.Location = new System.Drawing.Point(21, 224);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(614, 289);
+            this.tabControl1.TabIndex = 18;
+            // 
+            // tabPageResults
+            // 
+            this.tabPageResults.Controls.Add(this.dataGridViewResult);
+            this.tabPageResults.Location = new System.Drawing.Point(4, 22);
+            this.tabPageResults.Name = "tabPageResults";
+            this.tabPageResults.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageResults.Size = new System.Drawing.Size(606, 263);
+            this.tabPageResults.TabIndex = 0;
+            this.tabPageResults.Text = "Results";
+            this.tabPageResults.UseVisualStyleBackColor = true;
+            // 
+            // tabPageMessages
+            // 
+            this.tabPageMessages.Controls.Add(this.textBoxMessages);
+            this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
+            this.tabPageMessages.Name = "tabPageMessages";
+            this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageMessages.Size = new System.Drawing.Size(606, 263);
+            this.tabPageMessages.TabIndex = 1;
+            this.tabPageMessages.Text = "Messages";
+            this.tabPageMessages.UseVisualStyleBackColor = true;
+            // 
+            // textBoxMessages
+            // 
+            this.textBoxMessages.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxMessages.Location = new System.Drawing.Point(3, 3);
+            this.textBoxMessages.Multiline = true;
+            this.textBoxMessages.Name = "textBoxMessages";
+            this.textBoxMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBoxMessages.Size = new System.Drawing.Size(600, 257);
+            this.textBoxMessages.TabIndex = 0;
+            this.textBoxMessages.WordWrap = false;
             // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(587, 434);
-            this.Controls.Add(this.dataGridViewResult);
+            this.ClientSize = new System.Drawing.Size(647, 525);
+            this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.buttonExcute);
             this.Controls.Add(this.textBoxSql);
             this.Controls.Add(this.buttonOptimizeMin);
@@ -246,6 +297,10 @@
             this.Load += new System.EventHandler(this.FormMain_Load);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).EndInit();
+            this.tabControl1.ResumeLayout(false);
+            this.tabPageResults.ResumeLayout(false);
+            this.tabPageMessages.ResumeLayout(false);
+            this.tabPageMessages.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -271,5 +326,9 @@
         private System.Windows.Forms.TextBox textBoxSql;
         private System.Windows.Forms.Button buttonExcute;
         private System.Windows.Forms.DataGridView dataGridViewResult;
+        private System.Windows.Forms.TabControl tabControl1;
+        private System.Windows.Forms.TabPage tabPageResults;
+        private System.Windows.Forms.TabPage tabPageMessages;
+        private System.Windows.Forms.TextBox textBoxMessages;
     }
 }

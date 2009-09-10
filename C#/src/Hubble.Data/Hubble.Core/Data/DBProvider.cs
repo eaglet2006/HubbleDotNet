@@ -22,6 +22,7 @@ using System.Diagnostics;
 
 using Hubble.Core.Index;
 using Hubble.Core.Global;
+using Hubble.Core.StoredProcedure;
 using Hubble.Framework.Reflection;
 
 namespace Hubble.Core.Data
@@ -33,7 +34,10 @@ namespace Hubble.Core.Data
         static object _LockObj = new object();
         static object _sLockObj = new object();
 
-        static Dictionary<string, Type> _QueryTable = new Dictionary<string, Type>();
+        static Dictionary<string, Type> _QueryTable = new Dictionary<string, Type>(); //name to IQuery Type
+        static Dictionary<string, Type> _AnalyzerTable = new Dictionary<string, Type>(); //name to IAnalzer Type
+        static Dictionary<string, Type> _DBAdapterTable = new Dictionary<string, Type>(); //name to IDBAdapter Type
+        static Dictionary<string, Type> _StoredProcTable = new Dictionary<string, Type>(); //name to StoredProcedure type
 
         private static void DeleteTableName(string tableName)
         {
@@ -55,6 +59,11 @@ namespace Hubble.Core.Data
             return dbProvider;
         }
 
+        /// <summary>
+        /// Get Query by command name
+        /// </summary>
+        /// <param name="command">command name</param>
+        /// <returns>The instance of IQuery. If not find, return null</returns>
         internal static Hubble.Core.Query.IQuery GetQuery(string command)
         {
             Type type;
@@ -63,6 +72,48 @@ namespace Hubble.Core.Data
             {
                 return Hubble.Framework.Reflection.Instance.CreateInstance(type)
                     as Hubble.Core.Query.IQuery;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
+        /// <summary>
+        /// Get analyzer by analyzer name
+        /// </summary>
+        /// <param name="name">analyzer name</param>
+        /// <returns>The instance of IQuery. If not find, return null</returns>
+        internal static Hubble.Core.Analysis.IAnalyzer GetAnalyzer(string name)
+        {
+            Type type;
+
+            if (_AnalyzerTable.TryGetValue(name.Trim().ToLower(), out type))
+            {
+                return Hubble.Framework.Reflection.Instance.CreateInstance(type)
+                    as Hubble.Core.Analysis.IAnalyzer;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+
+        /// <summary>
+        /// Get storedprocedure by storedprocedure name
+        /// </summary>
+        /// <param name="name">storedprocedure name</param>
+        /// <returns>the instance of IStoredProc. If not find, return null</returns>
+        internal static Hubble.Core.StoredProcedure.IStoredProc GetStoredProc(string name)
+        {
+            Type type;
+
+            if (_StoredProcTable.TryGetValue(name.Trim().ToLower(), out type))
+            {
+                return Hubble.Framework.Reflection.Instance.CreateInstance(type)
+                    as Hubble.Core.StoredProcedure.IStoredProc;
             }
             else
             {
@@ -122,42 +173,152 @@ namespace Hubble.Core.Data
         {
             //Build QueryTable
 
-            foreach (System.Reflection.Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                foreach (Type type in asm.GetTypes())
-                {
-                    if (type.GetInterface("Hubble.Core.Query.IQuery") != null)
-                    {
-                        Hubble.Core.Query.IQuery iQuery = asm.CreateInstance(type.FullName) as 
-                            Hubble.Core.Query.IQuery;
+            System.Reflection.Assembly asm = System.Reflection.Assembly.GetExecutingAssembly();
 
-                        _QueryTable.Add(iQuery.Command.ToLower().Trim(), type);
+            foreach (Type type in asm.GetTypes())
+            {
+                //Init _QueryTable
+                if (type.GetInterface("Hubble.Core.Query.IQuery") != null)
+                {
+                    Hubble.Core.Query.IQuery iQuery = asm.CreateInstance(type.FullName) as
+                        Hubble.Core.Query.IQuery;
+                    string key = iQuery.Command.ToLower().Trim();
+                    if (!_QueryTable.ContainsKey(key))
+                    {
+                        _QueryTable.Add(key, type);
+                    }
+                    else
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Reduplicate query command name = {0}",
+                            iQuery.Command));
+                    }
+                }
+
+                //Init _AnalyzerTable
+                if (type.GetInterface("Hubble.Core.Analysis.IAnalyzer") != null)
+                {
+                    INamedExternalReference refer = asm.CreateInstance(type.FullName) as
+                        INamedExternalReference;
+
+                    if (refer == null)
+                    {
+                        Report.WriteErrorLog(string.Format("External reference {0} does not inherit from INamedExternalReference",
+                            type.FullName));
+                    }
+                    else
+                    {
+                        string key = refer.Name.ToLower().Trim();
+
+
+                        if (!_AnalyzerTable.ContainsKey(key))
+                        {
+                            Analysis.IAnalyzer analyzer = refer as Analysis.IAnalyzer;
+                            analyzer.Init();
+                            _AnalyzerTable.Add(key, type);
+                        }
+                        else
+                        {
+                            Global.Report.WriteErrorLog(string.Format("Reduplicate name = {0} in External reference {1}!",
+                                refer.Name, type.FullName));
+                        }
+                    }
+                }
+
+                //Init _DBAdapterTable
+                if (type.GetInterface("Hubble.Core.DBAdapter.IDBAdapter") != null)
+                {
+                    INamedExternalReference refer = asm.CreateInstance(type.FullName) as
+                        INamedExternalReference;
+
+                    if (refer == null)
+                    {
+                        Report.WriteErrorLog(string.Format("External reference {0} does not inherit from INamedExternalReference",
+                            type.FullName));
+                    }
+                    else
+                    {
+                        string key = refer.Name.ToLower().Trim();
+
+                        if (!_DBAdapterTable.ContainsKey(key))
+                        {
+                            _DBAdapterTable.Add(key, type);
+                        }
+                        else
+                        {
+                            Global.Report.WriteErrorLog(string.Format("Reduplicate name = {0} in External reference {1}!",
+                                refer.Name, type.FullName));
+                        }
+                    }
+                }
+
+                if (type.GetInterface("Hubble.Core.StoredProcedure.IStoredProc") != null)
+                {
+                    Hubble.Core.StoredProcedure.IStoredProc iSP = asm.CreateInstance(type.FullName) as
+                        Hubble.Core.StoredProcedure.IStoredProc;
+                    string key = iSP.Name.ToLower().Trim();
+                    if (!_StoredProcTable.ContainsKey(key))
+                    {
+                        _StoredProcTable.Add(key, type);
+                    }
+                    else
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Reduplicate StoredProcedure name = {0}",
+                            iSP.Name));
                     }
                 }
             }
 
-            List<string> removeDirs = new List<string>();
+            //Load from external reference 
+            //Load IQuery external reference
+            foreach (IQueryConfig iquery in Setting.Config.IQuerys)
+            {
+                iquery.Load(_QueryTable);
+            }
 
+            //Load IAnalyzer external reference
+            foreach (IAnalyzerConfig ianalyzer in Setting.Config.IAnalyzers)
+            {
+                ianalyzer.Load(_AnalyzerTable);
+            }
+
+            //Load IDBAdapter external reference
+            foreach (IDBAdapterConfig idbadapter in Setting.Config.IDBAdapters)
+            {
+                idbadapter.Load(_DBAdapterTable);
+            }
+
+            //List<string> removeDirs = new List<string>();
+
+            //Init table
             foreach (TableConfig tc in Setting.Config.Tables)
             {
                 try
                 {
                     DBProvider dbProvider = InitTable(tc);
-                    _DBProviderTable.Add(dbProvider.TableName.ToLower().Trim(), dbProvider);
+
+                    if (_DBAdapterTable.ContainsKey(dbProvider.TableName.ToLower().Trim()))
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Init Table {0} fail, table exists!",
+                            dbProvider.TableName));
+                    }
+                    else
+                    {
+                        _DBProviderTable.Add(dbProvider.TableName.ToLower().Trim(), dbProvider);
+                    }
                 }
                 catch (Exception e)
                 {
-                    removeDirs.Add(tc.Directory);
+                    //removeDirs.Add(tc.Directory);
 
                     Global.Report.WriteErrorLog(string.Format("Init Table at {0} fail, errmsg:{1} stack {2}",
                         tc.Directory, e.Message, e.StackTrace));
                 }
             }
 
-            foreach (string removeDir in removeDirs)
-            {
-                Setting.RemoveTableConfig(removeDir);
-            }
+            //foreach (string removeDir in removeDirs)
+            //{
+            //    Setting.RemoveTableConfig(removeDir);
+            //}
         }
 
 
@@ -480,7 +641,12 @@ namespace Hubble.Core.Data
                 //Get DB adapter
                 if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
                 {
-                    DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(table.DBAdapterTypeName);
+                    Type dbAdapterType;
+
+                    if (_DBAdapterTable.TryGetValue(table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                    {
+                        DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
+                    }
                 }
 
                 //init db table
@@ -737,13 +903,24 @@ namespace Hubble.Core.Data
         {
             lock (_LockObj)
             {
+                if (Setting.TableExists(directory))
+                {
+                    throw new DataException(string.Format("Table dicectory: {0} is already existed!",
+                        directory));
+                }
+
                 _Directory = directory;
                 _DelProvider = new DeleteProvider();
 
                 //Get DB adapter
                 if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
                 {
-                    DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(table.DBAdapterTypeName);
+                    Type dbAdapterType;
+
+                    if (_DBAdapterTable.TryGetValue(table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                    {
+                        DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
+                    }
                 }
 
                 //Create db table

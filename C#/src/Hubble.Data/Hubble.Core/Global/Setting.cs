@@ -26,7 +26,7 @@ namespace Hubble.Core.Global
     /// <summary>
     /// Global setting
     /// </summary>
-    [Serializable, System.Xml.Serialization.XmlRoot(Namespace = "http://www.hubble.net")] 
+    [Serializable, System.Xml.Serialization.XmlRoot(Namespace = "http://hubbledotnet.codeplex.com")] 
     public class Setting
     {
         static private object _LockObj = new object();
@@ -76,6 +76,15 @@ namespace Hubble.Core.Global
             }
         }
 
+        static public bool TableExists(string tableDir)
+        {
+            Setting cfg = Config;
+            lock (_LockObj)
+            {
+                return cfg.Tables.Contains(new TableConfig(tableDir));
+            }
+        }
+
 
         static public void Load()
         {
@@ -115,21 +124,27 @@ namespace Hubble.Core.Global
         {
             get
             {
-                return _MemoryLimited;
+                lock (_LockObj)
+                {
+                    return _MemoryLimited;
+                }
             }
 
             set
             {
-                _MemoryLimited = value;
-
-                if (_MemoryLimited < 1 * 1024 * 1024)
+                lock (_LockObj)
                 {
-                    _MemoryLimited = 1 * 1024 * 1024;
+                    _MemoryLimited = value;
+
+                    if (_MemoryLimited < 1 * 1024 * 1024)
+                    {
+                        _MemoryLimited = 1 * 1024 * 1024;
+                    }
                 }
             }
         }
 
-        Directories _Directories;
+        Directories _Directories = new Directories();
 
         public Directories Directories
         {
@@ -156,6 +171,60 @@ namespace Hubble.Core.Global
             set
             {
                 _Tables = value;
+            }
+        }
+
+        List<IQueryConfig> _IQuerys = new List<IQueryConfig>();
+
+        /// <summary>
+        /// IQuery exernal reference configuration 
+        /// </summary>
+        public List<IQueryConfig> IQuerys
+        {
+            get
+            {
+                return _IQuerys;
+            }
+
+            set
+            {
+                _IQuerys = value;
+            }
+        }
+
+        List<IAnalyzerConfig> _IAnalyzers = new List<IAnalyzerConfig>();
+
+        /// <summary>
+        /// IAnalyzer exernal reference configuration 
+        /// </summary>
+        public List<IAnalyzerConfig> IAnalyzers
+        {
+            get
+            {
+                return _IAnalyzers;
+            }
+
+            set
+            {
+                _IAnalyzers = value;
+            }
+        }
+
+        List<IDBAdapterConfig> _IDBAdapters = new List<IDBAdapterConfig>();
+
+        /// <summary>
+        /// IDBAdapter exernal reference configuration 
+        /// </summary>
+        public List<IDBAdapterConfig> IDBAdapters
+        {
+            get
+            {
+                return _IDBAdapters;
+            }
+
+            set
+            {
+                _IDBAdapters = value;
             }
         }
 
@@ -228,5 +297,78 @@ namespace Hubble.Core.Global
 
             return this.Directory.Trim().ToLower() == ((TableConfig)obj).Directory.Trim().ToLower();
         }
+
+        public override int GetHashCode()
+        {
+            return this.Directory.GetHashCode();
+        }
     }
+
+    [Serializable]
+    public class IQueryConfig : ExternalReference
+    {
+        [System.Xml.Serialization.XmlIgnore]
+        protected override Type Interface
+        {
+            get 
+            {
+                return typeof(Query.IQuery);
+            }
+        }
+
+        public IQueryConfig()
+        {
+        }
+
+        public IQueryConfig(string assemblyFile)
+        {
+            base.AssemblyFile = assemblyFile;
+        }
+    }
+
+    [Serializable]
+    public class IAnalyzerConfig : ExternalReference
+    {
+        [System.Xml.Serialization.XmlIgnore]
+        protected override Type Interface
+        {
+            get
+            {
+                return typeof(Analysis.IAnalyzer);
+            }
+        }
+
+        public IAnalyzerConfig()
+        {
+        }
+
+        public IAnalyzerConfig(string assemblyFile)
+        {
+            base.AssemblyFile = assemblyFile;
+        }
+    }
+
+    [Serializable]
+    public class IDBAdapterConfig : ExternalReference
+    {
+        [System.Xml.Serialization.XmlIgnore]
+        protected override Type Interface
+        {
+            get
+            {
+                return typeof(DBAdapter.IDBAdapter);
+            }
+        }
+
+        public IDBAdapterConfig()
+        {
+        }
+
+        public IDBAdapterConfig(string assemblyFile)
+        {
+            base.AssemblyFile = assemblyFile;
+        }
+    }
+
+
 }

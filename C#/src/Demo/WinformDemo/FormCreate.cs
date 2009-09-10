@@ -78,12 +78,12 @@ namespace WinformDemo
             {
                 Hubble.Core.Data.DBProvider.Drop("News");
 
-                string analyseName = "Hubble.Analyzer.PanGuAnalyzer";
+                string analyseName = "PanGuSegment";
 
                 DBAccess dbAccess = new DBAccess();
                 Table table = new Table();
                 table.ConnectionString = textBoxConnectionString.Text;
-                table.DBAdapterTypeName = typeof(Hubble.Core.DBAdapter.SqlServer2005Adapter).FullName;
+                table.DBAdapterTypeName = "SQLSERVER2005";
                 table.DBTableName = textBoxTableName.Text;
                 table.Fields.Add(new Field("title", DataType.String, 256, true, Field.Index.Tokenized, analyseName));
 
@@ -96,8 +96,8 @@ namespace WinformDemo
                     table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, Field.IndexMode.Simple, analyseName));
                 }
 
-                table.Fields.Add(new Field("Url", DataType.String, true, Field.Index.None, analyseName));
-                table.Fields.Add(new Field("Time", DataType.DateTime, true, Field.Index.Untokenized, analyseName));
+                table.Fields.Add(new Field("Url", DataType.String, true, Field.Index.None));
+                table.Fields.Add(new Field("Time", DataType.DateTime, true, Field.Index.Untokenized));
                 table.Name = textBoxTableName.Text;
                 //table.SQLForCreate = "create index I_News_Title on News(title);";
 

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Analysis;
+using Hubble.Core.Data;
 using PanGu;
 
 namespace Hubble.Analyzer
 {
-    public class PanGuAnalyzer : IAnalyzer
+    public class PanGuAnalyzer : IAnalyzer, INamedExternalReference
     {
         #region IAnalyzer Members
 
@@ -26,6 +27,18 @@ namespace Hubble.Analyzer
         public void Init()
         {
             PanGu.Segment.Init();
+        }
+
+        #endregion
+
+        #region INamedExternalReference Members
+
+        public string Name
+        {
+            get 
+            {
+                return "PanGuSegment";
+            }
         }
 
         #endregion

@@ -114,10 +114,35 @@ namespace WinformDemo
 
         }
 
+        private void ShowErrorMessage(string err)
+        {
+            tabControl1.SelectedTab = tabPageMessages;
+            textBoxMessages.ForeColor = Color.Red;
+            textBoxMessages.Text = err;
+        }
+
+        private void ShowMessages(List<string> messages)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string str in messages)
+            {
+                sb.AppendLine(str);
+            }
+
+            tabControl1.SelectedTab = tabPageMessages;
+            textBoxMessages.ForeColor = Color.Black;
+            textBoxMessages.Text = sb.ToString();
+
+        }
+
         private void buttonExcute_Click(object sender, EventArgs e)
         {
             try
             {
+                tabControl1.SelectedTab = tabPageResults;
+                textBoxMessages.Text = "";
+
                 QueryPerfCounter qp = new QueryPerfCounter();
                 qp.Start();
 
@@ -139,23 +164,37 @@ namespace WinformDemo
 
                 labelDuration.Text = (ns / (1000 * 1000)).ToString("0.00") + " ms";
                 labelCount.Text = count.ToString();
-                
+
+                if (queryResult.PrintMessages != null)
+                {
+                    if (queryResult.PrintMessages.Count > 0)
+                    {
+                        ShowMessages(queryResult.PrintMessages);
+                    }
+                }
+
                 if (queryResult.DataSet.Tables.Count > 0)
                 {
                     dataGridViewResult.DataSource = table;
                 }
+                else
+                {
+                    dataGridViewResult.DataSource = null;
+                }
+
+                
             }
             catch (Hubble.Core.SFQL.LexicalAnalysis.LexicalException lexicalEx)
             {
-                 MessageBox.Show(lexicalEx.ToString(), "Lexical Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowErrorMessage(lexicalEx.ToString());
             }
             catch (Hubble.Core.SFQL.SyntaxAnalysis.SyntaxException syntaxEx)
             {
-                 MessageBox.Show(syntaxEx.ToString(), "Syntax Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowErrorMessage(syntaxEx.ToString());
             }
             catch (Exception e1)
             {
-                 MessageBox.Show(e1.Message + "\r\n" + e1.StackTrace, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ShowErrorMessage(e1.Message + "\r\n" + e1.StackTrace);
             }
         }
 

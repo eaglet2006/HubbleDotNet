@@ -28,7 +28,7 @@ namespace Hubble.Core.Query
     /// tf/idf. The poisition informations are no useful.
     /// Syntax: MutiStringQuery('xxx','yyy','zzz')
     /// </summary>
-    public class MatchQuery : IQuery
+    public class MatchQuery : IQuery, INamedExternalReference
     {
         class WordIndexForQuery
         {
@@ -454,5 +454,17 @@ namespace Hubble.Core.Query
 
         #endregion
 
+
+        #region INamedExternalReference Members
+
+        public string Name
+        {
+            get 
+            {
+                return Command;
+            }
+        }
+
+        #endregion
     }
 }
