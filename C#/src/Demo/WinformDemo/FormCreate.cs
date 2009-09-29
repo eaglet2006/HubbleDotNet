@@ -85,18 +85,18 @@ namespace WinformDemo
                 table.ConnectionString = textBoxConnectionString.Text;
                 table.DBAdapterTypeName = "SQLSERVER2005";
                 table.DBTableName = textBoxTableName.Text;
-                table.Fields.Add(new Field("title", DataType.String, 256, true, Field.Index.Tokenized, analyseName));
+                table.Fields.Add(new Field("title", DataType.NVarchar, 256, true, Field.Index.Tokenized, analyseName));
 
                 if (checkBoxComplexIndex.Checked)
                 {
-                    table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, Field.IndexMode.Complex, analyseName));
+                    table.Fields.Add(new Field("content", DataType.NVarchar, true, Field.Index.Tokenized, Field.IndexMode.Complex, analyseName));
                 }
                 else
                 {
-                    table.Fields.Add(new Field("content", DataType.String, true, Field.Index.Tokenized, Field.IndexMode.Simple, analyseName));
+                    table.Fields.Add(new Field("content", DataType.NVarchar, true, Field.Index.Tokenized, Field.IndexMode.Simple, analyseName));
                 }
 
-                table.Fields.Add(new Field("Url", DataType.String, true, Field.Index.None));
+                table.Fields.Add(new Field("Url", DataType.NVarchar, true, Field.Index.None));
                 table.Fields.Add(new Field("Time", DataType.DateTime, true, Field.Index.Untokenized));
                 table.Name = textBoxTableName.Text;
                 //table.SQLForCreate = "create index I_News_Title on News(title);";

@@ -30,6 +30,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         Update = 4,
         Insert = 5,
         Exec   = 6,
+        CreateTable = 7,
     }
 
     class TSFQLState : SyntaxState<TSFQLSentenceFunction>
@@ -101,6 +102,11 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                     ((TSFQLSentence)dfa).SentenceType = SentenceType.EXEC;
                     ((TSFQLSentence)dfa).CurrentSyntax = new Exec.Exec();
                     break;
+                case TSFQLSentenceFunction.CreateTable:
+                    ((TSFQLSentence)dfa).SentenceType = SentenceType.CREATETABLE;
+                    ((TSFQLSentence)dfa).CurrentSyntax = new CreateTable.CreateTable();
+                    break;
+
             }
         }
     }
@@ -120,6 +126,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
          * s0 -- Update --s5
          * s0 -- Insert --s6
          * s0 -- Exec -- s7
+         * s0 -- Create-- s8
+         * s8 -- Table -- s9
          * s1 -- ] -- s2
          * s2 -- [ -- s1
          * s2 -- EOF ; -- squit
@@ -128,11 +136,13 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
          * s2 -- Update -- s5
          * s2 -- Insert -- s6
          * s2 -- Exec -- s7
+         * s2 -- Create-- s8
          * s3 -- EOF ; -- squit
          * s4 -- EOF ; -- squit
          * s5 -- EOF ; -- squit
          * s6 -- EOF ; -- squit
          * s7 -- EOF ; -- squit
+         * s9 -- EOF ; -- squit
          * ********************************************************/
 
         private static void InitDFAStates()
@@ -144,6 +154,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             SyntaxState<TSFQLSentenceFunction> s5 = AddSyntaxState(new TSFQLState(5, false, TSFQLSentenceFunction.Update)); //update state;
             SyntaxState<TSFQLSentenceFunction> s6 = AddSyntaxState(new TSFQLState(6, false, TSFQLSentenceFunction.Insert)); //insert state;
             SyntaxState<TSFQLSentenceFunction> s7 = AddSyntaxState(new TSFQLState(7, false, TSFQLSentenceFunction.Exec)); //Exec state;
+            SyntaxState<TSFQLSentenceFunction> s8 = AddSyntaxState(new TSFQLState(8)); //Create;
+            SyntaxState<TSFQLSentenceFunction> s9 = AddSyntaxState(new TSFQLState(9, false, TSFQLSentenceFunction.CreateTable)); //create table;
 
             s0.AddNextState((int)SyntaxType.LSquareBracket, s1.Id);
             s0.AddNextState((int)SyntaxType.SELECT, s3.Id);
@@ -151,6 +163,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s0.AddNextState((int)SyntaxType.UPDATE, s5.Id);
             s0.AddNextState((int)SyntaxType.INSERT, s6.Id);
             s0.AddNextState((int)SyntaxType.EXEC, s7.Id);
+            s0.AddNextState((int)SyntaxType.CREATE, s8.Id);
 
             s1.AddNextState((int)SyntaxType.RSquareBracket, s2.Id);
             
@@ -161,6 +174,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s2.AddNextState((int)SyntaxType.UPDATE, s5.Id);
             s2.AddNextState((int)SyntaxType.INSERT, s6.Id);
             s2.AddNextState((int)SyntaxType.EXEC, s7.Id);
+            s2.AddNextState((int)SyntaxType.CREATE, s8.Id);
 
             s3.AddNextState(new int[] { (int)SyntaxType.FROM, (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
             s4.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
@@ -168,6 +182,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s6.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
             s7.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
 
+            s8.AddNextState((int)SyntaxType.TABLE, s9.Id);
+            s9.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
             //s1.AddNextState((int)SyntaxType.RSquareBracket, s2.Id);
 
             //s2.AddNextState((int)SyntaxType.LSquareBracket, s1.Id);

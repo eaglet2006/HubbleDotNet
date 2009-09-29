@@ -34,32 +34,86 @@ namespace Hubble.Core.DBAdapter
             }
 
             string sqlType = "";
+            string defaultValue = null;
+
+            if (field.DefaultValue != null)
+            {
+                switch (field.DataType)
+                {
+                    case DataType.TinyInt:
+                    case DataType.SmallInt:
+                    case Hubble.Core.Data.DataType.Int:
+                    case Hubble.Core.Data.DataType.BigInt:
+                    case Hubble.Core.Data.DataType.Date:
+                    case Hubble.Core.Data.DataType.SmallDateTime:
+                    case Hubble.Core.Data.DataType.Float:
+                        defaultValue = field.DefaultValue;
+                        break;
+                    case Hubble.Core.Data.DataType.DateTime:
+                    case Hubble.Core.Data.DataType.Varchar:
+                    case Hubble.Core.Data.DataType.NVarchar:
+                    case Hubble.Core.Data.DataType.Char:
+                    case Hubble.Core.Data.DataType.NChar:
+                        defaultValue = string.Format("'{0}'", field.DefaultValue.Replace("'", "''"));
+                        break;
+                    default:
+                        throw new ArgumentException(field.DataType.ToString());
+                }
+            }
+
 
             switch (field.DataType)
             {
-                case Hubble.Core.Data.DataType.Int32:
-                case Hubble.Core.Data.DataType.Date:
-                case Hubble.Core.Data.DataType.SmallDateTime:
+                case DataType.TinyInt:
+                    sqlType = "TinyInt";
+                    break;
+                case DataType.SmallInt:
+                    sqlType = "SmallInt";
+                    break;
+                case Hubble.Core.Data.DataType.Int:
                     sqlType = "Int";
                     break;
+                case Hubble.Core.Data.DataType.Date:
+                case Hubble.Core.Data.DataType.SmallDateTime:
                 case Hubble.Core.Data.DataType.DateTime:
                     sqlType = "DateTime";
                     break;
                 case Hubble.Core.Data.DataType.Float:
                     sqlType = "Float";
                     break;
-                case Hubble.Core.Data.DataType.Int64:
+                case Hubble.Core.Data.DataType.BigInt:
                     sqlType = "Int64";
                     break;
-                case Hubble.Core.Data.DataType.String:
+                case Hubble.Core.Data.DataType.Varchar:
+                    sqlType = "varchar ({1})";
+                    break;
+                case Hubble.Core.Data.DataType.NVarchar:
                     sqlType = "nvarchar ({1})";
+                    break;
+                case Hubble.Core.Data.DataType.Char:
+                    sqlType = "char ({1})";
+                    break;
+                case Hubble.Core.Data.DataType.NChar:
+                    sqlType = "nchar ({1})";
                     break;
                 default:
                     throw new ArgumentException(field.DataType.ToString());
             }
 
-            return string.Format("[{0}] " + sqlType + ",", field.Name,
+            string sql = string.Format("[{0}] " + sqlType + " " , field.Name,
                 field.DataLength <= 0 ? "max" : field.DataLength.ToString());
+
+            if (!field.CanNull)
+            {
+                sql += "NOT NULL ";
+            }
+
+            if (defaultValue != null)
+            {
+                sql += "DEFAULT " + defaultValue + " ";
+            }
+
+            return sql;
         }
 
         #region IDBAdapter Members
@@ -125,20 +179,58 @@ namespace Hubble.Core.DBAdapter
         {
             Debug.Assert(Table != null);
 
+            List<string> primaryKeys = new List<string>();
+
             StringBuilder sql = new StringBuilder();
 
             sql.AppendFormat("create table {0} (", Table.DBTableName);
 
             sql.Append("DocId BigInt NOT NULL,");
 
-            foreach (Data.Field field in Table.Fields)
+            int i = 0;
+
+            for (i = 0; i < Table.Fields.Count; i++)
             {
+                Data.Field field = Table.Fields[i];
                 string fieldSql = GetFieldLine(field);
 
                 if (fieldSql != null)
                 {
                     sql.Append(fieldSql);
+
+                    if (i < Table.Fields.Count - 1)
+                    {
+                        sql.Append(",");
+                    }
                 }
+
+                if (field.PrimaryKey)
+                {
+                    primaryKeys.Add(field.Name);
+                }
+            }
+
+
+            if (primaryKeys.Count > 0)
+            {
+                i = 0;
+                sql.Append(" primary key NONCLUSTERED(");
+
+                foreach (string pkName in primaryKeys)
+                {
+                    if (i == 0)
+                    {
+                        sql.Append(pkName);
+                    }
+                    else
+                    {
+                        sql.Append("," + pkName);
+                    }
+
+                    i++;
+                }
+
+                sql.Append(")");
             }
 
             sql.Append(")");
@@ -189,7 +281,10 @@ namespace Hubble.Core.DBAdapter
 
                     switch (fv.Type)
                     {
-                        case Hubble.Core.Data.DataType.String:
+                        case Hubble.Core.Data.DataType.Varchar:
+                        case Hubble.Core.Data.DataType.NVarchar:
+                        case Hubble.Core.Data.DataType.Char:
+                        case Hubble.Core.Data.DataType.NChar:
                         case Hubble.Core.Data.DataType.DateTime:
                         case Hubble.Core.Data.DataType.Date:
                         case Hubble.Core.Data.DataType.SmallDateTime:
@@ -255,7 +350,8 @@ namespace Hubble.Core.DBAdapter
 
             foreach (Data.FieldValue fv in doc.FieldValues)
             {
-                string value = fv.Type == Data.DataType.String ||
+                string value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
+                    fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
                     fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
                     fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ? 
                     string.Format("'{0}'", fv.Value.Replace("'", "''"))  : fv.Value;
@@ -382,6 +478,26 @@ namespace Hubble.Core.DBAdapter
             return result;
         }
 
+        public System.Data.DataSet QuerySql(string sql)
+        {
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+
+                return sqlData.QuerySql(sql);
+            }
+        }
+
+        public int ExcuteSql(string sql)
+        {
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+
+                return sqlData.ExcuteSql(sql);
+            }
+        }
+
         #endregion
 
 
@@ -396,5 +512,6 @@ namespace Hubble.Core.DBAdapter
         }
 
         #endregion
+
     }
 }

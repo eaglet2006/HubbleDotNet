@@ -23,23 +23,23 @@ namespace Hubble.Core.StoredProcedure
 
             foreach (Hubble.Core.Global.ExternalReference externRef in Global.Setting.Config.IQuerys)
             {
+                NewRow();
                 OutputValue("RefName", "Query");
                 OutputValue("AssemblyFile", externRef.AssemblyFile);
-                NewRow();
             }
 
             foreach (Hubble.Core.Global.ExternalReference externRef in Global.Setting.Config.IAnalyzers)
             {
+                NewRow();
                 OutputValue("RefName", "Analyzer");
                 OutputValue("AssemblyFile", externRef.AssemblyFile);
-                NewRow();
             }
 
             foreach (Hubble.Core.Global.ExternalReference externRef in Global.Setting.Config.IDBAdapters)
             {
+                NewRow();
                 OutputValue("RefName", "DBAdapter");
                 OutputValue("AssemblyFile", externRef.AssemblyFile);
-                NewRow();
             }
         }
 

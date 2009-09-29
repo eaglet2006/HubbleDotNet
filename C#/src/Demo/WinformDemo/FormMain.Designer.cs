@@ -50,6 +50,7 @@
             this.tabPageResults = new System.Windows.Forms.TabPage();
             this.tabPageMessages = new System.Windows.Forms.TabPage();
             this.textBoxMessages = new System.Windows.Forms.TextBox();
+            this.button1 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).BeginInit();
             this.tabControl1.SuspendLayout();
             this.tabPageResults.SuspendLayout();
@@ -269,11 +270,22 @@
             this.textBoxMessages.TabIndex = 0;
             this.textBoxMessages.WordWrap = false;
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(485, 165);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 19;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(647, 525);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.buttonExcute);
             this.Controls.Add(this.textBoxSql);
@@ -330,5 +342,6 @@
         private System.Windows.Forms.TabPage tabPageResults;
         private System.Windows.Forms.TabPage tabPageMessages;
         private System.Windows.Forms.TextBox textBoxMessages;
+        private System.Windows.Forms.Button button1;
     }
 }

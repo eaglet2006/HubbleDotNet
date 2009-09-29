@@ -326,6 +326,11 @@ namespace Hubble.Core.Store
                     return 1;
                 }
 
+                if (this.FilePositionList.Count == 0)
+                {
+                    return -1;
+                }
+
                 if (this.FilePositionList[0].Serial > other.FilePositionList[0].Serial)
                 {
                     return 1;
@@ -352,6 +357,7 @@ namespace Hubble.Core.Store
                         return 0;
                     }
                 }
+
             }
 
             #endregion
@@ -515,7 +521,15 @@ namespace Hubble.Core.Store
                 {
                     pList = new List<IndexFile.FilePosition>(2);
                     pList.Add(p.Position);
-                    _WordFilePositionTable.Add(p.Word, pList);
+
+                    string internedWord = string.IsInterned(p.Word);
+
+                    if (internedWord == null)
+                    {
+                        internedWord = p.Word;
+                    }
+
+                    _WordFilePositionTable.Add(internedWord, pList);
                 }
             }
 

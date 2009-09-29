@@ -63,7 +63,6 @@ namespace Hubble.Core.Store
                     mergeInfos.EndSerial, mergeInfos.MergeHeadFileName, mergeInfos.MergeIndexFileName,
                     mergeInfos.MergedSerial);
 
-
                 mergeInfos.MergedWordFilePostionList.Sort();
 
                 string optimizeDir = IndexDir + @"Optimize\";

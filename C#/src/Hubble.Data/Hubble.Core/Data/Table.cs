@@ -31,21 +31,39 @@ namespace Hubble.Core.Data
         
         string _Name;
 
-        string _ConnectionString = "Data Source=(local);Initial Catalog=Test;Integrated Security=True";
+        string _ConnectionString = null;
 
         string _DBTableName;
 
         List<Field> _Fields = new List<Field>();
 
-        string _DBAdapterTypeName; //eg. SqlServer2005Adapter 
+        string _DBAdapterTypeName = null; //eg. SqlServer2005Adapter 
 
         string _SQLForCreate;
 
         int _ForceCollectCount = 5000;
 
+        bool _IndexOnly = false;
+
         #endregion
 
         #region Public properties
+
+        /// <summary>
+        /// This table is index only or not
+        /// </summary>
+        public bool IndexOnly
+        {
+            get
+            {
+                return _IndexOnly;
+            }
+
+            set
+            {
+                _IndexOnly = value;
+            }
+        }
 
         /// <summary>
         /// Table name

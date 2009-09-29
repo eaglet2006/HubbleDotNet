@@ -230,6 +230,143 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private QueryResult CreateTable(TSFQLSentence sentence)
+        {
+            Table table = new Table();
+
+            string directory = null;
+
+            SyntaxAnalysis.CreateTable.CreateTable createtable = sentence.SyntaxEntity as
+                SyntaxAnalysis.CreateTable.CreateTable;
+
+            table.Name = createtable.TableName;
+
+            //Read attributes
+
+            foreach (TSFQLAttribute attr in sentence.Attributes)
+            {
+                string attrName = attr.Name.ToLower();
+
+                switch (attrName)
+                {
+                    case "directory":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("Directory attribute must have one parameter!");
+                        }
+
+                        directory = attr.Parameters[0];
+                        if (!System.IO.Directory.Exists(directory))
+                        {
+                            System.IO.Directory.CreateDirectory(directory);
+                        }
+                        break;
+                    case "indexonly":
+                        table.IndexOnly = true;
+                        break;
+                    case "forcecollectcount":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("ForceCollectCount attribute must have one parameter!");
+                        }
+
+                        int count;
+
+                        if (!int.TryParse(attr.Parameters[0], out count))
+                        {
+                            throw new ParseException(string.Format("Invalid count ={0} in ForceCollectCount attribute!", attr.Parameters[0]));
+                        }
+
+                        if (count <= 0)
+                        {
+                            throw new ParseException("ForceCollectCount must be large then 0!");
+                        }
+
+                        table.ForceCollectCount = count;
+                        break;
+                    case "dbtablename":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("DBTableName attribute must have one parameter!");
+                        }
+
+                        table.DBTableName = attr.Parameters[0];
+
+                        break;
+                    case "dbadapter":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("DBAdapter attribute must have one parameter!");
+                        }
+
+                        table.DBAdapterTypeName = attr.Parameters[0];
+                        break;
+
+                    case "dbconnect":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("DBConnect attribute must have one parameter!");
+                        }
+
+                        table.ConnectionString = attr.Parameters[0];
+                        break;
+                }
+            }
+
+            //Verify parameters
+            if (directory == null)
+            {
+                throw new ParseException("Must have Directory attribute!");
+            }
+
+            if (table.DBAdapterTypeName == null)
+            {
+                throw new ParseException("Must have DBAdapter attribute!");
+            }
+
+            if (table.ConnectionString == null)
+            {
+                throw new ParseException("Must have DBConnect attribute!");
+            }
+
+            //Init fields
+
+            if (createtable.Fields.Count <= 0)
+            {
+                throw new ParseException("Table must have one field at least!");
+            }
+
+            foreach (SyntaxAnalysis.CreateTable.CreateTableField tfield in createtable.Fields)
+            {
+                Data.Field field = new Field();
+
+                field.Name = tfield.FieldName;
+                field.Mode = Field.IndexMode.Complex;
+                field.IndexType = tfield.IndexType;
+                field.Store = true;
+                field.AnalyzerName = tfield.AnalyzerName;
+                field.CanNull = tfield.CanNull;
+                field.DataLength = tfield.DataLength;
+                field.DataType = tfield.DataType;
+                field.DefaultValue = tfield.Default;
+                field.PrimaryKey = tfield.PrimaryKey;
+
+                table.Fields.Add(field);
+            }
+
+            if (table.DBTableName == null)
+            {
+                table.DBTableName = table.Name;
+            }
+
+            DBProvider.CreateTable(table, directory);
+
+            QueryResult result = new QueryResult();
+            result.PrintMessages.Add(string.Format("create table {0} successful!", table.Name));
+
+            return result;
+        }
+
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
@@ -265,7 +402,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (rankField != null)
             {
-                if (rankField.DataType == Hubble.Core.Data.DataType.Int32 &&
+                if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
                     rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
                 {
                     int rankTab = rankField.TabIndex;
@@ -311,11 +448,11 @@ namespace Hubble.Core.SFQL.Parse
 
                     if (selectField.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.Int64));
+                        selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.BigInt));
                     }
                     else if (selectField.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.Int64));
+                        selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.BigInt));
                     }
                     else
                     {
@@ -368,6 +505,8 @@ namespace Hubble.Core.SFQL.Parse
                     break;
                 case SentenceType.EXEC:
                     return ExcuteExec(sentence);
+                case SentenceType.CREATETABLE:
+                    return CreateTable(sentence);
             }
 
             return null;

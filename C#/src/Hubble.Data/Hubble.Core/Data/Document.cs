@@ -73,7 +73,7 @@ namespace Hubble.Core.Data
         #region Constructor
 
         public FieldValue(string name, string value)
-            : this(name, value, DataType.String, false)
+            : this(name, value, DataType.NVarchar, false)
         {
         }
 

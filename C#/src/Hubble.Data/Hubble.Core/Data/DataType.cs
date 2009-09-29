@@ -23,13 +23,18 @@ namespace Hubble.Core.Data
 {
     public enum DataType
     {
-        Int32 = 0,
-        Int64 = 1,
-        Float = 2,
-        Date  = 3, //From 1-1-1 to 9999-12-31
-        SmallDateTime = 4, //From 1980-01-01 0:0:0 to 2047-12-31 23:59:59
-        DateTime=5,
-        String= 100,
+        TinyInt = 0,
+        SmallInt = 1,
+        Int = 2,
+        BigInt = 3,
+        Float = 4,
+        Date  = 5, //From 1-1-1 to 9999-12-31
+        SmallDateTime = 6, //From 1980-01-01 0:0:0 to 2047-12-31 23:59:59
+        DateTime=7,
+        Varchar= 100,
+        NVarchar = 101,
+        Char = 102,
+        NChar = 103,
         Data  = 200,
     }
 
@@ -43,13 +48,19 @@ namespace Hubble.Core.Data
 
                     throw new Exception("Not finished!");
 
-                case DataType.String:
+                case DataType.Varchar:
+                case DataType.NVarchar:
+                case DataType.Char:
+                case DataType.NChar:
                     return typeof(string);
 
-                case DataType.Int32:
+                case DataType.Int:
                     return typeof(int);
-
-                case DataType.Int64:
+                case DataType.TinyInt:
+                    return typeof(sbyte);
+                case DataType.SmallInt:
+                    return typeof(short);
+                case DataType.BigInt:
                     return typeof(long);
 
                 case DataType.Date:
@@ -73,7 +84,10 @@ namespace Hubble.Core.Data
 
                     throw new Exception("Not finished!");
 
-                case DataType.String:
+                case DataType.Varchar:
+                case DataType.NVarchar:
+                case DataType.Char:
+                case DataType.NChar:
 
                     StringBuilder str = new StringBuilder();
 
@@ -101,12 +115,14 @@ namespace Hubble.Core.Data
                     return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.String, str.ToString());
                 case DataType.Date:
                 case DataType.SmallDateTime:
-                case DataType.Int32:
+                case DataType.TinyInt:
+                case DataType.SmallInt:
+                case DataType.Int:
                     {
                         return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, buf[from]);
                     }
 
-                case DataType.Int64:
+                case DataType.BigInt:
                 case DataType.DateTime:
                     {
                         long l;
@@ -139,7 +155,10 @@ namespace Hubble.Core.Data
 
                     throw new Exception("Not finished!");
 
-                case DataType.String:
+                case DataType.Varchar:
+                case DataType.NVarchar:
+                case DataType.Char:
+                case DataType.NChar:
 
                     StringBuilder str = new StringBuilder();
 
@@ -175,10 +194,12 @@ namespace Hubble.Core.Data
                         DateTime date = IntToSmallDatetime(buf[from]);
                         return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
                     }
-                case DataType.Int32:
+                case DataType.TinyInt:
+                case DataType.SmallInt:
+                case DataType.Int:
                     return buf[from].ToString();
 
-                case DataType.Int64:
+                case DataType.BigInt:
                     {
                         long l;
                         l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
@@ -221,7 +242,11 @@ namespace Hubble.Core.Data
 
                     throw new Exception("Not finished!");
 
-                case DataType.String:
+                case DataType.Varchar:
+                case DataType.NVarchar:
+                case DataType.Char:
+                case DataType.NChar:
+
                     if (dataLength <= 0)
                     {
                         throw new ArgumentException("String data length must larger then 0!");
@@ -275,7 +300,9 @@ namespace Hubble.Core.Data
                     ret = new int[1];
                     ret[0] = SmallDateTimeToInt(smalldate);
                     return ret;
-                case DataType.Int32:
+                case DataType.TinyInt:
+                case DataType.SmallInt:
+                case DataType.Int:
                     ret = new int[1];
                     if (!int.TryParse(value, out ret[0]))
                     {
@@ -283,7 +310,7 @@ namespace Hubble.Core.Data
                     }
                     return ret;
 
-                case DataType.Int64:
+                case DataType.BigInt:
                     ret = new int[2];
 
                     if (!long.TryParse(value, out l))
@@ -339,19 +366,25 @@ namespace Hubble.Core.Data
                     }
                     return length % sizeof(int) == 0 ? length / sizeof(int) : length / sizeof(int) + 1;
 
-                case DataType.String:
+                case DataType.Varchar:
+                case DataType.NVarchar:
+                case DataType.Char:
+                case DataType.NChar:
+
                     if (length > 32 || length <= 0)
                     {
-                        throw new ArgumentException("Data index length must less then 64!");
+                        throw new ArgumentException("Data index length must less then 32!");
                     }
                     return length % 2 == 0 ? length / 2 : length / 2 + 1;
                 case DataType.Date:
-                case DataType.Int32:
+                case DataType.TinyInt:
+                case DataType.SmallInt:
+                case DataType.Int:
                 case DataType.SmallDateTime:
                     length = sizeof(int);
                     return length % sizeof(int) == 0 ? length / sizeof(int) : length / sizeof(int) + 1;
 
-                case DataType.Int64:
+                case DataType.BigInt:
                 case DataType.DateTime:
                     length = sizeof(long); //ticks
                     return length % sizeof(int) == 0 ? length / sizeof(int) : length / sizeof(int) + 1; 

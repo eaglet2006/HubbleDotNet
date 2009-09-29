@@ -560,7 +560,7 @@ namespace Hubble.Core.Index
         private Data.Field.IndexMode _IndexMode;
         private int _TabIndex;
         private bool _Closed = false;
-        private Dictionary<string, WordIndexWriter> _WordTableNeedCollectDict = new Dictionary<string, WordIndexWriter>();
+        //private Dictionary<string, WordIndexWriter> _WordTableNeedCollectDict = new Dictionary<string, WordIndexWriter>();
         //private List<IndexFile.DocInfo> _DocInfosNeedCollect = new List<IndexFile.DocInfo>();
 
         private Dictionary<string, WordIndexReader> _WordTableReader = new Dictionary<string, WordIndexReader>();
@@ -702,35 +702,6 @@ namespace Hubble.Core.Index
         //    }
         //}
 
-        private List<WordIndexWriter> GetWordTableNeedCollectDict(bool forceCollect)
-        {
-            lock (this)
-            {
-                List<WordIndexWriter> retVal = new List<WordIndexWriter>();
-
-                Dictionary<string, WordIndexWriter> dict = _WordTableNeedCollectDict;
-
-                List<string> removedwords = new List<string>();
-
-                foreach (WordIndexWriter wordIndex in dict.Values)
-                {
-                    if (wordIndex.ListForWirterCount > 512 || forceCollect)
-                    {
-                        retVal.Add(wordIndex);
-                        removedwords.Add(wordIndex.Word);
-                    }
-                }
-
-                foreach (string word in removedwords)
-                {
-                    dict.Remove(word);
-                }
-
-                //_WordTableNeedCollectDict = new Dictionary<string,WordIndex>();
-                return retVal;
-            }
-        }
-
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
             _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild);
@@ -813,7 +784,10 @@ namespace Hubble.Core.Index
             Closed = true;
 
             _IndexMerge.Close();
+
             _IndexFileProxy.Close(2000);
+
+            GC.Collect();
 
         }
 
@@ -883,7 +857,15 @@ namespace Hubble.Core.Index
                     }
 
                     WordIndexWriter wordIndex;
-                    if (WordTableWriter.TryGetValue(wordInfo.Word, out wordIndex))
+
+                    string internedWord = string.IsInterned(wordInfo.Word);
+
+                    if (internedWord == null)
+                    {
+                        internedWord = wordInfo.Word;
+                    }
+
+                    if (WordTableWriter.TryGetValue(internedWord, out wordIndex))
                     {
                         //Wait Hit == false 
                         wordIndex.Wait(documentId);
@@ -921,10 +903,10 @@ namespace Hubble.Core.Index
                     wordIndex.Index();
                     wordIndex.Hit = false;
 
-                    if (!_WordTableNeedCollectDict.ContainsKey(wordIndex.Word))
-                    {
-                        _WordTableNeedCollectDict.Add(wordIndex.Word, wordIndex);
-                    }
+                    //if (!_WordTableNeedCollectDict.ContainsKey(wordIndex.Word))
+                    //{
+                    //    _WordTableNeedCollectDict.Add(wordIndex.Word, wordIndex);
+                    //}
                 }
 
 

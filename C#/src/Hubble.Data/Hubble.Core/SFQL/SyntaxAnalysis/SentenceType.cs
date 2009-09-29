@@ -29,5 +29,6 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         DELETE = 3,
         INSERT = 4,
         EXEC   = 5,
+        CREATETABLE = 6,
     }
 }

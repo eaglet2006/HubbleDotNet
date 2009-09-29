@@ -27,12 +27,39 @@ namespace Hubble.Core.Cache
         private static object _LockObj = new object();
         private static System.Threading.Thread _CacheManagerThread;
 
+        private static object _InserCountLockObj = new object();
+        private static int _InsertCount = 0; //Insert count before last GC.Collect;
+
+        public static int InsertCount
+        {
+            get
+            {
+                lock (_InserCountLockObj)
+                {
+                    return _InsertCount;
+                }
+            }
+
+            set
+            {
+                lock (_InserCountLockObj)
+                {
+                    _InsertCount = value;
+                }
+            }
+        }
 
         private static void CacheManageProc()
         {
             while (true)
             {
                 System.Threading.Thread.Sleep(10000);
+
+                if (InsertCount > 1000)
+                {
+                    InsertCount = 0;
+                    GC.Collect();
+                }
 
                 long pageSize = System.Diagnostics.Process.GetCurrentProcess().PagedMemorySize64 ;
                 if (pageSize < Global.Setting.Config.MemoryLimited)
@@ -47,6 +74,8 @@ namespace Hubble.Core.Cache
                         cache.ReduceMemory(50);
                     }
                 }
+
+                GC.Collect();
             }
         }
 

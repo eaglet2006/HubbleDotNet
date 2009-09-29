@@ -249,7 +249,9 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     case DataType.Date:
                     case DataType.SmallDateTime:
-                    case DataType.Int32:
+                    case DataType.TinyInt:
+                    case DataType.SmallInt:
+                    case DataType.Int:
                         #region Date, SmallDateTime and Int32
                         switch (cur.Operator.SyntaxType)
                         {
@@ -297,7 +299,7 @@ namespace Hubble.Core.SFQL.Parse
                         }
                         #endregion
                         break;
-                    case DataType.Int64:
+                    case DataType.BigInt:
                     case DataType.DateTime:
                         #region DateTime, Int64
 
@@ -352,7 +354,10 @@ namespace Hubble.Core.SFQL.Parse
 
                         break;
                     case DataType.Float:
-                    case DataType.String:
+                    case DataType.Varchar:
+                    case DataType.NVarchar:
+                    case DataType.Char:
+                    case DataType.NChar:
                         #region Float and String
                         switch (cur.Operator.SyntaxType)
                         {

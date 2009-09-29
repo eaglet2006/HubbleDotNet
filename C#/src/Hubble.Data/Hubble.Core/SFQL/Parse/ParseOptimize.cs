@@ -100,6 +100,7 @@ namespace Hubble.Core.SFQL.Parse
                     break;
                 case SentenceType.INSERT:
                 case SentenceType.EXEC:
+                case SentenceType.CREATETABLE:
                     break;
                 default:
                     throw new SyntaxException(string.Format("Unknow sentence {0}", sentence.SentenceType));

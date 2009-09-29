@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Data;
 
 namespace Hubble.Core.DBAdapter
 {
@@ -41,6 +42,10 @@ namespace Hubble.Core.DBAdapter
         Dictionary<long, Query.DocumentResult> GetDocumentResults(string where);
 
         long MaxDocId { get; }
+
+        DataSet QuerySql(string sql);
+
+        int ExcuteSql(string sql);
 
     }
 }

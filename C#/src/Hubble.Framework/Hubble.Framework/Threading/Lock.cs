@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Diagnostics;
 
 namespace Hubble.Framework.Threading
 {
@@ -45,8 +46,19 @@ namespace Hubble.Framework.Threading
 
         public void Enter(Mode mode)
         {
+            Enter(mode, -1);
+        }
+
+        /// <summary>
+        /// Enter lock
+        /// </summary>
+        /// <param name="mode">Share or mutex</param>
+        /// <param name="timeout">how many milliseconds waitting for. If timeout less then 0, wait until enter lock</param>
+        public void Enter(Mode mode, int timeout)
+        {
             bool waitShareCounterZero = false;
             bool waitForShareState = false;
+            Stopwatch sw = null;
         Loop:
             lock (this)
             {
@@ -79,8 +91,18 @@ namespace Hubble.Framework.Threading
                 }
             }
 
+            if (sw == null && timeout >= 0)
+            {
+                sw = new Stopwatch();
+            }
+
             if (waitShareCounterZero)
             {
+                if (sw != null)
+                {
+                    sw.Start();
+                }
+
                 int counter;
                 int times = 0;
                 do
@@ -102,10 +124,29 @@ namespace Hubble.Framework.Threading
                         }
                     }
 
+                    if (timeout >= 0)
+                    {
+                        if (sw.ElapsedMilliseconds > timeout)
+                        {
+                            sw.Stop();
+                            throw new TimeoutException();
+                        }
+                    }
+
                 } while (counter > 0);
+
+                if (sw != null)
+                {
+                    sw.Stop();
+                }
             }
             else if (waitForShareState)
             {
+                if (sw != null)
+                {
+                    sw.Start();
+                }
+
                 int times = 0;
                 State state;
 
@@ -127,9 +168,25 @@ namespace Hubble.Framework.Threading
                             Thread.Sleep(1);
                         }
                     }
+
+                    if (timeout >= 0)
+                    {
+                        if (sw.ElapsedMilliseconds > timeout)
+                        {
+                            sw.Stop();
+                            throw new TimeoutException();
+                        }
+                    }
+
                 } while (state != State.Share);
                 waitShareCounterZero = false;
                 waitForShareState = false;
+
+                if (sw != null)
+                {
+                    sw.Stop();
+                }
+
                 goto Loop;
             }
         }

@@ -85,6 +85,8 @@
     <Compile Include="SFQL\Parse\QueryResult.cs" />
     <Compile Include="SFQL\Parse\QueryResultSort.cs" />
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\CreateTable\CreateTable.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\CreateTable\CreateTableField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\Delete.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\DeleteFrom.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Exec\Exec.cs" />
@@ -116,7 +118,11 @@
     <Compile Include="StoredProcedure\SP_AddExternalReference.cs" />
     <Compile Include="StoredProcedure\SP_Configure.cs" />
     <Compile Include="StoredProcedure\SP_DeleteExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_DropTable.cs" />
+    <Compile Include="StoredProcedure\SP_ExcuteSql.cs" />
     <Compile Include="StoredProcedure\SP_ExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_QuerySql.cs" />
+    <Compile Include="StoredProcedure\SP_TableIndexOnly.cs" />
     <Compile Include="StoredProcedure\SP_Version.cs" />
     <Compile Include="StoredProcedure\StoredProcedure.cs" />
     <Compile Include="StoredProcedure\StoredProcException.cs" />

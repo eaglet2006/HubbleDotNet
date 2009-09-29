@@ -51,6 +51,7 @@ namespace Hubble.Core.Data
         Analysis.IAnalyzer _Analyzer;
         bool _CanNull = false;
         string _DefaultValue = null;
+        bool _PrimaryKey = false;
 
         #endregion
 
@@ -217,6 +218,22 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// Primary key of this field
+        /// </summary>
+        public bool PrimaryKey
+        {
+            get
+            {
+                return _PrimaryKey;
+            }
+
+            set
+            {
+                _PrimaryKey = value;
+            }
+        }
+
         #endregion
 
         public Analysis.IAnalyzer GetAnalyzer()
@@ -304,7 +321,7 @@ namespace Hubble.Core.Data
                 case Index.None:
                     break;
                 case Index.Tokenized:
-                    _IndexType = DataType == DataType.String ? Index.Tokenized : Index.None;
+                    _IndexType = (DataType >= DataType.Varchar && DataType <= DataType.NChar) ? Index.Tokenized : Index.None;
                     break;
                 case Index.Untokenized:
                     _IndexType = DataType == DataType.Data ? Index.None : Index.Untokenized;
