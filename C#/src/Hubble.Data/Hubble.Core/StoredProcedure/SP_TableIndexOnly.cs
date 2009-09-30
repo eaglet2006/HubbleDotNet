@@ -35,7 +35,7 @@ namespace Hubble.Core.StoredProcedure
 
             if (bool.TryParse(value, out indexonly))
             {
-                dbProvider.IndexOnly = indexonly;
+                dbProvider.SetIndexOnly(indexonly);
                 dbProvider.SaveTable();
                 OutputMessage(string.Format("Set table {0} index only to {1} sucessful!",
                     tableName, dbProvider.IndexOnly));

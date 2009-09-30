@@ -453,11 +453,6 @@ namespace Hubble.Core.Data
             {
                 return _Table.IndexOnly;
             }
-
-            set
-            {
-                _Table.IndexOnly = value;
-            }
         }
 
         public int PayloadLength
@@ -486,6 +481,20 @@ namespace Hubble.Core.Data
             {
                 index.ForceCollectCount = _Table.ForceCollectCount;
                 _FieldInvertedIndex.Add(fieldName.Trim().ToLower(), index);
+            }
+        }
+
+        internal void SetIndexOnly(bool value)
+        {
+            try
+            {
+                _TableLock.Enter(Lock.Mode.Share, 30000);
+
+                _Table.IndexOnly = value;
+            }
+            finally
+            {
+                _TableLock.Leave();
             }
         }
 
