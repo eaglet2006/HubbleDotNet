@@ -351,6 +351,21 @@ namespace Hubble.Core.SFQL.Parse
                 field.DefaultValue = tfield.Default;
                 field.PrimaryKey = tfield.PrimaryKey;
 
+                if (field.Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new ParseException("DocId can not be field name!");
+                }
+
+                if (field.IndexType != Field.Index.None && field.CanNull)
+                {
+                    throw new ParseException("Can not be NULL when index type is Tokenized or Untokenized!");
+                }
+
+                if (string.IsNullOrEmpty(field.AnalyzerName) && field.IndexType == Field.Index.Tokenized)
+                {
+                    throw new ParseException("Must set analyzer name when index type is Tokenized!");
+                }
+
                 table.Fields.Add(field);
             }
 
