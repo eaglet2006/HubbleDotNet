@@ -123,6 +123,21 @@ namespace Hubble.Core.Data
 
         }
 
+        public static List<string> GetTables()
+        {
+            lock (_sLockObj)
+            {
+                List<string> tables = new List<string>();
+
+                foreach (DBProvider dbProvider in _DBProviderTable.Values)
+                {
+                    tables.Add(dbProvider.TableName);
+                }
+
+                return tables;
+            }
+        }
+
         public static DBProvider GetDBProvider(string tableName)
         {
             lock (_sLockObj)
@@ -215,6 +230,13 @@ namespace Hubble.Core.Data
                     dbProvider._TableLock.Leave();
                 }
             }
+        }
+
+        public static void Init(string settingPath)
+        {
+            Setting.SettingPath = settingPath;
+
+            Init();
         }
 
         public static void Init()

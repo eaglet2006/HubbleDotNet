@@ -33,6 +33,28 @@ namespace Hubble.Core.Global
 
         static private Setting _Config = null;
 
+        static private string _Path = Path.ProcessDirectory;
+
+        [System.Xml.Serialization.XmlIgnore]
+        static public string SettingPath
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _Path;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _Path = value;
+                }
+            }
+        }
+
         static public Setting Config
         {
             get
@@ -41,7 +63,7 @@ namespace Hubble.Core.Global
                 {
                     if (_Config == null)
                     {
-                        Load();
+                        Load(_Path);
                     }
                 }
 
@@ -54,11 +76,12 @@ namespace Hubble.Core.Global
             }
         }
 
-        const string FileName = "setting.xml";
+        [System.Xml.Serialization.XmlIgnore]
+        public const string FileName = "setting.xml";
 
         static public void Save()
         {
-            string fileName = Path.AppendDivision(Path.ProcessDirectory, '\\') + FileName;
+            string fileName = Path.AppendDivision(SettingPath, '\\') + FileName;
 
             using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create,
                  System.IO.FileAccess.ReadWrite))
@@ -86,23 +109,62 @@ namespace Hubble.Core.Global
         }
 
 
-        static public void Load()
+        static string GetMD5FileName(string fileName)
         {
-            string fileName = Path.AppendDivision(Path.ProcessDirectory, '\\') + FileName;
+            string fullName = System.IO.Path.GetFullPath(fileName);
+
+            System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
+                new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+            byte[] buf = new byte[fullName.Length * 2];
+
+            for (int i = 0; i < fullName.Length; i++)
+            {
+                char c = fullName[i];
+                buf[2 * i] = (byte)(c % 256);
+                buf[2 * i + 1] = (byte)(c / 256);
+            }
+
+            buf = _MD5.ComputeHash(buf);
+
+            StringBuilder sb = new StringBuilder();
+
+            foreach (byte b in buf)
+            {
+                sb.AppendFormat("{0:000}", b);
+            }
+
+            return sb.ToString();
+        }
+
+        static System.Threading.Mutex _Mutex;
+
+        static public void Load(string path)
+        {
+            string fileName = Path.AppendDivision(path, '\\') + FileName;
+
+            string md5FileName = GetMD5FileName(fileName);
+
+            try
+            {
+                _Mutex = new System.Threading.Mutex(false, md5FileName);
+                if (!_Mutex.WaitOne(1000))
+                {
+                    throw new ReEntryException("Can't entry database on same path!");
+                }
+            }
+            catch(Exception e)
+            {
+                throw new ReEntryException(e.Message);
+            }
+
 
             if (System.IO.File.Exists(fileName))
             {
-                try
+                using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Open,
+                     System.IO.FileAccess.Read))
                 {
-                    using (System.IO.FileStream fs = new System.IO.FileStream(FileName, System.IO.FileMode.Open,
-                         System.IO.FileAccess.Read))
-                    {
-                        Config = XmlSerialization<Setting>.Deserialize(fs);
-                    }
-                }
-                catch
-                {
-                    Config = new Setting();
+                    Config = XmlSerialization<Setting>.Deserialize(fs);
                 }
             }
             else
@@ -243,7 +305,7 @@ namespace Hubble.Core.Global
             {
                 if (string.IsNullOrEmpty(_LogDirectory))
                 {
-                    return Path.AppendDivision(Path.ProcessDirectory, '\\') + @"Log\";
+                    return Path.AppendDivision(Setting.SettingPath, '\\') + @"Log\";
                 }
 
                 return Path.AppendDivision(System.IO.Path.GetFullPath(_LogDirectory), '\\');

@@ -23,19 +23,19 @@ namespace Hubble.Core.Data
 {
     public enum DataType
     {
-        TinyInt = 0,
-        SmallInt = 1,
-        Int = 2,
-        BigInt = 3,
-        Float = 4,
-        Date  = 5, //From 1-1-1 to 9999-12-31
+        TinyInt       = 0,
+        SmallInt      = 1,
+        Int           = 2,
+        BigInt        = 3,
+        Float         = 4,
+        Date          = 5, //From 1-1-1 to 9999-12-31
         SmallDateTime = 6, //From 1980-01-01 0:0:0 to 2047-12-31 23:59:59
-        DateTime=7,
-        Varchar= 100,
-        NVarchar = 101,
-        Char = 102,
-        NChar = 103,
-        Data  = 200,
+        DateTime      = 7,
+        Varchar       = 100,
+        NVarchar      = 101,
+        Char          = 102,
+        NChar         = 103,
+        Data          = 200,
     }
 
     public class DataTypeConvert

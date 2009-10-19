@@ -90,20 +90,34 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Insert
 
         /*****************************************************
          * s0 -- ( , -- s1
+         * s1 -- [ -- s3
          * s1 -- Identifer -- s2
          * s2 -- , ) --squit
+         * s3 -- Identifer, Keywords -- s2
+         * s2 -- ] -- s4
+         * s4 -- , ) --squit
          * **************************************************/
 
         private static void InitDFAStates()
         {
             SyntaxState<InsertFieldFunction> s1 = AddSyntaxState(new InsertFieldState(1)); //
             SyntaxState<InsertFieldFunction> s2 = AddSyntaxState(new InsertFieldState(2, false, InsertFieldFunction.Name));
+            SyntaxState<InsertFieldFunction> s3 = AddSyntaxState(new InsertFieldState(3)); //
+            SyntaxState<InsertFieldFunction> s4 = AddSyntaxState(new InsertFieldState(4)); //
 
             s0.AddNextState(new int[] { (int)SyntaxType.LBracket, (int)SyntaxType.Comma }, s1.Id);
 
             s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s1.AddNextState((int)SyntaxType.LSquareBracket, s3.Id);
 
             s2.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
+
+            s3.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s3.AddNextState((int)SyntaxType.BEGIN_KEYWORD, (int)SyntaxType.END_KEYWORD, s2.Id);
+
+            s2.AddNextState((int)SyntaxType.RSquareBracket, s4.Id);
+
+            s4.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
 
         }
 

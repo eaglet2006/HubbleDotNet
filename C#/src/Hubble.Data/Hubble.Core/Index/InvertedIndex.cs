@@ -451,6 +451,26 @@ namespace Hubble.Core.Index
                 }
             }
 
+            private int _TempRank;
+            internal int TempRank
+            {
+                get
+                {
+                    lock (_WaitLock)
+                    {
+                        return _TempRank;
+                    }
+                }
+
+                set
+                {
+                    lock (_WaitLock)
+                    {
+                        _TempRank = value;
+                    }
+                }
+            }
+
             internal long TempDocumentId
             {
                 get
@@ -517,7 +537,7 @@ namespace Hubble.Core.Index
                     {
                         if (_IndexMode == Hubble.Core.Data.Field.IndexMode.Simple)
                         {
-                            _ListForWriter.Add(new DocumentPositionList(_TempPositionList.Count, TempDocumentId));
+                            _ListForWriter.Add(new DocumentPositionList(_TempPositionList.Count, TempDocumentId, TempRank));
                         }
                         else
                         {
@@ -539,7 +559,7 @@ namespace Hubble.Core.Index
                                 _TempPositionList.Sort();
                             }
 
-                            _ListForWriter.Add(new DocumentPositionList(_TempPositionList, TempDocumentId));
+                            _ListForWriter.Add(new DocumentPositionList(_TempPositionList, TempDocumentId, TempRank));
                         }
                     }
                     finally
@@ -875,6 +895,7 @@ namespace Hubble.Core.Index
                             hitIndexes.Add(wordIndex);
                             wordIndex.Hit = true;
                             wordIndex.TempDocumentId = documentId;
+                            wordIndex.TempRank = wordInfo.Rank;
                         }
                     }
                     else
@@ -885,6 +906,7 @@ namespace Hubble.Core.Index
                         hitIndexes.Add(wordIndex);
                         wordIndex.Hit = true;
                         wordIndex.TempDocumentId = documentId;
+                        wordIndex.TempRank = wordInfo.Rank;
 
                         WordTableWriter.Add(wordInfo.Word, wordIndex);
                     }

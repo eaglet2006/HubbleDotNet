@@ -109,7 +109,7 @@ namespace Hubble.Core.SFQL.Parse
 
 
 
-        private void ExcuteUpdate(TSFQLSentence sentence)
+        private QueryResult ExcuteUpdate(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
                 SyntaxAnalysis.Update.Update;
@@ -145,9 +145,15 @@ namespace Hubble.Core.SFQL.Parse
 
             dBProvider.Update(fieldValues, result);
 
+            QueryResult qresult = new QueryResult();
+
+            qresult.PrintMessages.Add(string.Format("({0} Row(s) affected)", result.Length));
+
+            return qresult;
+
         }
 
-        private void ExcuteDelete(TSFQLSentence sentence)
+        private QueryResult ExcuteDelete(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as
                 SyntaxAnalysis.Delete.Delete;
@@ -175,6 +181,12 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             dBProvider.Delete(result);
+
+            QueryResult qresult = new QueryResult();
+
+            qresult.PrintMessages.Add(string.Format("({0} Row(s) affected)", result.Length));
+
+            return qresult;
         }
 
         private void ExcuteInsert(TSFQLSentence sentence)
@@ -227,7 +239,6 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             docs.Add(document);
-
         }
 
         private QueryResult CreateTable(TSFQLSentence sentence)
@@ -440,7 +451,9 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             QueryResultSort qSort = new QueryResultSort(select.OrderBys, dBProvider);
-            qSort.Sort(result);
+
+            //qSort.Sort(result);
+            qSort.Sort(result, select.End); // using part quick sort can reduce performance 40%
 
             List<Data.Field> selectFields = new List<Data.Field>();
 
@@ -509,11 +522,9 @@ namespace Hubble.Core.SFQL.Parse
                 case SentenceType.SELECT:
                     return ExcuteSelect(sentence);
                 case SentenceType.DELETE:
-                    ExcuteDelete(sentence);
-                    break;
+                    return ExcuteDelete(sentence);
                 case SentenceType.UPDATE:
-                    ExcuteUpdate(sentence);
-                    break;
+                    return ExcuteUpdate(sentence);
                 case SentenceType.INSERT:
                     _NeedCollect = true;
                     ExcuteInsert(sentence);
@@ -542,6 +553,7 @@ namespace Hubble.Core.SFQL.Parse
             QueryResult result = new QueryResult();
 
             SyntaxAnalyse(sql);
+            int tableNum = 0;
 
             foreach (TSFQLSentence sentence in _SFQLSentenceList)
             {
@@ -563,6 +575,8 @@ namespace Hubble.Core.SFQL.Parse
 
                     foreach (System.Data.DataTable table in tables)
                     {
+                        table.TableName = "Table" + tableNum.ToString();
+                        tableNum++;
                         result.DataSet.Tables.Add(table);
                     }
 
@@ -577,14 +591,22 @@ namespace Hubble.Core.SFQL.Parse
             if (_NeedCollect)
             {
                 _NeedCollect = false;
+                int affectedCount = 0;
 
                 foreach (string tableName in _InsertTables.Keys)
                 {
                     DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
 
-                    dbProvider.Insert(_InsertTables[tableName]);
+                    List<Document> docs = _InsertTables[tableName];
+
+                    affectedCount += docs.Count;
+
+                    dbProvider.Insert(docs);
                     dbProvider.Collect();
+
                 }
+
+                result.PrintMessages.Add(string.Format("({0} Row(s) affected)", affectedCount));
             }
 
 

@@ -38,7 +38,14 @@ namespace Hubble.Core.StoredProcedure
                 table.Rows.Add(table.NewRow());
             }
 
-            table.Rows[table.Rows.Count - 1][columnName] = value; 
+            if (value == null)
+            {
+                table.Rows[table.Rows.Count - 1][columnName] = DBNull.Value;
+            }
+            else
+            {
+                table.Rows[table.Rows.Count - 1][columnName] = value;
+            }
         }
 
         protected void OutputMessage(string message)
@@ -68,6 +75,20 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
+                if (_QueryResult != null)
+                {
+                    if (_QueryResult.DataSet != null)
+                    {
+                        if (_QueryResult.DataSet.Tables != null)
+                        {
+                            for (int i = 0; i < _QueryResult.DataSet.Tables.Count; i++)
+                            {
+                                System.Data.DataTable table = _QueryResult.DataSet.Tables[i];
+                                table.MinimumCapacity = table.Rows.Count;
+                            }
+                        }
+                    }
+                }
                 return _QueryResult;
             }
         }

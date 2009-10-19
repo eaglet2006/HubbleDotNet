@@ -46,6 +46,12 @@ namespace Hubble.Core.Data
             Dispose();
         }
 
+        public SFQL.Parse.QueryResult Query(string sql)
+        {
+            SFQL.Parse.SFQLParse sfqlParse = new SFQL.Parse.SFQLParse();
+            return sfqlParse.Query(sql);
+        }
+
         public void CreateTable(Table table, string directory)
         {
             if (string.IsNullOrEmpty(Host))

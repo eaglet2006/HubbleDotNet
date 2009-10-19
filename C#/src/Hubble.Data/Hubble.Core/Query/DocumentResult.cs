@@ -52,6 +52,18 @@ namespace Hubble.Core.Query
 
     }
 
+    public class DocumentResultComparer : IComparer<DocumentResult>
+    {
+        #region IComparer<DocumentResult> Members
+
+        public int Compare(DocumentResult x, DocumentResult y)
+        {
+            return x.CompareTo(y);
+        }
+
+        #endregion
+    }
+
     public class DocumentResult : IComparable<DocumentResult>
     {
         public long DocId;

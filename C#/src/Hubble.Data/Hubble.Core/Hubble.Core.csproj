@@ -63,6 +63,7 @@
     <Compile Include="Entity\DocumentPositionList.cs" />
     <Compile Include="Entity\WordInfo.cs" />
     <Compile Include="Global\ExternalReference.cs" />
+    <Compile Include="Global\ReEntryException.cs" />
     <Compile Include="Global\Report.cs" />
     <Compile Include="Global\Setting.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
     <Compile Include="StoredProcedure\IStoredProc.cs" />
     <Compile Include="StoredProcedure\SP_AddExternalReference.cs" />
+    <Compile Include="StoredProcedure\SP_Columns.cs" />
     <Compile Include="StoredProcedure\SP_Configure.cs" />
     <Compile Include="StoredProcedure\SP_DeleteExternalReference.cs" />
     <Compile Include="StoredProcedure\SP_DropTable.cs" />
@@ -123,6 +125,7 @@
     <Compile Include="StoredProcedure\SP_ExternalReference.cs" />
     <Compile Include="StoredProcedure\SP_QuerySql.cs" />
     <Compile Include="StoredProcedure\SP_TableIndexOnly.cs" />
+    <Compile Include="StoredProcedure\SP_TableList.cs" />
     <Compile Include="StoredProcedure\SP_Version.cs" />
     <Compile Include="StoredProcedure\StoredProcedure.cs" />
     <Compile Include="StoredProcedure\StoredProcException.cs" />

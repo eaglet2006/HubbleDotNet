@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Hubble.Core")]
+[assembly: AssemblyTitle("QueryAnalyzer")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hubble.Net")]
-[assembly: AssemblyProduct("Hubble.Core")]
-[assembly: AssemblyCopyright("Copyright © Bo Xiao 2008-2009")]
+[assembly: AssemblyCompany("Hubble.net")]
+[assembly: AssemblyProduct("QueryAnalyzer")]
+[assembly: AssemblyCopyright("Copyright © eaglet 2009")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("6936932f-1a62-4b02-b274-ee985480ad82")]
+[assembly: Guid("a9547725-a7e9-4c8a-b76e-be9c76d17203")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -29,7 +29,8 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-// You can specify all the values or you can default the Revision and Build Numbers 
+// You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
+// [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("0.6.0.0")]
 [assembly: AssemblyFileVersion("0.6.0.0")]

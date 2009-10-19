@@ -42,6 +42,7 @@
     <Compile Include="DataStructure\FingerPrintDictionary.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
+    <Compile Include="DataStructure\QuickSort.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
     <Compile Include="DataStructure\VInt.cs" />
     <Compile Include="DataStructure\VLong.cs" />

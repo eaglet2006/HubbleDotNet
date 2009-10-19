@@ -102,11 +102,17 @@ namespace Hubble.Core.Entity
         /// And the list must be sorted!
         /// The first element must be smallest!
         /// </remarks>
-        public DocumentPositionList(IList<int> input, long documentId)
+        public DocumentPositionList(IList<int> input, long documentId, int rank)
         {
             List<byte> tempBuf = new List<byte>(32);
             DocumentId = documentId;
             Count = input.Count;
+
+            Rank = rank;
+            if (Rank <= 0)
+            {
+                Rank = 1;
+            }
 
             int lastData = -1;
 
@@ -130,10 +136,16 @@ namespace Hubble.Core.Entity
             tempBuf.CopyTo(Data);
         }
 
-        public DocumentPositionList(int count, long documentId)
+        public DocumentPositionList(int count, long documentId, int rank)
         {
             DocumentId = documentId;
             Count = count;
+            Rank = rank;
+            if (Rank <= 0)
+            {
+                Rank = 1;
+            }
+
             Data = new byte[0];
         }
 

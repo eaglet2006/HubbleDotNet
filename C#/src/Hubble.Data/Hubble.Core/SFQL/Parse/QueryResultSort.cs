@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using Hubble.Framework.DataStructure;
+
 namespace Hubble.Core.SFQL.Parse
 {
     class QueryResultSort
@@ -95,7 +97,14 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            Array.Sort(docResults);
+            if (top <= 0 || top >= docResults.Length/2)
+            {
+                Array.Sort(docResults);
+            }
+            else
+            {
+                QuickSort<Query.DocumentResult>.TopSort(docResults, 10, new Query.DocumentResultComparer());
+            }
         }
     }
 }
