@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Query
 {
@@ -175,9 +176,9 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, Dictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
             {
-                _WordIndex.Calculate(docIdRank, _FieldRank, Rank, Norm_Ranks);
+                _WordIndex.Calculate(upDict, docIdRank, _FieldRank, Rank, Norm_Ranks);
             }
         }
 
@@ -422,9 +423,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        public Dictionary<long, DocumentResult> Search()
+        public WhereDictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
+            WhereDictionary<long, DocumentResult> result = new WhereDictionary<long, DocumentResult>();
 
             if (_QueryWords.Count <= 0)
             {
@@ -434,22 +435,55 @@ namespace Hubble.Core.Query
             //Get min document id
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                _WordIndexList[i].Calculate(result, _Norm_Ranks);
+                if (this.Not)
+                {
+                    _WordIndexList[i].Calculate(null, result, _Norm_Ranks);
+                }
+                else
+                {
+                    _WordIndexList[i].Calculate(this.UpDict, result, _Norm_Ranks);
+                }
+            }
+
+            if (this.Not)
+            {
+                result.Not = true;
+
+                if (UpDict != null)
+                {
+                    result = result.AndMerge(result, UpDict);
+                }
             }
 
             return result;
         }
 
-        public IEnumerable<DocumentRank> GetRankEnumerable()
+        WhereDictionary<long, DocumentResult> _UpDict;
+
+        public WhereDictionary<long, DocumentResult> UpDict
         {
-            Query.DocumentRank docRank = GetNexDocumentRank();
-
-            while (docRank.DocumentId >= 0)
+            get
             {
-                yield return docRank;
-                docRank = GetNexDocumentRank();
+                return _UpDict;
             }
+            set
+            {
+                _UpDict = value;
+            }
+        }
 
+        bool _Not = false;
+
+        public bool Not
+        {
+            get
+            {
+                return _Not;
+            }
+            set
+            {
+                _Not = value;
+            }
         }
 
         #endregion

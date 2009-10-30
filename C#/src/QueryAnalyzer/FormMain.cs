@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 
 using Hubble.Core.SFQL.Parse;
+using Hubble.SQLClient;
 
 namespace QueryAnalyzer
 {
@@ -27,21 +28,29 @@ namespace QueryAnalyzer
 
         private void ShowTree()
         {
-            treeViewData.Nodes.Clear();
-
-            TreeNode serverNode = new TreeNode(DataAccess.ServerName);
-            serverNode.Tag = "Server";
-            serverNode.ImageIndex = 0;
-            treeViewData.Nodes.Add(serverNode);
-
-            foreach (string tableName in GetTables())
+            try
             {
-                TreeNode tableNode = new TreeNode(tableName);
-                tableNode.Tag = "Table";
-                tableNode.ImageIndex = 1;
-                tableNode.SelectedImageIndex = tableNode.ImageIndex;
-                serverNode.Nodes.Add(tableNode);
+                treeViewData.Nodes.Clear();
+
+                TreeNode serverNode = new TreeNode(DataAccess.ServerName);
+                serverNode.Tag = "Server";
+                serverNode.ImageIndex = 0;
+                treeViewData.Nodes.Add(serverNode);
+
+                foreach (string tableName in GetTables())
+                {
+                    TreeNode tableNode = new TreeNode(tableName);
+                    tableNode.Tag = "Table";
+                    tableNode.ImageIndex = 1;
+                    tableNode.SelectedImageIndex = tableNode.ImageIndex;
+                    serverNode.Nodes.Add(tableNode);
+                }
             }
+            catch (Exception e)
+            {
+                ShowErrorMessage(e.Message);
+            }
+
         }
 
         private IEnumerable<string> GetTables()

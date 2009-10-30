@@ -7,6 +7,8 @@ using Hubble.Core.SFQL.SyntaxAnalysis;
 using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
 
+using Hubble.SQLClient;
+
 namespace Hubble.Core.SFQL.Parse
 {
     public class SFQLParse

@@ -184,7 +184,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
          * s0 -- where -- s1
          * s1 -- ( -- s5
          * s1 -- Identitier, Numeric, String -- s2
-         * s2 -- Identitier, Arithmetic Operators, Numeric, String, [ , ] , ^ --s2
+         * s2 -- Identitier, Arithmetic Operators, Numeric, String, [ , ] , ^ NOT --s2
          * s2 -- Comparision operator -- s3
          * s3 -- Identitier, Numeric, String -- s4
          * s4 -- Order Group Eof -- squit
@@ -221,6 +221,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                 (int)SyntaxType.Numeric, (int)SyntaxType.String, (int)SyntaxType.LSquareBracket, 
                 (int)SyntaxType.RSquareBracket, (int)SyntaxType.Up }, s2.Id);
             s2.AddNextState((int)SyntaxType.Plus, (int)SyntaxType.Mod, s2.Id);
+            s2.AddNextState((int)SyntaxType.NOT, s2.Id); //for not match, not like eg.
+
             s2.AddNextState((int)SyntaxType.NotEqual, (int)SyntaxType.LargethanEqual, s3.Id);
             s2.AddNextState(new int[] { (int)SyntaxType.LIKE, (int)SyntaxType.MATCH, (int)SyntaxType.CONTAINS,
                 (int)SyntaxType.CONTAINS1, (int)SyntaxType.CONTAINS2, (int)SyntaxType.CONTAINS3} , s3.Id);

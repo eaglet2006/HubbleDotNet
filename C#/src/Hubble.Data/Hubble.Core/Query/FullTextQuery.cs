@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Core.Data;
-
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Query
 {
@@ -725,33 +725,93 @@ namespace Hubble.Core.Query
             }
         }
 
+        WhereDictionary<long, DocumentResult> _UpDict;
 
-        public IEnumerable<DocumentRank> GetRankEnumerable()
+        public WhereDictionary<long, DocumentResult> UpDict
         {
-            long docId;
-
-            //GetNextHitWords has returned the word info list sorted by position 
-            IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
-
-            while (docId >= 0)
+            get
             {
-                yield return new DocumentRank(docId, FieldRank * CaculateRank(wordInfoList));
-                wordInfoList = GetNextHitWords(out docId);
+                return _UpDict;
+            }
+            set
+            {
+                _UpDict = value;
+            }
+        }
+
+        bool _Not;
+
+        public bool Not
+        {
+            get
+            {
+                return _Not;
+            }
+            set
+            {
+                _Not = value;
             }
         }
 
 
-        public Dictionary<long, DocumentResult> Search()
+
+        public WhereDictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
+            WhereDictionary<long, DocumentResult> result = new WhereDictionary<long, DocumentResult>();
             long docId;
 
             IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
 
             while (docId >= 0)
             {
-                result.Add(docId, new DocumentResult(docId, FieldRank * CaculateRank(wordInfoList)));
+                bool canInsert = false;
+
+                if (this.Not)
+                {
+                    canInsert = true;
+                }
+                else
+                {
+                    if (UpDict != null)
+                    {
+                        if (!UpDict.Not)
+                        {
+                            if (UpDict.ContainsKey(docId))
+                            {
+                                canInsert = true;
+                            }
+                        }
+                        else
+                        {
+                            if (!UpDict.ContainsKey(docId))
+                            {
+                                canInsert = true;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        canInsert = true;
+                    }
+                }
+
+                if (canInsert)
+                {
+                    result.Add(docId, new DocumentResult(docId, FieldRank * CaculateRank(wordInfoList)));
+                }
+
                 wordInfoList = GetNextHitWords(out docId);
+
+            }
+
+            if (this.Not)
+            {
+                result.Not = true;
+
+                if (UpDict != null)
+                {
+                    result = result.AndMerge(result, UpDict);
+                }
             }
 
             return result;
@@ -770,6 +830,12 @@ namespace Hubble.Core.Query
                 return Command;
             }
         }
+
+        #endregion
+
+        #region IQuery Members
+
+
 
         #endregion
     }

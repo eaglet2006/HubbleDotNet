@@ -5,11 +5,14 @@ using System.Text;
 
 using Hubble.Core.SFQL.Parse;
 using Hubble.Core.Data;
+using Hubble.SQLClient;
 
 namespace QueryAnalyzer
 {
     class DbAccess
     {
+        SqlConnection _Conn = null;
+
         string _SettingPath = null;
 
         public string ServerName { get; set; }
@@ -55,7 +58,10 @@ namespace QueryAnalyzer
             }
             else
             {
-                throw new Exception("Remote server connection function has not finished!");
+                System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
+                sqlConnBuilder.DataSource = serverName;
+                _Conn = new SqlConnection(sqlConnBuilder.ConnectionString);
+                _Conn.Open();
             }
         }
 
@@ -79,8 +85,12 @@ namespace QueryAnalyzer
                     Environment.CurrentDirectory = currentDirectory;
                 }
             }
-
-            return null;
+            else
+            {
+                SqlCommand cmd = new SqlCommand(sql, _Conn);
+                cmd.Query();
+                return cmd.Result;
+            }
         }
     }
 }

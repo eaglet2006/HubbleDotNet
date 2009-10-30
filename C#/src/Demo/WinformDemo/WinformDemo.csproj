@@ -120,6 +120,10 @@
       <Project>{003F69CF-186C-45C9-85B6-96D175D56711}</Project>
       <Name>Hubble.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Hubble.Data\Hubble.SQLClient\Hubble.SQLClient.csproj">
+      <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>
+      <Name>Hubble.SQLClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
       <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>

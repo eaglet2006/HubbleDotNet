@@ -57,7 +57,7 @@ namespace Hubble.Core.Data
                 case DataType.Int:
                     return typeof(int);
                 case DataType.TinyInt:
-                    return typeof(sbyte);
+                    return typeof(byte);
                 case DataType.SmallInt:
                     return typeof(short);
                 case DataType.BigInt:

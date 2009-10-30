@@ -78,14 +78,15 @@
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />
+    <Compile Include="Service\HubbleTask.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
     <Compile Include="SFQL\Parse\ParseException.cs" />
     <Compile Include="SFQL\Parse\ParseOptimize.cs" />
     <Compile Include="SFQL\Parse\ParseWhere.cs" />
-    <Compile Include="SFQL\Parse\QueryResult.cs" />
     <Compile Include="SFQL\Parse\QueryResultSort.cs" />
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
+    <Compile Include="SFQL\Parse\WhereDictionary.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\CreateTable\CreateTable.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\CreateTable\CreateTableField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Delete\Delete.cs" />
@@ -142,6 +143,10 @@
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
       <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Hubble.SQLClient\Hubble.SQLClient.csproj">
+      <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>
+      <Name>Hubble.SQLClient</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

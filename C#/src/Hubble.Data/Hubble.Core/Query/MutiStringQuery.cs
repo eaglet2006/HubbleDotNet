@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Query
 {
@@ -415,9 +416,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        public Dictionary<long, DocumentResult> Search()
+        public WhereDictionary<long, DocumentResult> Search()
         {
-            Dictionary<long, DocumentResult> result = new Dictionary<long, DocumentResult>();
+            WhereDictionary<long, DocumentResult> result = new WhereDictionary<long, DocumentResult>();
             
             if (_QueryWords.Count <= 0)
             {
@@ -454,16 +455,32 @@ namespace Hubble.Core.Query
             return result;
         }
 
-        public IEnumerable<DocumentRank> GetRankEnumerable()
+        WhereDictionary<long, DocumentResult> _UpDict;
+
+        public WhereDictionary<long, DocumentResult> UpDict
         {
-            Query.DocumentRank docRank = GetNexDocumentRank();
-
-            while (docRank.DocumentId >= 0)
+            get
             {
-                yield return docRank;
-                docRank = GetNexDocumentRank();
+                return _UpDict;
             }
+            set
+            {
+                _UpDict = value;
+            }
+        }
 
+        bool _Not;
+
+        public bool Not
+        {
+            get
+            {
+                return _Not;
+            }
+            set
+            {
+                _Not = value;
+            }
         }
 
         #endregion

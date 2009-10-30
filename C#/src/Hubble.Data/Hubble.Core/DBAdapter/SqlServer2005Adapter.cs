@@ -21,6 +21,7 @@ using System.Text;
 using System.Diagnostics;
 using Hubble.Framework.Data;
 using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.DBAdapter
 {
@@ -450,7 +451,7 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
-        public Dictionary<long, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
+        public WhereDictionary<long, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
         {
             string sql;
 
@@ -463,7 +464,7 @@ namespace Hubble.Core.DBAdapter
                 sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
             }
 
-            Dictionary<long, Hubble.Core.Query.DocumentResult> result = new Dictionary<long, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<long, Hubble.Core.Query.DocumentResult> result = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
 
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {

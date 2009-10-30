@@ -53,6 +53,10 @@
     <Compile Include="IO\LogFile.cs" />
     <Compile Include="IO\Path.cs" />
     <Compile Include="IO\Stream.cs" />
+    <Compile Include="Net\EventArgs.cs" />
+    <Compile Include="Net\MessageHead.cs" />
+    <Compile Include="Net\TcpClient.cs" />
+    <Compile Include="Net\TcpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\Assembly.cs" />
     <Compile Include="Reflection\Instance.cs" />
@@ -63,6 +67,8 @@
     <Compile Include="Text\Regex.cs" />
     <Compile Include="Threading\Lock.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
+    <Compile Include="Win32\Event.cs" />
+    <Compile Include="Win32\NTKernel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

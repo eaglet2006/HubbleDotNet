@@ -37,7 +37,7 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private Dictionary<long, Query.DocumentResult> GetResultFromDatabase(
+        private WhereDictionary<long, Query.DocumentResult> GetResultFromDatabase(
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
             string whereSql;
@@ -134,11 +134,11 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
-        private Dictionary<long, Query.DocumentResult> GetResultFromQuery(
-            SyntaxAnalysis.ExpressionTree expressionTree, Dictionary<long, Query.DocumentResult> upDict)
+        private WhereDictionary<long, Query.DocumentResult> GetResultFromQuery(
+            SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<long, Query.DocumentResult> upDict)
         {
-            Dictionary<long, Query.DocumentResult> orDict = new Dictionary<long, Hubble.Core.Query.DocumentResult>();
-            Dictionary<long, Query.DocumentResult> andDict = new Dictionary<long, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<long, Query.DocumentResult> orDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<long, Query.DocumentResult> andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
 
             if (expressionTree.Expression.NeedReverse)
             {
@@ -150,7 +150,8 @@ namespace Hubble.Core.SFQL.Parse
                     orDict = InnerParse(cur.OrChild);
                 }
 
-                andDict = GetResultFromQuery(cur, upDict);
+                //andDict = GetResultFromQuery(cur, upDict);
+                andDict = InnerParse(cur, upDict); //Change at 30 oct 2009
 
                 return MergeDict(andDict, orDict);
             }
@@ -168,6 +169,7 @@ namespace Hubble.Core.SFQL.Parse
                 Hubble.Core.Query.IQuery query;
 
                 string fieldName = cur.Left[0].Text;
+
                 int fieldRank = 1;
 
                 if (cur.Left.Count == 3)
@@ -190,6 +192,15 @@ namespace Hubble.Core.SFQL.Parse
                     throw new ParseException(string.Format("Can't find the command: {0}", cur.Operator.ToString()));
                 }
 
+                if (cur.Left.Count == 2)
+                {
+                    //not match, not like, not contain eg.
+                    if (cur.Left[1].SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.NOT)
+                    {
+                        query.Not = true;
+                    }
+                }
+
                 query.FieldRank = fieldRank;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
@@ -202,6 +213,15 @@ namespace Hubble.Core.SFQL.Parse
 
                 List<Hubble.Core.Entity.WordInfo> queryWords = GetWordInfoList(cur.Right[0].Text);
 
+                query.UpDict = null;
+
+                if (upDict != null)
+                {
+                    if (upDict.Count > 0)
+                    {
+                        query.UpDict = upDict;
+                    }
+                }
                 query.QueryWords = queryWords;
                 query.DBProvider = _DBProvider;
                 query.TabIndex = _DBProvider.GetField(fieldName).TabIndex;
@@ -460,7 +480,7 @@ namespace Hubble.Core.SFQL.Parse
         }
 
 
-        private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, Dictionary<long, Query.DocumentResult> upDict)
+        private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<long, Query.DocumentResult> upDict)
         {
             Preprocess(expressionTree);
 
@@ -521,10 +541,20 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private Dictionary<long, Query.DocumentResult> MergeDict(Dictionary<long, Query.DocumentResult> and, Dictionary<long, Query.DocumentResult> or)
+        private WhereDictionary<long, Query.DocumentResult> MergeDict(WhereDictionary<long, Query.DocumentResult> and, WhereDictionary<long, Query.DocumentResult> or)
         {
-            Dictionary<long, Query.DocumentResult> src;
-            Dictionary<long, Query.DocumentResult> dest;
+            if (and.Not)
+            {
+                and = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            }
+
+            if (or.Not)
+            {
+                or = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            }
+
+            WhereDictionary<long, Query.DocumentResult> src;
+            WhereDictionary<long, Query.DocumentResult> dest;
 
             if (and.Count > or.Count)
             {
@@ -557,10 +587,32 @@ namespace Hubble.Core.SFQL.Parse
             return dest;
         }
 
-        private Dictionary<long, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
+        private WhereDictionary<long, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            Dictionary<long, Query.DocumentResult> orDict = new Dictionary<long,Hubble.Core.Query.DocumentResult>();
-            Dictionary<long, Query.DocumentResult> andDict = new Dictionary<long, Hubble.Core.Query.DocumentResult>();
+            return InnerParse(expressionTree, null);
+        }
+
+        private WhereDictionary<long, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree,
+            WhereDictionary<long, Query.DocumentResult> upDict)
+        {
+            WhereDictionary<long, Query.DocumentResult> orDict = new WhereDictionary<long,Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<long, Query.DocumentResult> andDict;
+
+            if (upDict == null)
+            {
+                andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            }
+            else
+            {
+                if (upDict.Count > 0)
+                {
+                    andDict = upDict;
+                }
+                else
+                {
+                    andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+                }
+            }
 
             if (expressionTree.OrChild != null)
             {
@@ -600,7 +652,7 @@ namespace Hubble.Core.SFQL.Parse
 
         public Query.DocumentResult[] Parse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            Dictionary<long, Query.DocumentResult> dict;
+            WhereDictionary<long, Query.DocumentResult> dict;
 
             if (expressionTree == null)
             {

@@ -180,6 +180,42 @@ namespace Hubble.Core.Global
 
         #region Public properties
 
+        int _TcpPort = 7523;
+
+        public int TcpPort
+        {
+            get
+            {
+                return _TcpPort;
+            }
+
+            set
+            {
+                _TcpPort = value;
+            }
+        }
+
+        int _MaxConnectNum = 32;
+
+        public int MaxConnectNum
+        {
+            get
+            {
+                return _MaxConnectNum;
+            }
+
+            set
+            {
+                _MaxConnectNum = value;
+
+                if (_MaxConnectNum < 1)
+                {
+                    _MaxConnectNum = 1;
+                }
+            }
+        }
+
+
         long _MemoryLimited = 800 * 1024 * 1024;
 
         public long MemoryLimited

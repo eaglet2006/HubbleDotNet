@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.SQLClient;
 
 namespace Hubble.Core.StoredProcedure
 {
@@ -8,7 +9,7 @@ namespace Hubble.Core.StoredProcedure
     {
         List<string> Parameters {get;}
 
-        Hubble.Core.SFQL.Parse.QueryResult Result {get;}
+        QueryResult Result {get;}
 
         string Name { get; }
 

@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Hubble.SQLClient;
+
 namespace Hubble.Core.Data
 {
     public class DBAccess : IDisposable
@@ -46,7 +48,7 @@ namespace Hubble.Core.Data
             Dispose();
         }
 
-        public SFQL.Parse.QueryResult Query(string sql)
+        public QueryResult Query(string sql)
         {
             SFQL.Parse.SFQLParse sfqlParse = new SFQL.Parse.SFQLParse();
             return sfqlParse.Query(sql);

@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
+using Hubble.SQLClient;
+
 namespace QueryAnalyzer
 {
     public partial class FormTableInfo : Form
@@ -23,7 +25,7 @@ namespace QueryAnalyzer
         {
             try
             {
-                Hubble.Core.SFQL.Parse.QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
+                QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
                 ShowFields(qResult.DataSet.Tables[0]);
             }
             catch (Exception e1)

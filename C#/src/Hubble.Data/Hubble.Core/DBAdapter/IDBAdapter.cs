@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.DBAdapter
 {
@@ -39,7 +40,7 @@ namespace Hubble.Core.DBAdapter
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
 
-        Dictionary<long, Query.DocumentResult> GetDocumentResults(string where);
+        WhereDictionary<long, Query.DocumentResult> GetDocumentResults(string where);
 
         long MaxDocId { get; }
 

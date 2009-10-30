@@ -7,6 +7,7 @@ using Hubble.Core.Store;
 using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
 using Hubble.Framework.IO;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Index
 {
@@ -231,7 +232,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public void Calculate(Dictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict,  Dictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
             {
                 lock (this)
                 {
@@ -275,8 +276,31 @@ namespace Hubble.Core.Index
                         else
                         {
                             //docResult = new Query.DocumentResult(docScore.DocId, score);
-                            docResult = new Query.DocumentResult(docScore.DocId, rank);
-                            docIdRank.Add(docScore.DocId, docResult);
+
+                            if (upDict == null)
+                            {
+                                docResult = new Query.DocumentResult(docScore.DocId, rank);
+                                docIdRank.Add(docScore.DocId, docResult);
+                            }
+                            else
+                            {
+                                if (!upDict.Not)
+                                {
+                                    if (upDict.ContainsKey(docScore.DocId))
+                                    {
+                                        docResult = new Query.DocumentResult(docScore.DocId, rank);
+                                        docIdRank.Add(docScore.DocId, docResult);
+                                    }
+                                }
+                                else
+                                {
+                                    if (!upDict.ContainsKey(docScore.DocId))
+                                    {
+                                        docResult = new Query.DocumentResult(docScore.DocId, rank);
+                                        docIdRank.Add(docScore.DocId, docResult);
+                                    }
+                                }
+                            }
                         }
                     }
                 }

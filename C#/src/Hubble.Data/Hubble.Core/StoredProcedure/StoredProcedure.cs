@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.SQLClient;
 
 namespace Hubble.Core.StoredProcedure
 {
     public abstract class StoredProcedure
     {
-        protected SFQL.Parse.QueryResult _QueryResult = new Hubble.Core.SFQL.Parse.QueryResult();
+        protected QueryResult _QueryResult = new QueryResult();
 
         protected void AddColumn(string columnName)
         {
@@ -71,7 +72,7 @@ namespace Hubble.Core.StoredProcedure
             }
         }
 
-        public Hubble.Core.SFQL.Parse.QueryResult Result
+        public QueryResult Result
         {
             get
             {

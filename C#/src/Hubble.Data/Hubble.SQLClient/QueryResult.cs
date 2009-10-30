@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Hubble.Core.SFQL.Parse
+namespace Hubble.SQLClient
 {
     [Serializable]
     public class QueryResult

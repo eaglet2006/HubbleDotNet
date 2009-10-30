@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Query
 {
@@ -41,10 +42,17 @@ namespace Hubble.Core.Query
         Index.InvertedIndex InvertedIndex { get; set;}
         //Analysis.IAnalyzer Analyzer { get; set;}
 
+        /// <summary>
+        /// The dictionary in up and condition. 
+        /// </summary>
+        WhereDictionary<long, DocumentResult> UpDict{ get; set;}
+
+        /// <summary>
+        /// If this query need output not match result set it to true.
+        /// </summary>
+        bool Not { get; set; }
+
         //output
-        Dictionary<long, DocumentResult> Search();
-        IEnumerable<DocumentRank> GetRankEnumerable();
-        //IList<Entity.WordInfo> GetQueryWords();
-        //IList<Entity.WordInfo> GetNextHitWords(out long docId);
+        WhereDictionary<long, DocumentResult> Search();
     }
 }
