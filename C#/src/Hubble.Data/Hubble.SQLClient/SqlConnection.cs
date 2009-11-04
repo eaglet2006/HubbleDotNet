@@ -61,7 +61,16 @@ namespace Hubble.SQLClient
                 _TcpClient.ReceiveTimeout = value * 1000;
             }
         }
-        
+
+        private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
+        {
+            switch (evt)
+            {
+                case 1000:
+                    return new QueryResultSerialization((QueryResult)data);
+            }
+            return null;
+        }
 
         public SqlConnection(string connectionString)
         {
@@ -82,6 +91,7 @@ namespace Hubble.SQLClient
 
             _TcpClient.RemoteAddress = addresslist[0];
             _TcpClient.Port = TcpPort;
+            _TcpClient.RequireCustomSerialization = RequireCustomSerialization;
 
             _ConnectionString = connectionString;
             ConnectionTimeout = 15;

@@ -26,6 +26,11 @@ namespace Hubble.Framework.Net
         /// Data is string
         /// </summary>
         IsString = 0x0008,
+
+        /// <summary>
+        /// Custom serialization
+        /// </summary>
+        CustomSerialization = 0x0010,
     }
 
     public struct MessageHead

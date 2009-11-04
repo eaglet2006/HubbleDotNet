@@ -88,7 +88,7 @@ namespace QueryAnalyzer
         {
             MemoryStream m = new MemoryStream();
 
-            Hubble.SQLClient.QueryResultSerialization.Serialize(m, result, compress);
+            //Hubble.SQLClient.QueryResultSerialization.Serialize(m, result, compress);
 
             m.Position = 0;
 
@@ -163,15 +163,24 @@ namespace QueryAnalyzer
                 for (int i = 0; i < numericUpDownIteration.Value; i++)
                 {
                     //MemoryStream s = Serialize(result, true);
+
+                    //Hubble.SQLClient.QueryResult r =
+                    //    Hubble.SQLClient.QueryResultSerialization.Deserialize(s, true);
+
+                    //if (result.DataSet.Tables.Count == r.DataSet.Tables.Count)
+                    //{
+                    //    MessageBox.Show("OK");
+                    //}
+
                     //len = s.Length;
                     //MemoryStream s = Hubble.Framework.Serialization.XmlSerialization<Hubble.SQLClient.QueryResult>.Serialize(result, Encoding.UTF8);
 
 
-                    MemoryStream s = new MemoryStream();
-                    IFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(s, result);
-                    s.Position = 0;
-                    len = s.Length;
+                    //MemoryStream s = new MemoryStream();
+                    //IFormatter formatter = new BinaryFormatter();
+                    //formatter.Serialize(s, result);
+                    //s.Position = 0;
+                    //len = s.Length;
 
                     //MemoryStream cs = Compress(s);
                     //cs.Position = 0;

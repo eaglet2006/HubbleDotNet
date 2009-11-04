@@ -41,6 +41,13 @@ namespace Hubble.Core.Service
             {
                 case 1000: //excute sql
                     args.ReturnMsg = Excute(args.InMessage as string);
+
+                    if (args.ReturnMsg is QueryResult)
+                    {
+                        args.CustomSerializtion = new Hubble.SQLClient.QueryResultSerialization(
+                            args.ReturnMsg as QueryResult);
+                    }
+
                     break;
                 case 1001: //quit
                     Environment.Exit(0);
@@ -58,6 +65,16 @@ namespace Hubble.Core.Service
             catch
             {
             }
+        }
+
+        private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
+        {
+            switch (evt)
+            {
+                case 1000:
+                    return new QueryResultSerialization((QueryResult)data);
+            }
+            return null;
         }
 
         private void Init(string path)
@@ -104,6 +121,7 @@ namespace Hubble.Core.Service
             _Server.MessageReceiveEventHandler += MessageReceiveEventHandler;
             _Server.MessageReceiveErrorEventHandler += MessageReceiveErrorEventHandler;
             _Server.LocalAddress = null;
+            _Server.RequireCustomSerialization = RequireCustomSerialization;
 
             _Server.Listen();
         }

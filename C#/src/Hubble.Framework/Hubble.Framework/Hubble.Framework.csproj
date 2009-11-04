@@ -55,6 +55,7 @@
     <Compile Include="IO\Stream.cs" />
     <Compile Include="Net\EventArgs.cs" />
     <Compile Include="Net\MessageHead.cs" />
+    <Compile Include="Net\TcpCacheStream.cs" />
     <Compile Include="Net\TcpClient.cs" />
     <Compile Include="Net\TcpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using Hubble.Framework.Serialization;
 
 namespace Hubble.Framework.Net
 {
@@ -121,6 +122,41 @@ namespace Hubble.Framework.Net
     }
 
 
+    public class RequireCustomSerializationEventArgs : EventArgs
+    {
+        private Int16 _Event;
+        private IMySerialization _CustomSerializtion;
+
+        public Int16 Event
+        {
+            get
+            {
+                return _Event;
+            }
+        }
+
+        /// <summary>
+        /// Custom serialization
+        /// </summary>
+        public IMySerialization CustomSerializtion
+        {
+            get
+            {
+                return _CustomSerializtion;
+            }
+
+            set
+            {
+                _CustomSerializtion = value;
+            }
+        }
+
+        public RequireCustomSerializationEventArgs(Int16 evt)
+        {
+            _Event = evt;
+        }
+    }
+
     /// <summary>
     /// Message as a stream
     /// </summary>
@@ -129,6 +165,7 @@ namespace Hubble.Framework.Net
         private MessageHead _MsgHead;
         private object _Msg;
         private object _ReturnMsg;
+        private IMySerialization _CustomSerializtion;
 
         /// <summary>
         /// Message Head
@@ -169,11 +206,29 @@ namespace Hubble.Framework.Net
             }
         }
 
+        /// <summary>
+        /// Custom serialization
+        /// </summary>
+        public IMySerialization CustomSerializtion
+        {
+            get
+            {
+                return _CustomSerializtion;
+            }
+
+            set
+            {
+                _CustomSerializtion = value;
+            }
+        }
+
+
         public MessageReceiveEventArgs(MessageHead msgHead, object msg)
         {
             _MsgHead = msgHead;
             _Msg = msg;
             _ReturnMsg = null;
+            _CustomSerializtion = null;
         }
 
     }

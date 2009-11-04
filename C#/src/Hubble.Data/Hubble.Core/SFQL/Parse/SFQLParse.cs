@@ -455,7 +455,7 @@ namespace Hubble.Core.SFQL.Parse
             QueryResultSort qSort = new QueryResultSort(select.OrderBys, dBProvider);
 
             //qSort.Sort(result);
-            qSort.Sort(result, select.End); // using part quick sort can reduce performance 40%
+            qSort.Sort(result, select.End + 1); // using part quick sort can reduce performance 40%
 
             List<Data.Field> selectFields = new List<Data.Field>();
 

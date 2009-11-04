@@ -18,6 +18,9 @@ namespace Hubble.Framework.Net
 
         private IPAddress _RemoteAddress = IPAddress.Parse("127.0.0.1");
         private int _Port = 8800;
+
+        RequireCustomSerializationDelegate _RequireCustomSerialization;
+
         #endregion
 
         #region Public properties
@@ -92,9 +95,28 @@ namespace Hubble.Framework.Net
             }
         }
 
+        public RequireCustomSerializationDelegate RequireCustomSerialization
+        {
+            get
+            {
+                return _RequireCustomSerialization;
+            }
+
+            set
+            {
+                _RequireCustomSerialization = value;
+
+            }
+        }
+
         #endregion
 
-      
+        #region Delegates
+
+        public delegate Hubble.Framework.Serialization.IMySerialization RequireCustomSerializationDelegate(Int16 evt, object data);
+
+        #endregion
+
         #region Public methods
 
         public TcpClient()
@@ -145,6 +167,9 @@ namespace Hubble.Framework.Net
 
             lock (this)
             {
+
+                TcpCacheStream tcpStream = new TcpCacheStream(_ClientStream);
+
                 object result = null;
 
                 MessageHead head = new MessageHead(evt);
@@ -156,7 +181,7 @@ namespace Hubble.Framework.Net
 
                 //Send event
                 byte[] sendBuf = BitConverter.GetBytes(head.Event);
-                _ClientStream.Write(sendBuf, 0, sendBuf.Length);
+                tcpStream.Write(sendBuf, 0, sendBuf.Length);
 
                 if (msg != null)
                 {
@@ -166,29 +191,31 @@ namespace Hubble.Framework.Net
                     {
                         head.Flag |= MessageFlag.IsString;
                         sendBuf = BitConverter.GetBytes((short)head.Flag);
-                        _ClientStream.Write(sendBuf, 0, sendBuf.Length);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
 
                         byte[] buf = Encoding.UTF8.GetBytes((msg as string));
 
-                        _ClientStream.Write(buf, 0, buf.Length);
-                        _ClientStream.WriteByte(0);
+                        tcpStream.Write(buf, 0, buf.Length);
+                        tcpStream.WriteByte(0);
                     }
                     else
                     {
                         sendBuf = BitConverter.GetBytes((short)head.Flag);
-                        _ClientStream.Write(sendBuf, 0, sendBuf.Length);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
                         IFormatter formatter = new BinaryFormatter();
-                        formatter.Serialize(_ClientStream, msg);
+                        formatter.Serialize(tcpStream, msg);
                     }
                 }
                 else
                 {
                     //Send Flag
                     sendBuf = BitConverter.GetBytes((short)head.Flag);
-                    _ClientStream.Write(sendBuf, 0, sendBuf.Length);
+                    tcpStream.Write(sendBuf, 0, sendBuf.Length);
                 }
 
-                _ClientStream.Flush();
+                tcpStream.Flush();
+
+                tcpStream = new TcpCacheStream(_ClientStream);
 
                 //Recevie data
 
@@ -197,7 +224,7 @@ namespace Hubble.Framework.Net
 
                 while (offset < 4)
                 {
-                    offset += _ClientStream.Read(revBuf, offset, 4 - offset);
+                    offset += tcpStream.Read(revBuf, offset, 4 - offset);
                 }
 
                 head.Event = BitConverter.ToInt16(revBuf, 0);
@@ -205,10 +232,30 @@ namespace Hubble.Framework.Net
 
                 if ((head.Flag & MessageFlag.NullData) == 0)
                 {
-                    if ((head.Flag & MessageFlag.IsString) == 0)
+                    if ((head.Flag & MessageFlag.CustomSerialization) != 0)
+                    {
+                        if (RequireCustomSerialization != null)
+                        {
+                            Hubble.Framework.Serialization.IMySerialization mySerializer =
+                                RequireCustomSerialization(head.Event, null);
+
+                            if (mySerializer == null)
+                            {
+                                throw new Exception(string.Format("RequireCustomSerialization of Event = {0} is null!", 
+                                    head.Event));
+                            }
+
+                            result = mySerializer.Deserialize(tcpStream, mySerializer.Version);
+                        }
+                        else
+                        {
+                            throw new Exception("RequireCustomSerialization of TcpClient is null!");
+                        }
+                    }
+                    else if ((head.Flag & MessageFlag.IsString) == 0)
                     {
                         IFormatter formatter = new BinaryFormatter();
-                        result = formatter.Deserialize(_ClientStream);
+                        result = formatter.Deserialize(tcpStream);
                     }
                     else
                     {

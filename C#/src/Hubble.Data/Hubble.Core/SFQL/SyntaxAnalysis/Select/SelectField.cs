@@ -28,6 +28,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         Alias= 2,
         Begin = 3,
         End = 4,
+        Top = 5,
     }
 
     class SelectFieldState : SyntaxState<SelectFieldFunction>
@@ -85,11 +86,19 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
                 case SelectFieldFunction.Alias:
                     selectField.Alias = dfa.CurrentToken.Text;
                     break;
+                case SelectFieldFunction.Top:
+                    selectField.IsTop = true;
+                    break;
                 case SelectFieldFunction.End:
                     if (dfa.CurrentToken.SyntaxType == SyntaxType.Numeric)
                     {
                         selectField.BetweenRecord = true;
                         selectField.End = int.Parse(dfa.CurrentToken.Text);
+
+                        if (selectField.IsTop)
+                        {
+                            selectField.End--;
+                        }
                     }
                     break;
                 case SelectFieldFunction.Begin:
@@ -104,6 +113,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
     {
         private static SyntaxState<SelectFieldFunction> s0 = AddSyntaxState(new SelectFieldState(0)); //Start state;
         private static SyntaxState<SelectFieldFunction> squit = AddSyntaxState(new SelectFieldState(30, true)); //quit state;
+
+
 
         /*****************************************************
          * s0 -- Select , -- s1
@@ -126,7 +137,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             SyntaxState<SelectFieldFunction> s2 = AddSyntaxState(new SelectFieldState(2, false, SelectFieldFunction.Name));
             SyntaxState<SelectFieldFunction> s3 = AddSyntaxState(new SelectFieldState(3));
             SyntaxState<SelectFieldFunction> s4 = AddSyntaxState(new SelectFieldState(4, false, SelectFieldFunction.Alias));
-            SyntaxState<SelectFieldFunction> s5 = AddSyntaxState(new SelectFieldState(5, false));
+            SyntaxState<SelectFieldFunction> s5 = AddSyntaxState(new SelectFieldState(5, false, SelectFieldFunction.Top));
             SyntaxState<SelectFieldFunction> s6 = AddSyntaxState(new SelectFieldState(6, false));
             SyntaxState<SelectFieldFunction> s7 = AddSyntaxState(new SelectFieldState(7, false, SelectFieldFunction.Begin));
 
@@ -174,6 +185,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         public bool BetweenRecord = false;
         public int Begin = 0;
         public int End = -1;
+
+        public bool IsTop = false;
 
         public string Name;
 
