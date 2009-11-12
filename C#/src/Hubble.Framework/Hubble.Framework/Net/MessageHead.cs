@@ -31,6 +31,11 @@ namespace Hubble.Framework.Net
         /// Custom serialization
         /// </summary>
         CustomSerialization = 0x0010,
+
+        /// <summary>
+        /// Is Excetpion
+        /// </summary>
+        IsException = 0x0020,
     }
 
     public struct MessageHead

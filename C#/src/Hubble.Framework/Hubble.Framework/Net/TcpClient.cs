@@ -224,7 +224,15 @@ namespace Hubble.Framework.Net
 
                 while (offset < 4)
                 {
-                    offset += tcpStream.Read(revBuf, offset, 4 - offset);
+                    int len = tcpStream.Read(revBuf, offset, 4 - offset);
+
+                    if (len == 0)
+                    {
+                        throw new Exception("Tcp stream closed!");
+                    }
+
+
+                    offset += len;
                 }
 
                 head.Event = BitConverter.ToInt16(revBuf, 0);
@@ -266,7 +274,7 @@ namespace Hubble.Framework.Net
                         int len = 0;
                         do
                         {
-                            len = _ClientStream.Read(buf, 0, buf.Length);
+                            len = tcpStream.Read(buf, 0, buf.Length);
                             if (buf[len - 1] == 0)
                             {
                                 m.Write(buf, 0, len - 1);
@@ -284,9 +292,21 @@ namespace Hubble.Framework.Net
                         {
                             result = sr.ReadToEnd();
                         }
+
+                        if ((head.Flag & MessageFlag.IsException) != 0)
+                        {
+                            string[] strs = Hubble.Framework.Text.Regx.Split(result as string, "innerStackTrace:");
+
+                            result = new InnerServerException(strs[0], strs[1]);
+
+                        }
                     }
 
-                    if (result is Exception)
+                    if (result is InnerServerException)
+                    {
+                        throw new ServerException(result as InnerServerException);
+                    }
+                    else if (result is Exception)
                     {
                         throw result as Exception;
                     }

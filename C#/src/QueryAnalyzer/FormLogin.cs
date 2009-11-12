@@ -73,7 +73,7 @@ namespace QueryAnalyzer
             FormMain frmMain = new FormMain();
             this.Hide();
 
-            frmMain.DataAccess = dbAccess;
+            GlobalSetting.DataAccess = dbAccess;
 
             frmMain.ShowDialog();
 

@@ -6,6 +6,13 @@ using Hubble.Framework.Net;
 
 namespace Hubble.SQLClient
 {
+    public enum ConnectEvent : short
+    {
+        Connect = 999,
+        ExcuteSql = 1000,
+        Exit = 1001,
+    }
+
     public class SqlConnection : IDisposable
     {
         TcpClient _TcpClient;
@@ -29,6 +36,16 @@ namespace Hubble.SQLClient
             get
             {
                 return _DataSource;
+            }
+        }
+
+        private string _Database;
+
+        public string Database
+        {
+            get
+            {
+                return _Database;
             }
         }
 
@@ -64,9 +81,9 @@ namespace Hubble.SQLClient
 
         private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
         {
-            switch (evt)
+            switch ((ConnectEvent)evt)
             {
-                case 1000:
+                case ConnectEvent.ExcuteSql:
                     return new QueryResultSerialization((QueryResult)data);
             }
             return null;
@@ -84,6 +101,7 @@ namespace Hubble.SQLClient
             }
 
             _DataSource = strs[0];
+            _Database = _SqlConnBuilder.InitialCatalog;
 
             _TcpClient = new TcpClient();
 
@@ -101,6 +119,7 @@ namespace Hubble.SQLClient
         public void Open()
         {
             _TcpClient.Connect();
+            _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, Database);
         }
 
         public void Close()
@@ -112,7 +131,7 @@ namespace Hubble.SQLClient
 
         public QueryResult QuerySql(string sql)
         {
-            return _TcpClient.SendSyncMessage(1000, sql) as QueryResult;
+            return _TcpClient.SendSyncMessage((short)ConnectEvent.ExcuteSql, sql) as QueryResult;
         }
 
         #region IDisposable Members

@@ -29,6 +29,8 @@ namespace Hubble.Core.Global
     [Serializable, System.Xml.Serialization.XmlRoot(Namespace = "http://hubbledotnet.codeplex.com")] 
     public class Setting
     {
+        #region static members
+
         static private object _LockObj = new object();
 
         static private Setting _Config = null;
@@ -36,7 +38,7 @@ namespace Hubble.Core.Global
         static private string _Path = Path.ProcessDirectory;
 
         [System.Xml.Serialization.XmlIgnore]
-        static public string SettingPath
+        static internal string SettingPath
         {
             get
             {
@@ -55,7 +57,7 @@ namespace Hubble.Core.Global
             }
         }
 
-        static public Setting Config
+        static internal Setting Config
         {
             get
             {
@@ -79,7 +81,7 @@ namespace Hubble.Core.Global
         [System.Xml.Serialization.XmlIgnore]
         public const string FileName = "setting.xml";
 
-        static public void Save()
+        static internal void Save()
         {
             string fileName = Path.AppendDivision(SettingPath, '\\') + FileName;
 
@@ -90,26 +92,233 @@ namespace Hubble.Core.Global
             }
         }
 
-        static public void RemoveTableConfig(string tableDir)
+        internal static string GetTableFullName(string tableName)
+        {
+            tableName = tableName.Trim();
+
+            string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+
+            string prefix = curDatabaseName + ".";
+
+            if (tableName.IndexOf(prefix, 0, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                //already full name
+                return tableName;
+            }
+            else
+            {
+                return prefix + tableName;
+            }
+        }
+
+        static internal bool DatabaseExists(string databaseName)
         {
             Setting cfg = Config;
+
             lock (_LockObj)
             {
+                foreach (Database db in cfg.Databases)
+                {
+                    if (databaseName.Equals(db.DatabaseName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
+
+        static internal List<string> DatabaseList
+        {
+            get
+            {
+                Setting cfg = Config;
+
+                List<string> result = new List<string>();
+
+                lock (_LockObj)
+                {
+                    foreach (Database db in cfg.Databases)
+                    {
+                        result.Add(db.DatabaseName);
+                    }
+
+                    return result;
+                }
+            }
+        }
+
+        static internal Database GetDatabase(string databaseName)
+        {
+            Setting cfg = Config;
+
+            lock (_LockObj)
+            {
+                foreach (Database db in cfg.Databases)
+                {
+                    if (databaseName.Equals(db.DatabaseName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        return db;
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        static internal void UpdateDatabase(Database database)
+        {
+            Setting cfg = Config;
+
+            Database dest = GetDatabase(database.DatabaseName);
+
+            if (dest == null)
+            {
+                throw new Data.DataException(string.Format("Database {0} does not exist!",
+                    database.DatabaseName));
+            }
+
+            lock (_LockObj)
+            {
+                if (database.DefaultPath != null)
+                {
+                    dest.DefaultPath = database.DefaultPath;
+                }
+
+                if (database.DefaultConnectionString != null)
+                {
+                    dest.DefaultConnectionString = database.DefaultConnectionString;
+                }
+
+                if (database.DefaultDBAdapter != null)
+                {
+                    dest.DefaultDBAdapter = database.DefaultDBAdapter;
+                }
+
+                if (database.DefaultConnectionString != null)
+                {
+                    dest.DefaultConnectionString = database.DefaultConnectionString;
+                }
+            }
+        }
+
+        static internal void AddDatabase(Database database)
+        {
+            Setting cfg = Config;
+
+            lock (_LockObj)
+            {
+                if (cfg.Databases.Contains(database))
+                {
+                    throw new Data.DataException(string.Format("Database {0} exist!",
+                        database.DatabaseName));
+                }
+
+                cfg.Databases.Add(database);
+            }
+        }
+
+        static internal void RemoveDatabase(string databaseName)
+        {
+            Setting cfg = Config;
+
+            Database database = GetDatabase(databaseName);
+
+            if (database == null)
+            {
+                return;
+            }
+
+            lock (_LockObj)
+            {
+                if (database.Tables.Count > 0)
+                {
+                    throw new Data.DataException(string.Format("Database {0} can't be droped! There are more then one tables contain in this database",
+                        database.DatabaseName));
+                }
+
+                cfg.Databases.Remove(database);
+            }
+        }
+
+        static internal void RemoveTableConfig(string tableDir, string tableName)
+        {
+            Setting cfg = Config;
+
+            string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+
+            Database database = GetDatabase(curDatabaseName);
+
+            string fullTableName = GetTableFullName(tableName);
+
+            lock (_LockObj)
+            {
+                string tableNameInDatabase = null;
+
+                foreach (string tName in database.Tables)
+                {
+                    if (tName.Equals(fullTableName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        tableNameInDatabase = tName;
+                    }
+                }
+
+                if (tableNameInDatabase != null)
+                {
+                    database.Tables.Remove(tableNameInDatabase);
+                }
+
                 cfg.Tables.Remove(new TableConfig(tableDir));
             }
         }
 
-        static public bool TableExists(string tableDir)
+        static internal bool TableExists(string tableDir)
         {
             Setting cfg = Config;
+
             lock (_LockObj)
             {
                 return cfg.Tables.Contains(new TableConfig(tableDir));
             }
         }
 
+        static internal void AddTableConfig(string tableDir, string tableName)
+        {
+            Setting cfg = Config;
 
-        static string GetMD5FileName(string fileName)
+            string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+
+            Database database = GetDatabase(curDatabaseName);
+
+            if (database == null)
+            {
+                throw new Data.DataException(string.Format("Current database {0} does not exist!",
+                    curDatabaseName));
+            }
+
+            string fullTableName = GetTableFullName(tableName);
+
+            lock (_LockObj)
+            {
+                foreach(string tName in database.Tables)
+                {
+                    if (tName.Equals(fullTableName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        throw new Data.DataException(string.Format("Table {0} in database {1} exist!",
+                            fullTableName, curDatabaseName));
+                    }
+
+                }
+
+                database.Tables.Add(fullTableName);
+                
+
+                cfg.Tables.Add(new TableConfig(tableDir));
+            }
+        }
+
+        private static string GetMD5FileName(string fileName)
         {
             string fullName = System.IO.Path.GetFullPath(fileName);
 
@@ -139,7 +348,7 @@ namespace Hubble.Core.Global
 
         static System.Threading.Mutex _Mutex;
 
-        static public void Load(string path)
+        static internal void Load(string path)
         {
             string fileName = Path.AppendDivision(path, '\\') + FileName;
 
@@ -173,10 +382,16 @@ namespace Hubble.Core.Global
             }
         }
 
+        #endregion
+
+        #region Constructor
+
         public Setting()
         {
             Directories = new Directories();
         }
+
+        #endregion
 
         #region Public properties
 
@@ -254,6 +469,21 @@ namespace Hubble.Core.Global
             set
             {
                 _Directories = value;
+            }
+        }
+
+        List<Database> _Databases = new List<Database>();
+
+        public List<Database> Databases
+        {
+            get
+            {
+                return _Databases;
+            }
+
+            set
+            {
+                _Databases = value;
             }
         }
 
@@ -358,6 +588,102 @@ namespace Hubble.Core.Global
             
         }
     }
+
+    [Serializable]
+    public class Database
+    {
+        private string _DatabaseName = "";
+
+        [System.Xml.Serialization.XmlAttribute]
+        public string DatabaseName
+        {
+            get
+            {
+                return _DatabaseName.Trim();
+            }
+
+            set
+            {
+                _DatabaseName = value;
+            }
+        }
+
+        private string _DefaultPath;
+
+        [System.Xml.Serialization.XmlAttribute]
+        public string DefaultPath
+        {
+            get
+            {
+                return _DefaultPath;
+            }
+
+            set
+            {
+                _DefaultPath = value;
+            }
+        }
+
+
+        private string _DefaultDBAdapter;
+
+        [System.Xml.Serialization.XmlAttribute]
+        public string DefaultDBAdapter
+        {
+            get
+            {
+                return _DefaultDBAdapter;
+            }
+
+            set
+            {
+                _DefaultDBAdapter = value;
+            }
+        }
+
+        private string _DefaultConnectionString;
+
+        [System.Xml.Serialization.XmlAttribute]
+        public string DefaultConnectionString
+        {
+            get
+            {
+                return _DefaultConnectionString;
+            }
+
+            set
+            {
+                _DefaultConnectionString = value;
+            }
+        }
+
+
+        private List<string> _Tables = new List<string>();
+
+        public List<string> Tables
+        {
+            get
+            {
+                return _Tables;
+            }
+
+            set
+            {
+                _Tables = value;
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.DatabaseName.Equals(((Database)obj).DatabaseName, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.DatabaseName.GetHashCode();
+        }
+    }
+
 
     [Serializable]
     public class TableConfig

@@ -325,6 +325,23 @@ namespace Hubble.Framework.Net
                     tcpStream.WriteByte(0);
                     
                 }
+                else if (returnMsg is Exception)
+                {
+                    msgHead.Flag |= MessageFlag.IsException;
+                    msgHead.Flag |= MessageFlag.IsString;
+
+                    sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
+                    tcpStream.Write(sendBuf, 0, sendBuf.Length);
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendFormat("{0} innerStackTrace:{1}",
+                        (returnMsg as Exception).Message, (returnMsg as Exception).StackTrace);
+
+                    byte[] buf = Encoding.UTF8.GetBytes(sb.ToString());
+
+                    tcpStream.Write(buf, 0, buf.Length);
+                    tcpStream.WriteByte(0);
+                }
                 else
                 {
                     sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
@@ -471,7 +488,7 @@ namespace Hubble.Framework.Net
 
                         }
                            
-                        MessageReceiveEventArgs receiveEvent = new MessageReceiveEventArgs(msgHead, msg);
+                        MessageReceiveEventArgs receiveEvent = new MessageReceiveEventArgs(msgHead, msg, p.ThreadId);
 
                         Hubble.Framework.Serialization.IMySerialization customSerializer = null;
 

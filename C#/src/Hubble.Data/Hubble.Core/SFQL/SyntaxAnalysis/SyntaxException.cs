@@ -23,6 +23,7 @@ using Hubble.Core.SFQL.LexicalAnalysis;
 
 namespace Hubble.Core.SFQL.SyntaxAnalysis
 {
+    [Serializable]
     public class SyntaxException : Exception
     {
         private SyntaxType _SyntaxType;

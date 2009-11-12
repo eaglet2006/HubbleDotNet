@@ -35,9 +35,13 @@
             this.openOToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.batchInsertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.performanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabelReport = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
+            this.toolStripComboBoxDatabases = new System.Windows.Forms.ToolStripComboBox();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripButtonExcute = new System.Windows.Forms.ToolStripButton();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
@@ -56,8 +60,6 @@
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
-            this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.performanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -111,6 +113,21 @@
             this.batchInsertToolStripMenuItem.Text = "BatchInsert";
             this.batchInsertToolStripMenuItem.Click += new System.EventHandler(this.batchInsertToolStripMenuItem_Click);
             // 
+            // testToolStripMenuItem
+            // 
+            this.testToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.performanceToolStripMenuItem});
+            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
+            this.testToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.testToolStripMenuItem.Text = "Test";
+            // 
+            // performanceToolStripMenuItem
+            // 
+            this.performanceToolStripMenuItem.Name = "performanceToolStripMenuItem";
+            this.performanceToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.performanceToolStripMenuItem.Text = "Performance";
+            this.performanceToolStripMenuItem.Click += new System.EventHandler(this.performanceToolStripMenuItem_Click);
+            // 
             // statusStrip1
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -131,12 +148,26 @@
             // 
             this.toolStrip1.BackColor = System.Drawing.SystemColors.Control;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripComboBoxDatabases,
+            this.toolStripSeparator1,
             this.toolStripButtonExcute});
             this.toolStrip1.Location = new System.Drawing.Point(0, 24);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Size = new System.Drawing.Size(1016, 25);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripComboBoxDatabases
+            // 
+            this.toolStripComboBoxDatabases.Name = "toolStripComboBoxDatabases";
+            this.toolStripComboBoxDatabases.Size = new System.Drawing.Size(121, 25);
+            this.toolStripComboBoxDatabases.SelectedIndexChanged += new System.EventHandler(this.toolStripComboBoxDatabases_SelectedIndexChanged);
+            this.toolStripComboBoxDatabases.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.toolStripComboBoxDatabases_KeyPress);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
             // 
             // toolStripButtonExcute
             // 
@@ -166,20 +197,21 @@
             this.panel2.Controls.Add(this.splitter2);
             this.panel2.Controls.Add(this.tabControl1);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel2.Location = new System.Drawing.Point(124, 0);
+            this.panel2.Location = new System.Drawing.Point(132, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(892, 615);
+            this.panel2.Size = new System.Drawing.Size(884, 615);
             this.panel2.TabIndex = 20;
             // 
             // textBoxSql
             // 
             this.textBoxSql.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.textBoxSql.Font = new System.Drawing.Font("Courier New", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.textBoxSql.Location = new System.Drawing.Point(0, 0);
             this.textBoxSql.MaxLength = 327670;
             this.textBoxSql.Multiline = true;
             this.textBoxSql.Name = "textBoxSql";
             this.textBoxSql.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxSql.Size = new System.Drawing.Size(892, 473);
+            this.textBoxSql.Size = new System.Drawing.Size(884, 473);
             this.textBoxSql.TabIndex = 24;
             // 
             // splitter2
@@ -187,7 +219,7 @@
             this.splitter2.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.splitter2.Location = new System.Drawing.Point(0, 473);
             this.splitter2.Name = "splitter2";
-            this.splitter2.Size = new System.Drawing.Size(892, 3);
+            this.splitter2.Size = new System.Drawing.Size(884, 3);
             this.splitter2.TabIndex = 23;
             this.splitter2.TabStop = false;
             // 
@@ -199,7 +231,7 @@
             this.tabControl1.Location = new System.Drawing.Point(0, 476);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(892, 139);
+            this.tabControl1.Size = new System.Drawing.Size(884, 139);
             this.tabControl1.TabIndex = 22;
             // 
             // tabPageResults
@@ -208,7 +240,7 @@
             this.tabPageResults.Location = new System.Drawing.Point(4, 22);
             this.tabPageResults.Name = "tabPageResults";
             this.tabPageResults.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageResults.Size = new System.Drawing.Size(884, 113);
+            this.tabPageResults.Size = new System.Drawing.Size(876, 113);
             this.tabPageResults.TabIndex = 0;
             this.tabPageResults.Text = "Results";
             this.tabPageResults.UseVisualStyleBackColor = true;
@@ -219,7 +251,7 @@
             this.dataGridViewResult.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridViewResult.Location = new System.Drawing.Point(3, 3);
             this.dataGridViewResult.Name = "dataGridViewResult";
-            this.dataGridViewResult.Size = new System.Drawing.Size(878, 107);
+            this.dataGridViewResult.Size = new System.Drawing.Size(870, 107);
             this.dataGridViewResult.TabIndex = 17;
             // 
             // tabPageMessages
@@ -228,7 +260,7 @@
             this.tabPageMessages.Location = new System.Drawing.Point(4, 22);
             this.tabPageMessages.Name = "tabPageMessages";
             this.tabPageMessages.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageMessages.Size = new System.Drawing.Size(884, 113);
+            this.tabPageMessages.Size = new System.Drawing.Size(876, 113);
             this.tabPageMessages.TabIndex = 1;
             this.tabPageMessages.Text = "Messages";
             this.tabPageMessages.UseVisualStyleBackColor = true;
@@ -240,13 +272,13 @@
             this.textBoxMessages.Multiline = true;
             this.textBoxMessages.Name = "textBoxMessages";
             this.textBoxMessages.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBoxMessages.Size = new System.Drawing.Size(878, 107);
+            this.textBoxMessages.Size = new System.Drawing.Size(870, 107);
             this.textBoxMessages.TabIndex = 0;
             this.textBoxMessages.WordWrap = false;
             // 
             // splitter1
             // 
-            this.splitter1.Location = new System.Drawing.Point(121, 0);
+            this.splitter1.Location = new System.Drawing.Point(129, 0);
             this.splitter1.Name = "splitter1";
             this.splitter1.Size = new System.Drawing.Size(3, 615);
             this.splitter1.TabIndex = 1;
@@ -261,8 +293,9 @@
             this.treeViewData.Location = new System.Drawing.Point(0, 0);
             this.treeViewData.Name = "treeViewData";
             this.treeViewData.SelectedImageIndex = 0;
-            this.treeViewData.Size = new System.Drawing.Size(121, 615);
+            this.treeViewData.Size = new System.Drawing.Size(129, 615);
             this.treeViewData.TabIndex = 0;
+            this.treeViewData.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewData_AfterSelect);
             this.treeViewData.MouseDown += new System.Windows.Forms.MouseEventHandler(this.treeViewData_MouseDown);
             // 
             // contextMenuStripTree
@@ -300,26 +333,12 @@
             this.imageListTreeView.Images.SetKeyName(0, "Database");
             this.imageListTreeView.Images.SetKeyName(1, "Table");
             this.imageListTreeView.Images.SetKeyName(2, "Folder");
+            this.imageListTreeView.Images.SetKeyName(3, "DB.PNG");
             // 
             // openFileDialogSql
             // 
             this.openFileDialogSql.Filter = "SQL|*.sql";
             this.openFileDialogSql.RestoreDirectory = true;
-            // 
-            // testToolStripMenuItem
-            // 
-            this.testToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.performanceToolStripMenuItem});
-            this.testToolStripMenuItem.Name = "testToolStripMenuItem";
-            this.testToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
-            this.testToolStripMenuItem.Text = "Test";
-            // 
-            // performanceToolStripMenuItem
-            // 
-            this.performanceToolStripMenuItem.Name = "performanceToolStripMenuItem";
-            this.performanceToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.performanceToolStripMenuItem.Text = "Performance";
-            this.performanceToolStripMenuItem.Click += new System.EventHandler(this.performanceToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -387,6 +406,8 @@
         private System.Windows.Forms.ToolStripMenuItem batchInsertToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem performanceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripComboBox toolStripComboBoxDatabases;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
     }
 }
 

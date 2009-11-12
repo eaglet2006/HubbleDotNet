@@ -167,7 +167,16 @@ namespace Hubble.Framework.Net
                 Array.Copy(buffer, offset, _Buf, _BufLen, BUF_SIZE - _BufLen);
                 NetworkStream.Write(_Buf, 0, _Buf.Length);
 
-                Array.Copy(buffer, offset + BUF_SIZE - _BufLen, _Buf, 0, remain);
+                offset += BUF_SIZE - _BufLen;
+
+                while (remain >= BUF_SIZE)
+                {
+                    NetworkStream.Write(buffer, offset, BUF_SIZE);
+                    offset += BUF_SIZE;
+                    remain -= BUF_SIZE;
+                }
+
+                Array.Copy(buffer, offset, _Buf, 0, remain);
 
                 _BufLen = remain;
             }

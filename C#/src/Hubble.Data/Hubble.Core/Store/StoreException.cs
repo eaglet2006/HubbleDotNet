@@ -21,6 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.Store
 {
+    [Serializable]
     public class StoreException : Exception
     {
         public StoreException(string message)

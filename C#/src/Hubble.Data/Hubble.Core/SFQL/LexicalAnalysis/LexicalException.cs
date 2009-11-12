@@ -5,6 +5,7 @@ using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.SFQL.LexicalAnalysis
 {
+    [Serializable]
     public class LexicalException : Exception
     {
         private char _CurrentChar;

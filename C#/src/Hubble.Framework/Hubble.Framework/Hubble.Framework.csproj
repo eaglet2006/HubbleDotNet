@@ -38,10 +38,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\Cache.cs" />
     <Compile Include="DataStructure\DFA.cs" />
     <Compile Include="DataStructure\FingerPrintDictionary.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
+    <Compile Include="DataStructure\LinkedTable.cs" />
     <Compile Include="DataStructure\QuickSort.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
     <Compile Include="DataStructure\VInt.cs" />
@@ -55,6 +57,7 @@
     <Compile Include="IO\Stream.cs" />
     <Compile Include="Net\EventArgs.cs" />
     <Compile Include="Net\MessageHead.cs" />
+    <Compile Include="Net\ServerException.cs" />
     <Compile Include="Net\TcpCacheStream.cs" />
     <Compile Include="Net\TcpClient.cs" />
     <Compile Include="Net\TcpServer.cs" />

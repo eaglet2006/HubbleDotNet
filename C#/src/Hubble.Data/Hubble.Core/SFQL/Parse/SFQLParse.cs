@@ -326,20 +326,64 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
+            Global.Database database = null;
+
             //Verify parameters
             if (directory == null)
             {
-                throw new ParseException("Must have Directory attribute!");
+                if (database == null)
+                {
+                    string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+                    database = Global.Setting.GetDatabase(curDatabaseName);
+                }
+
+                if (string.IsNullOrEmpty(database.DefaultPath))
+                {
+                    throw new ParseException("Has't Directory attribute!");
+                }
+                else
+                {
+                    directory = Hubble.Framework.IO.Path.AppendDivision(database.DefaultPath, '\\') + 
+                        table.Name + @"\";
+                }
             }
 
             if (table.DBAdapterTypeName == null)
             {
-                throw new ParseException("Must have DBAdapter attribute!");
+                if (database == null)
+                {
+                    string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+                    database = Global.Setting.GetDatabase(curDatabaseName);
+                }
+
+                if (string.IsNullOrEmpty(database.DefaultDBAdapter))
+                {
+                    throw new ParseException("Has't DBAdapter attribute!");
+                }
+                else
+                {
+                    table.DBAdapterTypeName = database.DefaultDBAdapter;
+                }
+
+                
             }
 
             if (table.ConnectionString == null)
             {
-                throw new ParseException("Must have DBConnect attribute!");
+                if (database == null)
+                {
+                    string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+                    database = Global.Setting.GetDatabase(curDatabaseName);
+                }
+
+                if (string.IsNullOrEmpty(database.DefaultConnectionString))
+                {
+                    throw new ParseException("Has't DBConnect attribute!");
+                }
+                else
+                {
+                    table.ConnectionString = database.DefaultConnectionString;
+                }
             }
 
             //Init fields

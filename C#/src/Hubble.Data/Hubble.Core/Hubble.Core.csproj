@@ -78,6 +78,8 @@
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />
+    <Compile Include="Service\ConnectionInformation.cs" />
+    <Compile Include="Service\CurrentConnection.cs" />
     <Compile Include="Service\HubbleTask.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
@@ -116,7 +118,13 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_AnalyzerList.cs" />
+    <Compile Include="StoredProcedure\SP_DBAdapterList.cs" />
+    <Compile Include="StoredProcedure\SP_DatabaseList.cs" />
+    <Compile Include="StoredProcedure\SP_UpdateDatabase.cs" />
+    <Compile Include="StoredProcedure\SP_DropDatabase.cs" />
     <Compile Include="StoredProcedure\IStoredProc.cs" />
+    <Compile Include="StoredProcedure\SP_AddDatabase.cs" />
     <Compile Include="StoredProcedure\SP_AddExternalReference.cs" />
     <Compile Include="StoredProcedure\SP_Columns.cs" />
     <Compile Include="StoredProcedure\SP_Configure.cs" />

@@ -25,46 +25,33 @@ namespace Hubble.Framework.DataStructure
     /// <summary>
     /// Bit16 Int
     /// </summary>
-    public struct Bit16Int : IComparable<Bit16Int>
+    public struct Bit16Int 
     {
         ulong _Low;
         ulong _High;
 
-        public ulong Low
-        {
-            get
-            {
-                return _Low;
-            }
-        }
+        int _StringLength;
+        int _Sum;
 
-        public ulong High
-        {
-            get
-            {
-                return _High;
-            }
-        }
-
-        public Bit16Int(ulong high, ulong low)
-        {
-            this._High = high;
-            this._Low = low;
-        }
-
-        public Bit16Int(byte[] data)
+        public Bit16Int(byte[] data, int stringLength, int sum)
         {
             System.Diagnostics.Debug.Assert(data != null);
             System.Diagnostics.Debug.Assert(data.Length == 16);
+
+            _StringLength = stringLength;
+            _Sum = sum;
 
             _Low = BitConverter.ToUInt64(data, 0);
             _High = BitConverter.ToUInt64(data, 8);
         }
 
-        public Bit16Int(int[] data)
+        public Bit16Int(int[] data, int stringLength, int sum)
         {
             System.Diagnostics.Debug.Assert(data != null);
             System.Diagnostics.Debug.Assert(data.Length == 4);
+
+            _StringLength = stringLength;
+            _Sum = sum;
 
             _Low = (ulong)data[0] + (ulong)data[1] * 0x100000000;
 
@@ -92,36 +79,15 @@ namespace Hubble.Framework.DataStructure
             key = key + (key << 6);
             key = key ^ (key >> 22);
 
-
             return (int)(lKey + key);
         }
 
         public override bool Equals(object obj)
         {
             Bit16Int dest = (Bit16Int)obj;
-            return (dest.High == this.High) && (dest.Low == this.Low);
+            return (dest._High == this._High) && (dest._Low == this._Low) && 
+                (dest._StringLength == this._StringLength) && (dest._Sum == this._Sum);
         }
-
-        #region IComparable<Bit16Int> Members
-
-        public int CompareTo(Bit16Int other)
-        {
-            if ((other.High == this.High) && (other.Low == this.Low))
-            {
-                return 0;
-            }
-
-            if (other.High == this.High)
-            {
-                return this.High.CompareTo(other.High);
-            }
-            else
-            {
-                return this.Low.CompareTo(other.Low);
-            }
-        }
-
-        #endregion
     }
 
     public class FingerPrintDictionary<T> : IDictionary<string, T>, IEqualityComparer<Bit16Int>
@@ -134,17 +100,22 @@ namespace Hubble.Framework.DataStructure
         public Bit16Int MD5(string key)
         {
             byte[] b = new byte[key.Length * 2];
+            int sum = 0;
 
             for (int i = 0; i < key.Length; i++)
             {
                 char c = key[i];
+                sum += c;
+
                 b[2 * i] = (byte)(c % 256);
                 b[2 * i + 1] = (byte)(c / 256);
             }
 
             b = _MD5.ComputeHash(b);
 
-            return new Bit16Int(b);
+
+
+            return new Bit16Int(b, key.Length, sum);
         }
 
         public FingerPrintDictionary()
@@ -274,7 +245,7 @@ namespace Hubble.Framework.DataStructure
 
         public bool Equals(Bit16Int x, Bit16Int y)
         {
-            return x.High == y.High && x.Low == y.Low;
+            return x.Equals(y);
         }
 
         public int GetHashCode(Bit16Int obj)

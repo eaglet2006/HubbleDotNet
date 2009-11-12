@@ -14,7 +14,7 @@ namespace QueryAnalyzer
 {
     public partial class FormMain : Form
     {
-        internal DbAccess DataAccess { get; set; }
+        
 
         public FormMain()
         {
@@ -26,25 +26,53 @@ namespace QueryAnalyzer
             ShowTree();
         }
 
+        private void ShowTables(TreeNode databaseNode)
+        {
+            databaseNode.Nodes.Clear();
+
+            foreach (string tableName in GetTables(databaseNode.Text))
+            {
+                int index = tableName.IndexOf(databaseNode.Text, 0, StringComparison.CurrentCultureIgnoreCase);
+
+                string tName = tableName;
+
+                if (index >= 0)
+                {
+                    tName = tableName.Substring(databaseNode.Text.Length + 1);
+                }
+
+                TreeNode tableNode = new TreeNode(tName);
+                tableNode.Tag = "Table";
+                tableNode.ImageIndex = 1;
+                tableNode.SelectedImageIndex = tableNode.ImageIndex;
+                databaseNode.Nodes.Add(tableNode);
+            }
+        }
+
         private void ShowTree()
         {
             try
             {
                 treeViewData.Nodes.Clear();
+                toolStripComboBoxDatabases.Items.Clear();
 
-                TreeNode serverNode = new TreeNode(DataAccess.ServerName);
+                TreeNode serverNode = new TreeNode(GlobalSetting.DataAccess.ServerName);
                 serverNode.Tag = "Server";
                 serverNode.ImageIndex = 0;
                 treeViewData.Nodes.Add(serverNode);
 
-                foreach (string tableName in GetTables())
+                foreach (string databaseName in GetDatabases())
                 {
-                    TreeNode tableNode = new TreeNode(tableName);
-                    tableNode.Tag = "Table";
-                    tableNode.ImageIndex = 1;
-                    tableNode.SelectedImageIndex = tableNode.ImageIndex;
-                    serverNode.Nodes.Add(tableNode);
+                    TreeNode databaseNode = new TreeNode(databaseName);
+                    databaseNode.Tag = "Database";
+                    databaseNode.ImageIndex = 3;
+                    databaseNode.SelectedImageIndex = databaseNode.ImageIndex;
+                    serverNode.Nodes.Add(databaseNode);
+                    toolStripComboBoxDatabases.Items.Add(databaseName);
                 }
+
+                toolStripComboBoxDatabases.Text = GlobalSetting.DataAccess.DatabaseName;
+
             }
             catch (Exception e)
             {
@@ -53,9 +81,20 @@ namespace QueryAnalyzer
 
         }
 
-        private IEnumerable<string> GetTables()
+        private IEnumerable<string> GetDatabases()
         {
-            QueryResult result = DataAccess.Excute("exec sp_tablelist");
+            QueryResult result = GlobalSetting.DataAccess.Excute("exec sp_databaselist");
+
+            foreach (DataRow row in result.DataSet.Tables[0].Rows)
+            {
+                yield return row["DatabaseName"].ToString();
+            }
+        }
+
+        private IEnumerable<string> GetTables(string databaseName)
+        {
+            QueryResult result = GlobalSetting.DataAccess.Excute(string.Format("exec sp_tablelist '{0}'",
+                databaseName.Replace("'", "''")));
 
             foreach (DataRow row in result.DataSet.Tables[0].Rows)
             {
@@ -108,7 +147,7 @@ namespace QueryAnalyzer
                     sql = textBoxSql.SelectedText;
                 }
 
-                QueryResult queryResult = DataAccess.Excute(sql);
+                QueryResult queryResult = GlobalSetting.DataAccess.Excute(sql);
 
                 System.Data.DataTable table = null;
 
@@ -161,6 +200,10 @@ namespace QueryAnalyzer
             {
                 ShowErrorMessage(syntaxEx.ToString());
             }
+            catch (Hubble.Framework.Net.ServerException e1)
+            {
+                ShowErrorMessage(e1.Message + "\r\n" + e1.InnerStackTrace);
+            }
             catch (Exception e1)
             {
                 ShowErrorMessage(e1.Message + "\r\n" + e1.StackTrace);
@@ -169,6 +212,7 @@ namespace QueryAnalyzer
             {
             }
 
+            textBoxSql.Focus();
         }
 
         private void FormMain_KeyDown(object sender, KeyEventArgs e)
@@ -187,7 +231,8 @@ namespace QueryAnalyzer
             if (e.Button == MouseButtons.Right)
             {
                 tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
-                refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server";
+                refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server" ||
+                    treeViewData.SelectedNode.Tag.ToString() == "Database";
             }
         }
 
@@ -197,13 +242,20 @@ namespace QueryAnalyzer
 
             FormTableInfo frmTableInfo = new FormTableInfo();
             frmTableInfo.TableName = tableName;
-            frmTableInfo.DataAccess = DataAccess;
+            frmTableInfo.DataAccess = GlobalSetting.DataAccess;
             frmTableInfo.ShowDialog();
         }
 
         private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowTree();
+            if (treeViewData.SelectedNode.Tag.ToString() == "Server")
+            {
+                ShowTree();
+            }
+            else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
+            {
+                ShowTables(treeViewData.SelectedNode);
+            }
         }
 
         private void openOToolStripMenuItem_Click(object sender, EventArgs e)
@@ -243,7 +295,7 @@ namespace QueryAnalyzer
                 FormBatchInsert frmBatchInsert = new FormBatchInsert();
 
                 frmBatchInsert.TotalRecords = totalRecords;
-                frmBatchInsert.DataAccess = DataAccess;
+                frmBatchInsert.DataAccess = GlobalSetting.DataAccess;
                 frmBatchInsert.FileName = openFileDialogSql.FileName;
                 frmBatchInsert.BatchInsert = batchInsert;
                 frmBatchInsert.ShowDialog();
@@ -253,8 +305,33 @@ namespace QueryAnalyzer
         private void performanceToolStripMenuItem_Click(object sender, EventArgs e)
         {
             FormPerformance frmPerformance = new FormPerformance();
-            frmPerformance.DataAccess = this.DataAccess;
+            frmPerformance.DataAccess = GlobalSetting.DataAccess;
             frmPerformance.ShowDialog();
         }
+
+        private void treeViewData_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+            if ((string)e.Node.Tag == "Database" && e.Node.Nodes.Count <= 0)
+            {
+                ShowTables(e.Node);
+                e.Node.Expand();
+            }
+        }
+
+        private void toolStripComboBoxDatabases_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void toolStripComboBoxDatabases_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(toolStripComboBoxDatabases.Text))
+            {
+                return;
+            }
+
+            GlobalSetting.DataAccess.ChangeDatabase(toolStripComboBoxDatabases.Text);
+        }
+
     }
 }

@@ -21,10 +21,15 @@ using System.Text;
 
 namespace Hubble.Core.Data
 {
+    [Serializable]
     public class DataException : Exception
     {
         public DataException(string message)
             : base(message)
+        {
+        }
+
+        public DataException()
         {
         }
     }

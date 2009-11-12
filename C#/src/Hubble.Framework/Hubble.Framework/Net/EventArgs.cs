@@ -166,6 +166,7 @@ namespace Hubble.Framework.Net
         private object _Msg;
         private object _ReturnMsg;
         private IMySerialization _CustomSerializtion;
+        private int _ThreadId;
 
         /// <summary>
         /// Message Head
@@ -222,13 +223,26 @@ namespace Hubble.Framework.Net
             }
         }
 
+        public int ThreadId
+        {
+            get
+            {
+                return _ThreadId;
+            }
 
-        public MessageReceiveEventArgs(MessageHead msgHead, object msg)
+            set
+            {
+                _ThreadId = value;
+            }
+        }
+
+        public MessageReceiveEventArgs(MessageHead msgHead, object msg, int threadId)
         {
             _MsgHead = msgHead;
             _Msg = msg;
             _ReturnMsg = null;
             _CustomSerializtion = null;
+            _ThreadId = threadId;
         }
 
     }

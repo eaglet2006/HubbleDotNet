@@ -21,6 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
+    [Serializable]
     public class StoredProcException: Exception
     {
         public StoredProcException(string message)

@@ -17,6 +17,7 @@ namespace Hubble.Core.Service
         {
             try
             {
+                CurrentConnection.Connect();
                 Global.Report.WriteAppLog(string.Format("ThreadId = {0} connected", args.ThreadId));
             }
             catch
@@ -28,6 +29,7 @@ namespace Hubble.Core.Service
         {
             try
             {
+                CurrentConnection.Disconnect();
                 Global.Report.WriteAppLog(string.Format("ThreadId = {0} disconnected", args.ThreadId));
             }
             catch
@@ -37,9 +39,14 @@ namespace Hubble.Core.Service
 
         private void MessageReceiveEventHandler(object sender, MessageReceiveEventArgs args)
         {
-            switch (args.MsgHead.Event)
+            switch ((SQLClient.ConnectEvent)args.MsgHead.Event)
             {
-                case 1000: //excute sql
+                case SQLClient.ConnectEvent.Connect : //Connecting 
+                    CurrentConnection currentConnection = new CurrentConnection(
+                        new ConnectionInformation(args.InMessage as string));
+                    break;
+
+                case ConnectEvent.ExcuteSql: //excute sql
                     args.ReturnMsg = Excute(args.InMessage as string);
 
                     if (args.ReturnMsg is QueryResult)
@@ -49,7 +56,7 @@ namespace Hubble.Core.Service
                     }
 
                     break;
-                case 1001: //quit
+                case ConnectEvent.Exit: //quit
                     Environment.Exit(0);
                     break;
 
@@ -69,9 +76,9 @@ namespace Hubble.Core.Service
 
         private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
         {
-            switch (evt)
+            switch ((SQLClient.ConnectEvent)evt)
             {
-                case 1000:
+                case ConnectEvent.ExcuteSql:
                     return new QueryResultSerialization((QueryResult)data);
             }
             return null;

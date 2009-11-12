@@ -60,6 +60,36 @@ namespace Hubble.Core.Data
             return dbProvider;
         }
 
+        internal static Type[] GetAnalyzers()
+        {
+            Type[] result = new Type[_AnalyzerTable.Count];
+
+            int i = 0;
+
+            //dbadapter interface only load one at begining, so need not lock
+            foreach (Type type in _AnalyzerTable.Values)
+            {
+                result[i++] = type;
+            }
+
+            return result;
+        }
+
+        internal static Type[] GetDBAdapters()
+        {
+            Type[] result = new Type[_DBAdapterTable.Count];
+
+            int i = 0;
+
+            //dbadapter interface only load one at begining, so need not lock
+            foreach (Type type in _DBAdapterTable.Values)
+            {
+                result[i++] = type;
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Get Query by command name
         /// </summary>
@@ -69,7 +99,8 @@ namespace Hubble.Core.Data
         {
             Type type;
 
-            if (_QueryTable.TryGetValue(command.Trim().ToLower(), out type))
+            //query interface only load one at begining, so need not lock
+            if (_QueryTable.TryGetValue(command.Trim().ToLower(), out type)) 
             {
                 return Hubble.Framework.Reflection.Instance.CreateInstance(type)
                     as Hubble.Core.Query.IQuery;
@@ -90,6 +121,7 @@ namespace Hubble.Core.Data
         {
             Type type;
 
+            //analyser interface only load one at begining, so need not lock
             if (_AnalyzerTable.TryGetValue(name.Trim().ToLower(), out type))
             {
                 return Hubble.Framework.Reflection.Instance.CreateInstance(type)
@@ -111,6 +143,7 @@ namespace Hubble.Core.Data
         {
             Type type;
 
+            //store proc interface only load one at begining, so need not lock
             if (_StoredProcTable.TryGetValue(name.Trim().ToLower(), out type))
             {
                 return Hubble.Framework.Reflection.Instance.CreateInstance(type)
@@ -140,6 +173,8 @@ namespace Hubble.Core.Data
 
         public static DBProvider GetDBProvider(string tableName)
         {
+            tableName = Setting.GetTableFullName(tableName);
+
             lock (_sLockObj)
             {
                 DBProvider dbProvider;
@@ -156,6 +191,8 @@ namespace Hubble.Core.Data
 
         public static bool DBProviderExists(string tableName)
         {
+            tableName = Setting.GetTableFullName(tableName);
+
             lock (_sLockObj)
             {
                 return _DBProviderTable.ContainsKey(tableName.ToLower().Trim());
@@ -164,6 +201,8 @@ namespace Hubble.Core.Data
 
         public static void NewDBProvider(string tableName, DBProvider dbProvider)
         {
+            tableName = Setting.GetTableFullName(tableName);
+
             lock (_sLockObj)
             {
                 _DBProviderTable.Add(tableName.ToLower().Trim(), dbProvider);
@@ -181,6 +220,8 @@ namespace Hubble.Core.Data
             {
                 throw new System.ArgumentException("Empty table name");
             }
+
+            table.Name = Setting.GetTableFullName(table.Name.Trim());
 
             if (DBProvider.DBProviderExists(table.Name))
             {
@@ -210,6 +251,8 @@ namespace Hubble.Core.Data
 
         public static void Drop(string tableName)
         {
+            tableName = Setting.GetTableFullName(tableName);
+
             DBProvider dbProvider = GetDBProvider(tableName);
 
             if (dbProvider != null)
@@ -219,10 +262,17 @@ namespace Hubble.Core.Data
                     dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000);
 
                     string dir = dbProvider.Directory;
+
+                    if (dir == null)
+                    {
+                        DeleteTableName(tableName);
+                        return;
+                    }
+
                     dbProvider.Drop();
                     DeleteTableName(tableName);
 
-                    Global.Setting.RemoveTableConfig(dir);
+                    Global.Setting.RemoveTableConfig(dir, tableName);
                     Global.Setting.Save();
                 }
                 finally
@@ -1060,7 +1110,7 @@ namespace Hubble.Core.Data
                 }
 
                 //Add to global configuration file
-                Setting.Config.Tables.Add(new TableConfig(directory));
+                Setting.AddTableConfig(directory, table.Name);
                 Setting.Save();
 
                 //set payload file name

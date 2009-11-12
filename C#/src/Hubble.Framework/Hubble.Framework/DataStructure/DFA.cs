@@ -314,7 +314,7 @@ namespace Hubble.Framework.DataStructure
 
     }
 
-
+    [Serializable]
     public class DFAException : Exception
     {
         private int _Action;
