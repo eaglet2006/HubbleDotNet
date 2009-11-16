@@ -22,17 +22,30 @@ using System.Text;
 
 namespace Hubble.Framework.DataStructure
 {
+    public interface IManagedCache
+    {
+        string Name { get; }
+
+        int MaxStair { get; }
+
+        bool Clear(int stair);
+
+        List<string> BucketInfoList { get; }
+    }
+
     /// <summary>
     /// This class is using to create cache buffer 
     /// </summary>
     /// <typeparam name="T">type of cache item</typeparam>
-    public abstract class Cache<T>
+    public abstract class Cache<T> : IManagedCache
     {
         #region Bucket
 
         private class Bucket : LinkedList<CacheItem>
         {
             private long _MemorySize;
+            private FingerPrintDictionary<CacheItem> _Dict;
+            private CacheManage _CacheManage;
 
             public long MemorySize
             {
@@ -42,16 +55,69 @@ namespace Hubble.Framework.DataStructure
                 }
             }
 
+
+            private int _MaxHitCount;
+
+            public int MaxHitCount
+            {
+                get
+                {
+                    return _MaxHitCount;
+                }
+
+            }
+
+            public Bucket(FingerPrintDictionary<CacheItem> dict,
+                int maxHitCount, CacheManage cacheMgr)
+            {
+                _Dict = dict;
+                _MaxHitCount = maxHitCount;
+                _CacheManage = cacheMgr;
+            }
+
+            public void IncSize(long size)
+            {
+                _MemorySize += size;
+                _CacheManage.TotalMemorySize += size;
+            }
+
+
             public new LinkedListNode<CacheItem> AddLast(CacheItem node)
             {
                 _MemorySize += node.Size;
+                _CacheManage.TotalMemorySize += node.Size;
                 return base.AddLast(node);
             }
 
-            public new void Remove(LinkedListNode<CacheItem> node)
+            public new void Remove(CacheItem node)
             {
-                _MemorySize -= node.Value.Size;
-                base.Remove(node);
+                Remove(node, true);
+            }
+
+            public void Remove(CacheItem node, bool removeDict)
+            {
+                _MemorySize -= node.Size;
+                _CacheManage.TotalMemorySize -= node.Size;
+
+                if (removeDict)
+                {
+                    _Dict.Remove(node.Key);
+                }
+
+                base.Remove(node.Node);
+            }
+
+            public new void Clear()
+            {
+                LinkedListNode<CacheItem> node = this.First;
+
+                while (this.Count > 0)
+                {
+                    Remove(node.Value);
+
+                    node = this.First;
+                }
+
             }
         }
 
@@ -70,6 +136,22 @@ namespace Hubble.Framework.DataStructure
 
             private int _Stair;
             private LinkedListNode<CacheItem> _Node;
+
+            private Bit16Int _Key;
+
+            internal Bit16Int Key
+            {
+                get
+                {
+                    return _Key;
+                }
+
+                set
+                {
+                    _Key = value;
+                }
+            }
+
 
             public int Size
             {
@@ -194,14 +276,6 @@ namespace Hubble.Framework.DataStructure
                 _Cache = cache;
                 Value = data;
             }
-
-            public void Remove()
-            {
-                lock (this)
-                {
-                    _Cache._Buckets[_Stair].Remove(_Node);
-                }
-            }
         }
         
         #endregion
@@ -210,11 +284,18 @@ namespace Hubble.Framework.DataStructure
 
         private object _LockObj = new object();
 
-        private FingerPrintDictionary<LinkedListNode<CacheItem>> _Dict = new FingerPrintDictionary<LinkedListNode<CacheItem>>();
+        private FingerPrintDictionary<CacheItem> _Dict = new FingerPrintDictionary<CacheItem>();
 
-        private int[] _Stairs = {10, 100, 1000, 10000, 100000, 1000000, Int16.MaxValue};
+        private int[] _Stairs = { 10, 100, 1000, 10000, 100000, 1000000, 10000000};
 
         private Bucket[] _Buckets;
+        private CacheManage _CacheManage;
+
+        #endregion
+
+        #region Protected fields
+
+        protected string m_Name = "";
 
         #endregion
 
@@ -229,20 +310,34 @@ namespace Hubble.Framework.DataStructure
 
         private void Init()
         {
+            Array.Sort(_Stairs);
+
             _Buckets = new Bucket[_Stairs.Length];
 
             for (int i = 0; i < _Buckets.Length; i++)
             {
-                _Buckets[i] = new Bucket();
+                _Buckets[i] = new Bucket(_Dict, _Stairs[i], _CacheManage);
             }
         }
 
 
         #endregion
 
-        public Cache()
+        public Cache(CacheManage cacheMgr, int[] stairs)
         {
+            if (stairs != null)
+            {
+                _Stairs = stairs;
+            }
+
+            _CacheManage = cacheMgr;
+            _CacheManage.Add(this);
             Init();
+        }
+
+        public Cache(CacheManage cacheMgr) 
+            : this (cacheMgr, null)
+        {
         }
 
 
@@ -259,37 +354,65 @@ namespace Hubble.Framework.DataStructure
         {
             lock (_LockObj)
             {
-                LinkedListNode<CacheItem> node;
+                CacheItem node;
 
                 if (_Dict.TryGetValue(key, out node))
                 {
-                    node.Value.ExpireTime = expireTime;
+                    node.ExpireTime = expireTime;
+
+                    long oldSize = node.Size;
+
+                    node.Value = item;
+
+                    _Buckets[node.Stair].IncSize(node.Size - oldSize);
                 }
                 else
                 {
                     CacheItem cacheItem = new Cache<T>.CacheItem(item, expireTime, this, 0);
-                    
+
                     LinkedListNode<CacheItem> n = _Buckets[0].AddLast(cacheItem);
 
                     cacheItem.Node = n;
 
-                    _Dict.Add(key, node);
+                    node = n.Value;
 
+                    Bit16Int md5Key;
+                    _Dict.Add(key, node, out md5Key);
+
+                    node.Key = md5Key;
 
                 }
             }
+
+            _CacheManage.Collect();
         }
 
         public bool TryGetValue(string key, out T value, out DateTime expireTime, out int hitCount)
         {
             lock (_LockObj)
             {
-                LinkedListNode<CacheItem> node;
+                CacheItem node;
                 if (_Dict.TryGetValue(key, out node))
                 {
-                    value = node.Value.Value;
-                    expireTime = node.Value.ExpireTime;
-                    hitCount = node.Value.HitCount;
+                    value = node.Value;
+                    expireTime = node.ExpireTime;
+                    
+                    if (node.HitCount <= int.MaxValue)
+                    {
+                        node.HitCount++;
+
+                        if (node.HitCount > _Buckets[node.Stair].MaxHitCount)
+                        {
+                            if (node.Stair < _Buckets.Length - 1)
+                            {
+                                _Buckets[node.Stair].Remove(node, false);
+                                node.Stair++;
+                                node.Node = _Buckets[node.Stair].AddLast(node);
+                            }
+                        }
+                    }
+
+                    hitCount = node.HitCount;
 
                     return true;
                 }
@@ -300,6 +423,74 @@ namespace Hubble.Framework.DataStructure
                     hitCount = 0;
                     return false;
                 }
+            }
+        }
+
+        public void Remove(string key)
+        {
+            lock (_LockObj)
+            {
+                CacheItem node;
+                if (_Dict.TryGetValue(key, out node))
+                {
+                    _Buckets[node.Stair].Remove(node);
+                }
+            }
+        }
+
+        #endregion
+
+        #region IManagedCache Members
+
+        public string Name
+        {
+            get
+            {
+                return m_Name;
+            }
+        }
+
+        public int MaxStair
+        {
+            get 
+            {
+                return _Stairs.Length;    
+            }
+        }
+
+        public bool Clear(int stair)
+        {
+            lock (_LockObj)
+            {
+                if (stair >= _Buckets.Length)
+                {
+                    return false;
+                }
+
+                _Buckets[stair].Clear();
+
+                return true;
+            }
+
+        }
+
+        public List<string> BucketInfoList
+        {
+            get
+            {
+                List<string> result = new List<string>();
+
+                lock (_LockObj)
+                {
+                    for (int i = 0; i < _Buckets.Length; i++)
+                    {
+                        result.Add(string.Format("MaxHitCount:{0} MemorySize:{1} Items:{2}",
+                            _Buckets[i].MaxHitCount, _Buckets[i].MemorySize, _Buckets[i].Count));
+                    }
+                }
+
+                return result;
+
             }
         }
 

@@ -125,6 +125,12 @@ namespace Hubble.Framework.DataStructure
 
         #region IDictionary<string,T> Members
 
+        public void Add(string key, T value, out Bit16Int md5Key)
+        {
+            md5Key = MD5(key);
+            _Dict.Add(md5Key, value);
+        }
+
         public void Add(string key, T value)
         {
             _Dict.Add(MD5(key), value);
@@ -143,6 +149,11 @@ namespace Hubble.Framework.DataStructure
         public ICollection<string> Keys
         {
             get { throw new Exception("The method or operation is not implemented."); }
+        }
+
+        public bool Remove(Bit16Int key)
+        {
+            return _Dict.Remove(key);
         }
 
         public bool Remove(string key)

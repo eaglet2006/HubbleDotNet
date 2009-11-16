@@ -39,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataStructure\Cache.cs" />
+    <Compile Include="DataStructure\CacheManage.cs" />
     <Compile Include="DataStructure\DFA.cs" />
     <Compile Include="DataStructure\FingerPrintDictionary.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
