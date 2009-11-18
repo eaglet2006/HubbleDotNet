@@ -38,7 +38,7 @@ namespace Hubble.Framework.DataStructure
 
         private List<IManagedCache> _ManagedCacheList = new List<IManagedCache>();
 
-        private double _Ratio = 0.5; //Clean up ratio
+        private double _Ratio = 0.75; //Clean up ratio
 
         private long _TotalMemoryNotCollect = 0;
 
@@ -156,8 +156,46 @@ namespace Hubble.Framework.DataStructure
                 {
                     lock (_LockObj)
                     {
+                        long targetMemorySize = (long)(_MaxMemorySize * (_Ratio));
+
+                        if (targetMemorySize > _MaxMemorySize)
+                        {
+                            targetMemorySize = _MaxMemorySize;
+                        }
+
+                        if (targetMemorySize < 0)
+                        {
+                            targetMemorySize = 0;
+                        }
+
+
                         for (int i = 0; i < _MaxStair; i++)
                         {
+                            long delta = _TotalMemorySize - targetMemorySize;
+
+                            if (delta <= 0)
+                            {
+                                break;
+                            }
+
+                            long stairMemory = 0;
+
+                            foreach (IManagedCache cache in _ManagedCacheList)
+                            {
+                                stairMemory += cache.GetBucketMemorySize(i);
+                            }
+
+                            double ratio = 0;
+
+                            if (stairMemory <= delta)
+                            {
+                                ratio = 0;
+                            }
+                            else
+                            {
+                                ratio = (double)(stairMemory - delta) / (double)stairMemory;
+                            }
+
                             foreach (IManagedCache cache in _ManagedCacheList)
                             {
                                 if (i >= cache.MaxStair)
@@ -165,12 +203,7 @@ namespace Hubble.Framework.DataStructure
                                     continue;
                                 }
 
-                                cache.Clear(i);
-                            }
-
-                            if ((double)_TotalMemorySize <= (double)_MaxMemorySize * Ratio)
-                            {
-                                break;
+                                cache.Clear(i, ratio);
                             }
                         }
 

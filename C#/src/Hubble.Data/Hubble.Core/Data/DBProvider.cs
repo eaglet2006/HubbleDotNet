@@ -479,6 +479,9 @@ namespace Hubble.Core.Data
         private int _InsertCount = 0;
         private DeleteProvider _DelProvider;
         private Hubble.Framework.Threading.Lock _TableLock = new Hubble.Framework.Threading.Lock();
+
+        private long _LastModifyTicks = DateTime.Now.Ticks;
+
         #endregion
 
         #region Properties
@@ -543,9 +546,29 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal long LastModifyTicks
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _LastModifyTicks;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _LastModifyTicks = value;
+                }
+            }
+
+        }
+
         #endregion
 
-        #region Private methods
+        #region Private and internal methods
 
         private void AddFieldInvertedIndex(string fieldName, InvertedIndex index)
         {
@@ -1318,6 +1341,7 @@ namespace Hubble.Core.Data
             }
 
             Cache.CacheManager.InsertCount += docs.Count;
+            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
@@ -1500,6 +1524,8 @@ namespace Hubble.Core.Data
             {
                 _TableLock.Leave();
             }
+
+            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Delete(IList<long> docs)
@@ -1524,6 +1550,8 @@ namespace Hubble.Core.Data
             {
                 _TableLock.Leave();
             }
+
+            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Delete(IList<Query.DocumentResult> docs)

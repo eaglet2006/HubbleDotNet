@@ -24,18 +24,12 @@ using System.Diagnostics;
 
 namespace Hubble.Framework.Text
 {
-    class Regx
+    public class Regx
     {
         static public bool GetMatchStrings(String text, String regx,
-            bool ignoreCase, ref ArrayList output)
+            bool ignoreCase, out List<string> output)
         {
-            if (output == null)
-            {
-                Debug.Assert(false);
-                return false;
-            }
-
-            output.Clear();
+            output = new List<string>();
 
             Regex reg;
 
@@ -94,15 +88,9 @@ namespace Hubble.Framework.Text
         }
 
         static public bool GetSingleMatchStrings(String text, String regx,
-            bool ignoreCase, ref ArrayList output)
+            bool ignoreCase, out List<string> output)
         {
-            if (output == null)
-            {
-                Debug.Assert(false);
-                return false;
-            }
-
-            output.Clear();
+            output = new List<string>();
 
             Regex reg;
 
@@ -162,16 +150,9 @@ namespace Hubble.Framework.Text
 
 
         static public bool GetSplitWithoutFirstStrings(String text, String regx,
-            bool ignoreCase, ref ArrayList output)
+            bool ignoreCase, out List<string> output)
         {
-
-            if (output == null)
-            {
-                Debug.Assert(false);
-                return false;
-            }
-
-            output.Clear();
+            output = new List<string>();
 
             Regex reg;
 

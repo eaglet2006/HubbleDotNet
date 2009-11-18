@@ -29,6 +29,8 @@ namespace QueryAnalyzer
                     comboBoxServerName.Items.Add(serverInfo.ServerName);
                 }
             }
+
+            Hubble.SQLClient.DataCacheMgr.MaxMemorySize = 32 * 1024 * 1024; //32M Data cache
         }
 
         private void buttonLogin_Click(object sender, EventArgs e)

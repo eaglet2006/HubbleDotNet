@@ -18,18 +18,39 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Hubble.SQLClient;
+using Hubble.Framework.DataStructure;
+using System.IO;
 
-namespace Hubble.Core.StoredProcedure
+namespace Hubble.SQLClient
 {
-    public interface IStoredProc
+    class DataCache : Cache <QueryResult>
     {
-        List<string> Parameters {get;}
+        public DataCache(CacheManage cacheMgr)
+            : base(cacheMgr)
+        {
+        }
 
-        QueryResult Result {get;}
+        protected override byte[] GetBytes(QueryResult data)
+        {
+            MemoryStream m = new MemoryStream();
 
-        string Name { get; }
+            QueryResultSerialization.Serialize(m, data, false, 1);
 
-        void Run();
+            m.Position = 0;
+
+            byte[] bytes = new byte[m.Length];
+
+            m.Read(bytes, 0, bytes.Length);
+
+            return bytes;
+        }
+
+        protected override QueryResult GetData(byte[] buf)
+        {
+            MemoryStream m = new MemoryStream(buf);
+            m.Position = 0;
+
+            return QueryResultSerialization.Deserialize(m, false, 1);
+        }
     }
 }

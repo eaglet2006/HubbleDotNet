@@ -36,11 +36,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataCache.cs" />
+    <Compile Include="DataCacheMgr.cs" />
     <Compile Include="QueryResultSerialization.cs" />
     <Compile Include="SqlCommand.cs" />
     <Compile Include="SqlConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueryResult.cs" />
+    <Compile Include="TableTicks.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">

@@ -18,18 +18,39 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Hubble.SQLClient;
 
 namespace Hubble.Core.StoredProcedure
 {
-    public interface IStoredProc
+    class SP_InnerDataCache : StoredProcedure, IStoredProc
     {
-        List<string> Parameters {get;}
+        #region IStoredProc Members
 
-        QueryResult Result {get;}
+        public string Name
+        {
+            get
+            {
+                return "SP_InnerDataCache";
+            }
+        }
 
-        string Name { get; }
+        public void Run()
+        {
+            Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.NeedDataCache = true;
 
-        void Run();
+            if (Parameters.Count == 0)
+            {
+                return;
+            }
+
+            foreach (SQLClient.TableTicks tblTicks in SQLClient.TableTicks.ToTableTicksList(Parameters[0]))
+            {
+                Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.DataCache.Add(tblTicks.TableName,
+                    tblTicks.Ticks);
+            }
+
+
+        }
+
+        #endregion
     }
 }

@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -37,6 +54,16 @@ namespace QueryAnalyzer
             try
             {
                 QueryPerfCounter qp = new QueryPerfCounter();
+
+                bool dataCacheEnabled = checkBoxDataCache.Checked;
+                
+                int dataCacheTimeout = -1;
+
+                if (dataCacheEnabled)
+                {
+                    dataCacheTimeout = (int)numericUpDownDataCache.Value;
+                }
+
                 qp.Start();
 
                 SFQLParse sfqlParse = new SFQLParse();
@@ -49,7 +76,14 @@ namespace QueryAnalyzer
 
                 for (int i = 0; i < numericUpDownIteration.Value; i++)
                 {
-                    DataAccess.Excute(sql);
+                    if (dataCacheEnabled)
+                    {
+                        DataAccess.Excute(sql, dataCacheTimeout);
+                    }
+                    else
+                    {
+                        DataAccess.Excute(sql);
+                    }
                 }
 
                 qp.Stop();
@@ -217,6 +251,21 @@ namespace QueryAnalyzer
             finally
             {
             }
+        }
+
+        private void checkBoxDataCache_CheckedChanged(object sender, EventArgs e)
+        {
+            groupBoxDataCache.Enabled = checkBoxDataCache.Checked;
+        }
+
+        private void FormPerformance_Load(object sender, EventArgs e)
+        {
+            int left = groupBoxDataCache.Left + checkBoxDataCache.Left;
+            int top = groupBoxDataCache.Top + checkBoxDataCache.Top;
+
+            checkBoxDataCache.Parent = this;
+            checkBoxDataCache.Location = new Point(left, top);
+            checkBoxDataCache.BringToFront();
         }
     }
 }

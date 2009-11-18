@@ -28,9 +28,11 @@ namespace Hubble.Framework.DataStructure
 
         int MaxStair { get; }
 
-        bool Clear(int stair);
+        bool Clear(int stair, double ratio);
 
         List<string> BucketInfoList { get; }
+
+        long GetBucketMemorySize(int stair);
     }
 
     /// <summary>
@@ -109,13 +111,35 @@ namespace Hubble.Framework.DataStructure
 
             public new void Clear()
             {
+                Clear(0);
+            }
+
+            public void Clear(double ratio)
+            {
                 LinkedListNode<CacheItem> node = this.First;
+
+                long targetMemorySize = (long)(MemorySize * ratio);
+
+                if (targetMemorySize > MemorySize)
+                {
+                    targetMemorySize = MemorySize;
+                }
+
+                if (targetMemorySize < 0)
+                {
+                    targetMemorySize = 0;
+                }
 
                 while (this.Count > 0)
                 {
                     Remove(node.Value);
 
                     node = this.First;
+
+                    if (MemorySize <= targetMemorySize)
+                    {
+                        break;
+                    }
                 }
 
             }
@@ -136,6 +160,8 @@ namespace Hubble.Framework.DataStructure
 
             private int _Stair;
             private LinkedListNode<CacheItem> _Node;
+
+            private object _Tag = null;
 
             private Bit16Int _Key;
 
@@ -247,6 +273,26 @@ namespace Hubble.Framework.DataStructure
                 }
             }
 
+            public object Tag
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        return _Tag;
+                    }
+                }
+
+                set
+                {
+                    lock (this)
+                    {
+                        _Tag = value;
+                    }
+                }
+            }
+
+
             public T Value
             {
                 get
@@ -342,6 +388,24 @@ namespace Hubble.Framework.DataStructure
 
 
         #region Public methods
+        
+        public void ChangeExpireTime(string key, DateTime expireTime)
+        {
+            lock (_LockObj)
+            {
+                CacheItem node;
+
+                if (_Dict.TryGetValue(key, out node))
+                {
+                    node.ExpireTime = expireTime;
+                }
+            }
+        }
+
+        public void Insert(string key, T item, DateTime expireTime)
+        {
+            Insert(key, item, expireTime, null);
+        }
 
         /// <summary>
         /// Insert data by key
@@ -350,7 +414,7 @@ namespace Hubble.Framework.DataStructure
         /// <param name="key">key</param>
         /// <param name="item">data</param>
         /// <param name="expireTime">expire time</param>
-        public void Insert(string key, T item, DateTime expireTime)
+        public void Insert(string key, T item, DateTime expireTime, object tag)
         {
             lock (_LockObj)
             {
@@ -363,6 +427,7 @@ namespace Hubble.Framework.DataStructure
                     long oldSize = node.Size;
 
                     node.Value = item;
+                    node.Tag = tag;
 
                     _Buckets[node.Stair].IncSize(node.Size - oldSize);
                 }
@@ -380,6 +445,7 @@ namespace Hubble.Framework.DataStructure
                     _Dict.Add(key, node, out md5Key);
 
                     node.Key = md5Key;
+                    node.Tag = tag;
 
                 }
             }
@@ -388,6 +454,12 @@ namespace Hubble.Framework.DataStructure
         }
 
         public bool TryGetValue(string key, out T value, out DateTime expireTime, out int hitCount)
+        {
+            object tag;
+            return TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+        }
+
+        public bool TryGetValue(string key, out T value, out DateTime expireTime, out int hitCount, out object tag)
         {
             lock (_LockObj)
             {
@@ -412,6 +484,7 @@ namespace Hubble.Framework.DataStructure
                         }
                     }
 
+                    tag = node.Tag;
                     hitCount = node.HitCount;
 
                     return true;
@@ -421,6 +494,7 @@ namespace Hubble.Framework.DataStructure
                     value = default(T);
                     expireTime = default(DateTime);
                     hitCount = 0;
+                    tag = null;
                     return false;
                 }
             }
@@ -458,7 +532,7 @@ namespace Hubble.Framework.DataStructure
             }
         }
 
-        public bool Clear(int stair)
+        public bool Clear(int stair, double ratio)
         {
             lock (_LockObj)
             {
@@ -467,7 +541,7 @@ namespace Hubble.Framework.DataStructure
                     return false;
                 }
 
-                _Buckets[stair].Clear();
+                _Buckets[stair].Clear(ratio);
 
                 return true;
             }
@@ -491,6 +565,19 @@ namespace Hubble.Framework.DataStructure
 
                 return result;
 
+            }
+        }
+
+        public long GetBucketMemorySize(int stair)
+        {
+            lock (_LockObj)
+            {
+                if (stair >= _Buckets.Length)
+                {
+                    return 0;
+                }
+
+                return _Buckets[stair].MemorySize;
             }
         }
 

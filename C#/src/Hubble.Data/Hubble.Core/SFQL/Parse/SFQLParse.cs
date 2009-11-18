@@ -1,4 +1,21 @@
-﻿using System;
+﻿/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -441,10 +458,41 @@ namespace Hubble.Core.SFQL.Parse
 
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
         {
+            QueryResult qResult = new QueryResult();
+
             SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
                 SyntaxAnalysis.Select.Select;
 
-            ParseWhere parseWhere = new ParseWhere(select.SelectFroms[0].Name);
+            string tableName = select.SelectFroms[0].Name;
+
+            //Process data cache
+            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.NeedDataCache)
+            {
+                Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
+
+                if (dbProvider != null)
+                {
+                    long datacacheTicks = Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.DataCache.GetTicks(
+                        dbProvider.TableName);
+
+                    long lastModifyTicks = dbProvider.LastModifyTicks;
+
+                    qResult.PrintMessages.Add(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
+                        dbProvider.TableName, lastModifyTicks));
+
+                    if (lastModifyTicks <= datacacheTicks)
+                    {
+                        System.Data.DataTable table = new System.Data.DataTable();
+                        table.MinimumCapacity = int.MaxValue;
+                        qResult.DataSet.Tables.Add(table);
+                        return qResult;
+                    }
+                }
+            }
+
+            //Begin to select
+
+            ParseWhere parseWhere = new ParseWhere(tableName);
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
@@ -555,7 +603,8 @@ namespace Hubble.Core.SFQL.Parse
             
             ds.Tables[0].MinimumCapacity = result.Length;
 
-            return new QueryResult(ds);
+            qResult.DataSet = ds;
+            return qResult;
         }
 
         private QueryResult ExecuteTSFQLSentence(TSFQLSentence sentence)
