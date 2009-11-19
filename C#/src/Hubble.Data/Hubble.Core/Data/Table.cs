@@ -45,6 +45,10 @@ namespace Hubble.Core.Data
 
         bool _IndexOnly = false;
 
+        bool _QueryCacheEnabled = true;
+
+        int _QueryCacheTimeout = 0; //In seconds
+
         #endregion
 
         #region Public properties
@@ -172,6 +176,33 @@ namespace Hubble.Core.Data
             }
         }
 
+
+        public bool QueryCacheEnabled
+        {
+            get
+            {
+                return _QueryCacheEnabled;
+            }
+
+            set
+            {
+                _QueryCacheEnabled = value;
+            }
+        }
+
+        public int QueryCacheTimeout
+        {
+            get
+            {
+                return _QueryCacheTimeout;
+            }
+
+            set
+            {
+                _QueryCacheTimeout = value;
+            }
+        }
+             
 
         public void Save(string dir)
         {

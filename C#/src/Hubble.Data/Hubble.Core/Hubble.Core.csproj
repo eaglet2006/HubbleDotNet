@@ -49,6 +49,8 @@
     <Compile Include="Analysis\Framework\WordInfo.cs" />
     <Compile Include="Cache\CacheManager.cs" />
     <Compile Include="Cache\IManagedCache.cs" />
+    <Compile Include="Cache\QueryCache.cs" />
+    <Compile Include="Cache\QueryCacheManager.cs" />
     <Compile Include="Data\DataException.cs" />
     <Compile Include="Data\DataType.cs" />
     <Compile Include="Data\DBAccess.cs" />
@@ -119,6 +121,9 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_OptimizeTable.cs" />
+    <Compile Include="StoredProcedure\SP_QueryCacheReport.cs" />
+    <Compile Include="StoredProcedure\SP_TableQueryCache.cs" />
     <Compile Include="StoredProcedure\SP_InnerDataCache.cs" />
     <Compile Include="StoredProcedure\SP_AnalyzerList.cs" />
     <Compile Include="StoredProcedure\SP_DBAdapterList.cs" />

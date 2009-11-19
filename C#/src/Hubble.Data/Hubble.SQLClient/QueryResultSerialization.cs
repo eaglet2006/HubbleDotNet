@@ -26,7 +26,7 @@ namespace Hubble.SQLClient
 {
     public class QueryResultSerialization : Hubble.Framework.Serialization.IMySerialization
     {
-        enum DataType : byte
+        public enum DataType : byte
         {
             Null = 0,
             Byte = 1,
@@ -43,7 +43,7 @@ namespace Hubble.SQLClient
 
         #region static members
 
-        static private DataType GetDataType(Type type)
+        static public DataType GetDataType(Type type)
         {
             if (type == typeof(string))
             {
@@ -92,7 +92,7 @@ namespace Hubble.SQLClient
             }
         }
 
-        static private Type GetType(DataType type)
+        static public Type GetType(DataType type)
         {
             switch (type)
             {
@@ -123,7 +123,7 @@ namespace Hubble.SQLClient
 
         }
 
-        private static byte[] ReadToBuf(Stream stream, byte[] buf)
+        public static byte[] ReadToBuf(Stream stream, byte[] buf)
         {
             int offset = 0;
             int readBytes = 0;
@@ -142,7 +142,7 @@ namespace Hubble.SQLClient
             return buf;
         }
 
-        private static string ToString(Stream stream)
+        public static string ToString(Stream stream)
         {
             byte[] buf = ReadToBuf(stream, new byte[sizeof(int)]);
             int count = BitConverter.ToInt32(buf, 0);
@@ -150,13 +150,13 @@ namespace Hubble.SQLClient
             return Encoding.UTF8.GetString(buf);
         }
 
-        private static int ToInt32(Stream stream)
+        public static int ToInt32(Stream stream)
         {
             byte[] buf = ReadToBuf(stream, new byte[sizeof(int)]);
             return BitConverter.ToInt32(buf, 0);
         }
 
-        private static object Read(Stream stream, DataType type)
+        public static object Read(Stream stream, DataType type)
         {
             switch (type)
             {
@@ -224,7 +224,7 @@ namespace Hubble.SQLClient
         }
 
 
-        private static void Write(Stream stream, Type type, object data)
+        public static void Write(Stream stream, Type type, object data)
         {
             if (type == typeof(string))
             {

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using Serialization = Hubble.SQLClient.QueryResultSerialization;
+
 namespace Hubble.Core.Query
 {
     public enum SortType
@@ -49,7 +51,6 @@ namespace Hubble.Core.Query
             SortType = sortType;
             StringValue = value;
         }
-
     }
 
     public class DocumentResultComparer : IComparer<DocumentResult>
@@ -86,6 +87,23 @@ namespace Hubble.Core.Query
             DocId = docId;
             Score = score;
             Payload = payload;
+        }
+
+        public void Serialize(System.IO.Stream stream)
+        {
+            Serialization.Write(stream, typeof(long), this.DocId);
+            Serialization.Write(stream, typeof(long), this.Score);
+        }
+
+        public static DocumentResult Deserialize(System.IO.Stream stream)
+        {
+            long docId = (long)Serialization.Read(stream,
+                 Serialization.DataType.Long);
+
+            long score = (long)Serialization.Read(stream,
+                 Serialization.DataType.Long);
+
+            return new DocumentResult(docId, score);
         }
 
         #region IComparable<DocumentResult> Members

@@ -111,6 +111,8 @@ namespace Hubble.Framework.DataStructure
                     {
                         _MaxMemorySize = value;
                     }
+
+                    Collect();
                 }
             }
         }
@@ -147,8 +149,16 @@ namespace Hubble.Framework.DataStructure
             GC.Collect();
         }
 
+        internal void Add(IManagedCache cache)
+        {
+            lock (_LockObj)
+            {
+                _ManagedCacheList.Add(cache);
+                _MaxStair = Math.Max(_MaxStair, cache.MaxStair);
+            }
+        }
 
-        public void Collect()
+        internal void Collect()
         {
             try
             {
@@ -246,15 +256,6 @@ namespace Hubble.Framework.DataStructure
 
         }
 
-        public void Add(IManagedCache cache)
-        {
-            lock (_LockObj)
-            {
-                _ManagedCacheList.Add(cache);
-                _MaxStair = Math.Max(_MaxStair, cache.MaxStair);
-            }
-        }
-
         public IManagedCache[] GetCaches()
         {
             lock (_LockObj)
@@ -263,6 +264,14 @@ namespace Hubble.Framework.DataStructure
             }
         }
 
+        public void Delete(IManagedCache cache)
+        {
+            for (int i = 0; i < cache.MaxStair; i++)
+            {
+                cache.Clear(i, 0);
+            }
 
+            _ManagedCacheList.Remove(cache);
+        }
     }
 }

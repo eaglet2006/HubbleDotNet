@@ -456,6 +456,24 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
+        private string GetWhereSql(SyntaxAnalysis.Select.Select select)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append(select.Where.ToString());
+            sb.Append(" ");
+
+            if (select.OrderBys != null)
+            {
+                foreach (Hubble.Core.SFQL.SyntaxAnalysis.Select.OrderBy orderby in select.OrderBys)
+                {
+                    sb.AppendFormat("order by {0} {1} ", orderby.Name, orderby.Order);
+                }
+            }
+
+            return sb.ToString().ToLower();
+        }
+
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
         {
             QueryResult qResult = new QueryResult();
@@ -465,27 +483,36 @@ namespace Hubble.Core.SFQL.Parse
 
             string tableName = select.SelectFroms[0].Name;
 
-            //Process data cache
-            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.NeedDataCache)
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
+
+            if (dbProvider == null)
             {
-                Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
+                throw new DataException(string.Format("Table: {0} does not exist!", select.SelectFroms[0].Name));
+            }
 
-                if (dbProvider != null)
+            long lastModifyTicks = dbProvider.LastModifyTicks;
+
+            //Process data cache
+            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent != null)
+            {
+                if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.NeedDataCache)
                 {
-                    long datacacheTicks = Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.DataCache.GetTicks(
-                        dbProvider.TableName);
 
-                    long lastModifyTicks = dbProvider.LastModifyTicks;
-
-                    qResult.PrintMessages.Add(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
-                        dbProvider.TableName, lastModifyTicks));
-
-                    if (lastModifyTicks <= datacacheTicks)
+                    if (dbProvider != null)
                     {
-                        System.Data.DataTable table = new System.Data.DataTable();
-                        table.MinimumCapacity = int.MaxValue;
-                        qResult.DataSet.Tables.Add(table);
-                        return qResult;
+                        long datacacheTicks = Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.DataCache.GetTicks(
+                            dbProvider.TableName);
+
+                        qResult.PrintMessages.Add(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
+                            dbProvider.TableName, lastModifyTicks));
+
+                        if (lastModifyTicks <= datacacheTicks)
+                        {
+                            System.Data.DataTable table = new System.Data.DataTable();
+                            table.MinimumCapacity = int.MaxValue;
+                            qResult.DataSet.Tables.Add(table);
+                            return qResult;
+                        }
                     }
                 }
             }
@@ -498,56 +525,110 @@ namespace Hubble.Core.SFQL.Parse
             parseWhere.End = select.End;
             Query.DocumentResult[] result;
 
-            if (select.Where == null)
-            {
-                result = parseWhere.Parse(null);
-            }
-            else
-            {
-                result = parseWhere.Parse(select.Where.ExpressionTree);
-            }
+            //Query cache
+            Cache.QueryCache queryCache = null;
+            string whereSql = "";
+            bool noQueryCache = true;
+            Cache.QueryCacheDocuments qDocs = null;
 
-            //Sort
-            Data.DBProvider dBProvider =  Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
-
-            if (dBProvider == null)
+            if (dbProvider.QueryCacheEnabled)
             {
-                throw new DataException(string.Format("Table: {0} does not exist!", select.SelectFroms[0].Name));
+                queryCache = dbProvider.QueryCache;
             }
 
-            //Document rank
-            //If has rank field and datatype is int32, do document rank
-
-            Data.Field rankField = dBProvider.GetField("Rank");
-
-            if (rankField != null)
+            if (queryCache != null)
             {
-                if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
-                    rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
+                whereSql = GetWhereSql(select);
+                
+                DateTime expireTime;
+                int hitCount;
+                object tag;
+
+                if (queryCache.TryGetValue(whereSql, out qDocs, out expireTime, out hitCount, out tag))
                 {
-                    int rankTab = rankField.TabIndex;
+                    Cache.QueryCacheInformation qInfo = (Cache.QueryCacheInformation)tag;
 
-                    foreach (Query.DocumentResult dr in result)
+                    if (qInfo.Count >= select.End + 1)
                     {
-                        int docRank = dBProvider.GetPayload(dr.DocId).Data[rankTab];
-                        if (docRank < 0)
+                        if (DateTime.Now <= expireTime)
                         {
-                            docRank = 0;
+                            noQueryCache = false;
                         }
-                        else if (docRank > 65535)
+                        else
                         {
-                            docRank = 65535;
+                            if (qInfo.CacheTicks >= lastModifyTicks)
+                            {
+                                noQueryCache = false;
+                            }
                         }
-
-                        dr.Score *= docRank;
                     }
                 }
             }
 
-            QueryResultSort qSort = new QueryResultSort(select.OrderBys, dBProvider);
+            //Get document result
+            if (noQueryCache)
+            {
+                if (select.Where == null)
+                {
+                    result = parseWhere.Parse(null);
+                }
+                else
+                {
+                    result = parseWhere.Parse(select.Where.ExpressionTree);
+                }
 
-            //qSort.Sort(result);
-            qSort.Sort(result, select.End + 1); // using part quick sort can reduce performance 40%
+                //Sort
+                //Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
+
+                //Document rank
+                //If has rank field and datatype is int32, do document rank
+
+                Data.Field rankField = dbProvider.GetField("Rank");
+
+                if (rankField != null)
+                {
+                    if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
+                        rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
+                    {
+                        int rankTab = rankField.TabIndex;
+
+                        foreach (Query.DocumentResult dr in result)
+                        {
+                            int docRank = dbProvider.GetPayload(dr.DocId).Data[rankTab];
+                            if (docRank < 0)
+                            {
+                                docRank = 0;
+                            }
+                            else if (docRank > 65535)
+                            {
+                                docRank = 65535;
+                            }
+
+                            dr.Score *= docRank;
+                        }
+                    }
+                }
+
+                QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
+
+                //qSort.Sort(result);
+                qSort.Sort(result, select.End + 1); // using part quick sort can reduce performance 40%
+
+                if (queryCache != null)
+                {
+                    int count = Math.Min(result.Length, select.End + 1);
+
+                    queryCache.Insert(whereSql,
+                        new Hubble.Core.Cache.QueryCacheDocuments(count, result),
+                        DateTime.Now.AddSeconds(dbProvider.QueryCacheTimeout),
+                        new Cache.QueryCacheInformation(count, lastModifyTicks));
+                }
+
+            }
+            else
+            {
+                result = qDocs.Documents;
+            }
 
             List<Data.Field> selectFields = new List<Data.Field>();
 
@@ -557,13 +638,13 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (selectField.Name == "*")
                 {
-                    List<Data.Field> allFields = dBProvider.GetAllSelectFields();
+                    List<Data.Field> allFields = dbProvider.GetAllSelectFields();
                     selectFields.AddRange(allFields);
                     allFieldsCount += allFields.Count;
                     continue;
                 }
 
-                Data.Field field = dBProvider.GetField(selectField.Name);
+                Data.Field field = dbProvider.GetField(selectField.Name);
 
                 if (field == null)
                 {
@@ -587,7 +668,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            List<Data.Document> docResult = dBProvider.Query(selectFields, result, select.Begin, select.End);
+            List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
             System.Data.DataSet ds = Data.Document.ToDataSet(selectFields, docResult);
             ds.Tables[0].TableName = select.SelectFroms[0].Name;
 
@@ -604,6 +685,7 @@ namespace Hubble.Core.SFQL.Parse
             ds.Tables[0].MinimumCapacity = result.Length;
 
             qResult.DataSet = ds;
+
             return qResult;
         }
 

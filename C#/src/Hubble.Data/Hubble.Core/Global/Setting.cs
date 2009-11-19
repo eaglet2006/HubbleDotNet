@@ -457,6 +457,33 @@ namespace Hubble.Core.Global
             }
         }
 
+        long _QueryCacheMemoryLimited = 16 * 1024 * 1024;
+
+        public long QueryCacheMemoryLimited
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _QueryCacheMemoryLimited;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _QueryCacheMemoryLimited = value;
+
+                    if (_QueryCacheMemoryLimited < 64 * 1024 )
+                    {
+                        _MemoryLimited = 1 * 1024 * 1024;
+                    }
+                }
+            }
+
+        }
+
         Directories _Directories = new Directories();
 
         public Directories Directories

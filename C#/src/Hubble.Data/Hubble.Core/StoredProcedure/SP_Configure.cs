@@ -17,7 +17,11 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Note", "MB, Minimun is 1 MB");
 
             NewRow();
+            OutputValue("Name", "QueryCacheMemoryLimited");
+            OutputValue("Value", (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString());
+            OutputValue("Note", "MB, Minimun is 1 MB");
 
+            NewRow();
             OutputValue("Name", "LogDirectory");
             OutputValue("Value", Global.Setting.Config.Directories.LogDirectory);
             OutputValue("Note", "Dicrectory of log file in server");
@@ -35,6 +39,12 @@ namespace Hubble.Core.StoredProcedure
                 case "memorylimited":
                     OutputValue("Name", "MemoryLimited");
                     OutputValue("Value", (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString());
+                    OutputValue("Note", "MB, Minimun is 1 MB");
+                    break;
+
+                case "querycachememorylimited":
+                    OutputValue("Name", "QueryCacheMemoryLimited");
+                    OutputValue("Value", (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString());
                     OutputValue("Note", "MB, Minimun is 1 MB");
                     break;
 
@@ -58,20 +68,41 @@ namespace Hubble.Core.StoredProcedure
             switch (name.ToLower())
             {
                 case "memorylimited":
-                    oldValue = (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString();
-                    long memoryLimited;
-
-                    if (!long.TryParse(value, out memoryLimited))
                     {
-                        throw new StoredProcException("Error converting data type varchar to int.");
+                        oldValue = (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString();
+                        long memoryLimited;
+
+                        if (!long.TryParse(value, out memoryLimited))
+                        {
+                            throw new StoredProcException("Error converting data type varchar to int.");
+                        }
+
+                        Global.Setting.Config.MemoryLimited = memoryLimited * 1024 * 1024;
+
+                        Global.Setting.Save();
+
+                        OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
+                            name, oldValue, (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString()));
                     }
+                    break;
+                case "querycachememorylimited":
+                    {
+                        oldValue = (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString();
+                        long memoryLimited;
 
-                    Global.Setting.Config.MemoryLimited = memoryLimited * 1024 * 1024;
+                        if (!long.TryParse(value, out memoryLimited))
+                        {
+                            throw new StoredProcException("Error converting data type varchar to int.");
+                        }
 
-                    Global.Setting.Save();
+                        Global.Setting.Config.QueryCacheMemoryLimited = memoryLimited * 1024 * 1024;
+                        Cache.QueryCacheManager.Manager.MaxMemorySize = Global.Setting.Config.QueryCacheMemoryLimited;
 
-                    OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
-                        name, oldValue, (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString()));
+                        Global.Setting.Save();
+
+                        OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
+                            name, oldValue, (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString()));
+                    }
 
                     break;
 

@@ -285,6 +285,10 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
         #endregion
 
+        public override string ToString()
+        {
+            return ExpressionTree.ToString();
+        }
     }
 }
 

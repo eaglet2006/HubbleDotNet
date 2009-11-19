@@ -435,6 +435,8 @@ namespace Hubble.Core.Data
                 }
             }
 
+            Cache.QueryCacheManager.Manager.MaxMemorySize = Global.Setting.Config.QueryCacheMemoryLimited;
+
             //foreach (string removeDir in removeDirs)
             //{
             //    Setting.RemoveTableConfig(removeDir);
@@ -481,6 +483,12 @@ namespace Hubble.Core.Data
         private Hubble.Framework.Threading.Lock _TableLock = new Hubble.Framework.Threading.Lock();
 
         private long _LastModifyTicks = DateTime.Now.Ticks;
+
+        private Cache.QueryCache _QueryCache = null;
+
+        private bool _QueryCacheEnabled = true;
+
+        private int _QueryCacheTimeout = 0; //In seconds
 
         #endregion
 
@@ -538,6 +546,30 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal Cache.QueryCache QueryCache
+        {
+            get
+            {
+                return _QueryCache;
+            }
+        }
+
+        internal bool QueryCacheEnabled
+        {
+            get
+            {
+                return _Table.QueryCacheEnabled;
+            }
+        }
+
+        internal int QueryCacheTimeout
+        {
+            get
+            {
+                return _Table.QueryCacheTimeout;
+            }
+        }
+
         internal DeleteProvider DelProvider
         {
             get
@@ -577,6 +609,17 @@ namespace Hubble.Core.Data
                 index.ForceCollectCount = _Table.ForceCollectCount;
                 _FieldInvertedIndex.Add(fieldName.Trim().ToLower(), index);
             }
+        }
+
+        internal void SetCacheQuery(bool value, int timeout)
+        {
+            _Table.QueryCacheEnabled = value;
+
+            if (timeout >= 0)
+            {
+                _Table.QueryCacheTimeout = timeout;
+            }
+
         }
 
         internal void SetIndexOnly(bool value)
@@ -798,6 +841,18 @@ namespace Hubble.Core.Data
             }
             finally
             {
+                if (_QueryCache != null)
+                {
+                    try
+                    {
+                        Cache.QueryCacheManager.Manager.Delete(_QueryCache);
+                    }
+                    catch
+                    {
+                    }
+
+                    _QueryCache = null;
+                }
             }
         }
 
@@ -879,6 +934,10 @@ namespace Hubble.Core.Data
                 }
             }
 
+            if (_QueryCache == null)
+            {
+                _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
+            }
         }
 
         public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs)
@@ -1175,6 +1234,11 @@ namespace Hubble.Core.Data
 
                     AddFieldIndex(field.Name, field);
                 }
+            }
+
+            if (_QueryCache == null)
+            {
+                _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
             }
         }
 
