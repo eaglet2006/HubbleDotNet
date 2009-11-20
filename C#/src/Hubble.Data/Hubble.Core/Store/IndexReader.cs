@@ -52,9 +52,9 @@ namespace Hubble.Core.Store
             _Serial = serial;
 
             _HeadFilePath = Path.AppendDivision(path, '\\') + 
-                string.Format("{0:D4}{1}.hdx", serial, fieldName);
+                string.Format("{0:D7}{1}.hdx", serial, fieldName);
             _IndexFilePath = Path.AppendDivision(path, '\\') +
-                string.Format("{0:D4}{1}.idx", serial, fieldName);
+                string.Format("{0:D7}{1}.idx", serial, fieldName);
 
             _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Open,
                  System.IO.FileAccess.Read, System.IO.FileShare.Read);

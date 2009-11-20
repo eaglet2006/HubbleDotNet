@@ -448,6 +448,12 @@ namespace Hubble.Core.Store
 
         private int _WordCount = 0;
 
+        private bool _NeedClose = false;
+
+        private bool _CanClose = true;
+
+        private object _LockObj = new object();
+
         private int InnerWordTableSize
         {
             get
@@ -491,6 +497,19 @@ namespace Hubble.Core.Store
                 return InnerWordTableSize;
             }
         }
+
+        internal bool CanClose
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _CanClose;
+                }
+
+            }
+        }
+
         #endregion
 
         private List<IndexFile.FilePosition> GetFilePositionListByWord(string word)
@@ -670,11 +689,31 @@ namespace Hubble.Core.Store
                 }
             }
 
-            System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeHeadFileName,
-                _IndexFile.IndexDir + mergeAck.MergeHeadFileName);
+            try
+            {
+                System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeHeadFileName,
+                    _IndexFile.IndexDir + mergeAck.MergeHeadFileName);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
+                    begin, end, _IndexFile.IndexDir + mergeAck.MergeHeadFileName),
+                    e);
+                throw e;
+            }
 
-            System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeIndexFileName,
-                _IndexFile.IndexDir + mergeAck.MergeIndexFileName);
+            try
+            {
+                System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeIndexFileName,
+                    _IndexFile.IndexDir + mergeAck.MergeIndexFileName);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
+                    begin, end, _IndexFile.IndexDir + mergeAck.MergeIndexFileName),
+                    e);
+                throw e;
+            }
 
             foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
             {
@@ -709,36 +748,64 @@ namespace Hubble.Core.Store
 
         private object ProcessMessage(int evt, MessageFlag flag, object data)
         {
-            switch ((Event)evt)
+            try
             {
-                case Event.Add:
-                    WordDocList wl = (WordDocList)data;
-                    _IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
-                    if (WordUpdateDelegate != null)
-                    {
-                        WordUpdateDelegate(wl.Word, wl.DocList);
-                    }
+                switch ((Event)evt)
+                {
+                    case Event.Add:
+                        WordDocList wl = (WordDocList)data;
+                        _IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
+                        if (WordUpdateDelegate != null)
+                        {
+                            WordUpdateDelegate(wl.Word, wl.DocList);
+                        }
 
-                    break;
-                case Event.Collect:
-                    _IndexFile.Collect();
-                    PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
-                    _IndexFile.ClearWordFilePositionList();
-                    break;
-                case Event.Get:
-                    {
-                        GetInfo getInfo = data as GetInfo;
-                        List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
-                        return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
-                            getInfo.DBProvider, getInfo.TabIndex);
-                    }
-                case Event.GetFilePositionList:
-                    return ProcessGetFilePositionList(evt, flag, data);
+                        break;
+                    case Event.Collect:
 
-                case Event.MergeAck:
-                    ProcessMergeAck(evt, flag, data);
-                    break;
+                        lock (_LockObj)
+                        {
+                            if (_NeedClose)
+                            {
+                                break;
+                            }
 
+                            _CanClose = false;
+                        }
+
+                        _IndexFile.Collect();
+
+                        PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
+                        _IndexFile.ClearWordFilePositionList();
+
+                        lock (_LockObj)
+                        {
+                            _CanClose = true;
+                        }
+
+                        break;
+                    case Event.Get:
+                        {
+                            GetInfo getInfo = data as GetInfo;
+                            List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
+                            return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                                getInfo.DBProvider, getInfo.TabIndex);
+                        }
+                    case Event.GetFilePositionList:
+                        return ProcessGetFilePositionList(evt, flag, data);
+
+                    case Event.MergeAck:
+                        ProcessMergeAck(evt, flag, data);
+                        break;
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog(string.Format("Index File Proxy Fail! Event={0}", ((Event)evt).ToString()), e);
+
+                throw e;
             }
 
             return null;
@@ -797,6 +864,13 @@ namespace Hubble.Core.Store
             ASendMessage((int)Event.Collect, null);
         }
 
+        internal void SafelyClose()
+        {
+            lock (_LockObj)
+            {
+                _NeedClose = true;
+            }
+        }
 
         new public void Close(int millisecondsTimeout)
         {

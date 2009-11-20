@@ -317,7 +317,7 @@ namespace Hubble.Core.Store
 
         private void LoadIndexFiles(bool createNew)
         {
-            string[] files = System.IO.Directory.GetFiles(_Path, "????" + FieldName + ".hdx");
+            string[] files = System.IO.Directory.GetFiles(_Path, "???????" + FieldName + ".hdx");
 
             foreach (string file in files)
             {
@@ -325,7 +325,7 @@ namespace Hubble.Core.Store
                 {
                     string fileName = System.IO.Path.GetFileName(file);
 
-                    int serial = int.Parse(fileName.Substring(0, 4));
+                    int serial = int.Parse(fileName.Substring(0, 7));
 
                     string hFile = Path.AppendDivision(_Path, '\\') +
                         GetHeadFileName(serial);
@@ -540,12 +540,12 @@ namespace Hubble.Core.Store
 
         public string GetHeadFileName(int serialNo)
         {
-            return string.Format("{0:D4}{1}.hdx", serialNo, FieldName);
+            return string.Format("{0:D7}{1}.hdx", serialNo, FieldName);
         }
 
         public string GetIndexFileName(int serialNo)
         {
-            return string.Format("{0:D4}{1}.idx", serialNo, FieldName);
+            return string.Format("{0:D7}{1}.idx", serialNo, FieldName);
         }
 
         #endregion

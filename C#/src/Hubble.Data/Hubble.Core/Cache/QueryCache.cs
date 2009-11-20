@@ -57,6 +57,7 @@ namespace Hubble.Core.Cache
     {
         public DocumentResult[] Documents;
         public int Count;
+        public int ResultLength;
 
         public QueryCacheDocuments()
         {
@@ -68,6 +69,7 @@ namespace Hubble.Core.Cache
         {
             Documents = docResults;
             Count = count;
+            ResultLength = docResults.Length;
         }
 
     }
@@ -86,6 +88,7 @@ namespace Hubble.Core.Cache
         {
             System.IO.MemoryStream m = new System.IO.MemoryStream();
             m.Write(BitConverter.GetBytes(data.Count), 0, sizeof(int));
+            m.Write(BitConverter.GetBytes(data.ResultLength), 0, sizeof(int));
 
             if (data.Count > CompressFrom)
             {
@@ -129,6 +132,10 @@ namespace Hubble.Core.Cache
             m.Read(bytes, 0, bytes.Length);
 
             result.Count = BitConverter.ToInt32(bytes, 0);
+
+            m.Read(bytes, 0, bytes.Length);
+
+            result.ResultLength = BitConverter.ToInt32(bytes, 0);
 
             if (result.Count > CompressFrom)
             {

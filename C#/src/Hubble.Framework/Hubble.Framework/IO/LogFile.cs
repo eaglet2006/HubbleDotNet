@@ -86,8 +86,8 @@ namespace Hubble.Framework.IO
 
         public static void WriteErrorLog(string message, Exception e)
         {
-            WriteErrorLog(string.Format("ErrMsg:{0} Exception:{0} Message:{1} Stack:{2}",
-                message, e.ToString(), e.Message, e.StackTrace));
+            WriteErrorLog(string.Format("ErrMsg:{0}\r\nException:{1}\r\nMessage:{2}\r\nStack:{3}",
+                message, e.GetType().ToString(), e.Message, e.StackTrace));
         }
 
 

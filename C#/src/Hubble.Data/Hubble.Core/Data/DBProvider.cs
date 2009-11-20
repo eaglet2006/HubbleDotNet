@@ -40,6 +40,28 @@ namespace Hubble.Core.Data
         static Dictionary<string, Type> _DBAdapterTable = new Dictionary<string, Type>(); //name to IDBAdapter Type
         static Dictionary<string, Type> _StoredProcTable = new Dictionary<string, Type>(); //name to StoredProcedure type
 
+        static bool _sNeedClose = false;
+        static bool _sCanClose = true;
+
+        internal static bool StaticCanClose
+        {
+            get
+            {
+                lock (_sLockObj)
+                {
+                    return _sCanClose;
+                }
+            }
+        }
+
+        internal static void StaticClose()
+        {
+            lock (_sLockObj)
+            {
+                _sNeedClose = true;
+            }
+        }
+
         private static void DeleteTableName(string tableName)
         {
             lock (_sLockObj)
@@ -156,6 +178,21 @@ namespace Hubble.Core.Data
 
         }
 
+        internal static List<DBProvider> GetDbProviders()
+        {
+            lock (_sLockObj)
+            {
+                List<DBProvider> dbProviders = new List<DBProvider>();
+
+                foreach (DBProvider dbProvider in _DBProviderTable.Values)
+                {
+                    dbProviders.Add(dbProvider);
+                }
+
+                return dbProviders;
+            }
+        }
+
         public static List<string> GetTables()
         {
             lock (_sLockObj)
@@ -211,73 +248,113 @@ namespace Hubble.Core.Data
 
         public static void CreateTable(Table table, string directory)
         {
-            if (table.Name == null)
+            lock (_sLockObj)
             {
-                throw new System.ArgumentNullException("Null table name");
+                if (_sNeedClose)
+                {
+                    return;
+                }
+
+                _sCanClose = false;
             }
-
-            if (table.Name.Trim() == "")
-            {
-                throw new System.ArgumentException("Empty table name");
-            }
-
-            table.Name = Setting.GetTableFullName(table.Name.Trim());
-
-            if (DBProvider.DBProviderExists(table.Name))
-            {
-                throw new DataException(string.Format("Table {0} exists already!", table.Name));
-            }
-
-            directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
-
-            if (!System.IO.Directory.Exists(directory))
-            {
-                System.IO.Directory.CreateDirectory(directory);
-            }
-
-            DBProvider.NewDBProvider(table.Name, new DBProvider());
 
             try
             {
-                DBProvider.GetDBProvider(table.Name).Create(table, directory);
-            }
-            catch(Exception e)
-            {
-                DBProvider.Drop(table.Name);
+                if (table.Name == null)
+                {
+                    throw new System.ArgumentNullException("Null table name");
+                }
 
-                throw e;
+                if (table.Name.Trim() == "")
+                {
+                    throw new System.ArgumentException("Empty table name");
+                }
+
+                table.Name = Setting.GetTableFullName(table.Name.Trim());
+
+                if (DBProvider.DBProviderExists(table.Name))
+                {
+                    throw new DataException(string.Format("Table {0} exists already!", table.Name));
+                }
+
+                directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
+
+                if (!System.IO.Directory.Exists(directory))
+                {
+                    System.IO.Directory.CreateDirectory(directory);
+                }
+
+                DBProvider.NewDBProvider(table.Name, new DBProvider());
+
+                try
+                {
+                    DBProvider.GetDBProvider(table.Name).Create(table, directory);
+                }
+                catch (Exception e)
+                {
+                    DBProvider.Drop(table.Name);
+
+                    throw e;
+                }
+            }
+            finally
+            {
+                lock (_sLockObj)
+                {
+                    _sCanClose = true;
+                }
             }
         }
 
         public static void Drop(string tableName)
         {
-            tableName = Setting.GetTableFullName(tableName);
-
-            DBProvider dbProvider = GetDBProvider(tableName);
-
-            if (dbProvider != null)
+            lock (_sLockObj)
             {
-                try
+                if (_sNeedClose)
                 {
-                    dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000);
-
-                    string dir = dbProvider.Directory;
-
-                    if (dir == null)
-                    {
-                        DeleteTableName(tableName);
-                        return;
-                    }
-
-                    dbProvider.Drop();
-                    DeleteTableName(tableName);
-
-                    Global.Setting.RemoveTableConfig(dir, tableName);
-                    Global.Setting.Save();
+                    return;
                 }
-                finally
+
+                _sCanClose = false;
+            }
+
+            try
+            {
+                tableName = Setting.GetTableFullName(tableName);
+
+                DBProvider dbProvider = GetDBProvider(tableName);
+
+                if (dbProvider != null)
                 {
-                    dbProvider._TableLock.Leave();
+                    try
+                    {
+                        dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000);
+
+                        string dir = dbProvider.Directory;
+
+                        if (dir == null)
+                        {
+                            DeleteTableName(tableName);
+                            return;
+                        }
+
+                        dbProvider.Drop();
+                        DeleteTableName(tableName);
+
+                        Global.Setting.RemoveTableConfig(dir, tableName);
+                        Global.Setting.Save();
+                    }
+                    finally
+                    {
+                        dbProvider._TableLock.Leave();
+                    }
+                }
+            }
+            finally
+            {
+                lock (_sLockObj)
+                {
+                    _sCanClose = true;
                 }
             }
         }
@@ -486,9 +563,9 @@ namespace Hubble.Core.Data
 
         private Cache.QueryCache _QueryCache = null;
 
-        private bool _QueryCacheEnabled = true;
-
-        private int _QueryCacheTimeout = 0; //In seconds
+        private object _ExitLock = new object();
+        private bool _NeedExit = false;
+        private int _BusyCount = 0;
 
         #endregion
 
@@ -596,6 +673,36 @@ namespace Hubble.Core.Data
                 }
             }
 
+        }
+
+        internal bool Closed
+        {
+            get
+            {
+                lock (_ExitLock)
+                {
+                    if (_BusyCount > 0)
+                    {
+                        return false;
+                    }
+
+                    foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+                    {
+                        if (!iIndex.OptimizeStoped)
+                        {
+                            return false;
+                        }
+
+                        if (!iIndex.IndexStoped)
+                        {
+                            return false;
+                        }
+
+                    }
+
+                    return true;
+                }
+            }
         }
 
         #endregion
@@ -1256,6 +1363,17 @@ namespace Hubble.Core.Data
             {
                 _TableLock.Enter(Lock.Mode.Share, 30000);
 
+                lock (_ExitLock)
+                {
+                    if (_NeedExit)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        _BusyCount++;
+                    }
+                }
 
                 lock (this)
                 {
@@ -1398,14 +1516,20 @@ namespace Hubble.Core.Data
 
                     _PayloadFile.Add(docId, payload);
                 }
+                                    
+                Cache.CacheManager.InsertCount += docs.Count;
+                LastModifyTicks = DateTime.Now.Ticks;
             }
             finally
             {
+                lock (_ExitLock)
+                {
+                    _BusyCount--;
+                }
+
                 _TableLock.Leave();
             }
 
-            Cache.CacheManager.InsertCount += docs.Count;
-            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
@@ -1414,6 +1538,18 @@ namespace Hubble.Core.Data
             {
 
                 _TableLock.Enter(Lock.Mode.Share, 30000);
+
+                lock (_ExitLock)
+                {
+                    if (_NeedExit)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        _BusyCount++;
+                    }
+                }
 
                 if (IndexOnly)
                 {
@@ -1583,13 +1719,18 @@ namespace Hubble.Core.Data
                 }
 
                 Collect();
+                LastModifyTicks = DateTime.Now.Ticks;
             }
             finally
             {
+                lock (_ExitLock)
+                {
+                    _BusyCount--;
+                }
+
                 _TableLock.Leave();
             }
 
-            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Delete(IList<long> docs)
@@ -1597,6 +1738,18 @@ namespace Hubble.Core.Data
             try
             {
                 _TableLock.Enter(Lock.Mode.Share, 30000);
+
+                lock (_ExitLock)
+                {
+                    if (_NeedExit)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        _BusyCount++;
+                    }
+                }
 
                 if (docs.Count <= 0)
                 {
@@ -1609,13 +1762,18 @@ namespace Hubble.Core.Data
                 }
 
                 _DelProvider.Delete(docs);
+                LastModifyTicks = DateTime.Now.Ticks;
             }
             finally
             {
+                lock (_ExitLock)
+                {
+                    _BusyCount--;
+                }
+
                 _TableLock.Leave();
             }
 
-            LastModifyTicks = DateTime.Now.Ticks;
         }
 
         public void Delete(IList<Query.DocumentResult> docs)
@@ -1679,6 +1837,31 @@ namespace Hubble.Core.Data
             if (_PayloadFile != null)
             {
                 _PayloadFile.Collect();
+            }
+        }
+
+        internal void CloseInvertedIndex()
+        {
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                iIndex.Close();
+            }
+        }
+
+        internal void Close()
+        {
+            lock (_ExitLock)
+            {
+                _NeedExit = true;
+            }
+
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                if (!iIndex.OptimizeStoped)
+                {
+                    iIndex.StopOptimize();
+                    iIndex.StopIndexFileProxy();
+                }
             }
         }
 

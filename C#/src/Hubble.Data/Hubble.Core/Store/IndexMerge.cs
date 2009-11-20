@@ -35,6 +35,7 @@ namespace Hubble.Core.Store
         Thread _Thread;
 
         bool _Closed = false;
+        bool _CanClose = true;
 
         public string IndexDir
         {
@@ -44,10 +45,26 @@ namespace Hubble.Core.Store
             }
         }
 
+        internal bool CanClose
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _CanClose;
+                }
+            }
+        }
+
         #region Private methods
 
         private bool DoMerge(OptimizationOption option)
         {
+            lock (this)
+            {
+                _CanClose = true;
+            }
+
             Dictionary<int, System.IO.FileStream> indexSrcFileDict = new Dictionary<int, System.IO.FileStream>();
 
             try
@@ -155,7 +172,24 @@ namespace Hubble.Core.Store
                     fs.Close();
                 }
 
+                lock (this)
+                {
+                    if (_Closed)
+                    {
+                        _Thread = null;
+                        _CanClose = true;
+                        return false;
+                    }
+
+                    _CanClose = false;
+                }
+
                 _IndexFileProxy.DoMergeAck(mergeAck);
+
+                lock (this)
+                {
+                    _CanClose = true;
+                }
 
                 return true;
             }
@@ -252,6 +286,7 @@ namespace Hubble.Core.Store
                 _Closed = true;
             }
 
+Loop1:
             int i = 0;
             while (i++ < 100)
             {
@@ -267,9 +302,16 @@ namespace Hubble.Core.Store
             }
 
             Thread t;
+            bool canClose;
             lock (this)
             {
                 t = _Thread;
+                canClose = _CanClose;
+            }
+
+            if (!canClose)
+            {
+                goto Loop1;
             }
 
             if (t != null)
@@ -281,8 +323,13 @@ namespace Hubble.Core.Store
                 catch
                 {
                 }
+                finally
+                {
+                    _Thread = null;
+                }
             }
 
         }
     }
+
 }

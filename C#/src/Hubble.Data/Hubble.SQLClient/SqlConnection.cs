@@ -80,7 +80,7 @@ namespace Hubble.SQLClient
         }
 
         /// <summary>
-        /// The time (in seconds) to wait for a connection to open. The default value is 15 seconds.
+        /// The time (in seconds) to wait for a connection to open. The default value is 300 seconds.
         /// </summary>
         public int ConnectionTimeout
         {
@@ -129,7 +129,7 @@ namespace Hubble.SQLClient
             _TcpClient.RequireCustomSerialization = RequireCustomSerialization;
 
             _ConnectionString = connectionString;
-            ConnectionTimeout = 15;
+            ConnectionTimeout = 300;
 
         }
 

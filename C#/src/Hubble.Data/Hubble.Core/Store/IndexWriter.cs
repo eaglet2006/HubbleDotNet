@@ -49,9 +49,9 @@ namespace Hubble.Core.Store
         public IndexWriter(int serial, string path, string fieldName)
         {
             _HeadFilePath = Path.AppendDivision(path, '\\') + 
-                string.Format("{0:D4}{1}.hdx", serial, fieldName);
+                string.Format("{0:D7}{1}.hdx", serial, fieldName);
             _IndexFilePath = Path.AppendDivision(path, '\\') +
-                string.Format("{0:D4}{1}.idx", serial, fieldName);
+                string.Format("{0:D7}{1}.idx", serial, fieldName);
 
             _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Create,
                  System.IO.FileAccess.Write);

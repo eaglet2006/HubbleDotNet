@@ -681,8 +681,15 @@ namespace Hubble.Core.SFQL.Parse
 
                 ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i + allFieldsCount].Alias;
             }
-            
-            ds.Tables[0].MinimumCapacity = result.Length;
+
+            if (noQueryCache)
+            {
+                ds.Tables[0].MinimumCapacity = result.Length;
+            }
+            else
+            {
+                ds.Tables[0].MinimumCapacity = qDocs.ResultLength;
+            }
 
             qResult.DataSet = ds;
 

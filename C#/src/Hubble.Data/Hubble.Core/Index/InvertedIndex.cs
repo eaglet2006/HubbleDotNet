@@ -709,6 +709,31 @@ namespace Hubble.Core.Index
 
         #endregion
 
+        #region Internal properties
+
+        internal bool OptimizeStoped
+        {
+            get
+            {
+                if (_IndexMerge != null)
+                {
+                    return _IndexMerge.CanClose;
+                }
+
+                return true;
+            }
+        }
+
+        internal bool IndexStoped
+        {
+            get
+            {
+                return _IndexFileProxy.CanClose;
+            }
+        }
+
+        #endregion
+
         #region Public properties
 
         public int ForceCollectCount
@@ -844,7 +869,7 @@ namespace Hubble.Core.Index
 
             Closed = true;
 
-            _IndexMerge.Close();
+            StopOptimize();
 
             _IndexFileProxy.Close(2000);
 
@@ -1007,6 +1032,19 @@ namespace Hubble.Core.Index
             {
                 _IndexMerge.Optimize(option);
             }
+        }
+
+        internal void StopOptimize()
+        {
+            if (_IndexMerge != null)
+            {
+                _IndexMerge.Close();
+            }
+        }
+
+        internal void StopIndexFileProxy()
+        {
+            _IndexFileProxy.SafelyClose();
         }
 
         #endregion

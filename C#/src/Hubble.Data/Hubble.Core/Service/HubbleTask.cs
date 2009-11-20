@@ -30,6 +30,10 @@ namespace Hubble.Core.Service
     {
         TcpServer _Server;
 
+        static bool  _Closing = false;
+
+        static object _LockObj = new object();  
+
         private void ConnectEstablishEventHandler(object sender, ConnectEstablishEventArgs args)
         {
             try
@@ -56,6 +60,14 @@ namespace Hubble.Core.Service
 
         private void MessageReceiveEventHandler(object sender, MessageReceiveEventArgs args)
         {
+            lock (_LockObj)
+            {
+                if (_Closing)
+                {
+                    throw new Exception("Hubble task closing!");
+                }
+            }
+
             switch ((SQLClient.ConnectEvent)args.MsgHead.Event)
             {
                 case SQLClient.ConnectEvent.Connect : //Connecting 
@@ -76,7 +88,19 @@ namespace Hubble.Core.Service
 
                     break;
                 case ConnectEvent.Exit: //quit
-                    Environment.Exit(0);
+
+                    lock (_LockObj)
+                    {
+                        if (_Closing)
+                        {
+                            throw new Exception("Hubble task closing!");
+                        }
+
+                        _Closing = true;
+                    }
+
+                    System.Threading.ThreadPool.QueueUserWorkItem(Close);
+
                     break;
 
             }
@@ -132,6 +156,64 @@ namespace Hubble.Core.Service
             {
                 return dbAccess.Query(sql);
             }
+        }
+
+        private void Close(Object stateInfo)
+        {
+            try
+            {
+                foreach (DBProvider dbProvider in DBProvider.GetDbProviders())
+                {
+                    dbProvider.Close();
+                }
+
+                DBProvider.StaticClose();
+                bool safelyClose = false;
+
+                //Wait 60 seconds for closing
+                for (int i = 0; i < 600; i++)
+                {
+                    bool allTablesClosed = true;
+
+                    foreach (DBProvider dbProvider in DBProvider.GetDbProviders())
+                    {
+                        if (!dbProvider.Closed)
+                        {
+                            allTablesClosed = false;
+                            break;
+                        }
+                    }
+
+                    if (allTablesClosed && DBProvider.StaticCanClose)
+                    {
+                        safelyClose = true;
+                        break;
+                    }
+
+                    System.Threading.Thread.Sleep(100);
+                }
+
+                if (!safelyClose)
+                {
+                    Global.Report.WriteErrorLog("Hubble task close unsafely!");
+                }
+
+            }
+            catch(Exception e)
+            {
+                Global.Report.WriteErrorLog("Hubble task close fail", e);
+            }
+
+            System.Threading.Thread.Sleep(2000);
+
+            foreach (DBProvider dbProvider in DBProvider.GetDbProviders())
+            {
+                dbProvider.CloseInvertedIndex();
+            }
+
+            System.Threading.Thread.Sleep(2000);
+
+            Environment.Exit(0);
         }
 
         public HubbleTask(string path)
