@@ -45,9 +45,11 @@ namespace HubbleTask
         static void Main(string[] args)
         {
             _LogFilePath = Hubble.Framework.IO.Path.AppendDivision(
-                Hubble.Framework.IO.Path.ProcessDirectory, '\\') + "hubblesvr.log";
+                Hubble.Framework.IO.Path.ProcessDirectory, '\\') + "hubbletask.log";
             
             string taskPath ;
+
+            bool startFromService = false;
 
             if (args.Length < 1)
             {
@@ -58,17 +60,19 @@ namespace HubbleTask
             else
             {
                 taskPath = args[0];
+                startFromService = true;
             }
 
             try
             {
-                Hubble.Core.Service.HubbleTask hubbleTask = new Hubble.Core.Service.HubbleTask(taskPath);
+                Hubble.Core.Service.HubbleTask hubbleTask = new Hubble.Core.Service.HubbleTask(taskPath, startFromService);
 
                 Console.ReadKey();
             }
             catch (Exception e)
             {
                 WriteErrorMessage(e.Message + e.StackTrace);
+                Environment.Exit(0);
             }
         }
     }

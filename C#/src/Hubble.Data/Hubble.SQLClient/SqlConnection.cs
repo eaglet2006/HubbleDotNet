@@ -96,6 +96,16 @@ namespace Hubble.SQLClient
             }
         }
 
+        private bool _Connected;
+
+        public bool Connected
+        {
+            get
+            {
+                return _Connected;
+            }
+        }
+
         private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
         {
             switch ((ConnectEvent)evt)
@@ -138,15 +148,15 @@ namespace Hubble.SQLClient
             _TcpClient.Connect();
             _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, Database);
 
+            _Connected = true;
             DataCacheMgr.OnConnect(this);
         }
 
         public void Close()
         {
+            _Connected = false;
             _TcpClient.Close();
         }
-
-
 
         public QueryResult QuerySql(string sql)
         {

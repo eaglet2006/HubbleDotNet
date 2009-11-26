@@ -30,6 +30,8 @@ namespace Hubble.Core.Service
     {
         TcpServer _Server;
 
+        DateTime _StartTime;
+
         static bool  _Closing = false;
 
         static object _LockObj = new object();  
@@ -39,7 +41,7 @@ namespace Hubble.Core.Service
             try
             {
                 CurrentConnection.Connect();
-                Global.Report.WriteAppLog(string.Format("ThreadId = {0} connected", args.ThreadId));
+                //Global.Report.WriteAppLog(string.Format("ThreadId = {0} connected", args.ThreadId));
             }
             catch
             {
@@ -51,7 +53,7 @@ namespace Hubble.Core.Service
             try
             {
                 CurrentConnection.Disconnect();
-                Global.Report.WriteAppLog(string.Format("ThreadId = {0} disconnected", args.ThreadId));
+                //Global.Report.WriteAppLog(string.Format("ThreadId = {0} disconnected", args.ThreadId));
             }
             catch
             {
@@ -88,6 +90,21 @@ namespace Hubble.Core.Service
 
                     break;
                 case ConnectEvent.Exit: //quit
+
+                    string startTimeStr = (string)args.InMessage;
+
+                    if (startTimeStr == null)
+                    {
+                        throw new Exception("StartTime is null!");
+                    }
+
+                    DateTime startTime = DateTime.ParseExact(startTimeStr, "yyyy-MM-dd HH:mm:ss", null);
+
+                    if (!startTimeStr.Equals(_StartTime.ToString("yyyy-MM-dd HH:mm:ss"), 
+                        StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        throw new Exception("Invalid startTime!");
+                    }
 
                     lock (_LockObj)
                     {
@@ -213,14 +230,36 @@ namespace Hubble.Core.Service
 
             System.Threading.Thread.Sleep(2000);
 
+            Global.Report.WriteAppLog("Hubble.net close safely");
+
             Environment.Exit(0);
         }
 
-        public HubbleTask(string path)
+        public HubbleTask(string path, bool startFromService)
         {
+            _StartTime = DateTime.Now;
+
+            path = path.Replace("\"", "");
+
+            if (startFromService)
+            {
+                string intanceName = TaskInformation.GetCurrentIntanceName(path);
+                TaskInformation.SetStartTime(intanceName, _StartTime);
+            }    
+
             Init(path);
 
             _Server = new TcpServer(Global.Setting.Config.TcpPort);
+
+            if (startFromService)
+            {
+                string intanceName = TaskInformation.GetCurrentIntanceName(path);
+
+                if (Global.Setting.Config.TcpPort != TaskInformation.GetTcpPort(intanceName))
+                {
+                    TaskInformation.SetTcpPort(intanceName, Global.Setting.Config.TcpPort);
+                }
+            }
 
             _Server.MaxConnectNum = Global.Setting.Config.MaxConnectNum;
 
@@ -232,6 +271,7 @@ namespace Hubble.Core.Service
             _Server.RequireCustomSerialization = RequireCustomSerialization;
 
             _Server.Listen();
+            Global.Report.WriteAppLog("Hubble.net start successful");
         }
     }
 }

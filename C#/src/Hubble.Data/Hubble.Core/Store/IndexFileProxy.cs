@@ -689,6 +689,8 @@ namespace Hubble.Core.Store
                 }
             }
 
+            System.Threading.Thread.Sleep(20);
+
             try
             {
                 System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeHeadFileName,

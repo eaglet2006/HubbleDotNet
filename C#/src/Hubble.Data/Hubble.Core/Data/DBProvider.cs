@@ -491,6 +491,11 @@ namespace Hubble.Core.Data
             {
                 try
                 {
+                    if (tc.Directory == null)
+                    {
+                        continue;
+                    }
+
                     DBProvider dbProvider = InitTable(tc);
 
                     if (_DBAdapterTable.ContainsKey(dbProvider.TableName.ToLower().Trim()))

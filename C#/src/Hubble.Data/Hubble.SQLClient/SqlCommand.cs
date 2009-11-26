@@ -153,6 +153,11 @@ namespace Hubble.SQLClient
         /// <returns></returns>
         public System.Data.DataSet Query(int cacheTimeout)
         {
+            if (!_SqlConnection.Connected)
+            {
+                throw new System.Data.DataException("Sql Connection does not connect!");
+            }
+
             string tableTicks = "";
             string orginalSql = BuildSql();
 
