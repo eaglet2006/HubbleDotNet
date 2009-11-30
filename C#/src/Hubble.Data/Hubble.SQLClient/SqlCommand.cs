@@ -31,7 +31,7 @@ namespace Hubble.SQLClient
         {
             get
             {
-                return _Sql;
+                return BuildSql(_Sql, _Parameters); ;
             }
         }
 

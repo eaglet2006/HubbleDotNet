@@ -112,6 +112,20 @@ namespace Hubble.Core.Data
             return result;
         }
 
+        internal static Type GetDBAdapter(string name)
+        {
+            Type type;
+
+            if (_DBAdapterTable.TryGetValue(name.ToLower().Trim(), out type))
+            {
+                return type;
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
         /// <summary>
         /// Get Query by command name
         /// </summary>
@@ -601,6 +615,14 @@ namespace Hubble.Core.Data
             set
             {
                 _DBAdapter = value;
+            }
+        }
+
+        internal Table Table
+        {
+            get
+            {
+                return _Table;
             }
         }
 

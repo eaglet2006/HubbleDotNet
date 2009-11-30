@@ -12,6 +12,8 @@ namespace Hubble.WebDemo
 {
     public class Index
     {
+        const int CacheTimeout = 0; //In seconds
+
         static public string GetKeyWordsSplit(string keywords, Hubble.Core.Analysis.IAnalyzer iAnalyzer)
         {
             StringBuilder result = new StringBuilder();
@@ -21,15 +23,15 @@ namespace Hubble.WebDemo
 
             foreach (Hubble.Core.Entity.WordInfo word in words)
             {
-                result.AppendFormat("{0}^{1}^{2} ", word.Word, (int)Math.Pow(5, word.Rank), word.Position);
+                result.AppendFormat("{0}^{1}^{2} ", word.Word, word.Rank, word.Position);
             }
 
             return result.ToString().Trim();
         }
 
 
-        public static List<TNews> Search(String indexDir, String q, int pageLen, int pageNo, out int recCount,
-            out long elapsedMilliseconds)
+        public static List<TNews> Search(String indexDir, String q, int pageLen, int pageNo, string sortBy,
+            out int recCount, out long elapsedMilliseconds, out string sql)
         {
             List<TNews> result = new List<TNews>();
 
@@ -51,9 +53,17 @@ namespace Hubble.WebDemo
             {
                 conn.Open();
 
-                SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title match {2} order by score desc", 
+                if (string.IsNullOrEmpty(sortBy))
+                {
+                    sortBy = "score";
+                }
+
+                SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy, 
                     conn, (pageNo-1) * pageLen, pageNo * pageLen - 1, matchString);
-                ds = cmd.Query(0);
+
+                sql = cmd.Sql;
+
+                ds = cmd.Query(CacheTimeout);
             }
 
             sw.Stop();

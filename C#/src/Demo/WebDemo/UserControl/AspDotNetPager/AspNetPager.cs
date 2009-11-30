@@ -82,10 +82,16 @@ namespace Eaglet.Workroom.AspDotNetPager
 
         public void RaisePostBackEvent(string eventArgument)
         {
-            this.CurPage = Int32.Parse(System.Web.HttpContext.Current.Request.Form[this.UniqueID].ToString());
-            PageArgs e = new PageArgs();
-            e.CurPage = CurPage;
-            OnPageChange(this, e);
+            try
+            {
+                this.CurPage = Int32.Parse(System.Web.HttpContext.Current.Request.Form[this.UniqueID].ToString());
+                PageArgs e = new PageArgs();
+                e.CurPage = CurPage;
+                OnPageChange(this, e);
+            }
+            catch
+            {
+            }
         }
         #endregion Events
 

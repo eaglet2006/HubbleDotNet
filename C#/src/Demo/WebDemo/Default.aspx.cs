@@ -15,9 +15,22 @@ using Hubble.WebDemo;
 
 public partial class _Default : System.Web.UI.Page 
 {
+    bool _Showed = false;
+
     protected void Page_Load(object sender, EventArgs e)
     {
         AspNetPager.Visible = TextBoxSearch.Text != "";
+    }
+
+    protected override void Render(HtmlTextWriter writer)
+    {
+        if (!_Showed && IsPostBack)
+        {
+            AspNetPager.CurPage = 1;
+            ShowTable(TextBoxSearch.Text);
+        }
+
+        base.Render(writer);
     }
 
     private string GetHerf(TNews news)
@@ -27,7 +40,8 @@ public partial class _Default : System.Web.UI.Page
         herf.AppendFormat(@"<a href=""{0}"" target=""_blank"">", news.Url);
         herf.AppendFormat(@"{0}</a><br>", news.TitleHighLighter);
         herf.AppendFormat(@"<font size=-1>{0}</font>", news.Abstract);
-        herf.AppendFormat(@"<br><font size=-1 color=#008000>{0}</font>", news.Url);
+        herf.AppendFormat(@"<br><font size=-1 color=#008000>{0} {1}K {2}</font>",
+            news.Url, news.Content.Length / 1024, news.Time.ToString("yyyy-MM-dd"));
         return herf.ToString();
     }
 
@@ -54,22 +68,25 @@ public partial class _Default : System.Web.UI.Page
         string indexDir = "";
 
         long elapsedMilliseconds;
+        string sql;
 
-        List<TNews> newsList = Index.Search(indexDir, text, pageSize, pageNo, out recCount, out elapsedMilliseconds);
-        LabelDuration.Text = "用时：" + elapsedMilliseconds + "毫秒";
+        List<TNews> newsList = Index.Search(indexDir, text, pageSize, pageNo, DropDownListSort.Text,
+            out recCount, out elapsedMilliseconds, out sql);
+        LabelSql.Text = sql;
+        LabelDuration.Text = "Duration:" + elapsedMilliseconds + "ms";
         AspNetPager.CssClass = "align-center";
         AspNetPager.RecordCount = recCount;
 
-        AspNetPager.RecordCountButton.Text = "记录数:";
+        AspNetPager.RecordCountButton.Text = "Count:";
         AspNetPager.RecordCountButton.TextFormat = "{0}&nbsp";
 
-        AspNetPager.PageCountButton.Text = "总页数:";
+        AspNetPager.PageCountButton.Text = "Pages:";
         AspNetPager.PageCountButton.TextFormat = "{0}&nbsp";
 
-        AspNetPager.NextPageButton.Text = "下一页";
+        AspNetPager.NextPageButton.Text = "Next";
         AspNetPager.PageCountButton.TextFormat = "&nbsp{0}";
 
-        AspNetPager.PrevPageButton.Text = "上一页";
+        AspNetPager.PrevPageButton.Text = "Prev";
         AspNetPager.PageCountButton.TextFormat = "{0}&nbsp";
 
         AspNetPager.PageNoButton.TextFormat = "&nbsp[{0}]&nbsp";
@@ -102,16 +119,18 @@ public partial class _Default : System.Web.UI.Page
 
     protected void ButtonSearch_Click(object sender, EventArgs e)
     {
+        _Showed = true;
         if (TextBoxSearch.Text != "")
         {
             AspNetPager.CurPage = 1;
             ShowTable(TextBoxSearch.Text);
         }
-
-        GC.Collect();
     }
+
     protected void AspNetPager_PageChanged(object sender, Eaglet.Workroom.AspDotNetPager.AspNetPager.PageArgs e)
     {
+        _Showed = true;
+
         if (TextBoxSearch.Text != "")
         {
             ShowTable(TextBoxSearch.Text);

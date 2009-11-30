@@ -51,7 +51,13 @@ namespace Hubble.Core.Service
 
         public ConnectionInformation(string databaseName)
         {
+            if (!Global.Setting.DatabaseExists(databaseName))
+            {
+                throw new Data.DataException(string.Format("Database name: {0} does not exist",
+                    databaseName));
+            }
             _DatabaseName = databaseName;
+
         }
     }
 }

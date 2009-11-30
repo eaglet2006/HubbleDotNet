@@ -1,0 +1,1 @@
+exec sp_adddatabase 'News', 'd:\test\news\', 'SQLSERVER2005', 'Data Source=(local);Initial Catalog=News;Integrated Security=True';

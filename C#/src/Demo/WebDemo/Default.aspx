@@ -52,11 +52,20 @@ a.m:visited{COLOR:#660066;}
     <form id="form1" runat="server">
     <div class = "align-center">
         <br />
+        Hubble.net
+        <asp:TextBox ID="TextBoxSearch" runat="server" Width="308px" ></asp:TextBox>&nbsp;&nbsp;
+        <asp:Label ID="LabelDuration" runat="server" Text="Duration:0ms"></asp:Label>
         <br />
-        <asp:TextBox ID="TextBoxSearch" runat="server" ></asp:TextBox>&nbsp;
-        <asp:Button ID="ButtonSearch" runat="server" Text="Search" OnClick="ButtonSearch_Click" />&nbsp;
-        <asp:Label ID="LabelDuration" runat="server" Text="(0.23s)"></asp:Label>
-        <br />
+        <asp:Button ID="ButtonSearch" runat="server" Text="Search" OnClick="ButtonSearch_Click" />&nbsp;<asp:DropDownList 
+            ID="DropDownListSort" runat="server">
+            <asp:ListItem Value="score desc">Sort by score</asp:ListItem>
+            <asp:ListItem Value="time desc">Sort by time</asp:ListItem>
+            <asp:ListItem Value="time desc, score desc">Sort by time and score</asp:ListItem>
+        </asp:DropDownList>
+            <p>
+        <asp:Label ID="LabelSql" runat="server" Text="SQL:"></asp:Label>
+    </p>
+
             </div>
 
         <div>

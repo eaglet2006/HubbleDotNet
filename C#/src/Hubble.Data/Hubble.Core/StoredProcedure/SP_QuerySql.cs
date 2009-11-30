@@ -18,19 +18,59 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
-            if (Parameters.Count != 2)
+            if (Parameters.Count < 1)
             {
                 throw new ArgumentException("the number of parameters must be 2. Parameter 1 is table name. Parameter 2 is sql for excute");
             }
 
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0]);
+            string sql;
 
-            if (dbProvider == null)
+            DBAdapter.IDBAdapter dbAdapter;
+
+            if (Parameters.Count == 1)
             {
-                throw new StoredProcException(string.Format("Table name {0} does not exist!", Parameters[0]));
+                string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+                Global.Database database = Global.Setting.GetDatabase(curDatabaseName);
+
+                if (string.IsNullOrEmpty(database.DefaultDBAdapter))
+                {
+                    throw new StoredProcException("Current database hasn't default dbadapter");
+                }
+
+                if (string.IsNullOrEmpty(database.DefaultConnectionString))
+                {
+                    throw new StoredProcException("Current database hasn't default connectionstring");
+                }
+
+                dbAdapter = (DBAdapter.IDBAdapter)Hubble.Framework.Reflection.Instance.CreateInstance(
+                    Data.DBProvider.GetDBAdapter(database.DefaultDBAdapter));
+
+                if (dbAdapter == null)
+                {
+                    throw new StoredProcException(string.Format("Current database include a invalid default dbadapter:{0}", 
+                        database.DefaultDBAdapter));
+                }
+
+                dbAdapter.ConnectionString = database.DefaultConnectionString;
+
+                sql = Parameters[0];
+            }
+            else
+            {
+                Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0]);
+
+                if (dbProvider == null)
+                {
+                    throw new StoredProcException(string.Format("Table name {0} does not exist!", Parameters[0]));
+                }
+
+                dbAdapter = dbProvider.DBAdapter;
+
+                sql = Parameters[1];
             }
 
-            _QueryResult.DataSet = dbProvider.DBAdapter.QuerySql(Parameters[1]);
+
+            _QueryResult.DataSet = dbAdapter.QuerySql(sql);
 
         }
 

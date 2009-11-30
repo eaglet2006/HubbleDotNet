@@ -27,6 +27,8 @@ namespace Hubble.Core.DBAdapter
     {
         Data.Table Table { get; set; }
 
+        string ConnectionString { get; set; }
+
         void Drop();
 
         void Create();

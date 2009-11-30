@@ -133,6 +133,19 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        string _ConnectionString = null;
+
+        public string ConnectionString
+        {
+            get
+            {
+                return _ConnectionString;
+            }
+            set
+            {
+                _ConnectionString = value;
+            }
+        }
 
         public long MaxDocId
         {
@@ -483,7 +496,17 @@ namespace Hubble.Core.DBAdapter
         {
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {
-                sqlData.Connect(Table.ConnectionString);
+                string connectionString;
+                if (Table == null)
+                {
+                    connectionString = this.ConnectionString;
+                }
+                else
+                {
+                    connectionString = Table.ConnectionString;
+                }
+
+                sqlData.Connect(connectionString);
 
                 return sqlData.QuerySql(sql);
             }
@@ -493,7 +516,17 @@ namespace Hubble.Core.DBAdapter
         {
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {
-                sqlData.Connect(Table.ConnectionString);
+                string connectionString;
+                if (Table == null)
+                {
+                    connectionString = this.ConnectionString;
+                }
+                else
+                {
+                    connectionString = Table.ConnectionString;
+                }
+
+                sqlData.Connect(connectionString);
 
                 return sqlData.ExcuteSql(sql);
             }

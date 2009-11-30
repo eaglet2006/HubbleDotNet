@@ -51,7 +51,7 @@ namespace Hubble.WebDemo
             html += "<html>" + Style + "<body>";
             html += "<input id=\"Keywords\" type=text >";
             html += "&nbsp&nbsp&nbsp";
-            html += "<input id=\"Search\" type=submit value=\"ËÑË÷\">";
+            html += "<input id=\"Search\" type=submit value=\"Search\">";
             html += "</body></html>";
             return html;
         }
@@ -63,7 +63,7 @@ namespace Hubble.WebDemo
             html.Append("<html>" + Style + "<body>");
             html.AppendFormat("<input id=\"Keywords\" type=text Value={0}>", keyWord);
             html.Append("&nbsp&nbsp&nbsp");
-            html.Append("<input id=\"Search\" type=submit value=\"ËÑË÷\">");
+            html.Append("<input id=\"Search\" type=submit value=\"Search\">");
 
             foreach (TNews news in newsList)
             {
