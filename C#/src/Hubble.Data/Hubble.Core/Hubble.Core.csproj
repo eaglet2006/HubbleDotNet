@@ -38,6 +38,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analysis\AnalyzerRes.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AnalyzerRes.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Analysis\EnglishAnalyzer.cs" />
+    <Compile Include="Analysis\Framework\PorterStemmer.cs" />
     <Compile Include="Analysis\HighLight\Formatter.cs" />
     <Compile Include="Analysis\HighLight\Fragment.cs" />
     <Compile Include="Analysis\HighLight\Highlighter.cs" />
@@ -122,6 +129,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_GetWordsPositions.cs" />
     <Compile Include="StoredProcedure\SP_OptimizeTable.cs" />
     <Compile Include="StoredProcedure\SP_QueryCacheReport.cs" />
     <Compile Include="StoredProcedure\SP_TableQueryCache.cs" />
@@ -129,6 +137,7 @@
     <Compile Include="StoredProcedure\SP_AnalyzerList.cs" />
     <Compile Include="StoredProcedure\SP_DBAdapterList.cs" />
     <Compile Include="StoredProcedure\SP_DatabaseList.cs" />
+    <Compile Include="StoredProcedure\SP_TestAnalyzer.cs" />
     <Compile Include="StoredProcedure\SP_UpdateDatabase.cs" />
     <Compile Include="StoredProcedure\SP_DropDatabase.cs" />
     <Compile Include="StoredProcedure\IStoredProc.cs" />
@@ -164,6 +173,13 @@
       <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>
       <Name>Hubble.SQLClient</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Analysis\AnalyzerRes.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AnalyzerRes.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

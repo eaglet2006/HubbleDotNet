@@ -190,8 +190,6 @@ namespace QueryAnalyzer
 
                 Hubble.SQLClient.QueryResult result = DataAccess.Excute(sql);
 
-                long len = 0;
-
                 qp.Start();
 
                 for (int i = 0; i < numericUpDownIteration.Value; i++)

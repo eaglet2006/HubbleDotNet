@@ -36,6 +36,35 @@ namespace Hubble.Core.Analysis.HighLight
         #endregion
 
         #region Private methods
+
+        private List<WordInfo> PickupKeywords(System.Data.DataTable wordsPositions, long docId)
+        {
+            List<WordInfo> ret = new List<WordInfo>();
+
+            foreach (System.Data.DataRow row in wordsPositions.Rows)
+            {
+                if (row["DocId"] == DBNull.Value)
+                {
+                    continue;
+                }
+
+                if (long.Parse(row["DocId"].ToString()) == docId)
+                {
+                    WordInfo wordInfo = new WordInfo();
+                    wordInfo.Word = row["Word"].ToString();
+                    wordInfo.Position = int.Parse(row["Position"].ToString());
+                    wordInfo.Rank = 1;
+                    wordInfo.Frequency = 0;
+                    ret.Add(wordInfo);
+                }
+            }
+
+            ret.Sort();
+            return ret;
+        }
+
+
+
         private List<WordInfo> PickupKeywords(ICollection<WordInfo> keywordsWordInfos, ICollection<WordInfo> contentWordInfos)
         {
             List<WordInfo> ret = new List<WordInfo>();
@@ -220,6 +249,17 @@ namespace Hubble.Core.Analysis.HighLight
             return result;
         }
 
+        private List<Fragment> GetFragments(System.Data.DataTable wordsPositions, long docId)
+        {
+            _Selection = PickupKeywords(wordsPositions, docId);
+
+            _Selection = Optimize(_Selection);
+
+            return GetFragments(_Selection);
+
+        }
+
+
         private List<Fragment> GetFragments(string keywords, string content)
         {
             ICollection<WordInfo> keywordsWordInfos = DoSegment(keywords, _Analyzer);
@@ -312,10 +352,30 @@ namespace Hubble.Core.Analysis.HighLight
 
         #endregion
 
+        public Highlighter(Formatter formatter)
+            :this(formatter, null)
+        {
+
+        }
+
         public Highlighter(Formatter formatter, IAnalyzer analyzer)
         {
             _Formatter = formatter;
             _Analyzer = analyzer;
+        }
+
+        public string GetBestFragment(System.Data.DataTable wordsPosition, string content, long docId)
+        {
+            _Content = content;
+
+            List<Fragment> fragments = GetFragments(wordsPosition, docId);
+
+            if (fragments.Count > 0)
+            {
+                return FragmentToString(fragments[0]);
+            }
+
+            return "";
         }
 
         /// <summary>

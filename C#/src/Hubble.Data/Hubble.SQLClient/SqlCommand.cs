@@ -146,12 +146,7 @@ namespace Hubble.SQLClient
             return sb.ToString();
         }
 
-        /// <summary>
-        /// SQL query
-        /// </summary>
-        /// <param name="cacheTimeout">Time out for data cache. In second</param>
-        /// <returns></returns>
-        public System.Data.DataSet Query(int cacheTimeout)
+        private System.Data.DataSet Query(string orginalSql, int cacheTimeout)
         {
             if (!_SqlConnection.Connected)
             {
@@ -159,13 +154,12 @@ namespace Hubble.SQLClient
             }
 
             string tableTicks = "";
-            string orginalSql = BuildSql();
 
             if (cacheTimeout >= 0)
             {
                 DateTime expireTime;
                 int hitCount;
-                
+
                 _QueryResult = DataCacheMgr.Get(_SqlConnection,
                     orginalSql, out expireTime, out hitCount, out tableTicks);
 
@@ -263,10 +257,19 @@ namespace Hubble.SQLClient
                         DataCacheMgr.ChangeExpireTime(_SqlConnection, orginalSql, DateTime.Now.AddSeconds(cacheTimeout));
                     }
                 }
-
             }
 
             return _QueryResult.DataSet;
+        }
+
+        /// <summary>
+        /// SQL query
+        /// </summary>
+        /// <param name="cacheTimeout">Time out for data cache. In second</param>
+        /// <returns></returns>
+        public System.Data.DataSet Query(int cacheTimeout)
+        {
+            return Query(BuildSql(), cacheTimeout);
         }
 
         public System.Data.DataSet Query()
@@ -288,5 +291,37 @@ namespace Hubble.SQLClient
 
             return 0;
         }
+
+        /// <summary>
+        /// Get words positions
+        /// Usually using for highlight
+        /// </summary>
+        /// <param name="words">words split by space</param>
+        /// <param name="tableName">table name</param>
+        /// <param name="fieldName">field name</param>
+        /// <param name="docids">docid request</param>
+        /// <returns></returns>
+        public System.Data.DataTable GetWordsPositions(string words, string tableName, 
+            string fieldName, long[] docids, int cacheTimeout)
+        {
+            if (docids.Length == 0)
+            {
+                return new System.Data.DataTable();
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("exec SP_GetWordsPositions '{0}', '{1}', '{2}' ",
+                words.Replace("'", "''"), tableName.Replace("'", "''"), fieldName.Replace("'", "''"));
+
+            foreach (long docid in docids)
+            {
+                sb.AppendFormat(",{0}", docid);
+            }
+
+
+            return Query(sb.ToString(), cacheTimeout).Tables[0];
+        }
+ 
     }
 }

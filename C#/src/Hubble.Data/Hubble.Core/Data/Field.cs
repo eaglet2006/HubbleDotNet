@@ -248,7 +248,7 @@ namespace Hubble.Core.Data
 
                 if (_Analyzer == null)
                 {
-                    throw new DataException(string.Format("Can't find class : {0}", AnalyzerName));
+                    throw new DataException(string.Format("Can't find analyzer name : {0}", AnalyzerName));
                 }
             }
 

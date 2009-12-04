@@ -356,7 +356,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (string.IsNullOrEmpty(database.DefaultPath))
                 {
-                    throw new ParseException("Has't Directory attribute!");
+                    throw new ParseException("Hasn't Directory attribute!");
                 }
                 else
                 {
@@ -375,7 +375,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (string.IsNullOrEmpty(database.DefaultDBAdapter))
                 {
-                    throw new ParseException("Has't DBAdapter attribute!");
+                    throw new ParseException("Hasn't DBAdapter attribute!");
                 }
                 else
                 {
@@ -395,7 +395,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (string.IsNullOrEmpty(database.DefaultConnectionString))
                 {
-                    throw new ParseException("Has't DBConnect attribute!");
+                    throw new ParseException("Hasn't DBConnect attribute!");
                 }
                 else
                 {

@@ -14,18 +14,21 @@ namespace Hubble.WebDemo
     {
         const int CacheTimeout = 0; //In seconds
 
-        static public string GetKeyWordsSplit(string keywords, Hubble.Core.Analysis.IAnalyzer iAnalyzer)
+        static public string GetKeyWordsSplit(string keywords, Hubble.Core.Analysis.IAnalyzer iAnalyzer, out string bySpace)
         {
             StringBuilder result = new StringBuilder();
+            StringBuilder bySpaceSb = new StringBuilder();
             
             iAnalyzer.Init();
             IEnumerable<Hubble.Core.Entity.WordInfo> words = iAnalyzer.Tokenize(keywords);
 
             foreach (Hubble.Core.Entity.WordInfo word in words)
             {
+                bySpaceSb.AppendFormat("{0} ", word.Word, word.Rank, word.Position);
                 result.AppendFormat("{0}^{1}^{2} ", word.Word, word.Rank, word.Position);
             }
 
+            bySpace = bySpaceSb.ToString().Trim();
             return result.ToString().Trim();
         }
 
@@ -37,7 +40,10 @@ namespace Hubble.WebDemo
 
             string keywords = q;
 
-            string matchString = GetKeyWordsSplit(q, new PanGuAnalyzer());
+            string wordssplitbyspace;
+
+            string matchString = GetKeyWordsSplit(q, new PanGuAnalyzer(), out wordssplitbyspace);
+   
 
             System.Configuration.ConnectionStringSettings connString =
                 System.Web.Configuration.WebConfigurationManager.ConnectionStrings["News"];
@@ -46,6 +52,8 @@ namespace Hubble.WebDemo
 
             string connectString = connString.ConnectionString;
             System.Data.DataSet ds;
+            System.Data.DataTable titleWordsPositions;
+            System.Data.DataTable contentWordsPositions;
 
             sw.Start();
 
@@ -58,16 +66,24 @@ namespace Hubble.WebDemo
                     sortBy = "score";
                 }
 
-                SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy, 
-                    conn, (pageNo-1) * pageLen, pageNo * pageLen - 1, matchString);
+                SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy,
+                    conn, (pageNo - 1) * pageLen, pageNo * pageLen - 1, matchString);
 
                 sql = cmd.Sql;
 
                 ds = cmd.Query(CacheTimeout);
-            }
+                long[] docids = new long[ds.Tables[0].Rows.Count];
 
-            sw.Stop();
-            elapsedMilliseconds = sw.ElapsedMilliseconds;
+                int i = 0;
+
+                foreach (System.Data.DataRow row in ds.Tables[0].Rows)
+                {
+                    docids[i++] = (long)row["DocId"];
+                }
+             
+                titleWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Title", docids, int.MaxValue);
+                contentWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Content", docids, int.MaxValue);
+            }
 
             recCount = ds.Tables[0].MinimumCapacity;
 
@@ -83,12 +99,19 @@ namespace Hubble.WebDemo
                     new SimpleHTMLFormatter("<font color=\"red\">", "</font>");
 
                 Highlighter highlighter =
-                    new Highlighter(simpleHTMLFormatter, new PanGuAnalyzer());
+                    new Highlighter(simpleHTMLFormatter);
+
+                //Highlighter highlighter =
+                //    new Highlighter(simpleHTMLFormatter, new PanGuAnalyzer());
 
                 highlighter.FragmentSize = 50;
 
-                news.Abstract = highlighter.GetBestFragment(keywords, news.Content);
-                news.TitleHighLighter = highlighter.GetBestFragment(keywords, news.Title);
+                news.Abstract = highlighter.GetBestFragment(contentWordsPositions, news.Content, (long)row["DocId"]);
+                news.TitleHighLighter = highlighter.GetBestFragment(titleWordsPositions, news.Title, (long)row["DocId"]);
+
+
+                //news.Abstract = highlighter.GetBestFragment(keywords, news.Content);
+                //news.TitleHighLighter = highlighter.GetBestFragment(keywords, news.Title);
                 if (string.IsNullOrEmpty(news.TitleHighLighter))
                 {
                     news.TitleHighLighter = news.Title;
@@ -97,6 +120,8 @@ namespace Hubble.WebDemo
                 result.Add(news);
             }
 
+            sw.Stop();
+            elapsedMilliseconds = sw.ElapsedMilliseconds;
 
             return result;
 

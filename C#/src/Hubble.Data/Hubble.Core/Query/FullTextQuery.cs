@@ -833,10 +833,6 @@ namespace Hubble.Core.Query
 
         #endregion
 
-        #region IQuery Members
 
-
-
-        #endregion
     }
 }
