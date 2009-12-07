@@ -26,8 +26,18 @@ namespace Hubble.Core.Cache
 {
     class QueryCacheInformation
     {
+        private bool _All;
         private int _Count;
         private long _CacheTicks;
+
+        public bool All
+        {
+            get
+            {
+                return _All;
+            }
+        }
+
 
         public int Count
         {
@@ -47,6 +57,13 @@ namespace Hubble.Core.Cache
 
         public QueryCacheInformation(int count, long cacheTicks)
         {
+            _Count = count;
+            _CacheTicks = cacheTicks;
+        }
+
+        public QueryCacheInformation(int count, long cacheTicks, bool all)
+        {
+            _All = all;
             _Count = count;
             _CacheTicks = cacheTicks;
         }

@@ -87,7 +87,10 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
                     selectField.Alias = dfa.CurrentToken.Text;
                     break;
                 case SelectFieldFunction.Top:
-                    selectField.IsTop = true;
+                    if (!selectField.BetweenRecord)
+                    {
+                        selectField.IsTop = true;
+                    }
                     break;
                 case SelectFieldFunction.End:
                     if (dfa.CurrentToken.SyntaxType == SyntaxType.Numeric)

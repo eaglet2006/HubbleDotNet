@@ -548,7 +548,7 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     Cache.QueryCacheInformation qInfo = (Cache.QueryCacheInformation)tag;
 
-                    if (qInfo.Count >= select.End + 1)
+                    if (qInfo.Count >= select.End + 1 || (qInfo.All && select.End < 0))
                     {
                         if (DateTime.Now <= expireTime)
                         {
@@ -616,12 +616,21 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (queryCache != null)
                 {
-                    int count = Math.Min(result.Length, select.End + 1);
+                    int count;
+
+                    if (select.End < 0)
+                    {
+                        count = result.Length;
+                    }
+                    else
+                    {
+                        count = Math.Min(result.Length, select.End + 1);
+                    }
 
                     queryCache.Insert(whereSql,
                         new Hubble.Core.Cache.QueryCacheDocuments(count, result),
                         DateTime.Now.AddSeconds(dbProvider.QueryCacheTimeout),
-                        new Cache.QueryCacheInformation(count, lastModifyTicks));
+                        new Cache.QueryCacheInformation(count, lastModifyTicks, select.End < 0));
                 }
 
             }

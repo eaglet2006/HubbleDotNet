@@ -234,7 +234,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (upDict != null)
                 {
-                    if (upDict.Count > 0)
+                    if (upDict.Count > 0 || upDict.ZeroResult)
                     {
                         query.UpDict = upDict;
                     }
@@ -646,6 +646,11 @@ namespace Hubble.Core.SFQL.Parse
                 while (cur != null)
                 {
                     andDict = GetResultFromQuery(cur, andDict);
+
+                    if (andDict.Count == 0)
+                    {
+                        andDict.ZeroResult = true;
+                    }
 
                     cur = cur.AndChild;
 
