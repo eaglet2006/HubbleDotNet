@@ -91,18 +91,22 @@ namespace Hubble.Core.Data
 
                     StringBuilder str = new StringBuilder();
 
-                    for (int i = from; i < from + len; i++)
+                    int strDataLen = (len % 2) == 0 ? len / 2 : len / 2 + 1;
+
+                    for (int i = from; i < from + strDataLen; i++)
                     {
                         char c;
 
-                        if (i % 2 == 0)
+                        c = (char)(buf[i] >> 16);
+
+                        if (c == 0)
                         {
-                            c = (char)(buf[i] >> 16);
+                            break;
                         }
-                        else
-                        {
-                            c = (char)(buf[i] % 65536);
-                        }
+
+                        str.Append(c);
+
+                        c = (char)(buf[i] % 65536);
 
                         if (c == 0)
                         {
@@ -162,18 +166,22 @@ namespace Hubble.Core.Data
 
                     StringBuilder str = new StringBuilder();
 
-                    for (int i = from; i < from + len; i++)
+                    int strDataLen = (len % 2) == 0 ? len /2 : len / 2 + 1;
+
+                    for (int i = from; i < from + strDataLen; i++)
                     {
                         char c;
 
-                        if (i % 2 == 0)
+                        c = (char)(buf[i] >> 16);
+
+                        if (c == 0)
                         {
-                            c = (char)(buf[i] >> 16);
+                            break;
                         }
-                        else
-                        {
-                            c = (char)(buf[i] % 65536);
-                        }
+
+                        str.Append(c);
+
+                        c = (char)(buf[i] % 65536);
 
                         if (c == 0)
                         {

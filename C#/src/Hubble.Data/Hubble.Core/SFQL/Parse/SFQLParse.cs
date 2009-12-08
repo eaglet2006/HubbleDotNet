@@ -460,7 +460,11 @@ namespace Hubble.Core.SFQL.Parse
         {
             StringBuilder sb = new StringBuilder();
 
-            sb.Append(select.Where.ToString());
+            if (select.Where != null)
+            {
+                sb.Append(select.Where.ToString());
+            }
+
             sb.Append(" ");
 
             if (select.OrderBys != null)
