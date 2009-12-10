@@ -417,6 +417,7 @@ namespace Hubble.Core.SFQL.Parse
                 field.Name = tfield.FieldName;
                 field.Mode = Field.IndexMode.Complex;
                 field.IndexType = tfield.IndexType;
+                field.Mode = tfield.IndexMode;
                 field.Store = true;
                 field.AnalyzerName = tfield.AnalyzerName;
                 field.CanNull = tfield.CanNull;

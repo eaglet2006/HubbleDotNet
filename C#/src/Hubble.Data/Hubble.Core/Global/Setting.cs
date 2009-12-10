@@ -38,7 +38,7 @@ namespace Hubble.Core.Global
         static private string _Path = Path.ProcessDirectory;
 
         [System.Xml.Serialization.XmlIgnore]
-        static internal string SettingPath
+        static public string SettingPath
         {
             get
             {

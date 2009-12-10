@@ -176,9 +176,9 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, Dictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, ref WhereDictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
             {
-                _WordIndex.Calculate(upDict, docIdRank, _FieldRank, Rank, Norm_Ranks);
+                _WordIndex.Calculate(upDict, ref docIdRank, _FieldRank, Rank, Norm_Ranks);
             }
         }
 
@@ -437,11 +437,11 @@ namespace Hubble.Core.Query
             {
                 if (this.Not)
                 {
-                    _WordIndexList[i].Calculate(null, result, _Norm_Ranks);
+                    _WordIndexList[i].Calculate(null, ref result, _Norm_Ranks);
                 }
                 else
                 {
-                    _WordIndexList[i].Calculate(this.UpDict, result, _Norm_Ranks);
+                    _WordIndexList[i].Calculate(this.UpDict, ref result, _Norm_Ranks);
                 }
             }
 

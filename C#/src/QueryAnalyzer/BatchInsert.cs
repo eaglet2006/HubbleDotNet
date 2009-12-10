@@ -46,7 +46,8 @@ namespace QueryAnalyzer
             }
         }
 
-        public void BatchImport(string fileName, DbAccess db, int count, GetTotalRecordsDelegate getTotalRecordsDelegate)
+        public void BatchImport(string fileName, DbAccess db, int count, 
+            GetTotalRecordsDelegate getTotalRecordsDelegate, System.Diagnostics.Stopwatch sw)
         {
             int totalRecords = 0;
 
@@ -75,7 +76,9 @@ namespace QueryAnalyzer
                                 {
                                     if (totalRecords % 1000 == 0 || totalRecords == count)
                                     {
+                                        sw.Start();
                                         db.Excute(sb.ToString());
+                                        sw.Stop();
                                         sb = new StringBuilder();
                                     }
                                 }
@@ -101,7 +104,9 @@ namespace QueryAnalyzer
 
                     if (sb.Length > 0)
                     {
+                        sw.Start();
                         db.Excute(sb.ToString());
+                        sw.Stop();
                         getTotalRecordsDelegate(totalRecords);
                     }
                 }

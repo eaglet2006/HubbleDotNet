@@ -46,12 +46,8 @@ namespace QueryAnalyzer
 
                 Stopwatch sw = new Stopwatch();
 
-                sw.Start();
-
                 BatchInsert.BatchImport(FileName, DataAccess, (int)numericUpDownRecords.Value,
-                    GetTotalRecordsDelegate);
-
-                sw.Stop();
+                    GetTotalRecordsDelegate, sw);
 
                 MessageBox.Show(string.Format("Batch insert {0} records successful! Duration: {1} ms",
                     numericUpDownRecords.Value, sw.ElapsedMilliseconds));

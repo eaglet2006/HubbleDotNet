@@ -27,6 +27,15 @@ namespace Hubble.Core.SFQL.Parse
 
         public bool ZeroResult = false;
 
+        public WhereDictionary()
+        {
+        }
+
+        public WhereDictionary(int capacity)
+            : base(capacity)
+        {
+        }
+
         public WhereDictionary<TKey, TValue> AndMerge(WhereDictionary<TKey, TValue> fst, WhereDictionary<TKey, TValue> sec)
         {
             if (fst == null)

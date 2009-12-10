@@ -16,6 +16,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
         NOTNULL = 7,
         DEAFAULT = 8,
         PRIMARYKEY = 9,
+        FASTEST = 10,
     }
 
     class CreateTableFieldState : SyntaxState<CreateTableFieldFunction>
@@ -136,6 +137,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
                 case CreateTableFieldFunction.Tokenized:
                     ((CreateTableField)dfa).IndexType = GetIndexType(dfa.CurrentToken.SyntaxType);
                     break;
+                case CreateTableFieldFunction.FASTEST:
+                    ((CreateTableField)dfa).IndexMode = Hubble.Core.Data.Field.IndexMode.Simple;
+                    break;
                 case CreateTableFieldFunction.Analyzer:
                     ((CreateTableField)dfa).AnalyzerName = dfa.CurrentToken.Text;
                     break;
@@ -172,7 +176,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
          * s3 --NOT --s11
          * s3 --DEFAULT --s13
          * s3 --PRIMARY --s15
+         * s3 --FASTEST --s17
          * s3 --,)--squit
+         * 
          * s4 --Numeric MAX-- s5 //length
          * s5 --)-- s6 //length
          * s6 --Tokenized UnTokenized None--s7
@@ -181,6 +187,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
          * s6 --NOT --s11
          * s6 --DEFAULT --s13
          * s6 --PRIMARY --s15
+         * s6 --FASTEST --s17
          * s6 --,)--squit
 
          * s7 --Analyzer--s8
@@ -196,12 +203,14 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
          * s9 --NOT --s11
          * s9 --DEFAULT --s13
          * s9 --PRIMARY --s15
+         * s9 --FASTEST --s17
          * s9 --,)--squit
           
          * s10 --Tokenized UnTokenized None--s7
          * s10 --Analyzer--s8
          * s10 --DEFAULT --s13
          * s10 --PRIMARY --s15
+         * s10 --FASTEST --s17
          * s10 --,)--squit
          
          * s11 --NULL--s12
@@ -209,6 +218,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
          * s12 --Analyzer--s8
          * s12 --DEFAULT --s13
          * s12 --PRIMARY --s15
+         * s12 --FASTEST --s17
          * s12 --,)--squit
 
          * s13 --String Numeric --s14
@@ -218,14 +228,24 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
          * s14 --NOT --s11
          * s14 --PRIMARY --s15
          * s14 --,)--squit
-         
+         * s14 --FASTEST --s17
+         * 
          * s15 --KEY--s16
          * s16 --Tokenized UnTokenized None--s7
          * s16 --Analyzer--s8
          * s16 --NULL--s10 
          * s16 --NOT --s11
          * s16 --DEFAULT --s13
+         * s16 --FASTEST --s17         
          * s16 --,)--squit
+         * 
+         * s17 --Tokenized UnTokenized None--s7
+         * s17 --Analyzer--s8
+         * s17 --NULL--s10 
+         * s17 --NOT --s11
+         * s17 --DEFAULT --s13
+         * s17 --PRIMARY --s15
+         * s17 --,)--squit
          * **************************************************/
 
         private static void InitDFAStates()
@@ -246,6 +266,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             SyntaxState<CreateTableFieldFunction> s14 = AddSyntaxState(new CreateTableFieldState(14, false, CreateTableFieldFunction.DEAFAULT));
             SyntaxState<CreateTableFieldFunction> s15 = AddSyntaxState(new CreateTableFieldState(15, false));
             SyntaxState<CreateTableFieldFunction> s16 = AddSyntaxState(new CreateTableFieldState(16, false, CreateTableFieldFunction.PRIMARYKEY));
+            SyntaxState<CreateTableFieldFunction> s17 = AddSyntaxState(new CreateTableFieldState(17, false, CreateTableFieldFunction.FASTEST));
 
             s0.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.LBracket }, s1.Id);
 
@@ -260,7 +281,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s3.AddNextState((int)SyntaxType.NOT, s11.Id);
             s3.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
             s3.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
-
+            s3.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
             s3.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
 
@@ -275,6 +296,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s6.AddNextState((int)SyntaxType.NOT, s11.Id);
             s6.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
             s6.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
+            s6.AddNextState((int)SyntaxType.FASTEST, s17.Id);
             s6.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
 
             s7.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
@@ -292,12 +314,14 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s9.AddNextState((int)SyntaxType.NOT, s11.Id);
             s9.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
             s9.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
+            s9.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
             s10.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
             s10.AddNextState((int)SyntaxType.ANALYZER, s8.Id);
             s10.AddNextState(new int[] { (int)SyntaxType.TOKENIZED, (int)SyntaxType.UNTOKENIZED, (int)SyntaxType.NONE }, s7.Id);
             s10.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
             s10.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
+            s10.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
             s11.AddNextState((int)SyntaxType.NULL, s12.Id);
 
@@ -306,6 +330,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s12.AddNextState(new int[] { (int)SyntaxType.TOKENIZED, (int)SyntaxType.UNTOKENIZED, (int)SyntaxType.NONE }, s7.Id);
             s12.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
             s12.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
+            s12.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
             s13.AddNextState(new int[] {(int)SyntaxType.String, (int)SyntaxType.Numeric}, s14.Id);
 
@@ -315,6 +340,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s14.AddNextState((int)SyntaxType.NULL, s10.Id);
             s14.AddNextState((int)SyntaxType.NOT, s11.Id);
             s14.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
+            s14.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
             s15.AddNextState((int)SyntaxType.KEY, s16.Id);
 
@@ -324,7 +350,15 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
             s16.AddNextState((int)SyntaxType.NULL, s10.Id);
             s16.AddNextState((int)SyntaxType.NOT, s11.Id);
             s16.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
+            s16.AddNextState((int)SyntaxType.FASTEST, s17.Id);
 
+            s17.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
+            s17.AddNextState((int)SyntaxType.ANALYZER, s8.Id);
+            s17.AddNextState(new int[] { (int)SyntaxType.TOKENIZED, (int)SyntaxType.UNTOKENIZED, (int)SyntaxType.NONE }, s7.Id);
+            s17.AddNextState((int)SyntaxType.NULL, s10.Id);
+            s17.AddNextState((int)SyntaxType.NOT, s11.Id);
+            s17.AddNextState((int)SyntaxType.DEFAULT, s13.Id);
+            s17.AddNextState((int)SyntaxType.PRIMARY, s15.Id);
 
         }
 
@@ -350,6 +384,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
         public Data.DataType DataType;
         public int DataLength;
         public Data.Field.Index IndexType = Hubble.Core.Data.Field.Index.None;
+        public Data.Field.IndexMode IndexMode = Hubble.Core.Data.Field.IndexMode.Complex;
         public string AnalyzerName;
         public string Default = null;
         public bool CanNull = false;

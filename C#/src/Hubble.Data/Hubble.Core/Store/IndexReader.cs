@@ -31,6 +31,8 @@ namespace Hubble.Core.Store
         System.IO.FileStream _HeadFile;
         System.IO.FileStream _IndexFile;
 
+        private Hubble.Core.Data.Field.IndexMode _IndexMode;
+
         private string HeadFilePath
         {
             get
@@ -47,8 +49,10 @@ namespace Hubble.Core.Store
             }
         }
 
-        public IndexReader(int serial, string path, string fieldName)
+        public IndexReader(int serial, string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode)
         {
+            _IndexMode = indexMode;
+
             _Serial = serial;
 
             _HeadFilePath = Path.AppendDivision(path, '\\') + 
@@ -110,9 +114,18 @@ namespace Hubble.Core.Store
             {
                 Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
 
-                Entity.DocumentPositionList docList =
-                    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
-                    _IndexFile, iDocList);
+                Entity.DocumentPositionList docList;
+
+                if (_IndexMode == Hubble.Core.Data.Field.IndexMode.Complex)
+                {
+                    docList =
+                        Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
+                        _IndexFile, iDocList);
+                }
+                else
+                {
+                    docList = DocumentPositionListSimpleSerialization.Derialize(_IndexFile);
+                }
 
                 //Entity.DocumentPositionList docList =
                 //    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(

@@ -35,7 +35,7 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
-            if (Parameters.Count != 1)
+            if (Parameters.Count > 2 || Parameters.Count <= 0)
             {
                 throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
             }
@@ -48,7 +48,28 @@ namespace Hubble.Core.StoredProcedure
             }
             else
             {
-                dbProvider.Optimize();
+                int option = 1;
+
+                if (Parameters.Count == 2)
+                {
+                    option = int.Parse(Parameters[1]);
+                }
+
+                switch (option)
+                {
+                    case 1:
+                        dbProvider.Optimize( Hubble.Core.Data.OptimizationOption.Minimum);
+                        break;
+                    case 2:
+                        dbProvider.Optimize(Hubble.Core.Data.OptimizationOption.Middle);
+                        break;
+                    case 3:
+                        dbProvider.Optimize(Hubble.Core.Data.OptimizationOption.Speedy);
+                        break;
+                    default:
+                        dbProvider.Optimize();
+                        break;
+                }
             }
 
             OutputMessage(string.Format("System optimizing {0} in background now. Maybe need a few minutes to finish it!", 

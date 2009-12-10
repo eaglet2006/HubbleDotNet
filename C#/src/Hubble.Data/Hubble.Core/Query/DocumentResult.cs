@@ -70,6 +70,8 @@ namespace Hubble.Core.Query
         public long DocId;
         public long Score;
         public int[] Payload;
+        public long SortValue; //if SortInfoList == null, use SortValue to sort
+        public bool Asc = true; // Contain with SortValue
         public List<SortInfo> SortInfoList = null;
 
         public DocumentResult(long docId)
@@ -110,103 +112,139 @@ namespace Hubble.Core.Query
 
         public int CompareTo(DocumentResult other)
         {
-            for (int i = 0; i< other.SortInfoList.Count; i++)
+            if (other.SortInfoList == null)
             {
-                SortInfo src = this.SortInfoList[i];
-                SortInfo dest = other.SortInfoList[i];
-
-                if (src.Asc)
+                if (Asc)
                 {
-                    switch (src.SortType)
+                    if (this.SortValue > other.SortValue)
                     {
-                        case SortType.Int:
-                            if (src.IntValue > dest.IntValue)
-                            {
-                                return 1;
-                            }
-                            else if (src.IntValue < dest.IntValue)
-                            {
-                                return -1;
-                            }
-                            break;
-                        case SortType.Long:
-                            if (src.LongValue > dest.LongValue)
-                            {
-                                return 1;
-                            }
-                            else if (src.LongValue < dest.LongValue)
-                            {
-                                return -1;
-                            }
-                            break;
-                        case SortType.Double:
-                            if (src.DoubleValue > dest.DoubleValue)
-                            {
-                                return 1;
-                            }
-                            else if (src.DoubleValue < dest.DoubleValue)
-                            {
-                                return -1;
-                            }
-                            break;
-                        case SortType.String:
-                            int result = src.StringValue.CompareTo(dest.StringValue);
-
-                            if (result != 0)
-                            {
-                                return result;
-                            }
-                            break;
+                        return 1;
+                    }
+                    else if (this.SortValue < other.SortValue)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        return 0;
                     }
                 }
                 else
                 {
-                    switch (src.SortType)
+                    if (this.SortValue < other.SortValue)
                     {
-                        case SortType.Int:
-                            if (src.IntValue > dest.IntValue)
-                            {
-                                return -1;
-                            }
-                            else if (src.IntValue < dest.IntValue)
-                            {
-                                return 1;
-                            }
-                            break;
-                        case SortType.Long:
-                            if (src.LongValue > dest.LongValue)
-                            {
-                                return -1;
-                            }
-                            else if (src.LongValue < dest.LongValue)
-                            {
-                                return 1;
-                            }
-                            break;
-                        case SortType.Double:
-                            if (src.DoubleValue > dest.DoubleValue)
-                            {
-                                return -1;
-                            }
-                            else if (src.DoubleValue < dest.DoubleValue)
-                            {
-                                return 1;
-                            }
-                            break;
-                        case SortType.String:
-
-                            int result = dest.StringValue.CompareTo(src.StringValue);
-
-                            if (result != 0)
-                            {
-                                return result;
-                            }
-                            break;
+                        return 1;
+                    }
+                    else if (this.SortValue > other.SortValue)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        return 0;
                     }
                 }
             }
+            else
+            {
+                for (int i = 0; i < other.SortInfoList.Count; i++)
+                {
+                    SortInfo src = this.SortInfoList[i];
+                    SortInfo dest = other.SortInfoList[i];
 
-            return 0;
+                    if (src.Asc)
+                    {
+                        switch (src.SortType)
+                        {
+                            case SortType.Int:
+                                if (src.IntValue > dest.IntValue)
+                                {
+                                    return 1;
+                                }
+                                else if (src.IntValue < dest.IntValue)
+                                {
+                                    return -1;
+                                }
+                                break;
+                            case SortType.Long:
+                                if (src.LongValue > dest.LongValue)
+                                {
+                                    return 1;
+                                }
+                                else if (src.LongValue < dest.LongValue)
+                                {
+                                    return -1;
+                                }
+                                break;
+                            case SortType.Double:
+                                if (src.DoubleValue > dest.DoubleValue)
+                                {
+                                    return 1;
+                                }
+                                else if (src.DoubleValue < dest.DoubleValue)
+                                {
+                                    return -1;
+                                }
+                                break;
+                            case SortType.String:
+                                int result = src.StringValue.CompareTo(dest.StringValue);
+
+                                if (result != 0)
+                                {
+                                    return result;
+                                }
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        switch (src.SortType)
+                        {
+                            case SortType.Int:
+                                if (src.IntValue > dest.IntValue)
+                                {
+                                    return -1;
+                                }
+                                else if (src.IntValue < dest.IntValue)
+                                {
+                                    return 1;
+                                }
+                                break;
+                            case SortType.Long:
+                                if (src.LongValue > dest.LongValue)
+                                {
+                                    return -1;
+                                }
+                                else if (src.LongValue < dest.LongValue)
+                                {
+                                    return 1;
+                                }
+                                break;
+                            case SortType.Double:
+                                if (src.DoubleValue > dest.DoubleValue)
+                                {
+                                    return -1;
+                                }
+                                else if (src.DoubleValue < dest.DoubleValue)
+                                {
+                                    return 1;
+                                }
+                                break;
+                            case SortType.String:
+
+                                int result = dest.StringValue.CompareTo(src.StringValue);
+
+                                if (result != 0)
+                                {
+                                    return result;
+                                }
+                                break;
+                        }
+                    }
+                }
+
+                return 0;
+            }
         }
 
         #endregion

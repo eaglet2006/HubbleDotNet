@@ -247,9 +247,16 @@ namespace QueryAnalyzer
         {
             if (e.Button == MouseButtons.Right)
             {
-                tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
-                refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server" ||
-                    treeViewData.SelectedNode.Tag.ToString() == "Database";
+                try
+                {
+                    tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
+                    refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server" ||
+                        treeViewData.SelectedNode.Tag.ToString() == "Database";
+                }
+                catch(Exception e1)
+                {
+                    MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

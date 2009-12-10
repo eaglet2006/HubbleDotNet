@@ -454,6 +454,8 @@ namespace Hubble.Core.Store
 
         private object _LockObj = new object();
 
+        private Hubble.Core.Data.Field.IndexMode _IndexMode;
+
         private int InnerWordTableSize
         {
             get
@@ -814,18 +816,19 @@ namespace Hubble.Core.Store
         }
 
 
-        public IndexFileProxy(string path, string fieldName)
-            : this(path, fieldName, false)
+        public IndexFileProxy(string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode)
+            : this(path, fieldName, false, indexMode)
         {
 
         }
 
-        public IndexFileProxy(string path, string fieldName, bool rebuild)
+        public IndexFileProxy(string path, string fieldName, bool rebuild, Hubble.Core.Data.Field.IndexMode indexMode)
             : base()
         {
+            _IndexMode = indexMode;
             OnMessageEvent = ProcessMessage;
             _IndexFile = new IndexFile(path, this);
-            _IndexFile.Create(fieldName, rebuild);
+            _IndexFile.Create(fieldName, rebuild, indexMode);
 
             this.Start();
         }

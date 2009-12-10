@@ -102,6 +102,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         EXEC      ,
         EXISTS    ,
         EXIT      ,
+        FASTEST   ,
         FILE      ,
         FOR      ,
         FOREIGN      ,

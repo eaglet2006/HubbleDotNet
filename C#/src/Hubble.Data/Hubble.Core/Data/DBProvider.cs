@@ -1016,7 +1016,29 @@ namespace Hubble.Core.Data
                 if (DBAdapter != null)
                 {
                     DBAdapter.Table = table;
-                    dbMaxDocId = DBAdapter.MaxDocId;
+
+                    int TryConnectDBTimes = 5;
+
+                    for (int i = 0; i < TryConnectDBTimes; i++)
+                    {
+                        try
+                        {
+                            dbMaxDocId = DBAdapter.MaxDocId;
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            if (i == TryConnectDBTimes - 1)
+                            {
+                                throw;
+                            }
+
+                            Global.Report.WriteErrorLog(string.Format("Get MaxDocId fail, Try again! Try times:{0} Err:{1}, Stack:{2}",
+                                i + 1, e.Message, e.StackTrace));
+
+                            System.Threading.Thread.Sleep(2000);
+                        }
+                    }
                 }
                 else
                 {

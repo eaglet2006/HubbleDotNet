@@ -258,6 +258,7 @@ namespace Hubble.Core.Store
 
         private IIndexFile _IndexFileInterface;
         private string _Path;
+        private Hubble.Core.Data.Field.IndexMode _IndexMode;
 
         #endregion
 
@@ -376,7 +377,7 @@ namespace Hubble.Core.Store
 
             foreach (IndexFileInfo fi in _IndexFileList)
             {
-                using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName))
+                using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName, _IndexMode))
                 {
                     List<WordFilePosition> wfp = ir.GetWordFilePositionList();
                     IndexFileInterface.ImportWordFilePositionList(wfp);
@@ -394,9 +395,9 @@ namespace Hubble.Core.Store
             }
         }
 
-        private void CreateIndexFile()
+        private void CreateIndexFile(Hubble.Core.Data.Field.IndexMode indexMode)
         {
-            _IndexWriter = new IndexWriter(_MaxSerial, _Path, FieldName);
+            _IndexWriter = new IndexWriter(_MaxSerial, _Path, FieldName, indexMode);
 
             _WordFilePositionList = new List<WordFilePosition>();
         }
@@ -419,18 +420,20 @@ namespace Hubble.Core.Store
         /// if createNew is ture, delete index file and create a new file
         /// else if FilePath exist, open the index
         /// </param>
-        public void Create(string fieldName, bool createNew)
+        public void Create(string fieldName, bool createNew, Hubble.Core.Data.Field.IndexMode indexMode)
         {
+            _IndexMode = indexMode;
+
             _FieldName = fieldName;
 
             LoadIndexFiles(createNew);
 
-            CreateIndexFile();
+            CreateIndexFile(indexMode);
         }
 
-        public void Create(string fieldName)
+        public void Create(string fieldName, Hubble.Core.Data.Field.IndexMode indexMode)
         {
-            Create(fieldName, false);
+            Create(fieldName, false, indexMode);
         }
 
         public void Close()
@@ -463,7 +466,7 @@ namespace Hubble.Core.Store
 
             foreach (FilePosition filePosition in filePositionList)
             {
-                using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName))
+                using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode))
                 {
                     foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
                     {
@@ -487,7 +490,7 @@ namespace Hubble.Core.Store
             _MaxSerial++;
 
             _IndexWriter = new IndexWriter(_MaxSerial, _Path,
-                System.IO.Path.GetFileNameWithoutExtension(_FieldName));
+                System.IO.Path.GetFileNameWithoutExtension(_FieldName), _IndexMode);
         }
 
         public void AfterMerge(int beginSerial, int endSerial, int mergedSerial)
@@ -534,7 +537,7 @@ namespace Hubble.Core.Store
 
                 _MaxSerial = mergedSerial + 1;
                 _IndexWriter = new IndexWriter(_MaxSerial, _Path, 
-                    System.IO.Path.GetFileNameWithoutExtension(_FieldName));
+                    System.IO.Path.GetFileNameWithoutExtension(_FieldName), _IndexMode);
             }
         }
 

@@ -75,6 +75,7 @@ namespace QueryAnalyzer
 
             if (_SettingPath != null)
             {
+                Hubble.Core.Global.Setting.SettingPath = _SettingPath;
                 Hubble.Core.Service.CurrentConnection.Connect();
                 Hubble.Core.Service.CurrentConnection curConnection = new Hubble.Core.Service.CurrentConnection(
                     new Hubble.Core.Service.ConnectionInformation(DatabaseName));

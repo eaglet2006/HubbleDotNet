@@ -58,6 +58,18 @@ namespace Hubble.Framework.Data
         public void Connect(string connectString)
         {
             Close();
+            if (!connectString.Contains("Connection Timeout"))
+            {
+                if (connectString.EndsWith(";"))
+                {
+                    connectString += "Connection Timeout=120;";
+                }
+                else
+                {
+                    connectString += ";Connection Timeout=120;";
+                }
+            }
+
             _Conn = new SqlConnection(connectString);
             _Conn.Open();
         }

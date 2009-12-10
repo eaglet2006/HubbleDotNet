@@ -98,6 +98,7 @@
     <Compile Include="SFQL\Parse\ParseOptimize.cs" />
     <Compile Include="SFQL\Parse\ParseWhere.cs" />
     <Compile Include="SFQL\Parse\QueryResultSort.cs" />
+    <Compile Include="SFQL\Parse\QueryResultQuickSort.cs" />
     <Compile Include="SFQL\Parse\SFQLParse.cs" />
     <Compile Include="SFQL\Parse\WhereDictionary.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\CreateTable\CreateTable.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="StoredProcedure\SP_Version.cs" />
     <Compile Include="StoredProcedure\StoredProcedure.cs" />
     <Compile Include="StoredProcedure\StoredProcException.cs" />
+    <Compile Include="Store\DocumentPositionListSimpleSerialization.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
     <Compile Include="Store\IndexHead.cs" />

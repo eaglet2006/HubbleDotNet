@@ -249,8 +249,9 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict,  Dictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, ref WhereDictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
             {
+
                 lock (this)
                 {
                     int deleStamp = _DelProvider.DeleteStamp;
@@ -258,6 +259,11 @@ namespace Hubble.Core.Index
                     {
                         _DelProvider.FilterDocScore(_DocScoreList);
                         _DeleteStamp = deleStamp;
+                    }
+
+                    if (docIdRank.Count == 0)
+                    {
+                        docIdRank = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>(_DocScoreList.Length);
                     }
                     
                     for(int i = 0; i < _DocScoreList.Length; i++)
@@ -790,7 +796,7 @@ namespace Hubble.Core.Index
 
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
-            _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild);
+            _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild, _IndexMode);
             _IndexFileProxy.WordUpdateDelegate = WordUpdateDelegate;
         }
 
