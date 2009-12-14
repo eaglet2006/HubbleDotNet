@@ -340,7 +340,19 @@ namespace Hubble.Core.SFQL.Parse
                     case DataType.DateTime:
                         #region DateTime, Int64
 
-                        long leftLong = (((long)docResult.Payload[cur.FieldTab]) << 32) + (uint)docResult.Payload[cur.FieldTab + 1];
+                        long leftLong;
+
+                        if (cur.FieldTab == -1)
+                        {
+                            //DocId
+                            leftLong = docResult.DocId;
+                        }
+                        else
+                        {
+                            leftLong = (((long)docResult.Payload[cur.FieldTab]) << 32) + (uint)docResult.Payload[cur.FieldTab + 1];
+                        }
+
+
                         long rightLong = (((long)cur.ComparisionData[0]) << 32) + (uint)cur.ComparisionData[1];
 
                         switch (cur.Operator.SyntaxType)
@@ -532,23 +544,36 @@ namespace Hubble.Core.SFQL.Parse
             {
                 SyntaxAnalysis.Expression cur = expressionTree.Expression as SyntaxAnalysis.Expression; 
                 string fieldName = cur.Left[0].Text;
-                Field field = _DBProvider.GetField(fieldName);
+                string value;
 
-                if (field == null)
+                if (fieldName.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    throw new ParseException(string.Format("Unknow Field: {0}", fieldName));
+                    value = cur.Right[0].Text;
+                    cur.DataType = DataType.BigInt;
+                    cur.FieldTab = -1;
+                    cur.PayloadLength = 8;
+                    cur.ComparisionData = DataTypeConvert.GetData(DataType.BigInt, 8, value);
                 }
-
-                if (field.IndexType != Field.Index.Untokenized)
+                else
                 {
-                    throw new ParseException(string.Format("Field: {0} is not Untokenized field!", fieldName));
+                    Field field = _DBProvider.GetField(fieldName);
+
+                    if (field == null)
+                    {
+                        throw new ParseException(string.Format("Unknow Field: {0}", fieldName));
+                    }
+
+                    if (field.IndexType != Field.Index.Untokenized)
+                    {
+                        throw new ParseException(string.Format("Field: {0} is not Untokenized field!", fieldName));
+                    }
+
+                    value = cur.Right[0].Text;
+                    cur.DataType = field.DataType;
+                    cur.FieldTab = field.TabIndex;
+                    cur.PayloadLength = DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                    cur.ComparisionData = DataTypeConvert.GetData(field.DataType, field.DataLength, value);
                 }
-
-                string value = cur.Right[0].Text;
-
-                cur.FieldTab = field.TabIndex;
-                cur.PayloadLength = DataTypeConvert.GetDataLength(field.DataType, field.DataLength); 
-                cur.ComparisionData = DataTypeConvert.GetData(field.DataType, field.DataLength, value);
             }
 
             if (expressionTree.AndChild != null)

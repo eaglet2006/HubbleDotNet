@@ -265,7 +265,7 @@ namespace Hubble.Core.Index
                     {
                         docIdRank = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>(_DocScoreList.Length);
                     }
-                    
+   
                     for(int i = 0; i < _DocScoreList.Length; i++)
                     {
                         DocScore docScore = _DocScoreList[i];

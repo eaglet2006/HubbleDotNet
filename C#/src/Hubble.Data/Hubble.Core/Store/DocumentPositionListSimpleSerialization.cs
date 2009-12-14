@@ -83,9 +83,17 @@ namespace Hubble.Core.Store
 
             byte[] docIdBuf = new byte[8];
 
-            stream.Read(docIdBuf, 0, 8 - zeroCount);
+            long docid;
 
-            long docid = BitConverter.ToInt64(docIdBuf, 0);
+            if (zeroCount == 0)
+            {
+                docid = 0;
+            }
+            else
+            {
+                stream.Read(docIdBuf, 0, 8 - zeroCount);
+                docid = BitConverter.ToInt64(docIdBuf, 0);
+            }
 
             return new Hubble.Core.Entity.DocumentPositionList(count, docid, 5);
         }

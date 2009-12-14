@@ -1957,7 +1957,7 @@ namespace Hubble.Core.Data
                 query.TabIndex = GetField(fieldName).TabIndex;
 
                 Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-                Dictionary<long, Query.DocumentResult> docRankTbl = searcher.Search();
+                SFQL.Parse.WhereDictionary<long, Query.DocumentResult> docRankTbl = searcher.Search();
 
                 List<long> docs = new List<long>();
 

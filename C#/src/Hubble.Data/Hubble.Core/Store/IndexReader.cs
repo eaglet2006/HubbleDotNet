@@ -31,6 +31,9 @@ namespace Hubble.Core.Store
         System.IO.FileStream _HeadFile;
         System.IO.FileStream _IndexFile;
 
+
+        byte[] _Cache = new byte[1024 * 1024 * 2];
+
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
 
         private string HeadFilePath

@@ -47,6 +47,7 @@
     <Compile Include="DataStructure\LinkedTable.cs" />
     <Compile Include="DataStructure\QuickSort.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
+    <Compile Include="DataStructure\SortDictionary.cs" />
     <Compile Include="DataStructure\VInt.cs" />
     <Compile Include="DataStructure\VLong.cs" />
     <Compile Include="Data\SQLDataProvider.cs" />
