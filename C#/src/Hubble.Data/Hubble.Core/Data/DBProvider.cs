@@ -1190,17 +1190,17 @@ namespace Hubble.Core.Data
                     {
                         value = docId.ToString();
 
-                        doc.Add(field.Name, value, field.DataType, false);
+                        doc.Add(field.Name, value, field.DataType, field.DataLength, false);
                     }
                     else if (field.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                     {
                         value = docs[i].Score.ToString();
 
-                        doc.Add(field.Name, value, field.DataType, false);
+                        doc.Add(field.Name, value, field.DataType, field.DataLength, false);
                     }
                     else
                     {
-                        doc.Add(field.Name, value, field.DataType,
+                        doc.Add(field.Name, value, field.DataType, field.DataLength, 
                             field.Store && field.IndexType != Field.Index.Untokenized);
                     }
                     

@@ -30,7 +30,7 @@ namespace Hubble.Core.Data
         private string _FieldName;
         private DataType _Type;
         private bool _FromDB;
-
+        private int _DataLength;
         #endregion
 
         #region Public properties
@@ -56,6 +56,20 @@ namespace Hubble.Core.Data
             }
         }
 
+
+        public int DataLength
+        {
+            get
+            {
+                return _DataLength;
+            }
+
+            set
+            {
+                _DataLength = value;
+            }
+        }
+
         public string Value;
 
         public bool FromDB
@@ -73,11 +87,11 @@ namespace Hubble.Core.Data
         #region Constructor
 
         public FieldValue(string name, string value)
-            : this(name, value, DataType.NVarchar, false)
+            : this(name, value, DataType.NVarchar, -1, false)
         {
         }
 
-        public FieldValue(string name, string value, DataType type, bool fromDB)
+        public FieldValue(string name, string value, DataType type, int length, bool fromDB)
         {
             Debug.Assert(name != null);
 
@@ -85,6 +99,7 @@ namespace Hubble.Core.Data
             Value = value;
             _Type = type;
             _FromDB = fromDB;
+            _DataLength = length;
         }
 
         #endregion
@@ -119,9 +134,9 @@ namespace Hubble.Core.Data
         }
 
 
-        public void Add(string fieldName, string value, DataType type, bool fromDB)
+        public void Add(string fieldName, string value, DataType type, int dataLength, bool fromDB)
         {
-            _FieldValues.Add(new FieldValue(fieldName, value, type, fromDB));
+            _FieldValues.Add(new FieldValue(fieldName, value, type, dataLength, fromDB));
         }
 
         #region static methods

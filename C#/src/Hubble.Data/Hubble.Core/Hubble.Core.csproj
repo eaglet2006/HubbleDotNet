@@ -67,6 +67,7 @@
     <Compile Include="Data\OptimizationOption.cs" />
     <Compile Include="Data\Payload.cs" />
     <Compile Include="Data\Table.cs" />
+    <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />
     <Compile Include="Entity\DocumentPositionList.cs" />
