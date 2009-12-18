@@ -105,6 +105,12 @@ namespace Hubble.SQLClient
             }
         }
 
+        public SqlCommand(SqlConnection sqlConn)
+            :this("", sqlConn)
+        {
+
+        }
+
         public SqlCommand(string sql, SqlConnection sqlConn)
         {
             _Sql = sql;
@@ -290,6 +296,29 @@ namespace Hubble.SQLClient
             }
 
             return 0;
+        }
+
+        public string GetKeywordAnalyzerStringFromServer(string tableName, string fieldName, string keywords, int cacheTimeout, out string bySpace)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("exec SP_FieldAnalyze '{0}', '{1}', '{2}', 'sqlclient' ",
+                tableName.Replace("'", "''"), fieldName.Replace("'", "''"), keywords.Replace("'", "''"));
+
+            System.Data.DataTable table = Query(sb.ToString(), cacheTimeout).Tables[0];
+
+            StringBuilder result = new StringBuilder();
+            StringBuilder bySpaceSb = new StringBuilder();
+
+            foreach (System.Data.DataRow row in table.Rows)
+            {
+                string word = row["Word"].ToString().Replace("'", "''");
+                bySpaceSb.AppendFormat("{0} ", word);
+                result.AppendFormat("{0}^{1}^{2} ", word, row["Rank"], row["Position"]);
+            }
+
+            bySpace = bySpaceSb.ToString().Trim();
+            return result.ToString().Trim();
         }
 
         /// <summary>

@@ -51,6 +51,9 @@
     <Compile Include="DataStructure\VInt.cs" />
     <Compile Include="DataStructure\VLong.cs" />
     <Compile Include="Data\SQLDataProvider.cs" />
+    <Compile Include="Entity\DocumentPositionList.cs" />
+    <Compile Include="Entity\WordInfo.cs" />
+    <Compile Include="INamedExternalReference.cs" />
     <Compile Include="IO\BufFileStream.cs" />
     <Compile Include="IO\File.cs" />
     <Compile Include="IO\LinkedSegmentFileStream.cs" />

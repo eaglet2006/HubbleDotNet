@@ -73,7 +73,7 @@ namespace Hubble.Core.Analysis
 
             _InfinitiveVerbTable = new Dictionary<string, string>();
 
-            using (StringReader sr = new StringReader(AnalyzerRes.INFINITIVE))
+            using (StringReader sr = new StringReader(Hubble.Analyzer.AnalyzerResource.INFINITIVE))
             {
 
                 string line = sr.ReadLine();
@@ -184,6 +184,12 @@ namespace Hubble.Core.Analysis
             }
         }
 
+        public IEnumerable<Hubble.Core.Entity.WordInfo> TokenizeForSqlClient(string text)
+        {
+            return Tokenize(text);
+        }
+
+
         public void Init()
         {
             InitInfinitiveVerbTable();
@@ -204,5 +210,7 @@ namespace Hubble.Core.Analysis
         }
 
         #endregion
+
+
     }
 }

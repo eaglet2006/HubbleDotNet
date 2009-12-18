@@ -6,8 +6,8 @@
     {
         // Code that runs on application startup
 
-        Hubble.Analyzer.PanGuAnalyzer pangu = new Hubble.Analyzer.PanGuAnalyzer();
-        pangu.Init();
+        // Hubble.Analyzer.PanGuAnalyzer pangu = new Hubble.Analyzer.PanGuAnalyzer();
+        // pangu.Init();
     }
     
     void Application_End(object sender, EventArgs e) 

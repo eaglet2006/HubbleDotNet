@@ -121,6 +121,12 @@ namespace Hubble.Core.Analysis
             }
         }
 
+        public IEnumerable<Hubble.Core.Entity.WordInfo> TokenizeForSqlClient(string text)
+        {
+            return Tokenize(text);
+        }
+
+
         public void Init()
         {
             Framework.Lexical.Initialize();

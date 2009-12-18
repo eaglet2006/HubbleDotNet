@@ -38,22 +38,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analysis\AnalyzerRes.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>AnalyzerRes.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Analysis\EnglishAnalyzer.cs" />
-    <Compile Include="Analysis\Framework\PorterStemmer.cs" />
-    <Compile Include="Analysis\HighLight\Formatter.cs" />
-    <Compile Include="Analysis\HighLight\Fragment.cs" />
-    <Compile Include="Analysis\HighLight\Highlighter.cs" />
-    <Compile Include="Analysis\HighLight\SimpleHTMLFormatter.cs" />
-    <Compile Include="Analysis\IAnalyzer.cs" />
-    <Compile Include="Analysis\Framework\Lexical.cs" />
-    <Compile Include="Analysis\SimpleAnalyzer.cs" />
-    <Compile Include="Analysis\Framework\WordAttribute.cs" />
-    <Compile Include="Analysis\Framework\WordInfo.cs" />
     <Compile Include="Cache\CacheManager.cs" />
     <Compile Include="Cache\IManagedCache.cs" />
     <Compile Include="Cache\QueryCache.cs" />
@@ -63,15 +47,12 @@
     <Compile Include="Data\DBAccess.cs" />
     <Compile Include="Data\DBProvider.cs" />
     <Compile Include="Data\DeleteProvider.cs" />
-    <Compile Include="Data\INamedExternalReference.cs" />
     <Compile Include="Data\OptimizationOption.cs" />
     <Compile Include="Data\Payload.cs" />
     <Compile Include="Data\Table.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />
-    <Compile Include="Entity\DocumentPositionList.cs" />
-    <Compile Include="Entity\WordInfo.cs" />
     <Compile Include="Global\ExternalReference.cs" />
     <Compile Include="Global\ReEntryException.cs" />
     <Compile Include="Global\Report.cs" />
@@ -131,6 +112,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_FieldAnalyze.cs" />
     <Compile Include="StoredProcedure\SP_GetWordsPositions.cs" />
     <Compile Include="StoredProcedure\SP_OptimizeTable.cs" />
     <Compile Include="StoredProcedure\SP_QueryCacheReport.cs" />
@@ -168,6 +150,10 @@
     <Compile Include="Store\StoreException.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Hubble.Analyzer\Hubble.Analyzer.csproj">
+      <Project>{D94FD044-AC5D-4EF0-891B-019491461A16}</Project>
+      <Name>Hubble.Analyzer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
       <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
@@ -176,13 +162,6 @@
       <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>
       <Name>Hubble.SQLClient</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Analysis\AnalyzerRes.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AnalyzerRes.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

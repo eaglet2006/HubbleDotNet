@@ -4,7 +4,6 @@ using System.Text;
 using System.IO;
 
 using Hubble.SQLClient;
-using Hubble.Core;
 using Hubble.Core.Analysis.HighLight;
 using Hubble.Analyzer;
 
@@ -14,23 +13,23 @@ namespace Hubble.WebDemo
     {
         const int CacheTimeout = 0; //In seconds
 
-        static public string GetKeyWordsSplit(string keywords, Hubble.Core.Analysis.IAnalyzer iAnalyzer, out string bySpace)
-        {
-            StringBuilder result = new StringBuilder();
-            StringBuilder bySpaceSb = new StringBuilder();
+        //static public string GetKeyWordsSplit(string keywords, Hubble.Core.Analysis.IAnalyzer iAnalyzer, out string bySpace)
+        //{
+        //    StringBuilder result = new StringBuilder();
+        //    StringBuilder bySpaceSb = new StringBuilder();
             
-            iAnalyzer.Init();
-            IEnumerable<Hubble.Core.Entity.WordInfo> words = iAnalyzer.Tokenize(keywords);
+        //    iAnalyzer.Init();
+        //    IEnumerable<Hubble.Core.Entity.WordInfo> words = iAnalyzer.Tokenize(keywords);
 
-            foreach (Hubble.Core.Entity.WordInfo word in words)
-            {
-                bySpaceSb.AppendFormat("{0} ", word.Word, word.Rank, word.Position);
-                result.AppendFormat("{0}^{1}^{2} ", word.Word, word.Rank, word.Position);
-            }
+        //    foreach (Hubble.Core.Entity.WordInfo word in words)
+        //    {
+        //        bySpaceSb.AppendFormat("{0} ", word.Word, word.Rank, word.Position);
+        //        result.AppendFormat("{0}^{1}^{2} ", word.Word, word.Rank, word.Position);
+        //    }
 
-            bySpace = bySpaceSb.ToString().Trim();
-            return result.ToString().Trim();
-        }
+        //    bySpace = bySpaceSb.ToString().Trim();
+        //    return result.ToString().Trim();
+        //}
 
 
         public static List<TNews> Search(String indexDir, String q, int pageLen, int pageNo, string sortBy,
@@ -40,10 +39,7 @@ namespace Hubble.WebDemo
 
             string keywords = q;
 
-            string wordssplitbyspace;
-
-            string matchString = GetKeyWordsSplit(q, new PanGuAnalyzer(), out wordssplitbyspace);
-   
+            //string matchString = GetKeyWordsSplit(q, new PanGuAnalyzer(), out wordssplitbyspace);
 
             System.Configuration.ConnectionStringSettings connString =
                 System.Web.Configuration.WebConfigurationManager.ConnectionStrings["News"];
@@ -65,6 +61,13 @@ namespace Hubble.WebDemo
                 {
                     sortBy = "score";
                 }
+
+                string wordssplitbyspace;
+
+                SqlCommand matchCmd = new SqlCommand(conn);
+
+                string matchString = matchCmd.GetKeywordAnalyzerStringFromServer("News",
+                    "Content", keywords, int.MaxValue, out wordssplitbyspace);
 
                 SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy,
                     conn, (pageNo - 1) * pageLen, pageNo * pageLen - 1, matchString);
