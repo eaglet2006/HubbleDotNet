@@ -186,14 +186,18 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            if (top <= 0 || top >= docResults.Length/2)
-            {
-                Array.Sort(docResults);
-            }
-            else
-            {
-                QuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
-            }
+
+            Array.Sort(docResults);
+
+            //Has a bug of partial sort, make comments on following codes until it fixed. 
+            //if (top <= 0 || top >= docResults.Length/2)
+            //{
+            //    Array.Sort(docResults);
+            //}
+            //else
+            //{
+            //    QuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
+            //}
         }
     }
 }
