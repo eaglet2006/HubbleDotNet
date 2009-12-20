@@ -476,7 +476,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            return sb.ToString().ToLower();
+            return sb.ToString();
         }
 
         private QueryResult ExcuteSelect(TSFQLSentence sentence)
@@ -553,7 +553,7 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     Cache.QueryCacheInformation qInfo = (Cache.QueryCacheInformation)tag;
 
-                    if (qInfo.Count >= select.End + 1 || (qInfo.All && select.End < 0))
+                    if ((qInfo.Count >= select.End + 1 && select.End  >= 0) || (qInfo.All && select.End < 0))
                     {
                         if (DateTime.Now <= expireTime)
                         {

@@ -131,7 +131,7 @@ namespace Hubble.Framework.DataStructure
         /// <returns>next state id</returns>
         public virtual int NextState(int action, DFA<Token, Function> dfa, out bool isElseAction)
         {
-            Debug.Assert(NextStateIds != null);
+            //Debug.Assert(NextStateIds != null);
 
             isElseAction = false;
 

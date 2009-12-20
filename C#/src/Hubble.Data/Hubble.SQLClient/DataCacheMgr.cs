@@ -87,7 +87,7 @@ namespace Hubble.SQLClient
                 }
             }
 
-            dataCache.Insert(sql.ToLower().Trim(), qResult, expireTime, tableTick);
+            dataCache.Insert(sql.Trim(), qResult, expireTime, tableTick);
         }
 
         static internal QueryResult Get(SqlConnection conn, string sql,
@@ -112,7 +112,7 @@ namespace Hubble.SQLClient
 
             object tag;
 
-            if (dataCache.TryGetValue(sql.Trim().ToLower(), out result, out expireTime, out hitCount, out tag))
+            if (dataCache.TryGetValue(sql.Trim(), out result, out expireTime, out hitCount, out tag))
             {
                 tableTicks = (string)tag;
                 return result;
