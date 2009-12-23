@@ -72,6 +72,14 @@ namespace Hubble.Core.Data
             }
         }
 
+        public void IncDeleteStamp()
+        {
+            lock (_DeleteStampLock)
+            {
+                _DeleteStamp++;
+            }
+        }
+
         public void Delete(IList<long> docs)
         {
             lock (this)
@@ -101,6 +109,11 @@ namespace Hubble.Core.Data
         {
             lock (this)
             {
+                if (_DeleteTbl.Count <= 0)
+                {
+                    return;
+                }
+
                 for (int i = 0; i < docScoreList.Length; i++)
                 {
                     if (_DeleteTbl.ContainsKey(docScoreList[i].DocId))

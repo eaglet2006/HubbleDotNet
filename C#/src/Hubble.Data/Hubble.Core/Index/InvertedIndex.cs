@@ -806,6 +806,11 @@ namespace Hubble.Core.Index
 
             lock (this)
             {
+                if (_DBProvider.DelProvider != null)
+                {
+                    _DBProvider.DelProvider.IncDeleteStamp();
+                }
+
                 tempWordTableWriter = _WordTableWriter;
                 _WordTableWriter = new Dictionary<string, WordIndexWriter>();
             }
