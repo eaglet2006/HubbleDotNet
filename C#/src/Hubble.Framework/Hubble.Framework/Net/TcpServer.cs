@@ -253,42 +253,49 @@ namespace Hubble.Framework.Net
 
         private void ListenForClients()
         {
-            this._TcpListener.Start();
-
-            while (true)
+            try
             {
-                //blocks until a client has connected to the server
-                System.Net.Sockets.TcpClient client = this._TcpListener.AcceptTcpClient();
+                this._TcpListener.Start();
 
-                try
+                while (true)
                 {
-                    //create a thread to handle communication
-                    //with connected client
-                    Thread clientThread =
-                       new Thread(new
-                       ParameterizedThreadStart(HandleClientComm));
+                    //blocks until a client has connected to the server
+                    System.Net.Sockets.TcpClient client = this._TcpListener.AcceptTcpClient();
 
-                    PCB pcb = GetPCB(client);
-
-                    if (pcb == null)
+                    try
                     {
-                        //Over max connect number
-                        ReturnMessage(client.GetStream(), new MessageHead(), new Exception("Too many connects on server"), null);
+                        //create a thread to handle communication
+                        //with connected client
+                        Thread clientThread =
+                           new Thread(new
+                           ParameterizedThreadStart(HandleClientComm));
 
-                        System.Threading.Thread.Sleep(200);
+                        PCB pcb = GetPCB(client);
 
-                        client.Close();
-                        throw new Exception("Too many connects on server");
+                        if (pcb == null)
+                        {
+                            //Over max connect number
+                            ReturnMessage(client.GetStream(), new MessageHead(), new Exception("Too many connects on server"), null);
+
+                            System.Threading.Thread.Sleep(200);
+
+                            client.Close();
+                            throw new Exception("Too many connects on server");
+                        }
+                        else
+                        {
+                            clientThread.Start(pcb);
+                        }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        clientThread.Start(pcb);
+                        OnMessageReceiveErrorEvent(new MessageReceiveErrorEventArgs(e));
                     }
                 }
-                catch (Exception e)
-                {
-                    OnMessageReceiveErrorEvent(new MessageReceiveErrorEventArgs(e));
-                }
+            }
+            catch (Exception e)
+            {
+                OnMessageReceiveErrorEvent(new MessageReceiveErrorEventArgs(e));
             }
         }
 

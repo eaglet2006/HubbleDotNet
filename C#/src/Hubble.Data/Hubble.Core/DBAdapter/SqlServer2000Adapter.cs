@@ -235,6 +235,22 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+
+        public void Truncate()
+        {
+            Debug.Assert(Table != null);
+
+            string sql = string.Format("truncate table {0}",
+                Table.DBTableName);
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql);
+            }
+        }
+
+
         public void Create()
         {
             Debug.Assert(Table != null);
@@ -669,6 +685,7 @@ namespace Hubble.Core.DBAdapter
         }
 
         #endregion
+
 
     }
 }

@@ -338,6 +338,11 @@ namespace Hubble.Core.Data
 
                 DBProvider dbProvider = GetDBProvider(tableName);
 
+                if (!dbProvider.Table.IndexOnly)
+                {
+                    dbProvider.DBAdapter.Drop();
+                }
+
                 if (dbProvider != null)
                 {
                     try
@@ -372,6 +377,61 @@ namespace Hubble.Core.Data
                 }
             }
         }
+
+        public static void Truncate(string tableName)
+        {
+            lock (_sLockObj)
+            {
+                if (_sNeedClose)
+                {
+                    return;
+                }
+
+                _sCanClose = false;
+            }
+
+            try
+            {
+                string fullTableName = Setting.GetTableFullName(tableName);
+
+                DBProvider dbProvider = GetDBProvider(fullTableName);
+
+                if (dbProvider != null)
+                {
+                    Table table = dbProvider.Table;
+                    string dir = dbProvider.Directory;
+                    bool indexReadOnly = table.IndexOnly;
+
+                    dbProvider.SetIndexOnly(true);
+
+                    if (!indexReadOnly)
+                    {
+                        dbProvider.DBAdapter.Truncate();
+                    }
+
+                    Drop(tableName);
+
+                    CreateTable(table, dir);
+
+                    fullTableName = Setting.GetTableFullName(tableName);
+                    dbProvider = GetDBProvider(fullTableName);
+                    dbProvider.SetIndexOnly(indexReadOnly);
+                }
+                else
+                {
+                    throw new DataException(string.Format("Table name {0} does not exist!",
+                        tableName));
+                }
+            }
+            finally
+            {
+                lock (_sLockObj)
+                {
+                    _sCanClose = true;
+                }
+            }
+        }
+
 
         public static void Init(string settingPath)
         {
@@ -592,6 +652,15 @@ namespace Hubble.Core.Data
 
         long _LastDocId = 0;
 
+        internal long LastDocId
+        {
+            get
+            {
+                return _LastDocId;
+            }
+        }
+
+
         DBAdapter.IDBAdapter _DBAdapter;
 
         public string Directory
@@ -760,7 +829,7 @@ namespace Hubble.Core.Data
         {
             try
             {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
+                _TableLock.Enter(Lock.Mode.Mutex, 30000);
 
                 _Table.IndexOnly = value;
             }
@@ -1066,9 +1135,12 @@ namespace Hubble.Core.Data
                         _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
                         _LastDocId++;
 
-                        if (_LastDocId <= dbMaxDocId)
+                        if (!IndexOnly)
                         {
-                            _LastDocId = dbMaxDocId + 1;
+                            if (_LastDocId <= dbMaxDocId)
+                            {
+                                _LastDocId = dbMaxDocId + 1;
+                            }
                         }
                     }
                 }
@@ -1321,8 +1393,13 @@ namespace Hubble.Core.Data
                 if (DBAdapter != null)
                 {
                     DBAdapter.Table = table;
-                    DBAdapter.Drop();
-                    DBAdapter.Create();
+
+                    if (!table.IndexOnly)
+                    {
+                        DBAdapter.Drop();
+                        DBAdapter.Create();
+                    }
+
                 }
                 else
                 {
@@ -1343,7 +1420,10 @@ namespace Hubble.Core.Data
                 }
                 catch
                 {
-                    DBAdapter.Drop();
+                    if (!table.IndexOnly)
+                    {
+                        DBAdapter.Drop();
+                    }
                     throw;
                 }
 
@@ -1432,12 +1512,17 @@ namespace Hubble.Core.Data
                     {
                         if (IndexOnly)
                         {
-                            if (_LastDocId < doc.DocId)
+                            if (doc.DocId < 0)
+                            {
+                                throw new DataException("Must have docid when the table is indexonly!");
+                            }
+
+                            if (_LastDocId > doc.DocId)
                             {
                                 throw new DataException("Must insert DocId sort ascending!");
                             }
 
-                            _LastDocId = doc.DocId;
+                            _LastDocId = doc.DocId + 1;
                         }
                         else
                         {
@@ -1499,7 +1584,10 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                _DBAdapter.Insert(docs);
+                if (!IndexOnly)
+                {
+                    _DBAdapter.Insert(docs);
+                }
 
                 foreach (Document doc in docs)
                 {
@@ -1600,11 +1688,6 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                if (IndexOnly)
-                {
-                    throw new DataException("Can not update table that is index only.");
-                }
-
                 Debug.Assert(fieldValues != null && docs != null);
 
 
@@ -1660,6 +1743,11 @@ namespace Hubble.Core.Data
 
                 if (needDel)
                 {
+                    if (IndexOnly)
+                    {
+                        throw new DataException("Can not update fulltext field when the table is index only.");
+                    }
+
                     Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
 
                     foreach (FieldValue fv in fieldValues)
@@ -1729,7 +1817,10 @@ namespace Hubble.Core.Data
                 }
                 else
                 {
-                    _DBAdapter.Update(doc, docs);
+                    if (!IndexOnly)
+                    {
+                        _DBAdapter.Update(doc, docs);
+                    }
 
                     List<long> updateIds = new List<long>();
                     List<Payload> updatePayloads = new List<Payload>();

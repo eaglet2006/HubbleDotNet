@@ -255,7 +255,7 @@ namespace Hubble.Core.Store
 
         public Dictionary<long, Data.Payload> Open(List<Data.Field> fields, int payloadLength, out long lastDocId)
         {
-            lastDocId = 0;
+            lastDocId = -1;
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
             Dictionary<long, Data.Payload> docPayload = new Dictionary<long, Hubble.Core.Data.Payload>();
 

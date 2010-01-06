@@ -112,6 +112,8 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_GetTableAttributes.cs" />
+    <Compile Include="StoredProcedure\SP_TruncateTable.cs" />
     <Compile Include="StoredProcedure\SP_FieldAnalyze.cs" />
     <Compile Include="StoredProcedure\SP_GetWordsPositions.cs" />
     <Compile Include="StoredProcedure\SP_OptimizeTable.cs" />

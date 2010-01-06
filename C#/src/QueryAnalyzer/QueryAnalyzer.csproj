@@ -81,6 +81,12 @@
     <Compile Include="FormPerformance.Designer.cs">
       <DependentUpon>FormPerformance.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormRebuildTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormRebuildTable.Designer.cs">
+      <DependentUpon>FormRebuildTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTableInfo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -116,6 +122,9 @@
     <EmbeddedResource Include="FormPerformance.resx">
       <DependentUpon>FormPerformance.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormRebuildTable.resx">
+      <DependentUpon>FormRebuildTable.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTableInfo.resx">
       <DependentUpon>FormTableInfo.cs</DependentUpon>

@@ -18,39 +18,33 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Data;
-using Hubble.Core.SFQL.Parse;
 
-namespace Hubble.Core.DBAdapter
+namespace Hubble.Core.StoredProcedure
 {
-    public interface IDBAdapter
+    class SP_TruncateTable : StoredProcedure, IStoredProc
     {
-        Data.Table Table { get; set; }
+        #region IStoredProc Members
 
-        string ConnectionString { get; set; }
+        public string Name
+        {
+            get
+            {
+                return "SP_TruncateTable";
+            }
+        }
 
-        void Drop();
+        public void Run()
+        {
+            if (Parameters.Count > 1 || Parameters.Count <= 0)
+            {
+                throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
+            }
 
-        void Create();
+            Data.DBProvider.Truncate(Parameters[0]);
 
-        void Truncate();
+            OutputMessage("Command(s) completed successfully.");
+        }
 
-        void Insert(IList<Data.Document> docs);
-
-        void Delete(IList<long> docIds);
-
-        void Update(Data.Document doc, IList<Query.DocumentResult> docs);
-
-        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
-        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
-
-        WhereDictionary<long, Query.DocumentResult> GetDocumentResults(string where);
-
-        long MaxDocId { get; }
-
-        DataSet QuerySql(string sql);
-
-        int ExcuteSql(string sql);
-
+        #endregion
     }
 }

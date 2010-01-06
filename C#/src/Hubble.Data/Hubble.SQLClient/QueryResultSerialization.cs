@@ -482,7 +482,7 @@ namespace Hubble.SQLClient
 
         #endregion
 
-        bool _Compress = true;
+        bool _Compress = false;
         QueryResult _Result;
 
         public QueryResultSerialization(QueryResult result)

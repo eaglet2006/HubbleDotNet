@@ -227,13 +227,24 @@ namespace Hubble.Core.SFQL.Parse
             {
                 List<Field> fields = dBProvider.GetAllFields();
 
+                if (dBProvider.IndexOnly)
+                {
+                    SyntaxAnalysis.Insert.InsertField insertField = new SyntaxAnalysis.Insert.InsertField();
+                    insertField.Name = "docid";
+                    insert.Fields.Add(insertField);
+                }
+
                 foreach(Field field in fields)
                 {
                     SyntaxAnalysis.Insert.InsertField insertField = new SyntaxAnalysis.Insert.InsertField();
                     insertField.Name = field.Name;
                     insert.Fields.Add(insertField);
                 }
+
+
             }
+
+
 
             if (insert.Fields.Count > insert.Values.Count)
             {
@@ -247,7 +258,14 @@ namespace Hubble.Core.SFQL.Parse
 
             for(int i = 0; i < insert.Fields.Count; i++)
             {
-                document.FieldValues.Add(new FieldValue(insert.Fields[i].Name, insert.Values[i].Value));
+                if (insert.Fields[i].Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    document.DocId = long.Parse(insert.Values[i].Value);
+                }
+                else
+                {
+                    document.FieldValues.Add(new FieldValue(insert.Fields[i].Name, insert.Values[i].Value));
+                }
             }
 
             List<Document> docs;

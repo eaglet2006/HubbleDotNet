@@ -127,7 +127,10 @@ namespace Hubble.Core.Service
         {
             try
             {
-                Global.Report.WriteErrorLog(string.Format("Error = {0} ", args.InnerException.Message));
+                string errorMsg = string.Format("Error = {0} StackTrace = {1}", 
+                    args.InnerException.Message, args.InnerException.StackTrace);
+                Console.WriteLine(errorMsg);
+                Global.Report.WriteErrorLog(errorMsg);
             }
             catch
             {

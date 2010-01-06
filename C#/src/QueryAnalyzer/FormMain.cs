@@ -250,8 +250,16 @@ namespace QueryAnalyzer
                 try
                 {
                     tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
+                    rebuildTableToolStripMenuItem.Enabled = tableInfoToolStripMenuItem.Enabled;
+
                     refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server" ||
                         treeViewData.SelectedNode.Tag.ToString() == "Database";
+
+                    if (treeViewData.SelectedNode.Tag.ToString() == "Table")
+                    {
+                        toolStripComboBoxDatabases.Text = treeViewData.SelectedNode.Parent.Text;
+                    }
+
                 }
                 catch(Exception e1)
                 {
@@ -354,7 +362,22 @@ namespace QueryAnalyzer
                 return;
             }
 
-            GlobalSetting.DataAccess.ChangeDatabase(toolStripComboBoxDatabases.Text);
+            try
+            {
+                GlobalSetting.DataAccess.ChangeDatabase(toolStripComboBoxDatabases.Text);
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void rebuildTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FormRebuildTable frmRebuildTable = new FormRebuildTable();
+            frmRebuildTable.TableName = treeViewData.SelectedNode.Text;
+            frmRebuildTable.DataAccess = GlobalSetting.DataAccess; 
+            frmRebuildTable.ShowDialog();
         }
 
     }
