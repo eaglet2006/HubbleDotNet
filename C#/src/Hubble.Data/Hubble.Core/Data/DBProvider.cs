@@ -222,6 +222,25 @@ namespace Hubble.Core.Data
             }
         }
 
+        public static DBProvider GetDBProvider(string databaseName, string tableName)
+        {
+            tableName = Setting.GetTableFullName(databaseName, tableName);
+
+            lock (_sLockObj)
+            {
+                DBProvider dbProvider;
+                if (_DBProviderTable.TryGetValue(tableName.ToLower().Trim(), out dbProvider))
+                {
+                    return dbProvider;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
+
         public static DBProvider GetDBProvider(string tableName)
         {
             tableName = Setting.GetTableFullName(tableName);

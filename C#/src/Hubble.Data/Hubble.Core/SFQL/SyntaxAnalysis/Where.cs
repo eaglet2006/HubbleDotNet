@@ -231,7 +231,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
                 (int)SyntaxType.Numeric, (int)SyntaxType.String }, s4.Id);
 
             s4.AddNextState(new int[] { (int)SyntaxType.GROUP, 
-                (int)SyntaxType.ORDER, (int)SyntaxType.Eof }, squit.Id);
+                (int)SyntaxType.ORDER, (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
             s4.AddNextState(new int[] { (int)SyntaxType.Identifer, 
                 (int)SyntaxType.Numeric, (int)SyntaxType.String, (int)SyntaxType.LSquareBracket, (int)SyntaxType.RSquareBracket }, s4.Id);
             s4.AddNextState((int)SyntaxType.Plus, (int)SyntaxType.Mod, s4.Id);
@@ -246,7 +246,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s6.AddNextState(new int[] { (int)SyntaxType.AND, (int)SyntaxType.OR }, s7.Id);
             s6.AddNextState((int)SyntaxType.RBracket, s6.Id);
             s6.AddNextState(new int[] { (int)SyntaxType.GROUP, 
-                (int)SyntaxType.ORDER, (int)SyntaxType.Eof }, squit.Id);
+                (int)SyntaxType.ORDER, (int)SyntaxType.Eof, (int)SyntaxType.Semicolon }, squit.Id);
 
             s7.AddNextState((int)SyntaxType.LBracket, s5.Id);
             s7.AddNextState(new int[] { (int)SyntaxType.Identifer, 

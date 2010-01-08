@@ -147,6 +147,28 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
         #endregion
 
+        public TSFQLAttribute()
+        {
+        }
 
+        public TSFQLAttribute(string name)
+        {
+            this.Name = name;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            return this.Name.Equals(((TSFQLAttribute)obj).Name, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Name.ToLower().GetHashCode();
+        }
     }
 }

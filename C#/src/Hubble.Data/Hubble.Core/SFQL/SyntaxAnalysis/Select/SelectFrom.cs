@@ -116,12 +116,12 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             s2.AddNextState((int)SyntaxType.AS, s3.Id);
             s2.AddNextState((int)SyntaxType.Identifer, s4.Id);
             s2.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma, 
-                (int)SyntaxType.WHERE, (int)SyntaxType.ORDER, (int)SyntaxType.GROUP }, squit.Id);
+                (int)SyntaxType.WHERE, (int)SyntaxType.ORDER, (int)SyntaxType.GROUP, (int)SyntaxType.Semicolon }, squit.Id);
 
             s3.AddNextState((int)SyntaxType.Identifer, s4.Id);
 
             s4.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma, 
-                (int)SyntaxType.WHERE, (int)SyntaxType.ORDER, (int)SyntaxType.GROUP }, squit.Id);
+                (int)SyntaxType.WHERE, (int)SyntaxType.ORDER, (int)SyntaxType.GROUP, (int)SyntaxType.Semicolon }, squit.Id);
         }
 
         public static void Initialize()

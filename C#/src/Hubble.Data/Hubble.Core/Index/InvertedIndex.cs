@@ -212,7 +212,7 @@ namespace Hubble.Core.Index
                         docRank = dList.Rank;
                     }
 
-                    long score = docRank * _Idf_t * dList.Count * 1000000 / (_Norm_d_t * numDocWords);
+                    long score = (long)docRank * (long)_Idf_t * (long)dList.Count * (long)1000000 / ((long)_Norm_d_t * (long)numDocWords);
 
                     _DocScoreList[i] = new DocScore(dList.DocumentId, score);
 
@@ -276,6 +276,7 @@ namespace Hubble.Core.Index
 
                         long rank = docScore.Score;// / Norm_Ranks;
                         int score = 0;
+
                         if (rank > int.MaxValue - 4000000)
                         {
                             long high = rank % (int.MaxValue - 4000000);

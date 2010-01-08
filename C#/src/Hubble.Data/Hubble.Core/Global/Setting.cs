@@ -94,9 +94,17 @@ namespace Hubble.Core.Global
 
         internal static string GetTableFullName(string tableName)
         {
+            string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+
+            return GetTableFullName(curDatabaseName, tableName);
+        }
+
+
+        internal static string GetTableFullName(string databaseName, string tableName)
+        {
             tableName = tableName.Trim();
 
-            string curDatabaseName = Service.CurrentConnection.ConnectionInfo.DatabaseName;
+            string curDatabaseName = databaseName;
 
             string prefix = curDatabaseName + ".";
 
@@ -110,6 +118,7 @@ namespace Hubble.Core.Global
                 return prefix + tableName;
             }
         }
+
 
         static internal bool DatabaseExists(string databaseName)
         {

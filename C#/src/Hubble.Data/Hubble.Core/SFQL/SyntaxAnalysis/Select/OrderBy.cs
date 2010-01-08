@@ -110,9 +110,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
             s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
 
             s2.AddNextState(new int[] { (int)SyntaxType.ASC, (int)SyntaxType.DESC}, s3.Id);
-            s2.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma}, squit.Id);
+            s2.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma, (int)SyntaxType.Semicolon}, squit.Id);
 
-            s3.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma }, squit.Id);
+            s3.AddNextState(new int[] { (int)SyntaxType.Eof, (int)SyntaxType.Comma, (int)SyntaxType.Semicolon }, squit.Id);
 
         }
 
@@ -141,6 +141,11 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
         #endregion
 
+
+        public override string ToString()
+        {
+            return string.Format("{0} {1}", this.Name, this.Order);
+        }
     }
 }
 

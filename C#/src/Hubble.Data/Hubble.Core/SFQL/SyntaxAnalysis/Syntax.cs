@@ -38,7 +38,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             }
             catch (DFAException dfaEx)
             {
-                throw new SyntaxException(dfaEx.Message, this, dfaEx, token);
+                throw new SyntaxException(string.Format("{0}, current class:{1}", dfaEx.Message, this.GetType()), this, dfaEx, token);
             }
         }
     }

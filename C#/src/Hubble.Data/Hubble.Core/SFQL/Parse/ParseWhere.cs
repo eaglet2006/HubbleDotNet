@@ -37,7 +37,7 @@ namespace Hubble.Core.SFQL.Parse
         public int Begin = 0;
         public int End = 99;
 
-        public ParseWhere(string tableName)
+        public ParseWhere(string tableName, DBProvider dbProvider)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -46,7 +46,8 @@ namespace Hubble.Core.SFQL.Parse
 
             _TableName = tableName;
 
-            _DBProvider =  DBProvider.GetDBProvider(_TableName);
+            //_DBProvider =  DBProvider.GetDBProvider(_TableName);
+            _DBProvider = dbProvider;
 
             if (_DBProvider == null)
             {

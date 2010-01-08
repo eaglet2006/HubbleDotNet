@@ -78,6 +78,7 @@
     <Compile Include="Text\Regex.cs" />
     <Compile Include="Threading\Lock.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
+    <Compile Include="Threading\MultiThreadCalculate.cs" />
     <Compile Include="Win32\Event.cs" />
     <Compile Include="Win32\NTKernel.cs" />
   </ItemGroup>

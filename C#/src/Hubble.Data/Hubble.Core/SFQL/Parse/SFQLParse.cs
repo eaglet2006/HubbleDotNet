@@ -35,6 +35,9 @@ namespace Hubble.Core.SFQL.Parse
         private bool _NeedCollect = false;
         private Dictionary<string, List<Document>> _InsertTables = new Dictionary<string, List<Document>>();
 
+        private bool _UnionSelect = false;
+        private List<SyntaxAnalysis.Select.Select> _UnionSelects = new List<Hubble.Core.SFQL.SyntaxAnalysis.Select.Select>();
+
         private void InputLexicalToken(Lexical.Token token)
         {
             if (token.SyntaxType == SyntaxType.Space)
@@ -133,7 +136,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
                 SyntaxAnalysis.Update.Update;
 
-            ParseWhere parseWhere = new ParseWhere(update.TableName);
+            ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName));
 
             parseWhere.Begin = update.Begin;
             parseWhere.End = update.End;
@@ -177,7 +180,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as
                 SyntaxAnalysis.Delete.Delete;
 
-            ParseWhere parseWhere = new ParseWhere(delete.TableName);
+            ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName));
 
             parseWhere.Begin = delete.Begin;
             parseWhere.End = delete.End;
@@ -240,9 +243,8 @@ namespace Hubble.Core.SFQL.Parse
                     insertField.Name = field.Name;
                     insert.Fields.Add(insertField);
                 }
-
-
             }
+
 
 
 
@@ -497,16 +499,10 @@ namespace Hubble.Core.SFQL.Parse
             return sb.ToString();
         }
 
-        private QueryResult ExcuteSelect(TSFQLSentence sentence)
+        private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
+            Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
             QueryResult qResult = new QueryResult();
-
-            SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
-                SyntaxAnalysis.Select.Select;
-
-            string tableName = select.SelectFroms[0].Name;
-
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
 
             if (dbProvider == null)
             {
@@ -516,14 +512,14 @@ namespace Hubble.Core.SFQL.Parse
             long lastModifyTicks = dbProvider.LastModifyTicks;
 
             //Process data cache
-            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent != null)
+            if (connInfo.CurrentCommandContent != null)
             {
-                if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.NeedDataCache)
+                if (connInfo.CurrentCommandContent.NeedDataCache)
                 {
 
                     if (dbProvider != null)
                     {
-                        long datacacheTicks = Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.DataCache.GetTicks(
+                        long datacacheTicks = connInfo.CurrentCommandContent.DataCache.GetTicks(
                             dbProvider.TableName);
 
                         qResult.PrintMessages.Add(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
@@ -542,7 +538,7 @@ namespace Hubble.Core.SFQL.Parse
 
             //Begin to select
 
-            ParseWhere parseWhere = new ParseWhere(tableName);
+            ParseWhere parseWhere = new ParseWhere(tableName, dbProvider);
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
@@ -726,6 +722,176 @@ namespace Hubble.Core.SFQL.Parse
             qResult.DataSet = ds;
 
             return qResult;
+
+        }
+
+        private QueryResult ExcuteSelect(TSFQLSentence sentence)
+        {
+            SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
+                SyntaxAnalysis.Select.Select;
+
+            if (sentence.Attributes.Count > 0)
+            {
+                if (sentence.Attributes.Contains(new TSFQLAttribute("UnionSelect")))
+                {
+                    _UnionSelect = true;
+                }
+            }
+
+            if (_UnionSelect)
+            {
+                _UnionSelects.Add(select);
+                return null;
+            }
+
+            string tableName = select.SelectFroms[0].Name;
+
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
+
+            return ExcuteSelect(select, dbProvider, tableName, Service.CurrentConnection.ConnectionInfo);
+        }
+
+        private List<QueryResult> _UnionQueryResult;
+        private object _UnionLock = new object();
+        private void AddUnionQueryResult(QueryResult qResult)
+        {
+            lock (_UnionLock)
+            {
+                _UnionQueryResult.Add(qResult);
+            }
+        }
+
+
+        private void ProcUnionSelectQuery(object para)
+        {
+            try
+            {
+                SyntaxAnalysis.Select.Select select = ((object[])para)[0] as SyntaxAnalysis.Select.Select;
+                Service.ConnectionInformation connInfo = ((object[])para)[1] as Service.ConnectionInformation;
+
+                SyntaxAnalysis.Select.Select qSelect = new Hubble.Core.SFQL.SyntaxAnalysis.Select.Select();
+
+                qSelect.Begin = select.Begin;
+                qSelect.End = select.End;
+                qSelect.Where = select.Where;
+                qSelect.OrderBys = select.OrderBys;
+                qSelect.SelectFroms = select.SelectFroms;
+
+                SyntaxAnalysis.Select.SelectField selectField = new SyntaxAnalysis.Select.SelectField();
+                selectField.Name = "DocId";
+                selectField.Alias = selectField.Name;
+
+                qSelect.SelectFields.Add(selectField);
+
+                foreach (SyntaxAnalysis.Select.OrderBy orderby in select.OrderBys)
+                {
+                    selectField = new SyntaxAnalysis.Select.SelectField();
+                    selectField.Name = orderby.Name;
+                    selectField.Alias = selectField.Name;
+                    qSelect.SelectFields.Add(selectField);
+                }
+
+                string tableName = select.SelectFroms[0].Name;
+
+                Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(connInfo.DatabaseName, tableName);
+
+                QueryResult qResult = ExcuteSelect(qSelect, dbProvider, tableName, connInfo);
+
+                System.Data.DataColumn col = new System.Data.DataColumn();
+                col.ColumnName = "TableName";
+                col.DefaultValue = tableName;
+
+                qResult.DataSet.Tables[0].Columns.Add(col);
+
+                AddUnionQueryResult(qResult);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog(string.Format("ProcUnionSelectQuery fail! err:{0} stack:{1}",
+                    e.Message, e.StackTrace));
+            }
+
+        }
+
+        private QueryResult ExcuteUnionSelect()
+        {
+            _UnionQueryResult = new List<QueryResult>();
+
+            Hubble.Framework.Threading.MultiThreadCalculate mCalc =
+                new Hubble.Framework.Threading.MultiThreadCalculate(ProcUnionSelectQuery);
+
+            foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
+            {
+                object[] para = new object[2];
+                para[0] = select;
+                para[1] = Service.CurrentConnection.ConnectionInfo;
+                mCalc.Add(para);
+            }
+
+            mCalc.Start();
+
+            if (_UnionQueryResult.Count == 0)
+            {
+                throw new Data.DataException("Union query fail! Please check the error log file");
+            }
+
+            System.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
+            int count = table.MinimumCapacity;
+
+            for (int i = 1; i < _UnionQueryResult.Count; i++)
+            {
+                count += _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
+
+                foreach (System.Data.DataRow scrRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
+                {
+                    System.Data.DataRow row = table.NewRow();
+
+                    for (int j = 0; j < table.Columns.Count; j++)
+                    {
+                        row[j] = scrRow[j];
+                    }
+
+                    table.Rows.Add(row);
+                }
+            }
+
+            System.Data.DataRow[] ResultsRowArray;
+
+            if (_UnionSelects[0].OrderBys.Count > 0)
+            {
+                StringBuilder sortString = new StringBuilder();
+
+                foreach(SyntaxAnalysis.Select.OrderBy orderBy in _UnionSelects[0].OrderBys)
+                {
+                    sortString.AppendFormat("{0} ", orderBy.ToString());
+                }
+
+                ResultsRowArray = table.Select("", sortString.ToString());
+            }
+            else
+            {
+                ResultsRowArray = table.Select("", "DocId");
+            }
+
+            table = table.Clone();
+
+            foreach (System.Data.DataRow scrRow in ResultsRowArray)
+            {
+                System.Data.DataRow row = table.NewRow();
+
+                for (int j = 0; j < table.Columns.Count; j++)
+                {
+                    row[j] = scrRow[j];
+                }
+
+                table.Rows.Add(row);
+            }
+
+            System.Data.DataSet ds = new System.Data.DataSet();
+            table.MinimumCapacity = count;
+            ds.Tables.Add(table);
+
+            return new QueryResult(ds);
         }
 
         private QueryResult ExecuteTSFQLSentence(TSFQLSentence sentence)
@@ -759,6 +925,36 @@ namespace Hubble.Core.SFQL.Parse
             Query(sql);
         }
 
+        private void AppendQueryResult(QueryResult queryResult, ref int tableNum, ref QueryResult result)
+        {
+            if (queryResult != null)
+            {
+                List<System.Data.DataTable> tables = new List<System.Data.DataTable>();
+
+                foreach (System.Data.DataTable table in queryResult.DataSet.Tables)
+                {
+                    tables.Add(table);
+                }
+
+                foreach (System.Data.DataTable table in tables)
+                {
+                    queryResult.DataSet.Tables.Remove(table);
+                }
+
+                foreach (System.Data.DataTable table in tables)
+                {
+                    table.TableName = "Table" + tableNum.ToString();
+                    tableNum++;
+                    result.DataSet.Tables.Add(table);
+                }
+
+                foreach (string message in queryResult.PrintMessages)
+                {
+                    result.PrintMessages.Add(message);
+                }
+            }
+        }
+
         public QueryResult Query(string sql)
         {
             _NeedCollect = false;
@@ -775,32 +971,7 @@ namespace Hubble.Core.SFQL.Parse
             {
                 QueryResult queryResult = ExecuteTSFQLSentence(sentence);
 
-                if (queryResult != null)
-                {
-                    List<System.Data.DataTable> tables = new List<System.Data.DataTable>();
-
-                    foreach (System.Data.DataTable table in queryResult.DataSet.Tables)
-                    {
-                        tables.Add(table);
-                    }
-
-                    foreach (System.Data.DataTable table in tables)
-                    {
-                        queryResult.DataSet.Tables.Remove(table);
-                    }
-
-                    foreach (System.Data.DataTable table in tables)
-                    {
-                        table.TableName = "Table" + tableNum.ToString();
-                        tableNum++;
-                        result.DataSet.Tables.Add(table);
-                    }
-
-                    foreach (string message in queryResult.PrintMessages)
-                    {
-                        result.PrintMessages.Add(message);
-                    }
-                }
+                AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 
             //Collect
@@ -823,6 +994,14 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
                 result.PrintMessages.Add(string.Format("({0} Row(s) affected)", affectedCount));
+            }
+
+            //Union select
+            if (_UnionSelect)
+            {
+                QueryResult queryResult = ExcuteUnionSelect();
+
+                AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 
 
