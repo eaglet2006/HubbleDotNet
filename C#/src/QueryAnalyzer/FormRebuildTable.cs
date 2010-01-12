@@ -195,7 +195,7 @@ namespace QueryAnalyzer
             {
                 sb.AppendLine(GetOneRowSql(qResult.DataSet, row, TableName));
 
-                from = (long)row["DocId"] + 1;
+                from = long.Parse(row["DocId"].ToString()) + 1;
 
                 if (remain > 0)
                 {

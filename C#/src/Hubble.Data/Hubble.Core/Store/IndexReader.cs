@@ -143,6 +143,7 @@ namespace Hubble.Core.Store
             } while (true);
 
             return result;
+
         }
 
         public void Close()

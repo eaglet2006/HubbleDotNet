@@ -167,7 +167,7 @@ namespace Hubble.Core.DBAdapter
                     }
                     else
                     {
-                        return (long)ds.Tables[0].Rows[0][0];
+                        return long.Parse(ds.Tables[0].Rows[0][0].ToString());
                     }
 
                 } 
@@ -499,7 +499,7 @@ namespace Hubble.Core.DBAdapter
                 sqlData.Connect(Table.ConnectionString);
                 foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
                 {
-                    long docId = (long)row[0];
+                    long docId = long.Parse(row[0].ToString());
                     result.Add(docId, new Hubble.Core.Query.DocumentResult(docId));
                 }
             }

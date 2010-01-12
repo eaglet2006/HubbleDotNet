@@ -1305,7 +1305,7 @@ namespace Hubble.Core.Data
 
                 foreach (System.Data.DataRow row in dt.Rows)
                 {
-                    long docId = (long)row["DocId"];
+                    long docId = long.Parse(row["DocId"].ToString());
 
                     Document doc ;
 

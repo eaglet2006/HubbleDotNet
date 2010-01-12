@@ -499,6 +499,68 @@ namespace Hubble.Core.SFQL.Parse
             return sb.ToString();
         }
 
+        private void GetSelectFields(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider,
+            out List<Data.Field> selectFields, out int allFieldsCount)
+        {
+            selectFields = new List<Data.Field>();
+
+            allFieldsCount = 0;
+
+            foreach (SyntaxAnalysis.Select.SelectField selectField in select.SelectFields)
+            {
+                if (selectField.Name == "*")
+                {
+                    List<Data.Field> allFields = dbProvider.GetAllSelectFields();
+                    selectFields.AddRange(allFields);
+                    allFieldsCount += allFields.Count;
+                    continue;
+                }
+
+                Data.Field field = dbProvider.GetField(selectField.Name);
+
+                if (field == null)
+                {
+
+                    if (selectField.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.BigInt));
+                    }
+                    else if (selectField.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.BigInt));
+                    }
+                    else
+                    {
+                        throw new ParseException(string.Format("Unknown field name:{0}", selectField.Name));
+                    }
+                }
+                else
+                {
+                    selectFields.Add(field);
+                }
+            }
+
+        }
+
+        private void GetQueryResult(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider, 
+             Query.DocumentResult[] result, List<Data.Field> selectFields, int allFieldsCount,
+            out System.Data.DataSet ds)
+        {
+            List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
+            ds = Data.Document.ToDataSet(selectFields, docResult);
+            ds.Tables[0].TableName = select.SelectFroms[0].Name;
+
+            for (int i = 0; i < select.SelectFields.Count; i++)
+            {
+                if (select.SelectFields[i].Name == "*")
+                {
+                    continue;
+                }
+
+                ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i + allFieldsCount].Alias;
+            }
+        }
+
         private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
@@ -658,57 +720,13 @@ namespace Hubble.Core.SFQL.Parse
                 result = qDocs.Documents;
             }
 
-            List<Data.Field> selectFields = new List<Data.Field>();
+            List<Data.Field> selectFields;
+            int allFieldsCount;
 
-            int allFieldsCount = 0;
+            GetSelectFields(select, dbProvider, out selectFields, out allFieldsCount);
 
-            foreach (SyntaxAnalysis.Select.SelectField selectField in select.SelectFields)
-            {
-                if (selectField.Name == "*")
-                {
-                    List<Data.Field> allFields = dbProvider.GetAllSelectFields();
-                    selectFields.AddRange(allFields);
-                    allFieldsCount += allFields.Count;
-                    continue;
-                }
-
-                Data.Field field = dbProvider.GetField(selectField.Name);
-
-                if (field == null)
-                {
-
-                    if (selectField.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        selectFields.Add(new Data.Field("DocId", Hubble.Core.Data.DataType.BigInt));
-                    }
-                    else if (selectField.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        selectFields.Add(new Data.Field("Score", Hubble.Core.Data.DataType.BigInt));
-                    }
-                    else
-                    {
-                        throw new ParseException(string.Format("Unknown field name:{0}", selectField.Name));
-                    }
-                }
-                else
-                {
-                    selectFields.Add(field);
-                }
-            }
-
-            List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
-            System.Data.DataSet ds = Data.Document.ToDataSet(selectFields, docResult);
-            ds.Tables[0].TableName = select.SelectFroms[0].Name;
-
-            for (int i = 0; i < select.SelectFields.Count; i++)
-            {
-                if (select.SelectFields[i].Name == "*")
-                {
-                    continue;
-                }
-
-                ds.Tables[0].Columns[i].ColumnName = select.SelectFields[i + allFieldsCount].Alias;
-            }
+            System.Data.DataSet ds;
+            GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out ds);
 
             if (noQueryCache)
             {
@@ -783,10 +801,30 @@ namespace Hubble.Core.SFQL.Parse
 
                 qSelect.SelectFields.Add(selectField);
 
+                bool hasScore = false;
+
                 foreach (SyntaxAnalysis.Select.OrderBy orderby in select.OrderBys)
                 {
                     selectField = new SyntaxAnalysis.Select.SelectField();
+
+                    if (orderby.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                    else if (orderby.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        hasScore = true;
+                    }
+
                     selectField.Name = orderby.Name;
+                    selectField.Alias = selectField.Name;
+                    qSelect.SelectFields.Add(selectField);
+                }
+
+                if (!hasScore)
+                {
+                    selectField = new SyntaxAnalysis.Select.SelectField();
+                    selectField.Name = "Score";
                     selectField.Alias = selectField.Name;
                     qSelect.SelectFields.Add(selectField);
                 }
@@ -819,7 +857,11 @@ namespace Hubble.Core.SFQL.Parse
 
             Hubble.Framework.Threading.MultiThreadCalculate mCalc =
                 new Hubble.Framework.Threading.MultiThreadCalculate(ProcUnionSelectQuery);
+            
+            int begin = _UnionSelects[0].Begin;
+            int end = _UnionSelects[0].End;
 
+            //Start multi thread to get the order by fields and docids from each tables
             foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
             {
                 object[] para = new object[2];
@@ -835,6 +877,7 @@ namespace Hubble.Core.SFQL.Parse
                 throw new Data.DataException("Union query fail! Please check the error log file");
             }
 
+            //Get the result of combining.
             System.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
             int count = table.MinimumCapacity;
 
@@ -842,13 +885,13 @@ namespace Hubble.Core.SFQL.Parse
             {
                 count += _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
 
-                foreach (System.Data.DataRow scrRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
+                foreach (System.Data.DataRow srcRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
                 {
                     System.Data.DataRow row = table.NewRow();
 
                     for (int j = 0; j < table.Columns.Count; j++)
                     {
-                        row[j] = scrRow[j];
+                        row[j] = srcRow[j];
                     }
 
                     table.Rows.Add(row);
@@ -856,7 +899,8 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             System.Data.DataRow[] ResultsRowArray;
-
+            
+            //Sort by order by fields
             if (_UnionSelects[0].OrderBys.Count > 0)
             {
                 StringBuilder sortString = new StringBuilder();
@@ -875,13 +919,14 @@ namespace Hubble.Core.SFQL.Parse
 
             table = table.Clone();
 
-            foreach (System.Data.DataRow scrRow in ResultsRowArray)
+            //Get the result of combining that has beed sorted.
+            foreach (System.Data.DataRow srcRow in ResultsRowArray)
             {
                 System.Data.DataRow row = table.NewRow();
 
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
-                    row[j] = scrRow[j];
+                    row[j] = srcRow[j];
                 }
 
                 table.Rows.Add(row);
@@ -891,6 +936,60 @@ namespace Hubble.Core.SFQL.Parse
             table.MinimumCapacity = count;
             ds.Tables.Add(table);
 
+            //Get final result 
+
+            System.Data.DataTable finalTable = null;
+
+            for (int i = begin; i <= end; i++)
+            {
+                if (table.Rows.Count <= i)
+                {
+                    break;
+                }
+                
+                System.Data.DataRow row = table.Rows[i];
+
+                SyntaxAnalysis.Select.Select select = _UnionSelects[0];
+                List<Data.Field> selectFields;
+                int allFieldsCount;
+                Query.DocumentResult[] result = new Hubble.Core.Query.DocumentResult[1];
+                result[0] = new Hubble.Core.Query.DocumentResult(long.Parse(row["DocId"].ToString()),
+                    long.Parse(row["Score"].ToString()));
+                
+                string tableName = row["TableName"].ToString();
+                Data.DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
+
+                GetSelectFields(select, dbProvider, out selectFields, out allFieldsCount);
+
+                System.Data.DataSet dataset;
+                GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out dataset);
+
+                if (finalTable == null)
+                {
+                    finalTable = dataset.Tables[0].Clone();
+                                    
+                    System.Data.DataColumn col = new System.Data.DataColumn();
+                    col.ColumnName = "TableName";
+                    finalTable.Columns.Add(col);
+                }
+
+                foreach (System.Data.DataRow srcRow in dataset.Tables[0].Rows)
+                {
+                    System.Data.DataRow destRow = finalTable.NewRow();
+
+                    for (int j = 0; j < dataset.Tables[0].Columns.Count; j++)
+                    {
+                        destRow[j] = srcRow[j];
+                    }
+
+                    destRow["TableName"] = tableName;
+                    finalTable.Rows.Add(destRow);
+                }
+            }
+
+            finalTable.MinimumCapacity = count;
+            ds = new System.Data.DataSet();
+            ds.Tables.Add(finalTable);
             return new QueryResult(ds);
         }
 
