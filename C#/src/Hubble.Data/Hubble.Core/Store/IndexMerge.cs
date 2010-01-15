@@ -186,6 +186,11 @@ namespace Hubble.Core.Store
 
                 _IndexFileProxy.DoMergeAck(mergeAck);
 
+                mergeAck = null;
+
+                GC.Collect();
+                GC.Collect();
+
                 lock (this)
                 {
                     _CanClose = true;

@@ -102,11 +102,11 @@ namespace Hubble.Core.Store
 
         class PayloadEntity : IComparable<PayloadEntity>
         {
-            public long DocId;
+            public int DocId;
 
             public Hubble.Core.Data.Payload Payload;
 
-            public PayloadEntity(long docId, Hubble.Core.Data.Payload payload)
+            public PayloadEntity(int docId, Hubble.Core.Data.Payload payload)
             {
                 DocId = docId;
                 Payload = payload;
@@ -188,10 +188,10 @@ namespace Hubble.Core.Store
 
             peList.Sort();
 
-            int payloadLen = _PayloadEntities[0].Payload.Data.Length;
+            int payloadLen = peList[0].Payload.Data.Length;
             byte[] data = new byte[payloadLen * 4];
 
-            using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Append, System.IO.FileAccess.Write))
+            using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
             {
                 foreach (PayloadEntity pe in peList)
                 {
@@ -225,7 +225,7 @@ namespace Hubble.Core.Store
 
                         foreach (PayloadEntity pe in _PayloadEntities)
                         {
-                            byte[] buf = BitConverter.GetBytes(pe.DocId);
+                            byte[] buf = BitConverter.GetBytes((long)pe.DocId);
                             fs.Write(buf, 0, buf.Length);
 
                             pe.Payload.CopyTo(data);
@@ -253,11 +253,11 @@ namespace Hubble.Core.Store
             OnMessageEvent = ProcessMessage;
         }
 
-        public Dictionary<long, Data.Payload> Open(List<Data.Field> fields, int payloadLength, out long lastDocId)
+        public Dictionary<int, Data.Payload> Open(List<Data.Field> fields, int payloadLength, out int lastDocId)
         {
             lastDocId = -1;
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
-            Dictionary<long, Data.Payload> docPayload = new Dictionary<long, Hubble.Core.Data.Payload>();
+            Dictionary<int, Data.Payload> docPayload = new Dictionary<int, Hubble.Core.Data.Payload>();
 
             foreach (Data.Field field in fields)
             {
@@ -298,25 +298,27 @@ namespace Hubble.Core.Store
 
                 while (fs.Position < fs.Length)
                 {
-                    int fileIndex = (int)((fs.Position - HeadLength) / _StoreLength); 
+                    int fileIndex = (int)((fs.Position - HeadLength) / _StoreLength);
 
                     byte[] buf = new byte[sizeof(long)];
 
                     fs.Read(buf, 0, buf.Length);
 
-                    lastDocId = BitConverter.ToInt64(buf, 0);
+                    lastDocId = (int)BitConverter.ToInt64(buf, 0);
 
                     byte[] byteData = new byte[payloadLength * 4];
                     fs.Read(byteData, 0, byteData.Length);
 
                     Data.Payload payload = new Hubble.Core.Data.Payload(payloadLength);
-                    
+
                     payload.CopyFrom(byteData);
 
                     payload.FileIndex = fileIndex;
 
                     docPayload.Add(lastDocId, payload);
                 }
+
+                GC.Collect();
 
                 return docPayload;
             }
@@ -352,7 +354,7 @@ namespace Hubble.Core.Store
             }
         }
 
-        public void Add(long docId, Hubble.Core.Data.Payload payLoad)
+        public void Add(int docId, Hubble.Core.Data.Payload payLoad)
         {
             ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad));
         }
@@ -362,7 +364,7 @@ namespace Hubble.Core.Store
             ASendMessage((int)Event.Collect, null);
         }
 
-        public void Update(IList<long> docIds, IList<Data.Payload> payloads)
+        public void Update(IList<int> docIds, IList<Data.Payload> payloads)
         {
             List<PayloadEntity> peList = new List<PayloadEntity>();
 

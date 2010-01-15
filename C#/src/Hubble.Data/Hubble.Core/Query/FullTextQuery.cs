@@ -43,7 +43,7 @@ namespace Hubble.Core.Query
             private int _CurIndex;
             private Index.InvertedIndex.WordIndexReader _WordIndex;
             private int _OldIndexForDoc = -1;
-            private long _CurDocmentId;
+            private int _CurDocmentId;
 
             public IEnumerator<int> _CurPositionValues;
 
@@ -85,7 +85,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public long CurDocumentId
+            public int CurDocumentId
             {
                 get
                 {
@@ -185,7 +185,7 @@ namespace Hubble.Core.Query
         private int _QueryStringLength = 0;
         private int _HoleNumber = 0; //If query string does not continue, the hole number will be large then 0
 
-        private IList<Entity.WordInfo> GetNextHitWords(out long docId)
+        private IList<Entity.WordInfo> GetNextHitWords(out int docId)
         {
             _HitWords.Clear();
 
@@ -195,12 +195,12 @@ namespace Hubble.Core.Query
                 return _HitWords;
             }
 
-            long minDocId = long.MaxValue;
+            int minDocId = int.MaxValue;
 
             //Get min document id
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                long curDocId = _WordIndexList[i].CurDocumentId;
+                int curDocId = _WordIndexList[i].CurDocumentId;
 
                 if (curDocId < 0)
                 {
@@ -213,7 +213,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            if (minDocId == long.MaxValue)
+            if (minDocId == int.MaxValue)
             {
                 docId = -1;
                 return _HitWords;
@@ -223,7 +223,7 @@ namespace Hubble.Core.Query
             _TempSelect.Clear();
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                long curDocId = _WordIndexList[i].CurDocumentId;
+                int curDocId = _WordIndexList[i].CurDocumentId;
 
                 if (curDocId == minDocId)
                 {
@@ -282,7 +282,7 @@ namespace Hubble.Core.Query
                 {
                     for (int i = 0; i < _WordIndexList.Count; i++)
                     {
-                        long curDocId = _WordIndexList[i].CurDocumentId;
+                        int curDocId = _WordIndexList[i].CurDocumentId;
 
                         if (curDocId == minDocId)
                         {
@@ -725,9 +725,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        WhereDictionary<long, DocumentResult> _UpDict;
+        WhereDictionary<int, DocumentResult> _UpDict;
 
-        public WhereDictionary<long, DocumentResult> UpDict
+        public WhereDictionary<int, DocumentResult> UpDict
         {
             get
             {
@@ -755,10 +755,10 @@ namespace Hubble.Core.Query
 
 
 
-        public WhereDictionary<long, DocumentResult> Search()
+        public WhereDictionary<int, DocumentResult> Search()
         {
-            WhereDictionary<long, DocumentResult> result = new WhereDictionary<long, DocumentResult>();
-            long docId;
+            WhereDictionary<int, DocumentResult> result = new WhereDictionary<int, DocumentResult>();
+            int docId;
 
             IList<Entity.WordInfo> wordInfoList = GetNextHitWords(out docId);
 

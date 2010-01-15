@@ -110,9 +110,9 @@ namespace Hubble.Core.Data
     {
         List<FieldValue> _FieldValues = new List<FieldValue>();
 
-        private long _DocId = -1;
+        private int _DocId = -1;
 
-        public long DocId
+        public int DocId
         {
             get
             {

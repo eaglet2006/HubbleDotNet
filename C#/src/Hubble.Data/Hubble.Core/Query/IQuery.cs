@@ -45,7 +45,7 @@ namespace Hubble.Core.Query
         /// <summary>
         /// The dictionary in up and condition. 
         /// </summary>
-        WhereDictionary<long, DocumentResult> UpDict{ get; set;}
+        WhereDictionary<int, DocumentResult> UpDict{ get; set;}
 
         /// <summary>
         /// If this query need output not match result set it to true.
@@ -53,6 +53,6 @@ namespace Hubble.Core.Query
         bool Not { get; set; }
 
         //output
-        WhereDictionary<long, DocumentResult> Search();
+        WhereDictionary<int, DocumentResult> Search();
     }
 }

@@ -37,16 +37,16 @@ namespace Hubble.Core.DBAdapter
 
         void Insert(IList<Data.Document> docs);
 
-        void Delete(IList<long> docIds);
+        void Delete(IList<int> docIds);
 
         void Update(Data.Document doc, IList<Query.DocumentResult> docs);
 
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
 
-        WhereDictionary<long, Query.DocumentResult> GetDocumentResults(string where);
+        WhereDictionary<int, Query.DocumentResult> GetDocumentResults(string where);
 
-        long MaxDocId { get; }
+        int MaxDocId { get; }
 
         DataSet QuerySql(string sql);
 

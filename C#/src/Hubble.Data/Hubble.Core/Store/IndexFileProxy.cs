@@ -39,7 +39,7 @@ namespace Hubble.Core.Store
         public class GetInfo
         {
             string _Word;
-            long _TotalDocs;
+            int _TotalDocs;
             private Data.DBProvider _DBProvider;
             private int _TabIndex;
 
@@ -51,7 +51,7 @@ namespace Hubble.Core.Store
                 }
             }
 
-            public long TotalDocs
+            public int TotalDocs
             {
                 get
                 {
@@ -75,7 +75,7 @@ namespace Hubble.Core.Store
                 }
             }
 
-            public GetInfo(string word, long totalDocs, Data.DBProvider dbProvider, 
+            public GetInfo(string word, int totalDocs, Data.DBProvider dbProvider, 
                 int tabIndex)
             {
                 _Word = word;
@@ -540,7 +540,7 @@ namespace Hubble.Core.Store
                 }
                 else
                 {
-                    pList = new List<IndexFile.FilePosition>(2);
+                    pList = new List<IndexFile.FilePosition>(1);
                     pList.Add(p.Position);
 
                     string internedWord = string.IsInterned(p.Word);

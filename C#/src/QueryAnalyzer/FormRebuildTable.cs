@@ -15,6 +15,28 @@ namespace QueryAnalyzer
     public partial class FormRebuildTable : Form
     {
         internal DbAccess DataAccess { get; set; }
+        bool _Finished = false;
+        bool _Stop = false;
+
+        bool Stop
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _Stop;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _Stop = value;
+                }
+            }
+
+        }
 
         public string TableName
         {
@@ -218,7 +240,22 @@ namespace QueryAnalyzer
             return sb.ToString();
         }
 
-        private void buttonRebuild_Click(object sender, EventArgs e)
+        delegate void DelegateShowCurrentCount(long count);
+
+        private void ShowCurrentCount(long count)
+        {
+            if (labelCurrentCount.InvokeRequired)
+            {
+                labelCurrentCount.Invoke(new DelegateShowCurrentCount(ShowCurrentCount), count);
+
+            }
+            else
+            {
+                labelCurrentCount.Text = count.ToString();
+            }
+        }
+
+        private void Rebuild()
         {
             try
             {
@@ -247,13 +284,12 @@ namespace QueryAnalyzer
                 }
 
 
-                while (remain != 0)
+                while (remain != 0 && !Stop)
                 {
                     string insertSql = GetInsertSql(ref from, ref remain, out count);
                     DataAccess.Excute(insertSql);
                     totalCount += count;
-                    labelCurrentCount.Text = totalCount.ToString();
-                    Application.DoEvents();
+                    ShowCurrentCount(totalCount);
                 }
 
                 sw.Stop();
@@ -265,7 +301,6 @@ namespace QueryAnalyzer
             catch (Exception e1)
             {
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Close();
             }
             finally
             {
@@ -279,8 +314,32 @@ namespace QueryAnalyzer
                 {
                 }
 
-                Close();
+                _Finished = true;
             }
+        }
+
+        private void buttonRebuild_Click(object sender, EventArgs e)
+        {
+            buttonStop.Enabled = true;
+            groupBoxSetting.Enabled = false;
+            buttonRebuild.Enabled = false;
+            System.Threading.Thread thread = new System.Threading.Thread(Rebuild);
+            thread.IsBackground = true;
+            thread.Start();
+        }
+
+        private void FormRebuildTable_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (buttonRebuild.Enabled = false && !_Finished)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void buttonStop_Click(object sender, EventArgs e)
+        {
+            buttonStop.Enabled = false;
+            Stop = true;
         }
 
 

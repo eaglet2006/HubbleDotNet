@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.SFQL.Parse
 {
-    public class WhereDictionary<TKey, TValue> : Dictionary<long, TValue>
+    public class WhereDictionary<TKey, TValue> : Dictionary<int, TValue>
     //public class WhereDictionary<TKey, TValue> : Hubble.Framework.DataStructure.SortDictionary<TValue>
     {
         public bool Not = false;
@@ -37,7 +37,7 @@ namespace Hubble.Core.SFQL.Parse
         {
         }
 
-        public WhereDictionary<long, TValue> AndMerge(WhereDictionary<long, TValue> fst, WhereDictionary<long, TValue> sec)
+        public WhereDictionary<int, TValue> AndMerge(WhereDictionary<int, TValue> fst, WhereDictionary<int, TValue> sec)
         {
             if (fst == null)
             {
@@ -54,7 +54,7 @@ namespace Hubble.Core.SFQL.Parse
                 //Swap input dictionaries
                 //Let fst count less then sec
 
-                WhereDictionary<long, TValue> temp;
+                WhereDictionary<int, TValue> temp;
 
                 temp = fst;
                 fst = sec;
@@ -63,7 +63,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (fst.Not && sec.Not)
             {
-                foreach (long key in fst.Keys)
+                foreach (int key in fst.Keys)
                 {
                     if (!sec.ContainsKey(key))
                     {
@@ -75,8 +75,8 @@ namespace Hubble.Core.SFQL.Parse
             }
             else
             {
-                WhereDictionary<long, TValue> yes;
-                WhereDictionary<long, TValue> not;
+                WhereDictionary<int, TValue> yes;
+                WhereDictionary<int, TValue> not;
 
                 if (fst.Not)
                 {
@@ -89,7 +89,7 @@ namespace Hubble.Core.SFQL.Parse
                     not = sec;
                 }
 
-                foreach (long key in not.Keys)
+                foreach (int key in not.Keys)
                 {
                     yes.Remove(key);
                 }

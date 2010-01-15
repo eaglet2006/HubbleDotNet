@@ -9,7 +9,7 @@ namespace Hubble.Core.Store
     {
         static public void Serialize(Stream stream, Entity.DocumentPositionList docPositionList)
         {
-            byte[] docIdBuf = BitConverter.GetBytes(docPositionList.DocumentId);
+            byte[] docIdBuf = BitConverter.GetBytes((long)docPositionList.DocumentId);
 
             int zeroCount = 0;
 
@@ -54,7 +54,7 @@ namespace Hubble.Core.Store
                 stream.WriteByte((byte)(count & 0x000000FF));
             }
 
-            stream.Write(docIdBuf, 0, 8 - zeroCount);
+            stream.Write(docIdBuf, 0, sizeof(long) - zeroCount);
         }
 
         static public Entity.DocumentPositionList Derialize(Stream stream)
@@ -81,7 +81,7 @@ namespace Hubble.Core.Store
                 count = head & 0x0F;
             }
 
-            byte[] docIdBuf = new byte[8];
+            byte[] docIdBuf = new byte[sizeof(long)];
 
             long docid;
 
@@ -91,11 +91,11 @@ namespace Hubble.Core.Store
             }
             else
             {
-                stream.Read(docIdBuf, 0, 8 - zeroCount);
+                stream.Read(docIdBuf, 0, sizeof(long) - zeroCount);
                 docid = BitConverter.ToInt64(docIdBuf, 0);
             }
 
-            return new Hubble.Core.Entity.DocumentPositionList(count, docid, 5);
+            return new Hubble.Core.Entity.DocumentPositionList(count, (int)docid, 5);
         }
     }
 }

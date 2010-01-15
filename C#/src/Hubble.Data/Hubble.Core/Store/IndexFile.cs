@@ -20,6 +20,9 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Index;
 using Hubble.Framework.IO;
+using FilePositionType = System.Int64;
+using FileLengthType = System.Int64;
+using FileSizeType = System.Int64;
 
 namespace Hubble.Core.Store
 {
@@ -98,9 +101,9 @@ namespace Hubble.Core.Store
         {
             public int Serial;
 
-            public long Size;
+            public FileSizeType Size;
 
-            public IndexFileInfo(int serial, long size)
+            public IndexFileInfo(int serial, FileSizeType size)
             {
                 Serial = serial;
                 Size = size;
@@ -118,11 +121,11 @@ namespace Hubble.Core.Store
 
         public struct FilePosition
         {
-            public int Serial;
-            public long Position;
-            public long Length;
+            public int Serial; //Index file serial number
+            public FilePositionType Position; //Position in the file for the word point
+            public FileLengthType Length; //word index length
 
-            public FilePosition(int serial, long position, long length)
+            public FilePosition(int serial, FilePositionType position, FileLengthType length)
             {
                 Serial = serial;
                 Position = position;
@@ -138,7 +141,7 @@ namespace Hubble.Core.Store
             public string Word;
             public FilePosition Position;
 
-            public WordFilePosition(string word, int serial, long position, long length)
+            public WordFilePosition(string word, int serial, FilePositionType position, FileLengthType length)
             {
                 Word = word;
                 Position = new FilePosition(serial, position, length);
@@ -380,8 +383,13 @@ namespace Hubble.Core.Store
                 using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName, _IndexMode))
                 {
                     List<WordFilePosition> wfp = ir.GetWordFilePositionList();
+
                     IndexFileInterface.ImportWordFilePositionList(wfp);
+
                     wfp.Clear();
+                    wfp = null;
+                    GC.Collect();
+                    GC.Collect();
                 }
             }
 
@@ -446,8 +454,8 @@ namespace Hubble.Core.Store
 
         public void AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
         {
-            long length;
-            long position = _IndexWriter.AddWordAndDocList(word, docList, out length);
+            FileLengthType length;
+            FilePositionType position = _IndexWriter.AddWordAndDocList(word, docList, out length);
 
             _WordFilePositionList.Add(new WordFilePosition(word, _MaxSerial, position, length));
         }
@@ -459,7 +467,7 @@ namespace Hubble.Core.Store
         }
 
         internal Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word, 
-            List<FilePosition> filePositionList, long totalDocs, Data.DBProvider dbProvider,
+            List<FilePosition> filePositionList, int totalDocs, Data.DBProvider dbProvider,
             int tabIndex)
         {
             List<Entity.DocumentPositionList> docList = new List<Hubble.Core.Entity.DocumentPositionList>();

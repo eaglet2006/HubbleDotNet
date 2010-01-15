@@ -67,24 +67,24 @@ namespace Hubble.Core.Query
 
     public class DocumentResult : IComparable<DocumentResult>
     {
-        public long DocId;
+        public int DocId;
         public long Score;
         public int[] Payload;
         public long SortValue; //if SortInfoList == null, use SortValue to sort
         public bool Asc = true; // Contain with SortValue
         public List<SortInfo> SortInfoList = null;
 
-        public DocumentResult(long docId)
+        public DocumentResult(int docId)
             :this(docId, 1)
         {
         }
 
-        public DocumentResult(long docId, long score)
+        public DocumentResult(int docId, long score)
             : this(docId, score, null)
         {
         }
 
-        public DocumentResult(long docId, long score, int[] payload)
+        public DocumentResult(int docId, long score, int[] payload)
         {
             DocId = docId;
             Score = score;
@@ -93,14 +93,14 @@ namespace Hubble.Core.Query
 
         public void Serialize(System.IO.Stream stream)
         {
-            Serialization.Write(stream, typeof(long), this.DocId);
+            Serialization.Write(stream, typeof(int), this.DocId);
             Serialization.Write(stream, typeof(long), this.Score);
         }
 
         public static DocumentResult Deserialize(System.IO.Stream stream)
         {
-            long docId = (long)Serialization.Read(stream,
-                 Serialization.DataType.Long);
+            int docId = (int)Serialization.Read(stream,
+                 Serialization.DataType.Int);
 
             long score = (long)Serialization.Read(stream,
                  Serialization.DataType.Long);

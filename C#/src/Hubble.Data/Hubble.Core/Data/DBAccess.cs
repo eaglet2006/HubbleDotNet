@@ -120,7 +120,7 @@ namespace Hubble.Core.Data
             _LastTableName = tableName;
         }
 
-        public void Delete(string tableName, List<long> docs)
+        public void Delete(string tableName, List<int> docs)
         {
             if (string.IsNullOrEmpty(Host))
             {

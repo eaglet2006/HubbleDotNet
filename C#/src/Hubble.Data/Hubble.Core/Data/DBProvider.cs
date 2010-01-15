@@ -645,7 +645,7 @@ namespace Hubble.Core.Data
         private Dictionary<string, InvertedIndex> _FieldInvertedIndex = new Dictionary<string, InvertedIndex>();
         private Dictionary<string, Field> _FieldIndex = new Dictionary<string, Field>();
 
-        private Dictionary<long, Payload> _DocPayload = new Dictionary<long, Payload>(); //DocId to payload
+        private Dictionary<int, Payload> _DocPayload = new Dictionary<int, Payload>(); //DocId to payload
 
         private string _Directory;
 
@@ -669,9 +669,9 @@ namespace Hubble.Core.Data
 
         #region Properties
 
-        long _LastDocId = 0;
+        int _LastDocId = 0;
 
-        internal long LastDocId
+        internal int LastDocId
         {
             get
             {
@@ -1085,7 +1085,7 @@ namespace Hubble.Core.Data
 
             _Table = Table.Load(directory);
             Table table = _Table;
-            long dbMaxDocId = 0;
+            int dbMaxDocId = 0;
 
             lock (_LockObj)
             {
@@ -1196,7 +1196,7 @@ namespace Hubble.Core.Data
         {
             List<Field> dbFields = new List<Field>();
 
-            Dictionary<long, Document> docIdToDocumnet = null;
+            Dictionary<int, Document> docIdToDocumnet = null;
 
             List<Document> result;
 
@@ -1220,7 +1220,7 @@ namespace Hubble.Core.Data
 
             if (dbFields.Count > 0)
             {
-                docIdToDocumnet = new Dictionary<long,Document>();
+                docIdToDocumnet = new Dictionary<int,Document>();
             }
 
             if (end < 0)
@@ -1240,7 +1240,7 @@ namespace Hubble.Core.Data
                     break;
                 }
                 
-                long docId = docs[i].DocId;
+                int docId = docs[i].DocId;
 
                 Document doc = new Document();
                 result.Add(doc);
@@ -1305,7 +1305,7 @@ namespace Hubble.Core.Data
 
                 foreach (System.Data.DataRow row in dt.Rows)
                 {
-                    long docId = long.Parse(row["DocId"].ToString());
+                    int docId = int.Parse(row["DocId"].ToString());
 
                     Document doc ;
 
@@ -1344,7 +1344,7 @@ namespace Hubble.Core.Data
             _Table.Save(_Directory);
         }
 
-        internal int GetDocWordsCount(long docId, int tabIndex)
+        internal int GetDocWordsCount(int docId, int tabIndex)
         {
             int numDocWords = 1000000;
 
@@ -1363,7 +1363,7 @@ namespace Hubble.Core.Data
 
         }
 
-        internal Payload GetPayload(long docId)
+        internal Payload GetPayload(int docId)
         {
             lock (this)
             {
@@ -1612,7 +1612,7 @@ namespace Hubble.Core.Data
                 {
                     int[] data = new int[_PayloadLength];
 
-                    long docId = doc.DocId;
+                    int docId = doc.DocId;
 
                     foreach (FieldValue fValue in doc.FieldValues)
                     {
@@ -1786,7 +1786,7 @@ namespace Hubble.Core.Data
                     int i = 0;
                     foreach (Query.DocumentResult dResult in docs)
                     {
-                        //long docId = dResult.DocId;
+                        //int docId = dResult.DocId;
 
                         doDocs.Add(dResult);
 
@@ -1841,12 +1841,12 @@ namespace Hubble.Core.Data
                         _DBAdapter.Update(doc, docs);
                     }
 
-                    List<long> updateIds = new List<long>();
+                    List<int> updateIds = new List<int>();
                     List<Payload> updatePayloads = new List<Payload>();
 
                     foreach (Query.DocumentResult docResult in docs)
                     {
-                        long docId = docResult.DocId;
+                        int docId = docResult.DocId;
                         Payload payLoad;
 
                         lock (this)
@@ -1892,7 +1892,7 @@ namespace Hubble.Core.Data
 
         }
 
-        public void Delete(IList<long> docs)
+        public void Delete(IList<int> docs)
         {
             try
             {
@@ -1942,7 +1942,7 @@ namespace Hubble.Core.Data
                 return;
             }
 
-            List<long> docIds = new List<long>();
+            List<int> docIds = new List<int>();
 
             foreach (Query.DocumentResult docResult in docs)
             {
@@ -2067,9 +2067,9 @@ namespace Hubble.Core.Data
                 query.TabIndex = GetField(fieldName).TabIndex;
 
                 Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-                SFQL.Parse.WhereDictionary<long, Query.DocumentResult> docRankTbl = searcher.Search();
+                SFQL.Parse.WhereDictionary<int, Query.DocumentResult> docRankTbl = searcher.Search();
 
-                List<long> docs = new List<long>();
+                List<int> docs = new List<int>();
 
                 if (docRankTbl != null)
                 {

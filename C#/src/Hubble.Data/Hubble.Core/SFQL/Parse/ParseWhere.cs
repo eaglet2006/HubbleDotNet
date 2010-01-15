@@ -55,7 +55,7 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private WhereDictionary<long, Query.DocumentResult> GetResultFromDatabase(
+        private WhereDictionary<int, Query.DocumentResult> GetResultFromDatabase(
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
             string whereSql;
@@ -152,11 +152,11 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
-        private WhereDictionary<long, Query.DocumentResult> GetResultFromQuery(
-            SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<long, Query.DocumentResult> upDict)
+        private WhereDictionary<int, Query.DocumentResult> GetResultFromQuery(
+            SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<int, Query.DocumentResult> upDict)
         {
-            WhereDictionary<long, Query.DocumentResult> orDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
-            WhereDictionary<long, Query.DocumentResult> andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<int, Query.DocumentResult> orDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<int, Query.DocumentResult> andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
 
             if (expressionTree.Expression.NeedReverse)
             {
@@ -510,11 +510,11 @@ namespace Hubble.Core.SFQL.Parse
         }
 
 
-        private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<long, Query.DocumentResult> upDict)
+        private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<int, Query.DocumentResult> upDict)
         {
             Preprocess(expressionTree);
 
-            List<long> delDocIdList = new List<long>();
+            List<int> delDocIdList = new List<int>();
 
             foreach (Query.DocumentResult docResult in upDict.Values)
             {
@@ -524,7 +524,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            foreach (long docId in delDocIdList)
+            foreach (int docId in delDocIdList)
             {
                 upDict.Remove(docId);
             }
@@ -584,20 +584,20 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private WhereDictionary<long, Query.DocumentResult> MergeDict(WhereDictionary<long, Query.DocumentResult> and, WhereDictionary<long, Query.DocumentResult> or)
+        private WhereDictionary<int, Query.DocumentResult> MergeDict(WhereDictionary<int, Query.DocumentResult> and, WhereDictionary<int, Query.DocumentResult> or)
         {
             if (and.Not)
             {
-                and = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+                and = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
             }
 
             if (or.Not)
             {
-                or = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+                or = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
             }
 
-            WhereDictionary<long, Query.DocumentResult> src;
-            WhereDictionary<long, Query.DocumentResult> dest;
+            WhereDictionary<int, Query.DocumentResult> src;
+            WhereDictionary<int, Query.DocumentResult> dest;
 
             if (and.Count > or.Count)
             {
@@ -630,20 +630,20 @@ namespace Hubble.Core.SFQL.Parse
             return dest;
         }
 
-        private WhereDictionary<long, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
+        private WhereDictionary<int, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
             return InnerParse(expressionTree, null);
         }
 
-        private WhereDictionary<long, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree,
-            WhereDictionary<long, Query.DocumentResult> upDict)
+        private WhereDictionary<int, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree,
+            WhereDictionary<int, Query.DocumentResult> upDict)
         {
-            WhereDictionary<long, Query.DocumentResult> orDict = new WhereDictionary<long,Hubble.Core.Query.DocumentResult>();
-            WhereDictionary<long, Query.DocumentResult> andDict;
+            WhereDictionary<int, Query.DocumentResult> orDict = new WhereDictionary<int,Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<int, Query.DocumentResult> andDict;
 
             if (upDict == null)
             {
-                andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+                andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
             }
             else
             {
@@ -653,7 +653,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
-                    andDict = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+                    andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
                 }
             }
 
@@ -700,7 +700,7 @@ namespace Hubble.Core.SFQL.Parse
 
         public Query.DocumentResult[] Parse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            WhereDictionary<long, Query.DocumentResult> dict;
+            WhereDictionary<int, Query.DocumentResult> dict;
 
             if (expressionTree == null)
             {

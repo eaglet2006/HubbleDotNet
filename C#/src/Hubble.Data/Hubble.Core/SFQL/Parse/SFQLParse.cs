@@ -262,7 +262,7 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (insert.Fields[i].Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    document.DocId = long.Parse(insert.Values[i].Value);
+                    document.DocId = int.Parse(insert.Values[i].Value);
                 }
                 else
                 {
@@ -953,8 +953,8 @@ namespace Hubble.Core.SFQL.Parse
                 List<Data.Field> selectFields;
                 int allFieldsCount;
                 Query.DocumentResult[] result = new Hubble.Core.Query.DocumentResult[1];
-                result[0] = new Hubble.Core.Query.DocumentResult(long.Parse(row["DocId"].ToString()),
-                    long.Parse(row["Score"].ToString()));
+                result[0] = new Hubble.Core.Query.DocumentResult(int.Parse(row["DocId"].ToString()),
+                    int.Parse(row["Score"].ToString()));
                 
                 string tableName = row["TableName"].ToString();
                 Data.DBProvider dbProvider = DBProvider.GetDBProvider(tableName);

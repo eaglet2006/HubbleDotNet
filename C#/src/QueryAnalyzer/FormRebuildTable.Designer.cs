@@ -32,21 +32,24 @@
             this.labelTableName = new System.Windows.Forms.Label();
             this.labelDbAdapterName = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.numericUpDownDocIdFrom = new System.Windows.Forms.NumericUpDown();
             this.labelIndexOnly = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.checkBoxRebuildWholeTable = new System.Windows.Forms.CheckBox();
             this.labelCurrentCount = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.buttonRebuild = new System.Windows.Forms.Button();
-            this.numericUpDownStep = new System.Windows.Forms.NumericUpDown();
-            this.label4 = new System.Windows.Forms.Label();
+            this.groupBoxSetting = new System.Windows.Forms.GroupBox();
             this.numericUpDownImportCount = new System.Windows.Forms.NumericUpDown();
             this.label7 = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).BeginInit();
+            this.numericUpDownStep = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
+            this.checkBoxRebuildWholeTable = new System.Windows.Forms.CheckBox();
+            this.numericUpDownDocIdFrom = new System.Windows.Forms.NumericUpDown();
+            this.label2 = new System.Windows.Forms.Label();
+            this.buttonStop = new System.Windows.Forms.Button();
+            this.groupBoxSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownImportCount)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -85,27 +88,6 @@
             this.label3.TabIndex = 2;
             this.label3.Text = "DBAdapter Name:";
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(33, 140);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(62, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "DocId from:";
-            // 
-            // numericUpDownDocIdFrom
-            // 
-            this.numericUpDownDocIdFrom.Location = new System.Drawing.Point(135, 135);
-            this.numericUpDownDocIdFrom.Maximum = new decimal(new int[] {
-            1410065408,
-            2,
-            0,
-            0});
-            this.numericUpDownDocIdFrom.Name = "numericUpDownDocIdFrom";
-            this.numericUpDownDocIdFrom.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownDocIdFrom.TabIndex = 5;
-            // 
             // labelIndexOnly
             // 
             this.labelIndexOnly.AutoSize = true;
@@ -124,21 +106,10 @@
             this.label5.TabIndex = 6;
             this.label5.Text = "IndexOnly";
             // 
-            // checkBoxRebuildWholeTable
-            // 
-            this.checkBoxRebuildWholeTable.AutoSize = true;
-            this.checkBoxRebuildWholeTable.Location = new System.Drawing.Point(36, 109);
-            this.checkBoxRebuildWholeTable.Name = "checkBoxRebuildWholeTable";
-            this.checkBoxRebuildWholeTable.Size = new System.Drawing.Size(120, 17);
-            this.checkBoxRebuildWholeTable.TabIndex = 8;
-            this.checkBoxRebuildWholeTable.Text = "RebuildWholeTable";
-            this.checkBoxRebuildWholeTable.UseVisualStyleBackColor = true;
-            this.checkBoxRebuildWholeTable.CheckedChanged += new System.EventHandler(this.checkBoxRebuildWholeTable_CheckedChanged);
-            // 
             // labelCurrentCount
             // 
             this.labelCurrentCount.AutoSize = true;
-            this.labelCurrentCount.Location = new System.Drawing.Point(132, 248);
+            this.labelCurrentCount.Location = new System.Drawing.Point(132, 106);
             this.labelCurrentCount.Name = "labelCurrentCount";
             this.labelCurrentCount.Size = new System.Drawing.Size(13, 13);
             this.labelCurrentCount.TabIndex = 10;
@@ -147,7 +118,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(33, 247);
+            this.label6.Location = new System.Drawing.Point(33, 105);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(98, 13);
             this.label6.TabIndex = 9;
@@ -155,7 +126,7 @@
             // 
             // buttonRebuild
             // 
-            this.buttonRebuild.Location = new System.Drawing.Point(36, 285);
+            this.buttonRebuild.Location = new System.Drawing.Point(36, 318);
             this.buttonRebuild.Name = "buttonRebuild";
             this.buttonRebuild.Size = new System.Drawing.Size(75, 23);
             this.buttonRebuild.TabIndex = 11;
@@ -163,9 +134,46 @@
             this.buttonRebuild.UseVisualStyleBackColor = true;
             this.buttonRebuild.Click += new System.EventHandler(this.buttonRebuild_Click);
             // 
+            // groupBoxSetting
+            // 
+            this.groupBoxSetting.Controls.Add(this.numericUpDownImportCount);
+            this.groupBoxSetting.Controls.Add(this.label7);
+            this.groupBoxSetting.Controls.Add(this.numericUpDownStep);
+            this.groupBoxSetting.Controls.Add(this.label4);
+            this.groupBoxSetting.Controls.Add(this.checkBoxRebuildWholeTable);
+            this.groupBoxSetting.Controls.Add(this.numericUpDownDocIdFrom);
+            this.groupBoxSetting.Controls.Add(this.label2);
+            this.groupBoxSetting.Location = new System.Drawing.Point(36, 134);
+            this.groupBoxSetting.Name = "groupBoxSetting";
+            this.groupBoxSetting.Size = new System.Drawing.Size(266, 168);
+            this.groupBoxSetting.TabIndex = 16;
+            this.groupBoxSetting.TabStop = false;
+            this.groupBoxSetting.Text = "groupBox1";
+            // 
+            // numericUpDownImportCount
+            // 
+            this.numericUpDownImportCount.Location = new System.Drawing.Point(124, 135);
+            this.numericUpDownImportCount.Maximum = new decimal(new int[] {
+            1410065408,
+            2,
+            0,
+            0});
+            this.numericUpDownImportCount.Name = "numericUpDownImportCount";
+            this.numericUpDownImportCount.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDownImportCount.TabIndex = 22;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(22, 140);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(66, 13);
+            this.label7.TabIndex = 21;
+            this.label7.Text = "Import count";
+            // 
             // numericUpDownStep
             // 
-            this.numericUpDownStep.Location = new System.Drawing.Point(135, 171);
+            this.numericUpDownStep.Location = new System.Drawing.Point(124, 96);
             this.numericUpDownStep.Maximum = new decimal(new int[] {
             5000,
             0,
@@ -178,7 +186,7 @@
             0});
             this.numericUpDownStep.Name = "numericUpDownStep";
             this.numericUpDownStep.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownStep.TabIndex = 13;
+            this.numericUpDownStep.TabIndex = 20;
             this.numericUpDownStep.Value = new decimal(new int[] {
             1000,
             0,
@@ -188,50 +196,67 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(33, 176);
+            this.label4.Location = new System.Drawing.Point(22, 101);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(29, 13);
-            this.label4.TabIndex = 12;
+            this.label4.TabIndex = 19;
             this.label4.Text = "Step";
             // 
-            // numericUpDownImportCount
+            // checkBoxRebuildWholeTable
             // 
-            this.numericUpDownImportCount.Location = new System.Drawing.Point(135, 210);
-            this.numericUpDownImportCount.Maximum = new decimal(new int[] {
+            this.checkBoxRebuildWholeTable.AutoSize = true;
+            this.checkBoxRebuildWholeTable.Location = new System.Drawing.Point(25, 34);
+            this.checkBoxRebuildWholeTable.Name = "checkBoxRebuildWholeTable";
+            this.checkBoxRebuildWholeTable.Size = new System.Drawing.Size(120, 17);
+            this.checkBoxRebuildWholeTable.TabIndex = 18;
+            this.checkBoxRebuildWholeTable.Text = "RebuildWholeTable";
+            this.checkBoxRebuildWholeTable.UseVisualStyleBackColor = true;
+            this.checkBoxRebuildWholeTable.CheckedChanged += new System.EventHandler(this.checkBoxRebuildWholeTable_CheckedChanged);
+            // 
+            // numericUpDownDocIdFrom
+            // 
+            this.numericUpDownDocIdFrom.Location = new System.Drawing.Point(124, 60);
+            this.numericUpDownDocIdFrom.Maximum = new decimal(new int[] {
             1410065408,
             2,
             0,
             0});
-            this.numericUpDownImportCount.Name = "numericUpDownImportCount";
-            this.numericUpDownImportCount.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownImportCount.TabIndex = 15;
+            this.numericUpDownDocIdFrom.Name = "numericUpDownDocIdFrom";
+            this.numericUpDownDocIdFrom.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDownDocIdFrom.TabIndex = 17;
             // 
-            // label7
+            // label2
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(33, 215);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(66, 13);
-            this.label7.TabIndex = 14;
-            this.label7.Text = "Import count";
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(22, 65);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(62, 13);
+            this.label2.TabIndex = 16;
+            this.label2.Text = "DocId from:";
+            // 
+            // buttonStop
+            // 
+            this.buttonStop.Enabled = false;
+            this.buttonStop.Location = new System.Drawing.Point(135, 318);
+            this.buttonStop.Name = "buttonStop";
+            this.buttonStop.Size = new System.Drawing.Size(75, 23);
+            this.buttonStop.TabIndex = 17;
+            this.buttonStop.Text = "Stop";
+            this.buttonStop.UseVisualStyleBackColor = true;
+            this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
             // FormRebuildTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(322, 325);
-            this.Controls.Add(this.numericUpDownImportCount);
-            this.Controls.Add(this.label7);
-            this.Controls.Add(this.numericUpDownStep);
-            this.Controls.Add(this.label4);
+            this.ClientSize = new System.Drawing.Size(329, 382);
+            this.Controls.Add(this.buttonStop);
+            this.Controls.Add(this.groupBoxSetting);
             this.Controls.Add(this.buttonRebuild);
             this.Controls.Add(this.labelCurrentCount);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.checkBoxRebuildWholeTable);
             this.Controls.Add(this.labelIndexOnly);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.numericUpDownDocIdFrom);
-            this.Controls.Add(this.label2);
             this.Controls.Add(this.labelDbAdapterName);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.labelTableName);
@@ -239,9 +264,12 @@
             this.Name = "FormRebuildTable";
             this.Text = "Rebuild Table";
             this.Load += new System.EventHandler(this.FormRebuildTable_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).EndInit();
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormRebuildTable_FormClosing);
+            this.groupBoxSetting.ResumeLayout(false);
+            this.groupBoxSetting.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownImportCount)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -253,17 +281,19 @@
         private System.Windows.Forms.Label labelTableName;
         private System.Windows.Forms.Label labelDbAdapterName;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.NumericUpDown numericUpDownDocIdFrom;
         private System.Windows.Forms.Label labelIndexOnly;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.CheckBox checkBoxRebuildWholeTable;
         private System.Windows.Forms.Label labelCurrentCount;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button buttonRebuild;
-        private System.Windows.Forms.NumericUpDown numericUpDownStep;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.GroupBox groupBoxSetting;
         private System.Windows.Forms.NumericUpDown numericUpDownImportCount;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.NumericUpDown numericUpDownStep;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.CheckBox checkBoxRebuildWholeTable;
+        private System.Windows.Forms.NumericUpDown numericUpDownDocIdFrom;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button buttonStop;
     }
 }

@@ -193,7 +193,7 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
-        public long MaxDocId
+        public int MaxDocId
         {
             get 
             {
@@ -213,7 +213,7 @@ namespace Hubble.Core.DBAdapter
                     }
                     else
                     {
-                        return long.Parse(ds.Tables[0].Rows[0][0].ToString()); 
+                        return int.Parse(ds.Tables[0].Rows[0][0].ToString()); 
                     }
 
                 } 
@@ -328,7 +328,7 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        private string BuildWriteTextLine(string tableName, string fieldName, string text, long docid, DataType datatype)
+        private string BuildWriteTextLine(string tableName, string fieldName, string text, int docid, DataType datatype)
         {
             switch (datatype)
             {
@@ -427,7 +427,7 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public void Delete(IList<long> docIds)
+        public void Delete(IList<int> docIds)
         {
             StringBuilder sql = new StringBuilder();
 
@@ -436,7 +436,7 @@ namespace Hubble.Core.DBAdapter
             sql.AppendFormat(" {0} where docId in (", Table.DBTableName);
 
             int i = 0;
-            foreach (long docId in docIds)
+            foreach (int docId in docIds)
             {
                 if (i++ == 0)
                 {
@@ -521,7 +521,7 @@ namespace Hubble.Core.DBAdapter
 
                 foreach (Query.DocumentResult docResult in docs)
                 {
-                    long docId = docResult.DocId;
+                    int docId = docResult.DocId;
 
                     if (i++ == 0)
                     {
@@ -582,7 +582,7 @@ namespace Hubble.Core.DBAdapter
                     break;
                 }
 
-                long docId = docs[j].DocId;
+                int docId = docs[j].DocId;
 
                 if (i++ == 0)
                 {
@@ -603,7 +603,7 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
-        public WhereDictionary<long, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
+        public WhereDictionary<int, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
         {
             string sql;
 
@@ -616,14 +616,14 @@ namespace Hubble.Core.DBAdapter
                 sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
             }
 
-            WhereDictionary<long, Hubble.Core.Query.DocumentResult> result = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>();
+            WhereDictionary<int, Hubble.Core.Query.DocumentResult> result = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
 
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
                 {
-                    long docId = long.Parse(row[0].ToString());
+                    int docId = int.Parse(row[0].ToString());
                     result.Add(docId, new Hubble.Core.Query.DocumentResult(docId));
                 }
             }

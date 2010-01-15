@@ -43,10 +43,10 @@ namespace Hubble.Core.Index
         {
             public struct DocScore
             {
-                public long DocId;
+                public int DocId;
                 public long Score;
 
-                public DocScore(long docId, long score)
+                public DocScore(int docId, long score)
                 {
                     DocId = docId;
                     Score = score;
@@ -63,7 +63,7 @@ namespace Hubble.Core.Index
 
             Data.DBProvider _DBProvider;
             int _TabIndex;
-            long _TotalDocs;
+            int _TotalDocs;
 
             long _HitCount = 0;
 
@@ -120,7 +120,8 @@ namespace Hubble.Core.Index
                             size += docPList.Size;
                         }
 
-                        return _DocScoreList.Length * (sizeof(long)*2) + size;
+                        //Docid is int, score is long
+                        return _DocScoreList.Length * ((sizeof(int) + sizeof(long))*2) + size;
                     }
                 }
             }
@@ -233,7 +234,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public long GetDocumentId(int index)
+            public int GetDocumentId(int index)
             {
                 lock (this)
                 {
@@ -249,7 +250,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, ref WhereDictionary<long, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<int, Query.DocumentResult> upDict, ref WhereDictionary<int, Query.DocumentResult> docIdRank, int fieldRank, int wordRank, long Norm_Ranks)
             {
 
                 lock (this)
@@ -263,7 +264,7 @@ namespace Hubble.Core.Index
 
                     if (docIdRank.Count == 0)
                     {
-                        docIdRank = new WhereDictionary<long, Hubble.Core.Query.DocumentResult>(_DocScoreList.Length);
+                        docIdRank = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>(_DocScoreList.Length);
                     }
    
                     for(int i = 0; i < _DocScoreList.Length; i++)
@@ -347,7 +348,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            internal WordIndexReader(string word, List<DocumentPositionList> docList, long totalDocs, 
+            internal WordIndexReader(string word, List<DocumentPositionList> docList, int totalDocs, 
                 Data.DBProvider dbProvider, int tabIndex)
             {
                 _Word = word;
@@ -400,7 +401,7 @@ namespace Hubble.Core.Index
             #region Private fields
             string _Word;
             AppendList<int> _TempPositionList = new AppendList<int>();
-            long _TempDocumentId;
+            int _TempDocumentId;
             bool _Hit = false;
 
             List<DocumentPositionList> _ListForWriter = new List<DocumentPositionList>();
@@ -519,7 +520,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            internal long TempDocumentId
+            internal int TempDocumentId
             {
                 get
                 {
@@ -552,7 +553,7 @@ namespace Hubble.Core.Index
                 }
             }
 
-            internal void Wait(long docId)
+            internal void Wait(int docId)
             {
                 while (Hit && TempDocumentId != docId)
                 {
@@ -634,8 +635,8 @@ namespace Hubble.Core.Index
         private Dictionary<string, WordIndexReader> _WordTableReader = new Dictionary<string, WordIndexReader>();
         private Dictionary<string, WordIndexWriter> _WordTableWriter = new Dictionary<string, WordIndexWriter>();
 
-        private Dictionary<long, int> _DocumentWordCountTable = new Dictionary<long, int>();
-        private long _DocumentCount;
+        private Dictionary<int, int> _DocumentWordCountTable = new Dictionary<int, int>();
+        private int _DocumentCount;
         private Store.IndexFileProxy _IndexFileProxy;
         private bool _IndexFinished = false;
 
@@ -771,7 +772,7 @@ namespace Hubble.Core.Index
             }
         }
 
-        public long DocumentCount
+        public int DocumentCount
         {
             get
             {
@@ -889,7 +890,7 @@ namespace Hubble.Core.Index
 
         }
 
-        public int GetDocumentWordCount(long docId)
+        public int GetDocumentWordCount(int docId)
         {
             int count;
 
@@ -937,7 +938,7 @@ namespace Hubble.Core.Index
         /// <param name="text">text</param>
         /// <param name="documentId">document id</param>
         /// <param name="analyzer">analyzer</param>
-        public int Index(string text, long documentId, Analysis.IAnalyzer analyzer)
+        public int Index(string text, int documentId, Analysis.IAnalyzer analyzer)
         {
             List<WordIndexWriter> hitIndexes = new List<WordIndexWriter>(4192);
             int retCount = 0;

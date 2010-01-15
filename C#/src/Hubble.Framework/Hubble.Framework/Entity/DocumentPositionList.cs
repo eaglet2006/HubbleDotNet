@@ -40,7 +40,7 @@ namespace Hubble.Core.Entity
     public class DocumentPositionList : IEnumerable<int>, IMySerialization<DocumentPositionList>, IMySerialization 
     {
         //[FieldOffset(0)]
-        public long DocumentId;
+        public int DocumentId;
 
         //[FieldOffset(8)]
         /// <summary>
@@ -58,11 +58,12 @@ namespace Hubble.Core.Entity
         //[MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
         private byte[] Data;
 
+        //DocId + Rank + Count
         public int Size
         {
             get
             {
-                return sizeof(long) + sizeof(int) * 2 + Data.Length;
+                return sizeof(int) + sizeof(int) * 2 + Data.Length;
             }
         }
 
@@ -102,7 +103,7 @@ namespace Hubble.Core.Entity
         /// And the list must be sorted!
         /// The first element must be smallest!
         /// </remarks>
-        public DocumentPositionList(IList<int> input, long documentId, int rank)
+        public DocumentPositionList(IList<int> input, int documentId, int rank)
         {
             List<byte> tempBuf = new List<byte>(32);
             DocumentId = documentId;
@@ -136,7 +137,7 @@ namespace Hubble.Core.Entity
             tempBuf.CopyTo(Data);
         }
 
-        public DocumentPositionList(int count, long documentId, int rank)
+        public DocumentPositionList(int count, int documentId, int rank)
         {
             DocumentId = documentId;
             Count = count;
@@ -238,7 +239,7 @@ namespace Hubble.Core.Entity
 
             VInt size = Data.Length;
             size.WriteToStream(s);
-            VLong docId = DocumentId;
+            VLong docId = (long)DocumentId;
             docId.WriteToStream(s);
             VInt count = Count;
             count.WriteToStream(s);
@@ -296,7 +297,7 @@ namespace Hubble.Core.Entity
 
                     //buf = new byte[size - (sizeof(long) + sizeof(int) * 2)];
 
-                    DocumentId = (long)docId;
+                    DocumentId = (int)((long)docId);
                     Count = (int)count;
                     Rank = (int)rank;
 

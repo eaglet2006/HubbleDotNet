@@ -27,16 +27,18 @@ namespace Hubble.Core.Data
     /// </summary>
     public class Payload
     {
-        public int FileIndex = -1;
+        public int FileIndex;
         public int[] Data;
 
         public Payload(int dataLength)
         {
+            FileIndex = -1;
             Data = new int[dataLength];
         }
 
         public Payload(int[] data)
         {
+            FileIndex = -1;
             Data = data;
         }
 

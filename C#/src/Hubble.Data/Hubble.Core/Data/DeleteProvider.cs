@@ -28,7 +28,7 @@ namespace Hubble.Core.Data
     class DeleteProvider
     {
         const string FileName = "Delete.db";
-        Dictionary<long, int> _DeleteTbl = new Dictionary<long,int>(); //DocId is the key
+        Dictionary<int, int> _DeleteTbl = new Dictionary<int,int>(); //DocId is the key
 
         string _DelFileName;
         int _DeleteStamp;
@@ -55,7 +55,7 @@ namespace Hubble.Core.Data
 
                 while (fs.Read(buf, 0, buf.Length) == buf.Length)
                 {
-                    long docId = BitConverter.ToInt64(buf, 0);
+                    int docId = (int)BitConverter.ToInt64(buf, 0);
 
                     if (!_DeleteTbl.ContainsKey(docId))
                     {
@@ -80,7 +80,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Delete(IList<long> docs)
+        public void Delete(IList<int> docs)
         {
             lock (this)
             {
@@ -88,12 +88,12 @@ namespace Hubble.Core.Data
                 {
                     for (int i = 0; i < docs.Count; i++)
                     {
-                        long docId = docs[i];
+                        int docId = docs[i];
 
                         if (!_DeleteTbl.ContainsKey(docId))
                         {
                             _DeleteTbl.Add(docId, 0);
-                            fs.Write(BitConverter.GetBytes(docId), 0, sizeof(long));
+                            fs.Write(BitConverter.GetBytes((long)docId), 0, sizeof(long));
                         }
                     }
                 }

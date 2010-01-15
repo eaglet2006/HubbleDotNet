@@ -36,7 +36,7 @@ namespace Hubble.Core.Query
             private int _CurIndex;
             private int _OldIndexForDoc = -1;
             private int _OldIndexForWordCount = -1;
-            private long _CurDocmentId;
+            private int _CurDocmentId;
             private int _CurWordCount;
 
             private Index.InvertedIndex.WordIndexReader _WordIndex;
@@ -111,7 +111,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public long CurDocumentId
+            public int CurDocumentId
             {
                 get
                 {
@@ -145,7 +145,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex, long totalDocuments, int fieldRank)
+            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex, int totalDocuments, int fieldRank)
             {
                 _OldIndexForDoc = -1;
                 _OldIndexForWordCount = -1;
@@ -176,7 +176,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public void Calculate(WhereDictionary<long, Query.DocumentResult> upDict, ref WhereDictionary<long, Query.DocumentResult> docIdRank, long Norm_Ranks)
+            public void Calculate(WhereDictionary<int, Query.DocumentResult> upDict, ref WhereDictionary<int, Query.DocumentResult> docIdRank, long Norm_Ranks)
             {
                 _WordIndex.Calculate(upDict, ref docIdRank, _FieldRank, Rank, Norm_Ranks);
             }
@@ -194,7 +194,7 @@ namespace Hubble.Core.Query
 
         long _Norm_Ranks = 0; //sqrt(sum_t(rank)^2))
 
-        private int CaculateRank(long docId, WordIndexForQuery wq)
+        private int CaculateRank(int docId, WordIndexForQuery wq)
         {
             //int numDocWords = InvertedIndex.GetDocumentWordCount(docId);
 
@@ -215,7 +215,7 @@ namespace Hubble.Core.Query
 
         }
 
-        private int CaculateRank(long docId)
+        private int CaculateRank(int docId)
         {
             long rank = 0;
 
@@ -254,12 +254,12 @@ namespace Hubble.Core.Query
                 return new DocumentRank(-1);
             }
 
-            long minDocId = long.MaxValue;
+            int minDocId = int.MaxValue;
 
             //Get min document id
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                long curDocId = _WordIndexList[i].CurDocumentId;
+                int curDocId = _WordIndexList[i].CurDocumentId;
 
                 if (curDocId < 0)
                 {
@@ -272,7 +272,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            if (minDocId == long.MaxValue)
+            if (minDocId == int.MaxValue)
             {
                 return new DocumentRank(-1);
             }
@@ -281,7 +281,7 @@ namespace Hubble.Core.Query
             _TempSelect.Clear();
             for (int i = 0; i < _WordIndexList.Count; i++)
             {
-                long curDocId = _WordIndexList[i].CurDocumentId;
+                int curDocId = _WordIndexList[i].CurDocumentId;
 
                 if (curDocId == minDocId)
                 {
@@ -423,9 +423,9 @@ namespace Hubble.Core.Query
             }
         }
 
-        public WhereDictionary<long, DocumentResult> Search()
+        public WhereDictionary<int, DocumentResult> Search()
         {
-            WhereDictionary<long, DocumentResult> result = new WhereDictionary<long, DocumentResult>();
+            WhereDictionary<int, DocumentResult> result = new WhereDictionary<int, DocumentResult>();
 
             if (_QueryWords.Count <= 0)
             {
@@ -458,9 +458,9 @@ namespace Hubble.Core.Query
             return result;
         }
 
-        WhereDictionary<long, DocumentResult> _UpDict;
+        WhereDictionary<int, DocumentResult> _UpDict;
 
-        public WhereDictionary<long, DocumentResult> UpDict
+        public WhereDictionary<int, DocumentResult> UpDict
         {
             get
             {
