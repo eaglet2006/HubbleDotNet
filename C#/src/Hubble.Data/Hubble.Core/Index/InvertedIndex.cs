@@ -289,7 +289,7 @@ namespace Hubble.Core.Index
                             score = (int)rank;
                         }
 
-                        rank = fieldRank * wordRank * score;
+                        rank = (long)fieldRank * (long)wordRank * (long)score;
 
                         Query.DocumentResult docResult;
 

@@ -233,64 +233,7 @@ namespace Hubble.Core.Query
             }
         }
 
-        /// <summary>
-        /// Get next document rank
-        /// </summary>
-        /// <returns>
-        /// document rank.
-        /// The end flag is that documentid equal -1
-        /// </returns>
-        private Query.DocumentRank GetNexDocumentRank()
-        {
-            if (_QueryWords.Count <= 0)
-            {
-                return new DocumentRank(-1);
-            }
 
-            int minDocId = int.MaxValue;
-
-            //Get min document id
-            for (int i = 0; i < _WordIndexList.Count; i++)
-            {
-                int curDocId = _WordIndexList[i].CurDocumentId;
-
-                if (curDocId < 0)
-                {
-                    continue;
-                }
-
-                if (minDocId > curDocId)
-                {
-                    minDocId = curDocId;
-                }
-            }
-
-            if (minDocId == int.MaxValue)
-            {
-                return new DocumentRank(-1);
-            }
-
-            //Put min doc id into _TempSelect
-            _TempSelect.Clear();
-            for (int i = 0; i < _WordIndexList.Count; i++)
-            {
-                int curDocId = _WordIndexList[i].CurDocumentId;
-
-                if (curDocId == minDocId)
-                {
-                    _TempSelect.Add(_WordIndexList[i]);
-                }
-            }
-
-            int rank = CaculateRank(minDocId);
-
-            foreach(WordIndexForQuery wq in _TempSelect)
-            {
-                wq.IncCurIndex();
-            }
-
-            return new DocumentRank(minDocId, rank);
-        }
 
         #region IQuery Members
 
