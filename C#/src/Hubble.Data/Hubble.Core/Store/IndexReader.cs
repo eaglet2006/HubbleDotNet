@@ -27,12 +27,12 @@ namespace Hubble.Core.Store
         string _HeadFilePath;
         string _IndexFilePath;
         private int _Serial;
+        bool _ReadHead;
 
         System.IO.FileStream _HeadFile;
-        System.IO.FileStream _IndexFile;
 
-
-        byte[] _Cache = new byte[1024 * 1024 * 2];
+        System.IO.Stream _IndexFile;
+        //System.IO.FileStream _IndexFile;
 
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
 
@@ -53,24 +53,54 @@ namespace Hubble.Core.Store
         }
 
         public IndexReader(int serial, string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode)
+            :this(serial, path, fieldName, indexMode, true)
+        {
+        }
+
+        public IndexReader(int serial, string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode, bool readHead)
         {
             _IndexMode = indexMode;
 
             _Serial = serial;
 
-            _HeadFilePath = Path.AppendDivision(path, '\\') + 
-                string.Format("{0:D7}{1}.hdx", serial, fieldName);
+            _ReadHead = readHead;
+
+            if (_ReadHead)
+            {
+                _HeadFilePath = Path.AppendDivision(path, '\\') +
+                    string.Format("{0:D7}{1}.hdx", serial, fieldName);
+            }
+
             _IndexFilePath = Path.AppendDivision(path, '\\') +
                 string.Format("{0:D7}{1}.idx", serial, fieldName);
 
-            _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Open,
-                 System.IO.FileAccess.Read, System.IO.FileShare.Read);
+            if (_ReadHead)
+            {
+                _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Open,
+                     System.IO.FileAccess.Read, System.IO.FileShare.Read);
+            }
+
+            //_IndexFile = IndexFileStreamCache.GetIndexFile(_IndexFilePath);
+
+            //if (_IndexFile == null)
+            //{
+                //_IndexFile = new CachedFileStream(new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Open,
+                //     System.IO.FileAccess.Read, System.IO.FileShare.Read));
+
+            //    _IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Open,
+            //         System.IO.FileAccess.Read, System.IO.FileShare.Read);
+
+            //    IndexFileStreamCache.AddIndexFile(_IndexFilePath, _IndexFile);
+            //}
+
             _IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Open,
                  System.IO.FileAccess.Read, System.IO.FileShare.Read);
+
         }
 
         public List<IndexFile.WordFilePosition> GetWordFilePositionList()
         {
+
             List<IndexFile.WordFilePosition> list = new List<IndexFile.WordFilePosition>();
 
             _HeadFile.Seek(0, System.IO.SeekOrigin.Begin);
@@ -91,7 +121,7 @@ namespace Hubble.Core.Store
                 long position = BitConverter.ToInt64(wordBuf, 0);
 
                 //_HeadFile.Read(buf, 0, sizeof(long));
-                long length = BitConverter.ToInt64(wordBuf, sizeof(long));
+                int length = (int)BitConverter.ToInt64(wordBuf, sizeof(long));
 
                 //_HeadFile.Read(wordBuf, 0, wordBuf.Length);
                 string word = Encoding.UTF8.GetString(wordBuf, 2 * sizeof(long), size - 2 * sizeof(long));
@@ -102,45 +132,46 @@ namespace Hubble.Core.Store
             return list;
         }
 
-        public List<Entity.DocumentPositionList> GetDocList(long position, long length)
-        {
-            _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
 
+        public WordDocumentsList GetDocList(long position, long length, int count)
+        {
+      
+#if PerformanceTest
+
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            System.Diagnostics.Stopwatch sw1 = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
+            _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
+            
+#if PerformanceTest
+            sw1.Start();
+#endif
             //byte[] buf = new byte[length];
             //System.IO.MemoryStream ms = new System.IO.MemoryStream(buf);
             //Hubble.Framework.IO.Stream.ReadToBuf(_IndexFile, buf, 0, buf.Length);
             //ms.Position = 0;
 
-            List<Entity.DocumentPositionList> result = new List<Hubble.Core.Entity.DocumentPositionList>();
+            WordDocumentsList result = new WordDocumentsList();
+            bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
 
-            do
+            if (count >= 0)
             {
-                Entity.DocumentPositionList iDocList = new Entity.DocumentPositionList();
+                result.AddRange(Entity.DocumentPositionList.Deserialize(_IndexFile, ref count, simple, out result.WordCountSum));
+                result.RelDocCount = count;
+            }
+            else
+            {
+                result.AddRange(Entity.DocumentPositionList.Deserialize(_IndexFile, simple, out result.WordCountSum));
+                result.RelDocCount = result.Count;
+            }
+#if PerformanceTest
 
-                Entity.DocumentPositionList docList;
-
-                if (_IndexMode == Hubble.Core.Data.Field.IndexMode.Complex)
-                {
-                    docList =
-                        Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
-                        _IndexFile, iDocList);
-                }
-                else
-                {
-                    docList = DocumentPositionListSimpleSerialization.Derialize(_IndexFile);
-                }
-
-                //Entity.DocumentPositionList docList =
-                //    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Deserialize(
-                //    ms, iDocList);
-
-                if (docList == null)
-                {
-                    break;
-                }
-
-                result.Add(docList);
-            } while (true);
+            sw.Stop();
+            sw1.Stop();
+            Console.WriteLine(string.Format("Read index file: len={0}, {1} results, time={2} {3}", _IndexFile.Position - position, 
+                result.Count, sw.ElapsedMilliseconds, sw.ElapsedMilliseconds));
+#endif
 
             return result;
 
@@ -148,10 +179,14 @@ namespace Hubble.Core.Store
 
         public void Close()
         {
-            _HeadFile.Close();
+            if (_ReadHead)
+            {
+                _HeadFile.Close();
+                _HeadFile = null;
+            }
+
             _IndexFile.Close();
 
-            _HeadFile = null;
             _IndexFile = null;
 
         }

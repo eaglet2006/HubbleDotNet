@@ -31,6 +31,18 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'PerformanceTest|AnyCPU' ">
+    <OutputPath>..\..\..\Bin\Release\</OutputPath>
+    <DefineConstants>TRACE;PerformanceTest,DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -49,6 +61,9 @@
     <Compile Include="Data\DeleteProvider.cs" />
     <Compile Include="Data\OptimizationOption.cs" />
     <Compile Include="Data\Payload.cs" />
+    <Compile Include="Data\PayloadMemoryBlock.cs" />
+    <Compile Include="Data\PayloadProvider.cs" />
+    <Compile Include="Data\PayloadProviderOld.cs" />
     <Compile Include="Data\Table.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
@@ -64,7 +79,6 @@
     <Compile Include="Query\FullTextQuery.cs" />
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\MatchQuery.cs" />
-    <Compile Include="Query\MutiStringQuery.cs" />
     <Compile Include="Query\DocRankRadixSortedList.cs" />
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
@@ -113,6 +127,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
     <Compile Include="StoredProcedure\SP_GetTableAttributes.cs" />
+    <Compile Include="StoredProcedure\SP_TableMaxReturnCount.cs" />
     <Compile Include="StoredProcedure\SP_TruncateTable.cs" />
     <Compile Include="StoredProcedure\SP_FieldAnalyze.cs" />
     <Compile Include="StoredProcedure\SP_GetWordsPositions.cs" />
@@ -141,15 +156,17 @@
     <Compile Include="StoredProcedure\SP_Version.cs" />
     <Compile Include="StoredProcedure\StoredProcedure.cs" />
     <Compile Include="StoredProcedure\StoredProcException.cs" />
-    <Compile Include="Store\DocumentPositionListSimpleSerialization.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
+    <Compile Include="Store\IndexFileStreamCache.cs" />
     <Compile Include="Store\IndexHead.cs" />
     <Compile Include="Store\IndexMerge.cs" />
     <Compile Include="Store\IndexReader.cs" />
     <Compile Include="Store\IndexWriter.cs" />
     <Compile Include="Store\PayloadFile.cs" />
     <Compile Include="Store\StoreException.cs" />
+    <Compile Include="Store\WordDocumentsList.cs" />
+    <Compile Include="Store\WordFilePositionProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Hubble.Analyzer\Hubble.Analyzer.csproj">

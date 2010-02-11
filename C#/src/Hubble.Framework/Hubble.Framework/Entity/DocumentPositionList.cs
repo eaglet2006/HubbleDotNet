@@ -25,6 +25,18 @@ using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Entity
 {
+    public class MergeStream
+    {
+        public System.IO.Stream Stream;
+        public long Length;
+
+        public MergeStream(System.IO.Stream stream, long length)
+        {
+            Stream = stream;
+            Length = length;
+        }
+    }
+
     /// <summary>
     /// This class record all the position for one word in one document.
     /// 
@@ -37,369 +49,330 @@ namespace Hubble.Core.Entity
     /// Input int must not be less then zero!
     /// </summary>
     //[StructLayout(LayoutKind.Sequential,Pack=4)]
-    public class DocumentPositionList : IEnumerable<int>, IMySerialization<DocumentPositionList>, IMySerialization 
+    public struct DocumentPositionList
     {
+        readonly static int[] TotalWordsInDocRank = { 64, 192, 576, 1728, 5184, 15562, 46656, 139968 };
+
         //[FieldOffset(0)]
-        public int DocumentId;
+        public int DocumentId ;
 
         //[FieldOffset(8)]
         /// <summary>
-        /// Count of items
+        /// High 2 bytes is Count of items in one document.
+        /// Other 2 bytes is Word count in one document
         /// </summary>
-        public int Count;
+        //public int CountAndWordCount;
+
+        /// <summary>
+        /// Count of items of this word in one document.
+        /// </summary>
+        public Int16 Count;
+
+        /// <summary>
+        /// Total words count in this document
+        /// </summary>
+        private Int16 _TotalWordsInThisDocumentIndex;
+
+        public int TotalWordsInThisDocument
+        {
+            get
+            {
+                return TotalWordsInDocRank[_TotalWordsInThisDocumentIndex];
+            }
+        }
+
 
         //[FieldOffset(12)]
         /// <summary>
-        /// Document rank
+        /// First word position
         /// </summary>
-        public int Rank;
+        public int FirstPosition;
 
-        //[FieldOffset(16)]
-        //[MarshalAs(UnmanagedType.ByValArray, SizeConst=16)]
-        private byte[] Data;
 
-        //DocId + Rank + Count
-        public int Size
+        public DocumentPositionList(int docId)
         {
-            get
-            {
-                return sizeof(int) + sizeof(int) * 2 + Data.Length;
-            }
+            DocumentId = docId;
+            //CountAndWordCount = 0;
+            Count = 0;
+            _TotalWordsInThisDocumentIndex = 0;
+            FirstPosition = 0;
         }
 
-        public static void Add(int data, List<byte> input)
+        public DocumentPositionList(int docId, Int16 count, Int16 totalWordsInDocIndex, int firstPosition)
         {
-            Debug.Assert(data >= 0);
-
-            if (data == 0)
-            {
-                input.Add(0x80);
-                return;
-            }
-
-            input.Add((byte)((data & 0x0000007f) | 0x80));
-
-            data >>= 7;
-
-            while (data > 0)
-            {
-                input.Add((byte)(data & 0x0000007f));
-                data >>= 7;
-            }
-        }
-
-        public DocumentPositionList()
-        {
-        }
-
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="input">int list</param>
-        /// <remarks>
-        /// Input int must not be less then zero!
-        /// And the list must be sorted!
-        /// The first element must be smallest!
-        /// </remarks>
-        public DocumentPositionList(IList<int> input, int documentId, int rank)
-        {
-            List<byte> tempBuf = new List<byte>(32);
-            DocumentId = documentId;
-            Count = input.Count;
-
-            Rank = rank;
-            if (Rank <= 0)
-            {
-                Rank = 1;
-            }
-
-            int lastData = -1;
-
-            foreach (int data in input)
-            {
-                if (lastData == -1)
-                {
-                    Add(data, tempBuf);
-                }
-                else
-                {
-                    Add(data - lastData, tempBuf);
-                }
-
-                lastData = data;
-            }
-
-
-            Data = new byte[tempBuf.Count];
-
-            tempBuf.CopyTo(Data);
-        }
-
-        public DocumentPositionList(int count, int documentId, int rank)
-        {
-            DocumentId = documentId;
+            DocumentId = docId;
+            //CountAndWordCount = 0;
             Count = count;
-            Rank = rank;
-            if (Rank <= 0)
+            _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
+
+            if (_TotalWordsInThisDocumentIndex >= 8)
             {
-                Rank = 1;
+                _TotalWordsInThisDocumentIndex = 8;
             }
 
-            Data = new byte[0];
+            FirstPosition = firstPosition;
         }
 
-        public IEnumerator<int> Values
+        public DocumentPositionList(int docId, Int16 count, Int16 totalWordsInDocIndex)
         {
-            get
+            DocumentId = docId;
+            //CountAndWordCount = 0;
+            Count = count;
+            _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
+
+            if (_TotalWordsInThisDocumentIndex >= 8)
             {
-                return this.GetEnumerator();
+                _TotalWordsInThisDocumentIndex = 8;
             }
+
+            FirstPosition = 0;
         }
 
 
-        #region IEnumerable<int> Members
+        #region Static methods
 
-        public IEnumerator<int> GetEnumerator()
+        static public void Serialize(IList<DocumentPositionList> docPositions, System.IO.Stream stream, bool simple)
         {
-            int retVal = -1;
-            int shift = 7;
-            int last = -1;
-            foreach (byte data in Data)
+            int docsCount = docPositions.Count;
+           
+            //Write documets count
+            VInt.sWriteToStream(docsCount, stream);
+
+            DocumentPositionList first = docPositions[0];
+
+            //Write first document id
+            int lstDocId = first.DocumentId;
+            VInt.sWriteToStream(lstDocId, stream);
+
+            int count = first.Count;
+
+            if (count >= 32768)
             {
-                if ((data & 0x80) != 0)
+                count = 32767;
+            }
+
+            count *= 8;
+            count += first._TotalWordsInThisDocumentIndex;
+
+            VInt.sWriteToStream(count, stream);
+            if (!simple)
+            {
+                VInt.sWriteToStream(docPositions[0].FirstPosition, stream);
+            }
+
+            for (int i = 1; i < docPositions.Count; i++)
+            {
+                VInt.sWriteToStream(docPositions[i].DocumentId - lstDocId, stream);
+
+                count = docPositions[i].Count;
+
+                if (count >= 32768)
                 {
-                    if (retVal >= 0)
-                    {
-                        if (last == -1)
-                        {
-                            last = retVal;
-                        }
-                        else
-                        {
-                            last = last + retVal;
-                        }
+                    count = 32767;
+                }
 
-                        yield return last;
-                    }
+                count *= 8;
+                count += docPositions[i]._TotalWordsInThisDocumentIndex;
 
-                    shift = 7;
-                    retVal = data & 0x7f;
+                VInt.sWriteToStream(count, stream);
+
+                if (!simple)
+                {
+                    VInt.sWriteToStream(docPositions[i].FirstPosition, stream);
+                }
+
+                lstDocId = docPositions[i].DocumentId;
+            }
+
+            byte[] lstDocIdBuf = BitConverter.GetBytes(lstDocId);
+            stream.Write(lstDocIdBuf, 0, lstDocIdBuf.Length);
+        }
+
+        static public int GetDocumentsCount(System.IO.Stream stream)
+        {
+            return VInt.sReadFromStream(stream);
+        }
+
+        static public DocumentPositionList[] Deserialize(System.IO.Stream stream, bool simple, out long wordCountSum)
+        {
+            int count = int.MaxValue;
+            return Deserialize(stream, ref count, simple, out wordCountSum);
+        }
+
+
+        static public DocumentPositionList[] Deserialize(System.IO.Stream stream, ref int documentsCount, bool simple, out long wordCountSum)
+        {
+            wordCountSum = 0;
+
+            int docsCount = VInt.sReadFromStream(stream);
+
+            int lastDocId = VInt.sReadFromStream(stream);
+
+            int count = VInt.sReadFromStream(stream);
+
+            docsCount = Math.Min(docsCount, documentsCount);
+
+            DocumentPositionList[] result = new DocumentPositionList[docsCount];
+
+            if (!simple)
+            {
+                int firstPosition = VInt.sReadFromStream(stream);
+                result[0] = new DocumentPositionList(lastDocId, (Int16)(count / 8), (Int16)(count % 8), firstPosition);
+            }
+            else
+            {
+                result[0] = new DocumentPositionList(lastDocId, (Int16)(count / 8), (Int16)(count % 8));
+            }
+
+            if (docsCount == 1)
+            {
+                wordCountSum = 1;
+            }
+
+            for (int i = 1; i < docsCount; i++)
+            {
+                lastDocId = VInt.sReadFromStream(stream) + lastDocId;
+                count = VInt.sReadFromStream(stream);
+                int docCount = (Int16)(count / 8);
+
+                if (docCount >= 32768)
+                {
+                    docCount = 32767;
+                }
+
+                if (!simple)
+                {
+                    int firstPosition = VInt.sReadFromStream(stream);
+                    result[i] = new DocumentPositionList(lastDocId, (Int16)(docCount), (Int16)(count % 8), firstPosition);
                 }
                 else
                 {
-                    retVal += (int)data << shift;
-                    shift += 7;
+                    result[i] = new DocumentPositionList(lastDocId, (Int16)(docCount), (Int16)(count % 8));
                 }
+
+                wordCountSum += docCount;
             }
 
-            if (retVal >= 0)
+            documentsCount = docsCount;
+
+            return result;
+        }
+
+        static public void Merge(IList<MergeStream> srcList, System.IO.Stream destStream)
+        {
+            List<long> srcEndPositionList = new List<long>();
+
+            for (int i = 0; i < srcList.Count; i++)
             {
-                if (last == -1)
+                srcEndPositionList.Add(srcList[i].Stream.Position + srcList[i].Length);
+            }
+
+            int docsCount = 0;
+
+            foreach (MergeStream ms in srcList)
+            {
+                docsCount += VInt.sReadFromStream(ms.Stream);
+            }
+
+            //Write docs count
+            VInt.sWriteToStream(docsCount, destStream);
+
+            int lastDocId = -1;
+
+            for (int i = 0; i < srcList.Count; i++)
+            {
+                System.IO.Stream src = srcList[i].Stream;
+
+                int firstDocId = VInt.sReadFromStream(src);
+
+                if (lastDocId < 0)
                 {
-                    last = retVal;
+                    VInt.sWriteToStream(firstDocId, destStream);
                 }
                 else
                 {
-                    last = last + retVal;
+                    VInt.sWriteToStream(firstDocId - lastDocId, destStream);
                 }
 
-                yield return last;
+                byte[] buf = new byte[8192];
+                int remain = (int)(srcEndPositionList[i] - sizeof(int) - src.Position);
+
+                int len = src.Read(buf, 0, Math.Min(buf.Length, remain));
+
+                while (len > 0)
+                {
+                    destStream.Write(buf, 0, len);
+
+                    remain -= len;
+
+                    len = src.Read(buf, 0, Math.Min(buf.Length, remain));
+                }
+
+                //Get last docid of src
+                byte[] lastDocIdBuf = new byte[sizeof(int)];
+
+                src.Read(lastDocIdBuf, 0, lastDocIdBuf.Length);
+
+                lastDocId = BitConverter.ToInt32(lastDocIdBuf, 0);
             }
+
+            destStream.Write(BitConverter.GetBytes(lastDocId), 0, sizeof(int));
+
         }
 
-        #endregion
-
-        #region IEnumerable Members
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        static public void Merge(System.IO.Stream src1, long src1Length, System.IO.Stream src2, long src2Length, System.IO.Stream destStream)
         {
-            return this.GetEnumerator();
-        }
+            long src1EndPosition = src1.Position + src1Length;
+            long src2EndPosition = src2.Position + src2Length;
 
-        #endregion
+            int src1DocsCount = VInt.sReadFromStream(src1);
+            int src2DocsCount = VInt.sReadFromStream(src2);
 
-        #region IMySerialization<CompressIntList> Members
+            //Write docs count
+            VInt.sWriteToStream(src1DocsCount + src2DocsCount, destStream);
 
-        public byte Version
-        {
-            get 
+            //Merge src1
+            byte[] buf = new byte[8192];
+            int remain = (int)(src1EndPosition - sizeof(int) - src1.Position);
+
+            int len = src1.Read(buf, 0, Math.Min(buf.Length, remain));
+
+            while (len > 0)
             {
-                return 1;
+                destStream.Write(buf, 0, len);
+
+                remain -= len;
+                len = src1.Read(buf, 0, Math.Min(buf.Length, remain));
             }
-        }
 
-        public void Serialize(System.IO.Stream s)
-        {
-            //s.Write(BitConverter.GetBytes(Size), 0, sizeof(int));
-            //s.Write(BitConverter.GetBytes(DocumentId), 0, sizeof(long));
-            //s.Write(BitConverter.GetBytes(Count), 0, sizeof(int));
-            //s.Write(BitConverter.GetBytes(Rank), 0, sizeof(int));
+            //Get last docid of src1
+            byte[] lastDocIdBuf = new byte[sizeof(int)];
 
-            VInt size = Data.Length;
-            size.WriteToStream(s);
-            VLong docId = (long)DocumentId;
-            docId.WriteToStream(s);
-            VInt count = Count;
-            count.WriteToStream(s);
-            VInt rank = Rank;
-            rank.WriteToStream(s);
+            src1.Read(lastDocIdBuf, 0, lastDocIdBuf.Length);
 
-            if (Data.Length > 0)
+            int lastDocid = BitConverter.ToInt32(lastDocIdBuf, 0);
+
+            //Get first docid of src2
+            int src2FirstDocId = VInt.sReadFromStream(src2);
+            
+            //Write gap between above
+            VInt.sWriteToStream(src2FirstDocId - lastDocid, destStream);
+
+            //Merge src2
+            remain = (int)(src2EndPosition - src2.Position);
+
+            len = src2.Read(buf, 0, Math.Min(buf.Length, remain));
+
+            while (len > 0)
             {
-                s.Write(Data, 0, Data.Length);
-            }
-        }
+                destStream.Write(buf, 0, len);
 
-        public DocumentPositionList Deserialize(System.IO.Stream s, short version)
-        {
-            switch (version)
-            {
-                case 0:
-                    return null;
-
-                case 1:
-                    //if (s.Length - s.Position < sizeof(long) + sizeof(int) * 2 + sizeof(int))
-                    //{
-                    //    return null;
-                    //}
-
-                    VInt vsize = new VInt();
-                    vsize.ReadFromStream(s);
-
-                    int size = (int)vsize;
-
-                    VLong docId = new VLong();
-                    docId.ReadFromStream(s);
-                    VInt count = new VInt();
-                    count.ReadFromStream(s);
-                    VInt rank = new VInt();
-                    rank.ReadFromStream(s);
-
-                    //byte[] buf = new byte[sizeof(long)];
-                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    //int size = BitConverter.ToInt32(buf, 0);
-
-                    //if (size == 0)
-                    //{
-                    //    return null;
-                    //}
-
-                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(long));
-                    //DocumentId = BitConverter.ToInt64(buf, 0);
-                    
-                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    //Count = BitConverter.ToInt32(buf, 0);
-                    
-                    //Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, sizeof(int));
-                    //Rank = BitConverter.ToInt32(buf, 0);
-
-                    //buf = new byte[size - (sizeof(long) + sizeof(int) * 2)];
-
-                    DocumentId = (int)((long)docId);
-                    Count = (int)count;
-                    Rank = (int)rank;
-
-                    byte[] buf = new byte[size];
-
-                    if (size > 0)
-                    {
-                        Hubble.Framework.IO.Stream.ReadToBuf(s, buf, 0, buf.Length);
-                    }
-
-                    Data = buf;
-
-                    return this;
-                default:
-                    throw new System.Runtime.Serialization.SerializationException(
-                        string.Format("Invalid version:{0}", version));
+                remain -= len;
+                len = src2.Read(buf, 0, Math.Min(buf.Length, remain));
             }
         }
 
         #endregion
 
-        #region IMySerialization Members
-
-
-        object IMySerialization.Deserialize(System.IO.Stream s, short version)
-        {
-            return Deserialize(s, version);
-        }
-
-        #endregion
     }
-
-    public class CCompressIntList
-    {
-        private byte[] Data;
-
-        public CCompressIntList(List<int> input):this(input, 8)
-        {
-        }
-
-        public CCompressIntList(List<int> input, int capacity)
-        {
-            List<byte> tempBuf = new List<byte>(capacity);
-
-            int lastData = -1;
-
-            foreach (int data in input)
-            {
-                if (lastData == -1)
-                {
-                    DocumentPositionList.Add(data, tempBuf);
-                }
-                else
-                {
-                    DocumentPositionList.Add(data - lastData, tempBuf);
-                }
-
-                lastData = data;
-            }
-
-
-            Data = new byte[tempBuf.Count];
-
-            tempBuf.CopyTo(Data);
-        }
-
-        public IEnumerator<int> Values
-        {
-            get
-            {
-                int retVal = -1;
-                int shift = 7;
-                int last = -1;
-                foreach (byte data in Data)
-                {
-                    if ((data & 0x80) != 0)
-                    {
-                        if (retVal >= 0)
-                        {
-                            if (last == -1)
-                            {
-                                last = retVal;
-                            }
-                            else
-                            {
-                                last = last + retVal;
-                            }
-
-                            yield return last;
-                        }
-
-                        shift = 7;
-                        retVal = data & 0x7f;
-                    }
-                    else
-                    {
-                        retVal += (int)data << shift;
-                        shift += 7;
-                    }
-                }
-            }
-        }
-    }
-
 }

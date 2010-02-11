@@ -65,26 +65,13 @@ namespace Hubble.Core.Store
 
         }
 
-        public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList, out long length)
+        public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList, out int length)
         {
             long position = _IndexFile.Position;
+            bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
+            Entity.DocumentPositionList.Serialize(docList, _IndexFile, simple);
 
-            foreach (Entity.DocumentPositionList doc in docList)
-            {
-                if (_IndexMode == Hubble.Core.Data.Field.IndexMode.Complex)
-                {
-                    Hubble.Framework.Serialization.MySerialization<Entity.DocumentPositionList>.Serialize(_IndexFile, doc);
-                }
-                else
-                {
-                    DocumentPositionListSimpleSerialization.Serialize(_IndexFile, doc);
-                }
-            }
-
-            _IndexFile.WriteByte(0); //End flag, 1 byte
-            //_IndexFile.WriteByte(0);
-
-            length = _IndexFile.Position - position;
+            length = (int)(_IndexFile.Position - position);
 
             WriteHeadFile(_HeadFile, word, position, length);
 

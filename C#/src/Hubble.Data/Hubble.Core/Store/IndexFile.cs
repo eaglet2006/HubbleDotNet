@@ -21,7 +21,7 @@ using System.Text;
 using Hubble.Core.Index;
 using Hubble.Framework.IO;
 using FilePositionType = System.Int64;
-using FileLengthType = System.Int64;
+using FileLengthType = System.Int32;
 using FileSizeType = System.Int64;
 
 namespace Hubble.Core.Store
@@ -29,6 +29,8 @@ namespace Hubble.Core.Store
     public interface IIndexFile
     {
         void ImportWordFilePositionList(List<IndexFile.WordFilePosition> wordFilePositionList);
+
+        void CollectWordFilePositionList();
     }
 
     /// <summary>
@@ -122,8 +124,8 @@ namespace Hubble.Core.Store
         public struct FilePosition
         {
             public int Serial; //Index file serial number
-            public FilePositionType Position; //Position in the file for the word point
             public FileLengthType Length; //word index length
+            public FilePositionType Position; //Position in the file for the word point
 
             public FilePosition(int serial, FilePositionType position, FileLengthType length)
             {
@@ -267,6 +269,14 @@ namespace Hubble.Core.Store
 
         #region Public properties
 
+        internal int MaxSerial
+        {
+            get
+            {
+                return _MaxSerial;
+            }
+        }
+
         public string IndexDir
         {
             get
@@ -401,6 +411,8 @@ namespace Hubble.Core.Store
             {
                 _MaxSerial = _IndexFileList[_IndexFileList.Count - 1].Serial + 1;
             }
+
+            IndexFileInterface.CollectWordFilePositionList();
         }
 
         private void CreateIndexFile(Hubble.Core.Data.Field.IndexMode indexMode)
@@ -466,24 +478,67 @@ namespace Hubble.Core.Store
             return new LinkedSegmentFileStream.SegmentPosition();
         }
 
-        internal Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word, 
-            List<FilePosition> filePositionList, int totalDocs, Data.DBProvider dbProvider,
-            int tabIndex)
+        internal Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word,
+            WordFilePositionList filePositionList, int totalDocs, Data.DBProvider dbProvider, int maxReturnCount)
         {
-            List<Entity.DocumentPositionList> docList = new List<Hubble.Core.Entity.DocumentPositionList>();
+            WordDocumentsList docList = new WordDocumentsList();
 
-            foreach (FilePosition filePosition in filePositionList)
+            if (maxReturnCount < 0)
             {
-                using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode))
+                foreach (FilePosition filePosition in filePositionList.Values)
                 {
-                    foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
+                    using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
                     {
-                        docList.Add(dList);
+                        WordDocumentsList wdl = ir.GetDocList(filePosition.Position, filePosition.Length, -1);
+
+                        if (filePositionList.Count == 1)
+                        {
+                            docList = wdl;
+                        }
+                        else
+                        {
+                            docList.AddRange(wdl);
+                            docList.WordCountSum += wdl.WordCountSum;
+                        }
+
+                        //foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
+                        //{
+                        //    docList.Add(dList);
+                        //}
+                    }
+                }
+            }
+            else
+            {
+                int remain = maxReturnCount;
+
+                foreach (FilePosition filePosition in filePositionList.Values)
+                {
+                    using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
+                    {
+                        WordDocumentsList wdl = ir.GetDocList(filePosition.Position, filePosition.Length, remain);
+
+                        if (filePositionList.Count == 1)
+                        {
+                            docList = wdl;
+                        }
+                        else
+                        {
+                            docList.AddRange(wdl);
+                            docList.WordCountSum += wdl.WordCountSum;
+                        }
+
+                        remain -= wdl.Count;
+
+                        //foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
+                        //{
+                        //    docList.Add(dList);
+                        //}
                     }
                 }
             }
 
-            return new InvertedIndex.WordIndexReader(word, docList, totalDocs, dbProvider, tabIndex);
+            return new InvertedIndex.WordIndexReader(word, docList, totalDocs, dbProvider);
         }
 
         /// <summary>
@@ -528,8 +583,10 @@ namespace Hubble.Core.Store
                 }
             }
 
+            //If IndexWriter is writting currently, don't change _MaxSerial
             //No longer insert after optimize
-            if (IndexFileList[IndexFileList.Count - 1].Serial == mergedSerial)
+            if (IndexFileList[IndexFileList.Count - 1].Serial == mergedSerial &&
+                _WordFilePositionList.Count == 0)
             {
                 _IndexWriter.Close();
 

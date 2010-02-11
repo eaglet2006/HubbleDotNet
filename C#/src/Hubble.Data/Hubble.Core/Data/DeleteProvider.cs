@@ -45,6 +45,14 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal int Count
+        {
+            get
+            {
+                return _DeleteTbl.Count;
+            }
+        }
+
         public void Open(string indexFolder)
         {
             _DelFileName = Hubble.Framework.IO.Path.AppendDivision(indexFolder, '\\') + FileName;
@@ -105,7 +113,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void FilterDocScore(InvertedIndex.WordIndexReader.DocScore[] docScoreList)
+        public void Filter(SFQL.Parse.WhereDictionary<int, Query.DocumentResult> docIdResult)
         {
             lock (this)
             {
@@ -114,21 +122,43 @@ namespace Hubble.Core.Data
                     return;
                 }
 
-                for (int i = 0; i < docScoreList.Length; i++)
+                if (_DeleteTbl.Count < docIdResult.Count)
                 {
-                    if (_DeleteTbl.ContainsKey(docScoreList[i].DocId))
+                    foreach (int docid in _DeleteTbl.Keys)
                     {
-                        docScoreList[i].DocId = -1;
+                        if (docIdResult.ContainsKey(docid))
+                        {
+                            docIdResult.Remove(docid);
+                        }
                     }
+                }
+                else
+                {
+                    List<int> deleDocIdList = new List<int>();
+
+                    foreach (int docid in docIdResult.Keys)
+                    {
+                        if (_DeleteTbl.ContainsKey(docid))
+                        {
+                            docIdResult.Remove(docid);
+                        }
+                    }
+
+                    foreach (int docid in deleDocIdList)
+                    {
+                        docIdResult.Remove(docid);
+                    }
+
+                    deleDocIdList = null;
                 }
             }
         }
 
-        public List<DocumentPositionList> GetDocumentPositionList(List<DocumentPositionList> docList)
+        public Store.WordDocumentsList GetDocumentPositionList(Store.WordDocumentsList docList)
         {
             lock (this)
             {
-                List<DocumentPositionList> result;
+                Store.WordDocumentsList result;
 
                 bool needDel = false;
 
@@ -137,17 +167,17 @@ namespace Hubble.Core.Data
                     if (_DeleteTbl.ContainsKey(docList[i].DocumentId))
                     {
                         needDel = true;
-                        docList[i] = null;
+                        docList[i] = new DocumentPositionList(-1);
                     }
                 }
 
                 if (needDel)
                 {
-                    result = new List<DocumentPositionList>();
+                    result = new Store.WordDocumentsList();
 
                     for (int i = 0; i < docList.Count; i++)
                     {
-                        if (docList[i] != null)
+                        if (docList[i].DocumentId < 0)
                         {
                             result.Add(docList[i]);
                         }

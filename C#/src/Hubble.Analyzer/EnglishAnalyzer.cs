@@ -7,11 +7,12 @@ using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Analysis
 {
-    class EnglishAnalyzer : IAnalyzer, Data.INamedExternalReference
+    public class EnglishAnalyzer : IAnalyzer, Data.INamedExternalReference
     {
         const int OriginalRank = 500;
         const int LowerRank = 50;
         const int StemRank = 10;
+        LinkedList<Framework.WordInfo> _Tokenes = null;
 
         private static Dictionary<string, string> _InfinitiveVerbTable = null;
 
@@ -134,9 +135,27 @@ namespace Hubble.Core.Analysis
 
         #region IAnalyzer Members
 
+        public int Count
+        {
+            get
+            {
+                if (_Tokenes == null)
+                {
+                    throw new Exception("Tokenes is null. Count property should be called after Tokenize");
+                }
+                else
+                {
+                    return _Tokenes.Count;
+                }
+                
+            }
+        }
+
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
-            foreach (Framework.WordInfo wi in GetInitSegment(text))
+            _Tokenes = GetInitSegment(text);
+
+            foreach (Framework.WordInfo wi in _Tokenes)
             {
                 if (wi == null)
                 {

@@ -82,7 +82,33 @@ namespace Hubble.Framework.DataStructure
             }
         }
 
-        public void ReadFromStream(System.IO.Stream stream)
+        static public void sWriteToStream(int data, System.IO.Stream stream)
+        {
+            System.Diagnostics.Debug.Assert(stream != null);
+
+            if (data < 128)
+            {
+                stream.WriteByte((byte)data);
+                return;
+            }
+
+            stream.WriteByte((byte)((data & 0x0000007f) | 0x80));
+            data >>= 7;
+
+            while (data > 0)
+            {
+                if (data < 128)
+                {
+                    stream.WriteByte((byte)data);
+                    return;
+                }
+
+                stream.WriteByte((byte)((data & 0x0000007f) | 0x80));
+                data >>= 7;
+            }
+        }
+
+        public int ReadFromStream(System.IO.Stream stream)
         {
             System.Diagnostics.Debug.Assert(stream != null);
 
@@ -100,6 +126,36 @@ namespace Hubble.Framework.DataStructure
                 zeroBits += 7;
             }
             while (b >= 128);
+
+            return _Value;
         }
+
+        static public int sReadFromStream(System.IO.Stream stream)
+        {
+            System.Diagnostics.Debug.Assert(stream != null);
+
+            int value = 0;
+            int zeroBits = 0;
+            int b;
+
+            do
+            {
+                b = stream.ReadByte();
+
+                if (b < 128 && zeroBits == 0)
+                {
+                    return b;
+                }
+
+                value |= (int)((b & 0x7f) << zeroBits);
+
+                zeroBits += 7;
+
+            }
+            while (b >= 128);
+
+            return value;
+        }
+
     }
 }

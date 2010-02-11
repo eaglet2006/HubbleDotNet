@@ -26,6 +26,7 @@ namespace Hubble.Core.Analysis
     public class SimpleAnalyzer : IAnalyzer, Data.INamedExternalReference
     {
         private bool _Lowercase;
+        LinkedList<Framework.WordInfo> _Tokenes = null;
 
         private LinkedList<Framework.WordInfo> GetInitSegment(string text)
         {
@@ -88,9 +89,26 @@ namespace Hubble.Core.Analysis
 
         #region IAnalyzer Members
 
+        public int Count
+        {
+            get
+            {
+                if (_Tokenes == null)
+                {
+                    throw new Exception("Tokenes is null. Count property should be called after Tokenize");
+                }
+                else
+                {
+                    return _Tokenes.Count;
+                }
+            }
+        }
+
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
-            foreach (Framework.WordInfo wi in GetInitSegment(text))
+            _Tokenes = GetInitSegment(text);
+
+            foreach (Framework.WordInfo wi in _Tokenes)
             {
                 if (wi == null)
                 {

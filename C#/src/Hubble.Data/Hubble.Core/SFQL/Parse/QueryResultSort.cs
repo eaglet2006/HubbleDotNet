@@ -17,12 +17,12 @@ namespace Hubble.Core.SFQL.Parse
             _DBProvider = dbProvider;
         }
 
-        public void Sort(Query.DocumentResult[] docResults)
+        internal void Sort(Query.DocumentResult[] docResults)
         {
             Sort(docResults, -1);
         }
 
-        public void Sort(Query.DocumentResult[] docResults, int top)
+        unsafe internal void Sort(Query.DocumentResult[] docResults, int top)
         {
             if (_OrderBys.Count <= 0)
             {
@@ -33,10 +33,10 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (_OrderBys[0].Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    foreach (Query.DocumentResult docResult in docResults)
+                    for(int i = 0; i < docResults.Length; i++)
                     {
-                        docResult.SortValue = docResult.DocId;
-                        docResult.Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                        docResults[i].SortValue = docResults[i].DocId;
+                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
                     QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
@@ -45,10 +45,10 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else if (_OrderBys[0].Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    foreach (Query.DocumentResult docResult in docResults)
+                    for (int i = 0; i < docResults.Length; i++)
                     {
-                        docResult.SortValue = docResult.Score;
-                        docResult.Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                        docResults[i].SortValue = docResults[i].Score;
+                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
                     QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
@@ -74,14 +74,14 @@ namespace Hubble.Core.SFQL.Parse
                             case Hubble.Core.Data.DataType.SmallInt:
                             case Hubble.Core.Data.DataType.TinyInt:
                                 {
-                                    foreach (Query.DocumentResult docResult in docResults)
+                                    for (int i = 0; i < docResults.Length; i++)
                                     {
-                                        Data.Payload payLoad = _DBProvider.GetPayload(docResult.DocId);
-                                        docResult.Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                        int* payLoadData = _DBProvider.GetPayloadData(docResults[i].DocId);
+                                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
 
-                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResult.Asc, field.DataType,
-                                            payLoad.Data, field.TabIndex, field.DataLength);
-                                        docResult.SortValue = sortInfo.IntValue;
+                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
+                                            payLoadData, field.TabIndex, field.DataLength);
+                                        docResults[i].SortValue = sortInfo.IntValue;
                                     }
 
                                     QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
@@ -92,14 +92,14 @@ namespace Hubble.Core.SFQL.Parse
                             case Hubble.Core.Data.DataType.BigInt:
                             case Hubble.Core.Data.DataType.DateTime:
                                 {
-                                    foreach (Query.DocumentResult docResult in docResults)
+                                    for (int i = 0; i < docResults.Length; i++)
                                     {
-                                        Data.Payload payLoad = _DBProvider.GetPayload(docResult.DocId);
-                                        docResult.Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                        int* payLoadData = _DBProvider.GetPayloadData(docResults[i].DocId);
+                                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
 
-                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResult.Asc, field.DataType,
-                                            payLoad.Data, field.TabIndex, field.DataLength);
-                                        docResult.SortValue = sortInfo.LongValue;
+                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
+                                            payLoadData, field.TabIndex, field.DataLength);
+                                        docResults[i].SortValue = sortInfo.LongValue;
                                     }
 
                                     QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
@@ -151,37 +151,37 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
-                foreach (Query.DocumentResult docResult in docResults)
+                for(int i = 0; i < docResults.Length; i++)
                 {
-                    if (docResult.SortInfoList == null)
+                    if (docResults[i].SortInfoList == null)
                     {
-                        docResult.SortInfoList = new List<Hubble.Core.Query.SortInfo>(2);
+                        docResults[i].SortInfoList = new List<Hubble.Core.Query.SortInfo>(2);
                     }
 
                     if (isDocId)
                     {
-                        docResult.SortInfoList.Add(new Hubble.Core.Query.SortInfo(isAsc, sortType, docResult.DocId));
+                        docResults[i].SortInfoList.Add(new Hubble.Core.Query.SortInfo(isAsc, sortType, docResults[i].DocId));
                     }
                     else if (isScore)
                     {
-                        docResult.SortInfoList.Add(new Hubble.Core.Query.SortInfo(isAsc, sortType, docResult.Score));
+                        docResults[i].SortInfoList.Add(new Hubble.Core.Query.SortInfo(isAsc, sortType, docResults[i].Score));
                     }
                     else
                     {
-                        if (docResult.Payload == null)
+                        if (docResults[i].PayloadData == null)
                         {
-                            Data.Payload payLoad = _DBProvider.GetPayload(docResult.DocId);
+                            int* payloadData = _DBProvider.GetPayloadData(docResults[i].DocId);
 
-                            if (payLoad == null)
+                            if (payloadData == null)
                             {
-                                throw new ParseException(string.Format("DocId={0} has not payload!", docResult.DocId));
+                                throw new ParseException(string.Format("DocId={0} has not payload!", docResults[i].DocId));
                             }
-                            
-                            docResult.Payload = payLoad.Data;
+
+                            docResults[i].PayloadData = payloadData;
                         }
 
-                        docResult.SortInfoList.Add(Data.DataTypeConvert.GetSortInfo (isAsc,
-                            field.DataType, docResult.Payload, field.TabIndex, field.DataLength));
+                        docResults[i].SortInfoList.Add(Data.DataTypeConvert.GetSortInfo(isAsc,
+                            field.DataType, docResults[i].PayloadData, field.TabIndex, field.DataLength));
                     }
                 }
             }

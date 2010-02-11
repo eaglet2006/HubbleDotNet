@@ -136,7 +136,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
                 SyntaxAnalysis.Update.Update;
 
-            ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName));
+            ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName), false);
 
             parseWhere.Begin = update.Begin;
             parseWhere.End = update.End;
@@ -180,7 +180,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as
                 SyntaxAnalysis.Delete.Delete;
 
-            ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName));
+            ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName), false);
 
             parseWhere.Begin = delete.Begin;
             parseWhere.End = delete.End;
@@ -561,9 +561,10 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
+        unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
+
             QueryResult qResult = new QueryResult();
 
             if (dbProvider == null)
@@ -600,7 +601,20 @@ namespace Hubble.Core.SFQL.Parse
 
             //Begin to select
 
-            ParseWhere parseWhere = new ParseWhere(tableName, dbProvider);
+            bool orderByScore = false;
+            if (select.OrderBys.Count == 0)
+            {
+                orderByScore = true;
+            }
+            else if (select.OrderBys.Count == 1)
+            {
+                if (select.OrderBys[0].Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    orderByScore = true;
+                }
+            }
+
+            ParseWhere parseWhere = new ParseWhere(tableName, dbProvider, orderByScore);
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
@@ -646,16 +660,19 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
+            int relTotalCount = 0;
+
             //Get document result
             if (noQueryCache)
             {
                 if (select.Where == null)
                 {
                     result = parseWhere.Parse(null);
+                    relTotalCount = result.Length;
                 }
                 else
                 {
-                    result = parseWhere.Parse(select.Where.ExpressionTree);
+                    result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount);
                 }
 
                 //Sort
@@ -673,9 +690,9 @@ namespace Hubble.Core.SFQL.Parse
                     {
                         int rankTab = rankField.TabIndex;
 
-                        foreach (Query.DocumentResult dr in result)
+                        for(int i = 0; i< result.Length; i++)
                         {
-                            int docRank = dbProvider.GetPayload(dr.DocId).Data[rankTab];
+                            int docRank = dbProvider.GetPayloadData(result[i].DocId)[rankTab];
                             if (docRank < 0)
                             {
                                 docRank = 0;
@@ -685,7 +702,7 @@ namespace Hubble.Core.SFQL.Parse
                                 docRank = 65535;
                             }
 
-                            dr.Score *= docRank;
+                            result[i].Score *= docRank;
                         }
                     }
                 }
@@ -720,6 +737,7 @@ namespace Hubble.Core.SFQL.Parse
                 result = qDocs.Documents;
             }
 
+
             List<Data.Field> selectFields;
             int allFieldsCount;
 
@@ -730,7 +748,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (noQueryCache)
             {
-                ds.Tables[0].MinimumCapacity = result.Length;
+                ds.Tables[0].MinimumCapacity = relTotalCount;
             }
             else
             {
@@ -738,6 +756,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             qResult.DataSet = ds;
+
 
             return qResult;
 
@@ -1066,6 +1085,19 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalyse(sql);
             int tableNum = 0;
 
+#if PerformanceTest
+            long totalMem = GC.GetTotalMemory(false);
+
+            int[] gcCounts = new int[GC.MaxGeneration + 1];
+            for (int i = 0; i <= GC.MaxGeneration; i++)
+            {
+                gcCounts[i] = GC.CollectionCount(i);
+            }
+             
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
+
             foreach (TSFQLSentence sentence in _SFQLSentenceList)
             {
                 QueryResult queryResult = ExecuteTSFQLSentence(sentence);
@@ -1103,7 +1135,20 @@ namespace Hubble.Core.SFQL.Parse
                 AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 
+#if PerformanceTest
 
+            sw.Stop();
+            Console.WriteLine(string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
+
+            Console.WriteLine(string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
+
+            for (int i = 0; i <= GC.MaxGeneration; i++)
+            {
+                int count = GC.CollectionCount(i) - gcCounts[i];
+                Console.WriteLine("\tGen " + i + ": \t\t" + count);
+            }
+
+#endif
             return result;
         }
     }

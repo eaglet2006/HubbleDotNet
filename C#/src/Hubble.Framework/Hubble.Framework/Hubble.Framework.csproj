@@ -31,6 +31,17 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'PerformanceTest|AnyCPU' ">
+    <OutputPath>..\..\..\Bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -38,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\BlockedAppendList.cs" />
     <Compile Include="DataStructure\Cache.cs" />
     <Compile Include="DataStructure\CacheManage.cs" />
     <Compile Include="DataStructure\DFA.cs" />
@@ -48,6 +60,10 @@
     <Compile Include="DataStructure\QuickSort.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
     <Compile Include="DataStructure\SortDictionary.cs" />
+    <Compile Include="DataStructure\StepList.cs" />
+    <Compile Include="IO\CachedFileStream.cs" />
+    <Compile Include="IO\HGlobalMemoryBlock.cs" />
+    <Compile Include="IO\BlockedMemoryStream.cs" />
     <Compile Include="DataStructure\VInt.cs" />
     <Compile Include="DataStructure\VLong.cs" />
     <Compile Include="Data\SQLDataProvider.cs" />

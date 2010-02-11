@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.Threading;
+using Hubble.Core.Data;
 
 namespace Hubble.Core.Store
 {
@@ -103,13 +104,14 @@ namespace Hubble.Core.Store
         class PayloadEntity : IComparable<PayloadEntity>
         {
             public int DocId;
-
+            public PayloadProvider PayloadProvider;
             public Hubble.Core.Data.Payload Payload;
 
-            public PayloadEntity(int docId, Hubble.Core.Data.Payload payload)
+            public PayloadEntity(int docId, Hubble.Core.Data.Payload payload, PayloadProvider payloadProvider)
             {
                 DocId = docId;
                 Payload = payload;
+                PayloadProvider = payloadProvider;
             }
 
             #region IComparable<PayloadEntity> Members
@@ -154,6 +156,7 @@ namespace Hubble.Core.Store
         string _FileName;
         List<PayloadEntity> _PayloadEntities = new List<PayloadEntity>();
         int _StoreLength = 0;
+        int _DocumentsCount = 0;
 
         private object ProcessMessage(int evt, MessageFlag flag, object data)
         {
@@ -166,14 +169,14 @@ namespace Hubble.Core.Store
                     SaveToFile();
                     break;
                 case Event.Update:
-                    UpdataToFile((List<PayloadEntity>)data);
+                    UpdateToFile((List<PayloadEntity>)data);
                     break;
             }
 
             return null;
         }
 
-        private void UpdataToFile(List<PayloadEntity> peList)
+        private void UpdateToFile(List<PayloadEntity> peList)
         {
             if (_StoreLength <= 0)
             {
@@ -195,7 +198,12 @@ namespace Hubble.Core.Store
             {
                 foreach (PayloadEntity pe in peList)
                 {
-                    fs.Seek(pe.Payload.FileIndex * _StoreLength + HeadLength + sizeof(long), System.IO.SeekOrigin.Begin);
+                    if (pe.Payload.FileIndex < 0)
+                    {
+                        throw new Data.DataException("Payload fileIndex < 0!");
+                    }
+
+                    fs.Seek(pe.Payload.FileIndex * _StoreLength + HeadLength + sizeof(int), System.IO.SeekOrigin.Begin);
 
                     pe.Payload.CopyTo(data);
                     fs.Write(data, 0, data.Length);
@@ -214,27 +222,54 @@ namespace Hubble.Core.Store
 
                     if (_StoreLength <= 0)
                     {
-                        _StoreLength = data.Length + sizeof(long);
+                        _StoreLength = data.Length + sizeof(int);
                     }
+
+                    if (data.Length == 0)
+                    {
+                        _DocumentsCount += _PayloadEntities.Count;
+
+                        using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
+                        {
+                            //Seek to end of head
+                            fs.Seek(HeadLength, System.IO.SeekOrigin.Begin);
+                            
+                            //Write last doc id
+                            byte[] buf = BitConverter.GetBytes((int)_PayloadEntities[_PayloadEntities.Count - 1].DocId);
+                            fs.Write(buf, 0, buf.Length);
+                            
+                            //Write documents count
+                            buf = BitConverter.GetBytes((int)_DocumentsCount);
+                            fs.Write(buf, 0, buf.Length);
+                        }
+
+                        _PayloadEntities.Clear();
+
+                        return;
+                    }
+
 
                     using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Append, System.IO.FileAccess.Write))
                     {
                         fs.Seek(0, System.IO.SeekOrigin.End);
 
-                        int fileIndex = (int)((fs.Length - HeadLength) / _StoreLength); 
+                        int fileIndex = (int)((fs.Length - HeadLength) / _StoreLength);
 
                         foreach (PayloadEntity pe in _PayloadEntities)
                         {
-                            byte[] buf = BitConverter.GetBytes((long)pe.DocId);
+                            byte[] buf = BitConverter.GetBytes((int)pe.DocId);
                             fs.Write(buf, 0, buf.Length);
 
                             pe.Payload.CopyTo(data);
 
                             fs.Write(data, 0, data.Length);
 
-                            pe.Payload.FileIndex = fileIndex;
+                            pe.PayloadProvider.SetFileIndex(pe.DocId, fileIndex);
+                            //pe.Payload.FileIndex = fileIndex;
                             fileIndex++;
                         }
+
+                        _DocumentsCount += _PayloadEntities.Count;
 
                         _PayloadEntities.Clear();
                     }
@@ -253,11 +288,19 @@ namespace Hubble.Core.Store
             OnMessageEvent = ProcessMessage;
         }
 
-        public Dictionary<int, Data.Payload> Open(List<Data.Field> fields, int payloadLength, out int lastDocId)
+        internal int DocumentsCount
+        {
+            get
+            {
+                return _DocumentsCount;
+            }
+        }
+
+        internal PayloadProvider Open(List<Data.Field> fields, int payloadLength, out int lastDocId)
         {
             lastDocId = -1;
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
-            Dictionary<int, Data.Payload> docPayload = new Dictionary<int, Hubble.Core.Data.Payload>();
+            PayloadProvider docPayload = new PayloadProvider();
 
             foreach (Data.Field field in fields)
             {
@@ -275,7 +318,7 @@ namespace Hubble.Core.Store
 
             if (_StoreLength <= 0)
             {
-                _StoreLength = payloadLength * 4 + sizeof(long);
+                _StoreLength = payloadLength * 4 + sizeof(int);
             }
 
             using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Read))
@@ -284,6 +327,11 @@ namespace Hubble.Core.Store
                 Hubble.Framework.Serialization.BinSerialization.DeserializeBinary(fs, out obj);
 
                 PayloadFileHead fileHead = (PayloadFileHead)obj;
+
+                if (fileHead.Version[1] < 8 || (fileHead.Version[1] == 8 && fileHead.Version[2] == 0 && fileHead.Version[3] < 4))
+                {
+                    throw new Data.DataException("Index file version is less then V0.8.0.4, you have to rebuild the index");
+                }
 
                 for (int i = 0; i < head.FieldMD5.Length; i++)
                 {
@@ -300,11 +348,22 @@ namespace Hubble.Core.Store
                 {
                     int fileIndex = (int)((fs.Position - HeadLength) / _StoreLength);
 
-                    byte[] buf = new byte[sizeof(long)];
+                    byte[] buf = new byte[sizeof(int)];
 
                     fs.Read(buf, 0, buf.Length);
 
-                    lastDocId = (int)BitConverter.ToInt64(buf, 0);
+                    lastDocId = (int)BitConverter.ToInt32(buf, 0);
+
+                    if (payloadLength == 0)
+                    {
+                        buf = new byte[sizeof(int)];
+
+                        fs.Read(buf, 0, buf.Length);
+
+                        _DocumentsCount = (int)BitConverter.ToInt32(buf, 0);
+
+                        return docPayload;
+                    }
 
                     byte[] byteData = new byte[payloadLength * 4];
                     fs.Read(byteData, 0, byteData.Length);
@@ -315,7 +374,11 @@ namespace Hubble.Core.Store
 
                     payload.FileIndex = fileIndex;
 
-                    docPayload.Add(lastDocId, payload);
+                    if (payloadLength > 0)
+                    {
+                        docPayload.Add(lastDocId, payload);
+                        _DocumentsCount++;
+                    }
                 }
 
                 GC.Collect();
@@ -324,7 +387,7 @@ namespace Hubble.Core.Store
             }
         }
 
-        public void Create(List<Data.Field> fields)
+        internal void Create(List<Data.Field> fields)
         {
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
 
@@ -354,23 +417,23 @@ namespace Hubble.Core.Store
             }
         }
 
-        public void Add(int docId, Hubble.Core.Data.Payload payLoad)
+        internal void Add(int docId, Hubble.Core.Data.Payload payLoad, PayloadProvider payloadProvider)
         {
-            ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad));
+            ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad, payloadProvider));
         }
 
-        public void Collect()
+        internal void Collect()
         {
             ASendMessage((int)Event.Collect, null);
         }
 
-        public void Update(IList<int> docIds, IList<Data.Payload> payloads)
+        internal void Update(IList<int> docIds, IList<Data.Payload> payloads, PayloadProvider payloadProvider)
         {
             List<PayloadEntity> peList = new List<PayloadEntity>();
 
             for (int i = 0; i < docIds.Count; i++)
             {
-                peList.Add(new PayloadEntity(docIds[i], payloads[i]));
+                peList.Add(new PayloadEntity(docIds[i], payloads[i], payloadProvider));
             }
 
             SSendMessage((int)Event.Update, peList, int.MaxValue);

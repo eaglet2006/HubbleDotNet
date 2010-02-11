@@ -19,16 +19,41 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Hubble.Core.Data
 {
     /// <summary>
     /// Payload of each document
     /// </summary>
-    public class Payload
+    [StructLayout(LayoutKind.Explicit)]
+    struct Payload
     {
+        [FieldOffset(0)]
         public int FileIndex;
+        [FieldOffset(4)]
         public int[] Data;
+
+        unsafe public Payload(int fileIndex, int* data, int length)
+        {
+            Data = new int[length];
+
+            for (int i = 0; i < Data.Length; i++)
+            {
+                Data[i] = data[i];
+            }
+
+            //data.CopyTo(this.Data, 0);
+            this.FileIndex = fileIndex;
+        }
+
+
+        public Payload(int fileIndex, int[] data)
+        {
+            Data = new int[data.Length];
+            data.CopyTo(this.Data, 0);
+            this.FileIndex = fileIndex;
+        }
 
         public Payload(int dataLength)
         {
@@ -39,7 +64,8 @@ namespace Hubble.Core.Data
         public Payload(int[] data)
         {
             FileIndex = -1;
-            Data = data;
+            Data = new int[data.Length];
+            data.CopyTo(this.Data, 0);
         }
 
         /// <summary>
@@ -47,7 +73,7 @@ namespace Hubble.Core.Data
         /// </summary>
         /// <param name="tabIndex">tab index</param>
         /// <returns>count</returns>
-        public int WordCount(int tabIndex)
+        public int GetWordCount(int tabIndex)
         {
             return Data[tabIndex];
         }

@@ -56,11 +56,12 @@
             this.treeViewData = new System.Windows.Forms.TreeView();
             this.contextMenuStripTree = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tableInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rebuildTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
-            this.rebuildTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -305,26 +306,34 @@
             this.tableInfoToolStripMenuItem,
             this.rebuildTableToolStripMenuItem,
             this.toolStripMenuItem1,
-            this.refreshToolStripMenuItem});
+            this.refreshToolStripMenuItem,
+            this.troubleshooterToolStripMenuItem});
             this.contextMenuStripTree.Name = "contextMenuStripTree";
-            this.contextMenuStripTree.Size = new System.Drawing.Size(153, 98);
+            this.contextMenuStripTree.Size = new System.Drawing.Size(153, 120);
             // 
             // tableInfoToolStripMenuItem
             // 
             this.tableInfoToolStripMenuItem.Name = "tableInfoToolStripMenuItem";
-            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.tableInfoToolStripMenuItem.Text = "Table Info";
             this.tableInfoToolStripMenuItem.Click += new System.EventHandler(this.tableInfoToolStripMenuItem_Click);
+            // 
+            // rebuildTableToolStripMenuItem
+            // 
+            this.rebuildTableToolStripMenuItem.Name = "rebuildTableToolStripMenuItem";
+            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.rebuildTableToolStripMenuItem.Text = "Rebuild Table";
+            this.rebuildTableToolStripMenuItem.Click += new System.EventHandler(this.rebuildTableToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(135, 6);
             // 
             // refreshToolStripMenuItem
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
@@ -336,18 +345,20 @@
             this.imageListTreeView.Images.SetKeyName(1, "Table");
             this.imageListTreeView.Images.SetKeyName(2, "Folder");
             this.imageListTreeView.Images.SetKeyName(3, "DB.PNG");
+            this.imageListTreeView.Images.SetKeyName(4, "QDatabase.png");
+            this.imageListTreeView.Images.SetKeyName(5, "QTable.png");
             // 
             // openFileDialogSql
             // 
             this.openFileDialogSql.Filter = "SQL|*.sql";
             this.openFileDialogSql.RestoreDirectory = true;
             // 
-            // rebuildTableToolStripMenuItem
+            // troubleshooterToolStripMenuItem
             // 
-            this.rebuildTableToolStripMenuItem.Name = "rebuildTableToolStripMenuItem";
-            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.rebuildTableToolStripMenuItem.Text = "Rebuild Table";
-            this.rebuildTableToolStripMenuItem.Click += new System.EventHandler(this.rebuildTableToolStripMenuItem_Click);
+            this.troubleshooterToolStripMenuItem.Name = "troubleshooterToolStripMenuItem";
+            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.troubleshooterToolStripMenuItem.Text = "Troubleshooter";
+            this.troubleshooterToolStripMenuItem.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -418,6 +429,7 @@
         private System.Windows.Forms.ToolStripComboBox toolStripComboBoxDatabases;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem rebuildTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem troubleshooterToolStripMenuItem;
     }
 }
 

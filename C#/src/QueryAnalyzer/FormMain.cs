@@ -31,6 +31,22 @@ namespace QueryAnalyzer
 {
     public partial class FormMain : Form
     {
+        struct TableInfo
+        {
+            public string TableName;
+            public string InitError;
+
+            public TableInfo(string tableName, string initError)
+            {
+                TableName = tableName;
+                InitError = initError;
+            }
+
+            public override string ToString()
+            {
+                return "Table";
+            }
+        }
         
 
         public FormMain()
@@ -47,20 +63,29 @@ namespace QueryAnalyzer
         {
             databaseNode.Nodes.Clear();
 
-            foreach (string tableName in GetTables(databaseNode.Text))
+            foreach (TableInfo tableInfo in GetTables(databaseNode.Text))
             {
-                int index = tableName.IndexOf(databaseNode.Text, 0, StringComparison.CurrentCultureIgnoreCase);
+                int index = tableInfo.TableName.IndexOf(databaseNode.Text, 0, StringComparison.CurrentCultureIgnoreCase);
 
-                string tName = tableName;
+                string tName = tableInfo.TableName;
 
                 if (index >= 0)
                 {
-                    tName = tableName.Substring(databaseNode.Text.Length + 1);
+                    tName = tableInfo.TableName.Substring(databaseNode.Text.Length + 1);
                 }
 
                 TreeNode tableNode = new TreeNode(tName);
-                tableNode.Tag = "Table";
-                tableNode.ImageIndex = 1;
+                tableNode.Tag = tableInfo;
+
+                if (string.IsNullOrEmpty(tableInfo.InitError))
+                {
+                    tableNode.ImageIndex = 1;
+                }
+                else
+                {
+                    tableNode.ImageIndex = 5;
+                }
+                
                 tableNode.SelectedImageIndex = tableNode.ImageIndex;
                 databaseNode.Nodes.Add(tableNode);
             }
@@ -108,14 +133,14 @@ namespace QueryAnalyzer
             }
         }
 
-        private IEnumerable<string> GetTables(string databaseName)
+        private IEnumerable<TableInfo> GetTables(string databaseName)
         {
             QueryResult result = GlobalSetting.DataAccess.Excute(string.Format("exec sp_tablelist '{0}'",
                 databaseName.Replace("'", "''")));
 
             foreach (DataRow row in result.DataSet.Tables[0].Rows)
             {
-                yield return row["TableName"].ToString();
+                yield return new TableInfo(row["TableName"].ToString(), row["InitError"].ToString());
             }
         }
 
@@ -249,6 +274,17 @@ namespace QueryAnalyzer
             {
                 try
                 {
+                    troubleshooterToolStripMenuItem.Enabled = false;
+
+                    if (treeViewData.SelectedNode.Tag.ToString() == "Table")
+                    {
+                        TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+                        if (!string.IsNullOrEmpty(tableInfo.InitError))
+                        {
+                            troubleshooterToolStripMenuItem.Enabled = true;
+                        }
+                    }
+
                     tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
                     rebuildTableToolStripMenuItem.Enabled = tableInfoToolStripMenuItem.Enabled;
 
@@ -270,83 +306,125 @@ namespace QueryAnalyzer
 
         private void tableInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string tableName = treeViewData.SelectedNode.Text;
+            try
+            {
+                string tableName = treeViewData.SelectedNode.Text;
 
-            FormTableInfo frmTableInfo = new FormTableInfo();
-            frmTableInfo.TableName = tableName;
-            frmTableInfo.DataAccess = GlobalSetting.DataAccess;
-            frmTableInfo.ShowDialog();
+                FormTableInfo frmTableInfo = new FormTableInfo();
+                frmTableInfo.TableName = tableName;
+                frmTableInfo.DataAccess = GlobalSetting.DataAccess;
+                frmTableInfo.ShowDialog();
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void refreshToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (treeViewData.SelectedNode.Tag.ToString() == "Server")
+            try
             {
-                ShowTree();
+                if (treeViewData.SelectedNode.Tag.ToString() == "Server")
+                {
+                    ShowTree();
+                }
+                else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
+                {
+                    ShowTables(treeViewData.SelectedNode);
+                }
             }
-            else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
+            catch (Exception e1)
             {
-                ShowTables(treeViewData.SelectedNode);
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void openOToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (openFileDialogSql.ShowDialog() == DialogResult.OK)
+            try
             {
-                string sqlText = Hubble.Framework.IO.File.ReadFileToString(
-                    openFileDialogSql.FileName, Encoding.UTF8);
-
-                if (sqlText.Length > textBoxSql.MaxLength)
+                if (openFileDialogSql.ShowDialog() == DialogResult.OK)
                 {
-                    MessageBox.Show(string.Format("SQL file length large then {0}. It will be truncated", textBoxSql.MaxLength),
-                        "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    string sqlText = Hubble.Framework.IO.File.ReadFileToString(
+                        openFileDialogSql.FileName, Encoding.UTF8);
 
-                    sqlText = sqlText.Substring(0, textBoxSql.MaxLength);
+                    if (sqlText.Length > textBoxSql.MaxLength)
+                    {
+                        MessageBox.Show(string.Format("SQL file length large then {0}. It will be truncated", textBoxSql.MaxLength),
+                            "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+                        sqlText = sqlText.Substring(0, textBoxSql.MaxLength);
+                    }
+
+                    textBoxSql.Text = sqlText;
                 }
-
-                textBoxSql.Text = sqlText;
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void batchInsertToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (openFileDialogSql.ShowDialog() == DialogResult.OK)
+            try
             {
-                BatchInsert batchInsert = new BatchInsert();
+                if (openFileDialogSql.ShowDialog() == DialogResult.OK)
+                {
+                    BatchInsert batchInsert = new BatchInsert();
 
-                FormWaittingGetTotalRecords frmWatting = new FormWaittingGetTotalRecords();
+                    FormWaittingGetTotalRecords frmWatting = new FormWaittingGetTotalRecords();
 
-                frmWatting.Show();
+                    frmWatting.Show();
 
-                int totalRecords = batchInsert.GetTotalRecords(openFileDialogSql.FileName,
-                    frmWatting.GetTotalRecordsDelegate);
+                    int totalRecords = batchInsert.GetTotalRecords(openFileDialogSql.FileName,
+                        frmWatting.GetTotalRecordsDelegate);
 
-                frmWatting.Close();
+                    frmWatting.Close();
 
-                FormBatchInsert frmBatchInsert = new FormBatchInsert();
+                    FormBatchInsert frmBatchInsert = new FormBatchInsert();
 
-                frmBatchInsert.TotalRecords = totalRecords;
-                frmBatchInsert.DataAccess = GlobalSetting.DataAccess;
-                frmBatchInsert.FileName = openFileDialogSql.FileName;
-                frmBatchInsert.BatchInsert = batchInsert;
-                frmBatchInsert.ShowDialog();
+                    frmBatchInsert.TotalRecords = totalRecords;
+                    frmBatchInsert.DataAccess = GlobalSetting.DataAccess;
+                    frmBatchInsert.FileName = openFileDialogSql.FileName;
+                    frmBatchInsert.BatchInsert = batchInsert;
+                    frmBatchInsert.ShowDialog();
+                }
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void performanceToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FormPerformance frmPerformance = new FormPerformance();
-            frmPerformance.DataAccess = GlobalSetting.DataAccess;
-            frmPerformance.ShowDialog();
+            try
+            {
+                FormPerformance frmPerformance = new FormPerformance();
+                frmPerformance.DataAccess = GlobalSetting.DataAccess;
+                frmPerformance.ShowDialog();
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void treeViewData_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            if ((string)e.Node.Tag == "Database" && e.Node.Nodes.Count <= 0)
+            try
             {
-                ShowTables(e.Node);
-                e.Node.Expand();
+                if (e.Node.Tag.ToString() == "Database" && e.Node.Nodes.Count <= 0)
+                {
+                    ShowTables(e.Node);
+                    e.Node.Expand();
+                }
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -376,8 +454,27 @@ namespace QueryAnalyzer
         {
             FormRebuildTable frmRebuildTable = new FormRebuildTable();
             frmRebuildTable.TableName = treeViewData.SelectedNode.Text;
-            frmRebuildTable.DataAccess = GlobalSetting.DataAccess; 
+            frmRebuildTable.DataAccess = GlobalSetting.DataAccess;
+            TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+            if (!string.IsNullOrEmpty(tableInfo.InitError))
+            {
+                frmRebuildTable.InitError = true;
+            }
+
             frmRebuildTable.ShowDialog();
+        }
+
+        private void troubleshooterToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (treeViewData.SelectedNode.Tag.ToString() == "Table")
+            {
+                TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+                if (!string.IsNullOrEmpty(tableInfo.InitError))
+                {
+                    FormTroubleshooter frmTroubleshooter = new FormTroubleshooter();
+                    frmTroubleshooter.ShowDialog(tableInfo.InitError);
+                }
+            }
         }
 
     }

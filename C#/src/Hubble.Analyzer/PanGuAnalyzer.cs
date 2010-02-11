@@ -12,6 +12,8 @@ namespace Hubble.Analyzer
     {
         static PanGu.Setting.PanGuSettings _SqlClientSetting;
 
+        ICollection<WordInfo> _Tokenes = null;
+
         private void LoadSqlClientSetting(string fileName)
         {
             if (System.IO.File.Exists(fileName))
@@ -38,10 +40,27 @@ namespace Hubble.Analyzer
 
         #region IAnalyzer Members
 
+        public int Count
+        {
+            get
+            {
+                if (_Tokenes == null)
+                {
+                    throw new Exception("Tokenes is null. Count property should be called after Tokenize");
+                }
+                else
+                {
+                    return _Tokenes.Count;
+                }
+            }
+        }
+
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
             PanGu.Segment segment = new Segment();
-            foreach (PanGu.WordInfo wi in segment.DoSegment(text))
+            _Tokenes = segment.DoSegment(text);
+
+            foreach (PanGu.WordInfo wi in _Tokenes)
             {
                 yield return new Hubble.Core.Entity.WordInfo(wi.Word, wi.Position, wi.Rank);
             }
@@ -56,10 +75,6 @@ namespace Hubble.Analyzer
             }
         }
 
-        #endregion
-
-        #region IAnalyzer Members
-
         public void Init()
         {
             LoadSqlClientSetting(PanGu.Framework.Path.GetAssemblyPath() + "PanGuSqlClient.xml");
@@ -67,6 +82,7 @@ namespace Hubble.Analyzer
         }
 
         #endregion
+
 
         #region INamedExternalReference Members
 

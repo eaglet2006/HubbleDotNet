@@ -15,8 +15,24 @@ namespace QueryAnalyzer
     public partial class FormRebuildTable : Form
     {
         internal DbAccess DataAccess { get; set; }
+
+        private bool _InitError = false;
+
         bool _Finished = false;
         bool _Stop = false;
+
+        internal bool InitError
+        {
+            get
+            {
+                return _InitError;
+            }
+
+            set
+            {
+                _InitError = value;
+            }
+        }
 
         bool Stop
         {
@@ -97,6 +113,11 @@ namespace QueryAnalyzer
                     }
                 }
 
+                if (InitError)
+                {
+                    checkBoxRebuildWholeTable.Checked = true;
+                    checkBoxRebuildWholeTable.Enabled = false;
+                }
             }
             catch (Exception e1)
             {

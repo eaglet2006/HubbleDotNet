@@ -240,15 +240,12 @@ namespace Hubble.Core.Data
             }
         }
 
-
-        public static DBProvider GetDBProvider(string tableName)
+        public static DBProvider GetDBProviderByFullName(string fullTableName)
         {
-            tableName = Setting.GetTableFullName(tableName);
-
             lock (_sLockObj)
             {
                 DBProvider dbProvider;
-                if (_DBProviderTable.TryGetValue(tableName.ToLower().Trim(), out dbProvider))
+                if (_DBProviderTable.TryGetValue(fullTableName.ToLower().Trim(), out dbProvider))
                 {
                     return dbProvider;
                 }
@@ -257,6 +254,12 @@ namespace Hubble.Core.Data
                     return null;
                 }
             }
+        }
+
+
+        public static DBProvider GetDBProvider(string tableName)
+        {
+            return GetDBProviderByFullName(Setting.GetTableFullName(tableName));
         }
 
         public static bool DBProviderExists(string tableName)
@@ -357,13 +360,17 @@ namespace Hubble.Core.Data
 
                 DBProvider dbProvider = GetDBProvider(tableName);
 
-                if (!dbProvider.Table.IndexOnly)
-                {
-                    dbProvider.DBAdapter.Drop();
-                }
 
                 if (dbProvider != null)
                 {
+                    if (dbProvider.Table != null)
+                    {
+                        if (!dbProvider.Table.IndexOnly)
+                        {
+                            dbProvider.DBAdapter.Drop();
+                        }
+                    }
+
                     try
                     {
                         dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000);
@@ -645,7 +652,7 @@ namespace Hubble.Core.Data
         private Dictionary<string, InvertedIndex> _FieldInvertedIndex = new Dictionary<string, InvertedIndex>();
         private Dictionary<string, Field> _FieldIndex = new Dictionary<string, Field>();
 
-        private Dictionary<int, Payload> _DocPayload = new Dictionary<int, Payload>(); //DocId to payload
+        private PayloadProvider _DocPayload = new PayloadProvider();
 
         private string _Directory;
 
@@ -664,12 +671,22 @@ namespace Hubble.Core.Data
         private object _ExitLock = new object();
         private bool _NeedExit = false;
         private int _BusyCount = 0;
+        
+        private string _InitError = ""; //Initialization error when table open
 
         #endregion
 
         #region Properties
 
         int _LastDocId = 0;
+
+        internal string InitError
+        {
+            get
+            {
+                return _InitError;
+            }
+        }
 
         internal int LastDocId
         {
@@ -727,6 +744,14 @@ namespace Hubble.Core.Data
             get
             {
                 return _Table.IndexOnly;
+            }
+        }
+
+        public int MaxReturnCount
+        {
+            get
+            {
+                return _Table.MaxReturnCount;
             }
         }
 
@@ -851,6 +876,21 @@ namespace Hubble.Core.Data
                 _TableLock.Enter(Lock.Mode.Mutex, 30000);
 
                 _Table.IndexOnly = value;
+                SaveTable();
+            }
+            finally
+            {
+                _TableLock.Leave();
+            }
+        }
+
+        internal void SetMaxReturnCount(int value)
+        {
+            try
+            {
+                _TableLock.Enter(Lock.Mode.Mutex, 30000);
+
+                _Table.MaxReturnCount = value;
             }
             finally
             {
@@ -956,9 +996,9 @@ namespace Hubble.Core.Data
             {
                 switch (field.IndexType)
                 {
-                    case Field.Index.Tokenized:
-                        _PayloadLength++;
-                        break;
+                    //case Field.Index.Tokenized:
+                    //    _PayloadLength++;
+                    //    break;
                     case Field.Index.Untokenized:
                         _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
                         break;
@@ -980,10 +1020,10 @@ namespace Hubble.Core.Data
 
                 switch (field.IndexType)
                 {
-                    case Field.Index.Tokenized:
-                        tabIndex = _PayloadLength;
-                        _PayloadLength++;
-                        break;
+                    //case Field.Index.Tokenized:
+                    //    tabIndex = _PayloadLength;
+                    //    _PayloadLength++;
+                    //    break;
                     case Field.Index.Untokenized:
                         tabIndex = _PayloadLength;
                         _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
@@ -994,6 +1034,54 @@ namespace Hubble.Core.Data
 
                 field.TabIndex = tabIndex;
             }
+        }
+
+        private void DeleteOptimizeFiles(string optimizeDir)
+        {
+            if (System.IO.Directory.Exists(optimizeDir))
+            {
+                foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.hdx"))
+                {
+                    System.IO.File.Delete(file);
+                }
+
+                foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.idx"))
+                {
+                    System.IO.File.Delete(file);
+                }
+            }
+        }
+
+        private void DeleteAllFiles(string dir, string optimizeDir)
+        {
+            foreach (string file in System.IO.Directory.GetFiles(dir, "*.hdx"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(dir, "*.idx"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(dir, "Payload.db"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(dir, "Delete.db"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            foreach (string file in System.IO.Directory.GetFiles(dir, "tableinfo.xml"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            //Delete optimize files
+            DeleteOptimizeFiles(optimizeDir);
+
         }
 
         private void Drop()
@@ -1010,54 +1098,23 @@ namespace Hubble.Core.Data
                     if (field.IndexType == Field.Index.Tokenized)
                     {
                         InvertedIndex invertedIndex = GetInvertedIndex(field.Name);
-                        invertedIndex.Close();
+                        if (invertedIndex != null)
+                        {
+                            invertedIndex.Close();
+                        }
                     }
                 }
 
-                _PayloadFile.Close(2000);
+                if (_PayloadFile != null)
+                {
+                    _PayloadFile.Close(2000);
+                }
 
                 string dir = Directory;
                 string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "Optimize";
 
                 //Delete files
-
-                foreach (string file in System.IO.Directory.GetFiles(dir, "*.hdx"))
-                {
-                    System.IO.File.Delete(file);
-                }
-
-                foreach (string file in System.IO.Directory.GetFiles(dir, "*.idx"))
-                {
-                    System.IO.File.Delete(file);
-                }
-
-                foreach (string file in System.IO.Directory.GetFiles(dir, "Payload.db"))
-                {
-                    System.IO.File.Delete(file);
-                }
-
-                foreach (string file in System.IO.Directory.GetFiles(dir, "Delete.db"))
-                {
-                    System.IO.File.Delete(file);
-                }
-
-                foreach (string file in System.IO.Directory.GetFiles(dir, "tableinfo.xml"))
-                {
-                    System.IO.File.Delete(file);
-                }
-
-                if (System.IO.Directory.Exists(optimizeDir))
-                {
-                    foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.hdx"))
-                    {
-                        System.IO.File.Delete(file);
-                    }
-
-                    foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.idx"))
-                    {
-                        System.IO.File.Delete(file);
-                    }
-                }
+                DeleteAllFiles(dir, optimizeDir);
 
                 ClearAll();
             }
@@ -1087,103 +1144,119 @@ namespace Hubble.Core.Data
             Table table = _Table;
             int dbMaxDocId = 0;
 
-            lock (_LockObj)
+            try
             {
-                //Get DB adapter
-                if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
+
+                lock (_LockObj)
                 {
-                    Type dbAdapterType;
+                    string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Optimize";
+                    DeleteOptimizeFiles(optimizeDir);
 
-                    if (_DBAdapterTable.TryGetValue(table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                    //Get DB adapter
+                    if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
                     {
-                        DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
-                    }
-                }
+                        Type dbAdapterType;
 
-                //init db table
-                if (DBAdapter != null)
-                {
-                    DBAdapter.Table = table;
-
-                    int TryConnectDBTimes = 5;
-
-                    for (int i = 0; i < TryConnectDBTimes; i++)
-                    {
-                        try
+                        if (_DBAdapterTable.TryGetValue(table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
                         {
-                            dbMaxDocId = DBAdapter.MaxDocId;
-                            break;
+                            DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
                         }
-                        catch (Exception e)
+                    }
+
+                    //init db table
+                    if (DBAdapter != null)
+                    {
+                        DBAdapter.Table = table;
+
+                        int TryConnectDBTimes = 5;
+
+                        for (int i = 0; i < TryConnectDBTimes; i++)
                         {
-                            if (i == TryConnectDBTimes - 1)
+                            try
                             {
-                                throw;
+                                dbMaxDocId = DBAdapter.MaxDocId;
+                                break;
                             }
-
-                            Global.Report.WriteErrorLog(string.Format("Get MaxDocId fail, Try again! Try times:{0} Err:{1}, Stack:{2}",
-                                i + 1, e.Message, e.StackTrace));
-
-                            System.Threading.Thread.Sleep(2000);
-                        }
-                    }
-                }
-                else
-                {
-                    throw new DataException(string.Format("Can't find DBAdapterTypeName : {0}",
-                        table.DBAdapterTypeName));
-                }
-
-                //Open delete provider
-                _DelProvider.Open(_Directory);
-
-                //Open payload information
-                OpenPayloadInformation(table);
-
-                //set payload file name
-                _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Payload.db";
-
-                lock (this)
-                {
-                    //Start payload message queue
-                    if (_PayloadFile == null)
-                    {
-                        _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
-
-                        //Open Payload file
-                        _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
-                        _LastDocId++;
-
-                        if (!IndexOnly)
-                        {
-                            if (_LastDocId <= dbMaxDocId)
+                            catch (Exception e)
                             {
-                                _LastDocId = dbMaxDocId + 1;
+                                if (i == TryConnectDBTimes - 1)
+                                {
+                                    throw;
+                                }
+
+                                Global.Report.WriteErrorLog(string.Format("Get MaxDocId fail, Try again! Try times:{0} Err:{1}, Stack:{2}",
+                                    i + 1, e.Message, e.StackTrace));
+
+                                System.Threading.Thread.Sleep(2000);
                             }
                         }
                     }
-                }
-
-
-                //Start payload file
-                _PayloadFile.Start();
-
-                //Add field inverted index 
-                foreach (Field field in table.Fields)
-                {
-                    if (field.IndexType == Field.Index.Tokenized)
+                    else
                     {
-                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, field.Mode, false, this);
-                        AddFieldInvertedIndex(field.Name, invertedIndex);
+                        throw new DataException(string.Format("Can't find DBAdapterTypeName : {0}",
+                            table.DBAdapterTypeName));
                     }
 
-                    AddFieldIndex(field.Name, field);
+                    //Open delete provider
+                    _DelProvider.Open(_Directory);
+
+                    //Open payload information
+                    OpenPayloadInformation(table);
+
+                    //set payload file name
+                    _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Payload.db";
+
+                    lock (this)
+                    {
+                        //Start payload message queue
+                        if (_PayloadFile == null)
+                        {
+                            _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
+
+                            //Open Payload file
+                            _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
+
+                            GC.Collect();
+
+                            _LastDocId++;
+
+                            if (!IndexOnly)
+                            {
+                                if (_LastDocId <= dbMaxDocId)
+                                {
+                                    _LastDocId = dbMaxDocId + 1;
+                                }
+                            }
+                        }
+                    }
+
+                    int documentsCount = _PayloadFile.DocumentsCount - _DelProvider.Count;
+
+                    //Start payload file
+                    _PayloadFile.Start();
+
+                    //Add field inverted index 
+                    foreach (Field field in table.Fields)
+                    {
+                        if (field.IndexType == Field.Index.Tokenized)
+                        {
+                            InvertedIndex invertedIndex = new InvertedIndex(directory,
+                                field.Name.Trim(), field.TabIndex, field.Mode, false, this, documentsCount);
+                            AddFieldInvertedIndex(field.Name, invertedIndex);
+                        }
+
+                        AddFieldIndex(field.Name, field);
+                    }
+                }
+
+                if (_QueryCache == null)
+                {
+                    _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
                 }
             }
-
-            if (_QueryCache == null)
+            catch (Exception e)
             {
-                _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
+                _InitError = e.Message + "\r\n" + e.StackTrace;
             }
         }
 
@@ -1192,7 +1265,7 @@ namespace Hubble.Core.Data
             return Query(selectFields, docs, 0, docs.Count - 1);
         }
 
-        public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
+        unsafe internal List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
         {
             List<Field> dbFields = new List<Field>();
 
@@ -1211,7 +1284,8 @@ namespace Hubble.Core.Data
             {
                 if (field.Store && field.IndexType != Field.Index.Untokenized)
                 {
-                    if (!field.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    if (!field.Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase) &&
+                        !field.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                     {
                         dbFields.Add(field);
                     }
@@ -1254,13 +1328,13 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                Payload payload;
+                int* payloadData;
 
                 lock (this)
                 {
-                    if (!_DocPayload.TryGetValue(docId, out payload))
+                    if (!_DocPayload.TryGetData(docId, out payloadData))
                     {
-                        payload = null;
+                        payloadData = null;
                     }
                 }
 
@@ -1268,12 +1342,12 @@ namespace Hubble.Core.Data
                 {
                     string value = null;
 
-                    if (payload != null)
+                    if (payloadData != null)
                     {
                         if (field.IndexType == Field.Index.Untokenized)
                         {
                             value = DataTypeConvert.GetString(field.DataType,
-                                payload.Data, field.TabIndex, field.DataLength);
+                                payloadData, field.TabIndex, field.DataLength);
                         }
                     }
                     
@@ -1300,8 +1374,22 @@ namespace Hubble.Core.Data
 
             if (dbFields.Count > 0)
             {
-                dbFields.Add(new Field("DocId", DataType.BigInt));
+                dbFields.Add(new Field("DocId", DataType.Int));
+
+#if PerformanceTest
+                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+                sw.Reset();
+                sw.Start();
+#endif
+
                 System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs, begin, end);
+                
+#if PerformanceTest
+                sw.Stop();
+
+                Console.WriteLine("DB Query elapse:" + sw.ElapsedMilliseconds + "ms");
+#endif
 
                 foreach (System.Data.DataRow row in dt.Rows)
                 {
@@ -1350,27 +1438,21 @@ namespace Hubble.Core.Data
 
             lock (this)
             {
-                Payload payload;
-                _DocPayload.TryGetValue(docId, out payload);
-
-                if (payload != null)
-                {
-                    numDocWords = payload.WordCount(tabIndex);
-                }
+                _DocPayload.TryGetWordCount(docId, tabIndex, ref numDocWords);
             }
 
             return numDocWords;
 
         }
 
-        internal Payload GetPayload(int docId)
+        internal unsafe int* GetPayloadData(int docId)
         {
             lock (this)
             {
-                Payload payload;
-                if (_DocPayload.TryGetValue(docId, out payload))
+                int* payloadData;
+                if (_DocPayload.TryGetData(docId, out payloadData))
                 {
-                    return payload;
+                    return payloadData;
                 }
                 else
                 {
@@ -1390,8 +1472,22 @@ namespace Hubble.Core.Data
             {
                 if (Setting.TableExists(directory))
                 {
-                    throw new DataException(string.Format("Table dicectory: {0} is already existed!",
-                        directory));
+                    if (!System.IO.File.Exists(Hubble.Framework.IO.Path.AppendDivision(directory, '\\') +
+                        "tableinfo.xml"))
+                    {
+                        Setting.RemoveTableConfig(directory, table.Name);
+
+                        string dir = directory;
+                        string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "Optimize";
+
+                        //Delete files
+                        DeleteAllFiles(dir, optimizeDir);
+                    }
+                    else
+                    {
+                        throw new DataException(string.Format("Table dicectory: {0} is already existed!",
+                            directory));
+                    }
                 }
 
                 _Directory = directory;
@@ -1483,7 +1579,7 @@ namespace Hubble.Core.Data
                 {
                     if (field.IndexType == Field.Index.Tokenized)
                     {
-                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, field.Mode, true, this);
+                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, field.Mode, true, this, 0);
                         AddFieldInvertedIndex(field.Name, invertedIndex);
                     }
 
@@ -1561,6 +1657,7 @@ namespace Hubble.Core.Data
                             }
 
                             fValue.Type = field.DataType;
+                            fValue.DataLength = field.DataLength;
 
                             if (fValue.Value != null)
                             {
@@ -1588,6 +1685,7 @@ namespace Hubble.Core.Data
                                 {
                                     FieldValue fv = new FieldValue(field.Name, field.DefaultValue);
                                     fv.Type = field.DataType;
+                                    fv.DataLength = field.DataLength;
                                 }
                                 else
                                 {
@@ -1646,7 +1744,7 @@ namespace Hubble.Core.Data
 
                                 int count = iIndex.Index(fValue.Value, docId, field.GetAnalyzer());
 
-                                data[field.TabIndex] = count;
+                                //data[field.TabIndex] = count;
 
                                 break;
                         }
@@ -1670,7 +1768,7 @@ namespace Hubble.Core.Data
                         _DocPayload.Add(docId, payload);
                     }
 
-                    _PayloadFile.Add(docId, payload);
+                    _PayloadFile.Add(docId, payload, _DocPayload);
                 }
                                     
                 Cache.CacheManager.InsertCount += docs.Count;
@@ -1688,7 +1786,7 @@ namespace Hubble.Core.Data
 
         }
 
-        public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
+        unsafe public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
         {
             try
             {
@@ -1847,25 +1945,31 @@ namespace Hubble.Core.Data
                     foreach (Query.DocumentResult docResult in docs)
                     {
                         int docId = docResult.DocId;
-                        Payload payLoad;
-
+                        int* payLoadData;
+                        int payLoadFileIndex;
                         lock (this)
                         {
-                            if (_DocPayload.TryGetValue(docId, out payLoad))
+                            int payLoadLength;
+                            if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
                             {
                                 foreach (PayloadSegment ps in payloadSegment)
                                 {
-                                    Array.Copy(ps.Data, 0, payLoad.Data, ps.TabIndex, ps.Data.Length);
+                                    for (int i = 0; i < ps.Data.Length; i++)
+                                    {
+                                        payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                    }
+
+                                    //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
                                 }
 
                                 updateIds.Add(docId);
-                                updatePayloads.Add(payLoad.Clone());
+                                updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
                             }
                         }
 
                         if (updateIds.Count >= 1000)
                         {
-                            _PayloadFile.Update(updateIds, updatePayloads);
+                            _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
                             updateIds.Clear();
                             updatePayloads.Clear();
                         }
@@ -1873,7 +1977,7 @@ namespace Hubble.Core.Data
 
                     if (updateIds.Count > 0)
                     {
-                        _PayloadFile.Update(updateIds, updatePayloads);
+                        _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
                     }
                 }
 
@@ -2022,92 +2126,6 @@ namespace Hubble.Core.Data
                     iIndex.StopIndexFileProxy();
                 }
             }
-        }
-
-        public System.Data.DataSet Select(string sql, int first, int length, out int count)
-        {
-            try
-            {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
-
-                Hubble.Core.Query.IQuery query;
-                count = 0;
-
-                string[] words = sql.Split(new string[] { " " }, StringSplitOptions.None);
-
-                if (words.Length <= 2)
-                {
-                    return null;
-                }
-
-                string fieldName = words[0];
-
-                query = GetQuery(words[1]);
-
-                if (query == null)
-                {
-                    throw new DataException(string.Format("Can't find the command: {0}", words[1]));
-                }
-
-                query.InvertedIndex = GetInvertedIndex(fieldName);
-
-                List<Hubble.Core.Entity.WordInfo> queryWords = new List<Hubble.Core.Entity.WordInfo>();
-
-                int position = 0;
-
-                for (int i = 2; i < words.Length; i++)
-                {
-                    Hubble.Core.Entity.WordInfo wordInfo = new Hubble.Core.Entity.WordInfo(words[i], position);
-                    queryWords.Add(wordInfo);
-                    position += words.Length + 1;
-                }
-
-                query.QueryWords = queryWords;
-                query.DBProvider = this;
-                query.TabIndex = GetField(fieldName).TabIndex;
-
-                Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
-                SFQL.Parse.WhereDictionary<int, Query.DocumentResult> docRankTbl = searcher.Search();
-
-                List<int> docs = new List<int>();
-
-                if (docRankTbl != null)
-                {
-                    count = docRankTbl.Count;
-
-                    foreach (Hubble.Core.Query.DocumentResult docResult in docRankTbl.Values)
-                    {
-                        docs.Add(docResult.DocId);
-
-                        if (docs.Count > 10)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                List<Field> selectFields = new List<Field>();
-
-                foreach (Field field in _FieldIndex.Values)
-                {
-                    selectFields.Add(field);
-                }
-
-                return new System.Data.DataSet();
-            }
-            finally
-            {
-                _TableLock.Leave();
-            }
-            //List<Query.DocumentResult> docResult = Query(selectFields, docs);
-
-            //return Document.ToDataSet(selectFields, docResult);
-
-            //foreach (Hubble.Core.Query.DocumentRank docRank in searcher.Get(first, length))
-            //{
-                
-            //}
-
         }
 
         #endregion

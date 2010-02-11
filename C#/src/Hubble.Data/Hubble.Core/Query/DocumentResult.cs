@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.InteropServices;
 
 using Serialization = Hubble.SQLClient.QueryResultSerialization;
 
@@ -65,30 +66,67 @@ namespace Hubble.Core.Query
         #endregion
     }
 
-    public class DocumentResult : IComparable<DocumentResult>
+    [StructLayout(LayoutKind.Auto)]
+    unsafe public struct DocumentResult : IComparable<DocumentResult>
     {
-        public int DocId;
         public long Score;
-        public int[] Payload;
         public long SortValue; //if SortInfoList == null, use SortValue to sort
-        public bool Asc = true; // Contain with SortValue
-        public List<SortInfo> SortInfoList = null;
+        public int* PayloadData;
+        public object Tag;
+        public List<SortInfo> SortInfoList;
+        public int DocId;
+        public bool Asc; // Contain with SortValue
+
+        public int LastPosition
+        {
+            get
+            {
+                return (int)(SortValue & 0xFFFFFFFF);
+            }
+        }
+
+        public int lastIndex
+        {
+            get
+            {
+                return (int)((SortValue / 0x100000000) & 0xFFFF);
+            }
+        }
+
+        public int LastCount
+        {
+            get
+            {
+                return (int)(SortValue / 0x1000000000000);
+            }
+        }
 
         public DocumentResult(int docId)
             :this(docId, 1)
         {
         }
 
+        public DocumentResult(int docId, long score, object tag, int lastPostion, int lastCount, int lastIndex)
+            : this(docId, score, (int*)null)
+        {
+            Tag = tag;
+            SortValue = lastCount * 0x1000000000000 + lastIndex * 0x100000000 + lastPostion;
+        }
+
         public DocumentResult(int docId, long score)
-            : this(docId, score, null)
+            : this(docId, score, (int*)null)
         {
         }
 
-        public DocumentResult(int docId, long score, int[] payload)
+        public DocumentResult(int docId, long score, int* payload)
         {
             DocId = docId;
             Score = score;
-            Payload = payload;
+            PayloadData = payload;
+            SortValue = 0;
+            Asc = true;
+            SortInfoList = null;
+            Tag = null;
         }
 
         public void Serialize(System.IO.Stream stream)

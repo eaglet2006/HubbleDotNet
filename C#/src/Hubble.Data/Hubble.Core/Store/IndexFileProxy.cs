@@ -25,8 +25,10 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.Store
 {
-    public class IndexFileProxy : MessageQueue, IIndexFile
+    public class IndexFileProxy : /*MessageQueue,*/ IIndexFile
     {
+        const int Timeout = 5 * 60 * 1000;
+
         enum Event
         {
             Add = 1,
@@ -40,8 +42,9 @@ namespace Hubble.Core.Store
         {
             string _Word;
             int _TotalDocs;
+            int _MaxReturnCount = -1;
             private Data.DBProvider _DBProvider;
-            private int _TabIndex;
+            //private int _TabIndex;
 
             public string Word
             {
@@ -59,6 +62,14 @@ namespace Hubble.Core.Store
                 }
             }
 
+            public int MaxReturnCount
+            {
+                get
+                {
+                    return _MaxReturnCount;
+                }
+            }
+
             public Data.DBProvider DBProvider
             {
                 get
@@ -67,21 +78,21 @@ namespace Hubble.Core.Store
                 }
             }
 
-            public int TabIndex
-            {
-                get
-                {
-                    return _TabIndex;
-                }
-            }
+            //public int TabIndex
+            //{
+            //    get
+            //    {
+            //        return _TabIndex;
+            //    }
+            //}
 
-            public GetInfo(string word, int totalDocs, Data.DBProvider dbProvider, 
-                int tabIndex)
+            public GetInfo(string word, int totalDocs, Data.DBProvider dbProvider, int maxReturnCount)
             {
                 _Word = word;
                 _TotalDocs = totalDocs;
                 _DBProvider = dbProvider;
-                _TabIndex = tabIndex;
+                _MaxReturnCount = maxReturnCount;
+                //_TabIndex = tabIndex;
             }
         }
 
@@ -118,15 +129,17 @@ namespace Hubble.Core.Store
         {
             public class MergeFilePosition
             {
-                public IndexFile.FilePosition MergedFilePostion;
+                internal IndexFile.FilePosition MergedFilePostion;
 
-                public List<IndexFile.FilePosition> FilePostionList;
+                internal string Word;
 
-                public MergeFilePosition(IndexFile.FilePosition filePostion,
-                     List<IndexFile.FilePosition> pList)
+                //internal WordFilePositionList FilePostionList;
+
+                internal MergeFilePosition(IndexFile.FilePosition filePostion, string word)
                 {
                     MergedFilePostion = filePostion;
-                    FilePostionList = pList;
+                    //FilePostionList = pList;
+                    this.Word = word;
                 }
 
             }
@@ -280,9 +293,9 @@ namespace Hubble.Core.Store
                 }
             }
 
-            private List<IndexFile.FilePosition> _FilePositionList;
+            private WordFilePositionList _FilePositionList;
 
-            public List<IndexFile.FilePosition> FilePositionList
+            internal WordFilePositionList FilePositionList
             {
                 get
                 {
@@ -290,21 +303,21 @@ namespace Hubble.Core.Store
                 }
             }
 
-            private List<IndexFile.FilePosition> _OrginalFilePositionList;
+            //private WordFilePositionList _OrginalFilePositionList;
 
-            public List<IndexFile.FilePosition> OrginalFilePositionList
-            {
-                get
-                {
-                    return _OrginalFilePositionList;
-                }
-            }
+            //internal WordFilePositionList OrginalFilePositionList
+            //{
+            //    get
+            //    {
+            //        return _OrginalFilePositionList;
+            //    }
+            //}
 
-            public MergedWordFilePostionList(string word, List<IndexFile.FilePosition> orginal)
+            internal MergedWordFilePostionList(string word)
             {
                 _Word = word;
-                _OrginalFilePositionList = orginal;
-                _FilePositionList = new List<IndexFile.FilePosition>();
+                //_OrginalFilePositionList = orginal;
+                _FilePositionList = new WordFilePositionList();
             }
 
             #region IComparable<WordFilePostionList> Members
@@ -376,9 +389,9 @@ namespace Hubble.Core.Store
                 }
             }
 
-            private List<IndexFile.FilePosition> _FilePositionList;
+            private WordFilePositionList _FilePositionList;
 
-            public List<IndexFile.FilePosition> FilePositionList
+            internal WordFilePositionList FilePositionList
             {
                 get
                 {
@@ -389,7 +402,7 @@ namespace Hubble.Core.Store
             public WordFilePostionList(string word)
             {
                 _Word = word;
-                _FilePositionList = new List<IndexFile.FilePosition>();
+                _FilePositionList = new WordFilePositionList();
             }
 
             #region IComparable<WordFilePostionList> Members
@@ -444,7 +457,7 @@ namespace Hubble.Core.Store
 
         private IndexFile _IndexFile;
 
-        private Dictionary<string, List<IndexFile.FilePosition>> _WordFilePositionTable = new Dictionary<string, List<IndexFile.FilePosition>>();
+        private WordFilePositionProvider _WordFilePositionTable = new WordFilePositionProvider();
 
         private int _WordCount = 0;
 
@@ -475,22 +488,22 @@ namespace Hubble.Core.Store
             }
         }
 
-        private Index.DelegateWordUpdate _WordUpdateDelegate;
+        //private Index.DelegateWordUpdate _WordUpdateDelegate;
 
         #region Public properties
 
-        public Index.DelegateWordUpdate WordUpdateDelegate
-        {
-            get
-            {
-                return _WordUpdateDelegate;
-            }
+        //public Index.DelegateWordUpdate WordUpdateDelegate
+        //{
+        //    get
+        //    {
+        //        return _WordUpdateDelegate;
+        //    }
 
-            set
-            {
-                _WordUpdateDelegate = value;
-            }
-        }
+        //    set
+        //    {
+        //        _WordUpdateDelegate = value;
+        //    }
+        //}
 
         public int WordTableSize
         {
@@ -514,9 +527,9 @@ namespace Hubble.Core.Store
 
         #endregion
 
-        private List<IndexFile.FilePosition> GetFilePositionListByWord(string word)
+        private WordFilePositionList GetFilePositionListByWord(string word)
         {
-            List<IndexFile.FilePosition> pList;
+            WordFilePositionList pList;
 
             if (_WordFilePositionTable.TryGetValue(word, out pList))
             {
@@ -532,7 +545,7 @@ namespace Hubble.Core.Store
         {
             foreach (IndexFile.WordFilePosition p in wordFilePostionList)
             {
-                List<IndexFile.FilePosition> pList;
+                WordFilePositionList pList;
 
                 if (_WordFilePositionTable.TryGetValue(p.Word, out pList))
                 {
@@ -540,8 +553,8 @@ namespace Hubble.Core.Store
                 }
                 else
                 {
-                    pList = new List<IndexFile.FilePosition>(1);
-                    pList.Add(p.Position);
+                    pList = new WordFilePositionList();
+                    pList.AddOnly(p.Position);
 
                     string internedWord = string.IsInterned(p.Word);
 
@@ -555,9 +568,14 @@ namespace Hubble.Core.Store
             }
 
             InnerWordTableSize = _WordFilePositionTable.Count;
+
+            GC.Collect();
+            GC.Collect();
+            GC.Collect();
+
         }
 
-        private object ProcessGetFilePositionList(int evt, MessageFlag flag, object data)
+        private object ProcessGetFilePositionList(int evt, MessageQueue.MessageFlag flag, object data)
         {
             OptimizationOption option = (OptimizationOption)data;
 
@@ -639,14 +657,14 @@ namespace Hubble.Core.Store
 
             foreach (string word in _WordFilePositionTable.Keys)
             {
-                List<IndexFile.FilePosition> pList = _WordFilePositionTable[word];
-                MergedWordFilePostionList wfpl = new MergedWordFilePostionList(word, pList);
+                WordFilePositionList pList = _WordFilePositionTable[word];
+                MergedWordFilePostionList wfpl = new MergedWordFilePostionList(word);
 
-                foreach (IndexFile.FilePosition fp in pList)
+                foreach (IndexFile.FilePosition fp in pList.Values)
                 {
                     if (fp.Serial >= begin && fp.Serial <= end)
                     {
-                        wfpl.FilePositionList.Add(new IndexFile.FilePosition(fp.Serial, fp.Position, fp.Length));
+                        wfpl.FilePositionList.AddOnly(new IndexFile.FilePosition(fp.Serial, fp.Position, fp.Length));
                     }
                 }
 
@@ -664,11 +682,13 @@ namespace Hubble.Core.Store
                 serial = 1;
             }
 
+
+
             return new MergeInfos(_IndexFile.GetHeadFileName(serial),
                 _IndexFile.GetIndexFileName(serial), result, begin, end, serial);
         }
 
-        private void ProcessMergeAck(int evt, MessageFlag flag, object data)
+        private void ProcessMergeAck(int evt, MessageQueue.MessageFlag flag, object data)
         {
             MergeAck mergeAck = (MergeAck)data;
 
@@ -721,7 +741,15 @@ namespace Hubble.Core.Store
 
             foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
             {
-                List<IndexFile.FilePosition> pList = mfp.FilePostionList;
+                //WordFilePositionList pList = mfp.FilePostionList;
+
+                WordFilePositionList pList = _WordFilePositionTable[mfp.Word];
+
+                if (pList == null)
+                {
+                    continue;
+                }
+                
                 int i = 0;
                 bool fst = true;
 
@@ -745,12 +773,14 @@ namespace Hubble.Core.Store
                         i++;
                     }
                 }
+
+                _WordFilePositionTable.Reset(pList.Word, pList.FPList);
             }
 
             _IndexFile.AfterMerge(begin, end, mergeAck.MergedSerial);
         }
 
-        private object ProcessMessage(int evt, MessageFlag flag, object data)
+        private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
         {
             try
             {
@@ -759,10 +789,10 @@ namespace Hubble.Core.Store
                     case Event.Add:
                         WordDocList wl = (WordDocList)data;
                         _IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
-                        if (WordUpdateDelegate != null)
-                        {
-                            WordUpdateDelegate(wl.Word, wl.DocList);
-                        }
+                        //if (WordUpdateDelegate != null)
+                        //{
+                        //    WordUpdateDelegate(wl.Word, wl.DocList);
+                        //}
 
                         break;
                     case Event.Collect:
@@ -791,9 +821,9 @@ namespace Hubble.Core.Store
                     case Event.Get:
                         {
                             GetInfo getInfo = data as GetInfo;
-                            List<IndexFile.FilePosition> pList = GetFilePositionListByWord(getInfo.Word);
+                            WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
                             return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
-                                getInfo.DBProvider, getInfo.TabIndex);
+                                getInfo.DBProvider, getInfo.MaxReturnCount);
                         }
                     case Event.GetFilePositionList:
                         return ProcessGetFilePositionList(evt, flag, data);
@@ -826,11 +856,11 @@ namespace Hubble.Core.Store
             : base()
         {
             _IndexMode = indexMode;
-            OnMessageEvent = ProcessMessage;
+            //OnMessageEvent = ProcessMessage;
             _IndexFile = new IndexFile(path, this);
             _IndexFile.Create(fieldName, rebuild, indexMode);
 
-            this.Start();
+            //this.Start();
         }
 
         //public void AddDocInfos(List<IndexFile.DocInfo> docInfos)
@@ -839,47 +869,162 @@ namespace Hubble.Core.Store
 
         public MergeInfos GetMergeInfos(Data.OptimizationOption option)
         {
-            return SSendMessage((int)Event.GetFilePositionList,
-                option, 30 * 1000) as MergeInfos;
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return null;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                return (MergeInfos)ProcessGetFilePositionList((int)Event.GetFilePositionList, MessageQueue.MessageFlag.None, option);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+
+
+            //return SSendMessage((int)Event.GetFilePositionList,
+            //    option, 30 * 1000) as MergeInfos;
         }
 
         public void DoMergeAck(MergeAck mergeAck)
         {
-            SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                ProcessMergeAck((int)Event.MergeAck, MessageQueue.MessageFlag.None, mergeAck);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
         }
 
         public void AddWordPositionAndDocumentPositionList(string word,
             List<Entity.DocumentPositionList> docList)
         {
-            ASendMessage((int)Event.Add, new WordDocList(word, docList));
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                _IndexFile.AddWordAndDocList(word, docList);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //ASendMessage((int)Event.Add, new WordDocList(word, docList));
         }
 
 
         public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(GetInfo getInfo)
         {
-            return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
-                Hubble.Core.Index.InvertedIndex.WordIndexReader;
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return null;
+                }
 
-            //List<IndexFile.FilePosition> pList = GetFilePositionListByWord(word);
-            //return _IndexFile.GetWordIndex(word, pList);
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
+
+                if (pList == null)
+                {
+                    return null;
+                }
+
+
+                return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                    getInfo.DBProvider, getInfo.MaxReturnCount);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
+            //    Hubble.Core.Index.InvertedIndex.WordIndexReader;
+
+            //lock (_LockObj)
+            //{
+            //    WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
+            //    return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+            //        getInfo.DBProvider, getInfo.TabIndex);
+
+            //}
         }
 
         public void Collect()
         {
-            ASendMessage((int)Event.Collect, null);
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                _IndexFile.Collect();
+
+                PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
+                _IndexFile.ClearWordFilePositionList();
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //ASendMessage((int)Event.Collect, null);
         }
 
         internal void SafelyClose()
         {
-            lock (_LockObj)
-            {
-                _NeedClose = true;
-            }
+            System.Threading.Monitor.Enter(_LockObj);
+
+            _NeedClose = true;
+
+            System.Threading.Monitor.Exit(_LockObj);
         }
 
-        new public void Close(int millisecondsTimeout)
+        internal void Close(int millisecondsTimeout)
         {
-            base.Close(millisecondsTimeout);
+            //base.Close(millisecondsTimeout);
 
             _WordFilePositionTable.Clear();
             _IndexFile.Close();
@@ -902,6 +1047,11 @@ namespace Hubble.Core.Store
         public void ImportWordFilePositionList(List<IndexFile.WordFilePosition> wordFilePositionList)
         {
             PatchWordFilePositionTable(wordFilePositionList);
+        }
+
+        public void CollectWordFilePositionList()
+        {
+            _WordFilePositionTable.Collect();
         }
 
         #endregion

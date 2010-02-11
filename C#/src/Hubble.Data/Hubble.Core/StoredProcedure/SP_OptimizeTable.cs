@@ -45,6 +45,7 @@ namespace Hubble.Core.StoredProcedure
             if (dbProvider == null)
             {
                 OutputMessage(string.Format("Table name {0} does not exist!", Parameters[0]));
+                return;
             }
             else
             {

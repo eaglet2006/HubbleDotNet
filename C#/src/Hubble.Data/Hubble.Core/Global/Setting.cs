@@ -270,6 +270,7 @@ namespace Hubble.Core.Global
                     if (tName.Equals(fullTableName, StringComparison.CurrentCultureIgnoreCase))
                     {
                         tableNameInDatabase = tName;
+                        break;
                     }
                 }
 

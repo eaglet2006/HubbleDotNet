@@ -35,97 +35,100 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
-            if (Parameters.Count < 4)
-            {
-                throw new StoredProcException("First parameter is words. Second is Table name. Third is Field name and after is docid.");
-            }
+            throw new NotImplementedException();
 
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[1]);
+            //if (Parameters.Count < 4)
+            //{
+            //    throw new StoredProcException("First parameter is words. Second is Table name. Third is Field name and after is docid.");
+            //}
 
-            if (dbProvider == null)
-            {
-                throw new StoredProcException(string.Format("Table name {0} does not exist!", Parameters[1]));
-            }
+            //Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[1]);
 
-            Hubble.Core.Index.InvertedIndex invertedIndex = dbProvider.GetInvertedIndex(Parameters[2]);
+            //if (dbProvider == null)
+            //{
+            //    throw new StoredProcException(string.Format("Table name {0} does not exist!", Parameters[1]));
+            //}
 
-            if (invertedIndex == null)
-            {
-                throw new StoredProcException(string.Format("Field: {0} isn't tokenized field!", Parameters[2]));
-            }
+            //Hubble.Core.Index.InvertedIndex invertedIndex = dbProvider.GetInvertedIndex(Parameters[2]);
 
-            Dictionary<string, bool> wordDict = new Dictionary<string, bool>();
+            //if (invertedIndex == null)
+            //{
+            //    throw new StoredProcException(string.Format("Field: {0} isn't tokenized field!", Parameters[2]));
+            //}
 
-            foreach (string word in Hubble.Framework.Text.Regx.Split(Parameters[0], @"\s+"))
-            {
-                if (wordDict.ContainsKey(word))
-                {
-                    continue;
-                }
+            //Dictionary<string, bool> wordDict = new Dictionary<string, bool>();
 
-                wordDict.Add(word, true);
-            }
+            //foreach (string word in Hubble.Framework.Text.Regx.Split(Parameters[0], @"\s+"))
+            //{
+            //    if (wordDict.ContainsKey(word))
+            //    {
+            //        continue;
+            //    }
 
-            List<long> docidList = new List<long>();
+            //    wordDict.Add(word, true);
+            //}
 
-            for (int i = 3; i < Parameters.Count; i++)
-            {
-                docidList.Add(long.Parse(Parameters[i]));
-            }
+            //List<long> docidList = new List<long>();
 
-            docidList.Sort();
+            //for (int i = 3; i < Parameters.Count; i++)
+            //{
+            //    docidList.Add(long.Parse(Parameters[i]));
+            //}
 
-            long[] docids = docidList.ToArray();
+            //docidList.Sort();
 
-            AddColumn("DocId");
-            AddColumn("Word");
-            AddColumn("Position");
+            //long[] docids = docidList.ToArray();
 
-            foreach (string word in wordDict.Keys)
-            {
-                Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = invertedIndex.GetWordIndex(word);
+            //AddColumn("DocId");
+            //AddColumn("Word");
+            //AddColumn("Position");
 
-                if (wordIndex == null)
-                {
-                    continue;
-                }
+            //foreach (string word in wordDict.Keys)
+            //{
+            //    Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = invertedIndex.GetWordIndex(word);
 
-                int j =0;
+            //    if (wordIndex == null)
+            //    {
+            //        continue;
+            //    }
 
-                for (int i = 0; i < wordIndex.Count; i++)
-                {
-                    long curDocId = wordIndex[i].DocumentId;
+            //    int j =0;
 
-                    //docids[j] does not exist in this word's document list
-                    if (curDocId > docids[j])
-                    {
-                        j++;
+            //    for (int i = 0; i < wordIndex.Count; i++)
+            //    {
+            //        long curDocId = wordIndex[i].DocumentId;
 
-                        while (j < docids.Length && wordIndex[i].DocumentId > docids[j])
-                        {
-                            j++;
-                        }
+            //        //docids[j] does not exist in this word's document list
+            //        if (curDocId > docids[j])
+            //        {
+            //            j++;
 
-                        if (j >= docids.Length)
-                        {
-                            break;
-                        }
-                    }
+            //            while (j < docids.Length && wordIndex[i].DocumentId > docids[j])
+            //            {
+            //                j++;
+            //            }
 
-                    if (curDocId == docids[j])
-                    {
-                        foreach (int position in wordIndex[i])
-                        {
-                            NewRow();
-                            OutputValue("DocId", curDocId);
-                            OutputValue("Word", word);
-                            OutputValue("Position", position);
-                        }
-                    }
-                }
-            }
+            //            if (j >= docids.Length)
+            //            {
+            //                break;
+            //            }
+            //        }
+
+            //        if (curDocId == docids[j])
+            //        {
+            //            foreach (int position in wordIndex[i])
+            //            {
+            //                NewRow();
+            //                OutputValue("DocId", curDocId);
+            //                OutputValue("Word", word);
+            //                OutputValue("Position", position);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         #endregion
+
     }
 }

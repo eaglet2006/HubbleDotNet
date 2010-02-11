@@ -37,6 +37,7 @@ namespace Hubble.Core.StoredProcedure
         public void Run()
         {
             AddColumn("TableName");
+            AddColumn("InitError");
 
             string databaseName = null;
 
@@ -49,6 +50,14 @@ namespace Hubble.Core.StoredProcedure
 
             foreach (string tableName in DBProvider.GetTables())
             {
+                DBProvider dbProvider = DBProvider.GetDBProviderByFullName(tableName);
+
+                if (dbProvider == null)
+                {
+                    continue;
+                }
+
+
                 if (databaseName != null)
                 {
                     if (tableName.IndexOf(databaseName, 0, StringComparison.CurrentCultureIgnoreCase) != 0)
@@ -57,8 +66,10 @@ namespace Hubble.Core.StoredProcedure
                     }
                 }
 
+
                 NewRow();
                 OutputValue("TableName", tableName);
+                OutputValue("InitError", dbProvider.InitError);
             }
 
         }

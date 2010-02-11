@@ -52,6 +52,12 @@ namespace Hubble.Core.Query
         /// </summary>
         bool Not { get; set; }
 
+        /// <summary>
+        /// Can load part of docs for file that configure by 
+        /// max doc count
+        /// </summary>
+        bool CanLoadPartOfDocs { get; set; }
+
         //output
         WhereDictionary<int, DocumentResult> Search();
     }

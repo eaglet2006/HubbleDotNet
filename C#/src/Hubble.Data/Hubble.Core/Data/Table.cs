@@ -43,6 +43,8 @@ namespace Hubble.Core.Data
 
         int _ForceCollectCount = 5000;
 
+        int _MaxReturnCount = 2 * 1024 * 1024;
+
         bool _IndexOnly = false;
 
         bool _QueryCacheEnabled = true;
@@ -172,6 +174,29 @@ namespace Hubble.Core.Data
                 else
                 {
                     _ForceCollectCount = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// max count when the doc id list is too many to list.
+        /// </summary>
+        public int MaxReturnCount
+        {
+            get
+            {
+                return _MaxReturnCount;
+            }
+
+            set
+            {
+                if (value <= 0)
+                {
+                    _MaxReturnCount = 2 * 1024 * 1024;
+                }
+                else
+                {
+                    _MaxReturnCount = value;
                 }
             }
         }

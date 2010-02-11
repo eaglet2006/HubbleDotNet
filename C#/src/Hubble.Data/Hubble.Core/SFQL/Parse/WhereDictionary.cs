@@ -28,6 +28,28 @@ namespace Hubble.Core.SFQL.Parse
 
         public bool ZeroResult = false;
 
+        private int _RelTotalCount = 0;
+
+        public int RelTotalCount
+        {
+            get
+            {
+                if (_RelTotalCount > this.Count)
+                {
+                    return _RelTotalCount;
+                }
+                else
+                {
+                    return this.Count;
+                }
+            }
+
+            set
+            {
+                _RelTotalCount = value;
+            }
+        }
+
         public WhereDictionary()
         {
         }

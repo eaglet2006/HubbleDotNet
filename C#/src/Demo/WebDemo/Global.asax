@@ -5,9 +5,15 @@
     void Application_Start(object sender, EventArgs e) 
     {
         // Code that runs on application startup
-
-        // Hubble.Analyzer.PanGuAnalyzer pangu = new Hubble.Analyzer.PanGuAnalyzer();
-        // pangu.Init();
+        string connectionInfo = ConfigurationManager.AppSettings["InitChineseAnalyzer"];
+        if (connectionInfo != null)
+        {
+            if (connectionInfo.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+            {
+                Hubble.Analyzer.PanGuAnalyzer pangu = new Hubble.Analyzer.PanGuAnalyzer();
+                pangu.Init();
+            }
+        }
     }
     
     void Application_End(object sender, EventArgs e) 

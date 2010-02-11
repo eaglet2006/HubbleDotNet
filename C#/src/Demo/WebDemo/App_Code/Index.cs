@@ -31,6 +31,34 @@ namespace Hubble.WebDemo
         //    return result.ToString().Trim();
         //}
 
+        private static string _TitleAnalyzerName = null;
+        private static string _ContentAnalyzerName = null;
+
+        private static void GetAnalyzerName(SqlConnection conn, string tableName)
+        {
+            if (_TitleAnalyzerName != null && _ContentAnalyzerName != null)
+            {
+                return;
+            }
+
+            string sql = string.Format("exec SP_Columns '{0}'", tableName.Replace("'", "''"));
+
+            SqlCommand cmd = new SqlCommand(sql, conn);
+
+            foreach (System.Data.DataRow row in cmd.Query().Tables[0].Rows)
+            {
+                if (row["FieldName"].ToString().Equals("Title", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    _TitleAnalyzerName = row["Analyzer"].ToString();
+                }
+
+                if (row["FieldName"].ToString().Equals("Content", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    _ContentAnalyzerName = row["Analyzer"].ToString();
+                }
+            }
+
+        }
 
         public static List<TNews> Search(String indexDir, String q, int pageLen, int pageNo, string sortBy,
             out int recCount, out long elapsedMilliseconds, out string sql)
@@ -48,14 +76,16 @@ namespace Hubble.WebDemo
 
             string connectString = connString.ConnectionString;
             System.Data.DataSet ds;
-            System.Data.DataTable titleWordsPositions;
-            System.Data.DataTable contentWordsPositions;
+            //System.Data.DataTable titleWordsPositions;
+            //System.Data.DataTable contentWordsPositions;
 
             sw.Start();
 
             using (SqlConnection conn = new SqlConnection(connectString))
             {
                 conn.Open();
+
+                GetAnalyzerName(conn, "News");
 
                 if (string.IsNullOrEmpty(sortBy))
                 {
@@ -84,8 +114,8 @@ namespace Hubble.WebDemo
                     docids[i++] = (long)row["DocId"];
                 }
              
-                titleWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Title", docids, int.MaxValue);
-                contentWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Content", docids, int.MaxValue);
+                //titleWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Title", docids, int.MaxValue);
+                //contentWordsPositions = cmd.GetWordsPositions(wordssplitbyspace, "News", "Content", docids, int.MaxValue);
             }
 
             recCount = ds.Tables[0].MinimumCapacity;
@@ -101,20 +131,45 @@ namespace Hubble.WebDemo
                 SimpleHTMLFormatter simpleHTMLFormatter =
                     new SimpleHTMLFormatter("<font color=\"red\">", "</font>");
 
-                Highlighter highlighter =
-                    new Highlighter(simpleHTMLFormatter);
+                Highlighter titleHighlighter;
+                Highlighter contentHighlighter;
 
-                //Highlighter highlighter =
-                //    new Highlighter(simpleHTMLFormatter, new PanGuAnalyzer());
+                if (_TitleAnalyzerName.Equals("PanGuSegment", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    titleHighlighter =
+                    new Highlighter(simpleHTMLFormatter, new PanGuAnalyzer());
+                }
+                else if (_TitleAnalyzerName.Equals("EnglishAnalyzer", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    titleHighlighter = new Highlighter(simpleHTMLFormatter, new Hubble.Core.Analysis.EnglishAnalyzer());
+                }
+                else
+                {
+                    titleHighlighter = new Highlighter(simpleHTMLFormatter, new Hubble.Core.Analysis.SimpleAnalyzer());
+                }
 
-                highlighter.FragmentSize = 50;
+                if (_ContentAnalyzerName.Equals("PanGuSegment", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    contentHighlighter =
+                    new Highlighter(simpleHTMLFormatter, new PanGuAnalyzer());
+                }
+                else if (_ContentAnalyzerName.Equals("EnglishAnalyzer", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    contentHighlighter = new Highlighter(simpleHTMLFormatter, new Hubble.Core.Analysis.EnglishAnalyzer());
+                }
+                else
+                {
+                    contentHighlighter = new Highlighter(simpleHTMLFormatter, new Hubble.Core.Analysis.SimpleAnalyzer());
+                }
 
-                news.Abstract = highlighter.GetBestFragment(contentWordsPositions, news.Content, (long)row["DocId"]);
-                news.TitleHighLighter = highlighter.GetBestFragment(titleWordsPositions, news.Title, (long)row["DocId"]);
+                titleHighlighter.FragmentSize = 50;
+                contentHighlighter.FragmentSize = 50;
 
+                //news.Abstract = highlighter.GetBestFragment(contentWordsPositions, news.Content, (long)row["DocId"]);
+                //news.TitleHighLighter = highlighter.GetBestFragment(titleWordsPositions, news.Title, (long)row["DocId"]);
 
-                //news.Abstract = highlighter.GetBestFragment(keywords, news.Content);
-                //news.TitleHighLighter = highlighter.GetBestFragment(keywords, news.Title);
+                news.Abstract = contentHighlighter.GetBestFragment(keywords, news.Content);
+                news.TitleHighLighter = titleHighlighter.GetBestFragment(keywords, news.Title);
                 if (string.IsNullOrEmpty(news.TitleHighLighter))
                 {
                     news.TitleHighLighter = news.Title;
