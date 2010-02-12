@@ -31,7 +31,7 @@ namespace Hubble.Core.Query
             _Query = query;
         }
 
-        public WhereDictionary<int, DocumentResult> Search()
+        public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
             return _Query.Search();
         }

@@ -1260,12 +1260,12 @@ namespace Hubble.Core.Data
             }
         }
 
-        public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs)
+        public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResultForSort> docs)
         {
             return Query(selectFields, docs, 0, docs.Count - 1);
         }
 
-        unsafe internal List<Document> Query(List<Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
+        unsafe internal List<Document> Query(List<Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end)
         {
             List<Field> dbFields = new List<Field>();
 
@@ -1786,7 +1786,7 @@ namespace Hubble.Core.Data
 
         }
 
-        unsafe public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResult> docs)
+        unsafe public void Update(IList<FieldValue> fieldValues, IList<Query.DocumentResultForSort> docs)
         {
             try
             {
@@ -1879,10 +1879,10 @@ namespace Hubble.Core.Data
                         selectFields.Add(field);
                     }
 
-                    List<Query.DocumentResult> doDocs = new List<Query.DocumentResult>();
+                    List<Query.DocumentResultForSort> doDocs = new List<Query.DocumentResultForSort>();
 
                     int i = 0;
-                    foreach (Query.DocumentResult dResult in docs)
+                    foreach (Query.DocumentResultForSort dResult in docs)
                     {
                         //int docId = dResult.DocId;
 
@@ -1942,7 +1942,7 @@ namespace Hubble.Core.Data
                     List<int> updateIds = new List<int>();
                     List<Payload> updatePayloads = new List<Payload>();
 
-                    foreach (Query.DocumentResult docResult in docs)
+                    foreach (Query.DocumentResultForSort docResult in docs)
                     {
                         int docId = docResult.DocId;
                         int* payLoadData;
@@ -2039,7 +2039,7 @@ namespace Hubble.Core.Data
 
         }
 
-        public void Delete(IList<Query.DocumentResult> docs)
+        public void Delete(IList<Query.DocumentResultForSort> docs)
         {
             if (docs.Count <= 0)
             {
@@ -2048,7 +2048,7 @@ namespace Hubble.Core.Data
 
             List<int> docIds = new List<int>();
 
-            foreach (Query.DocumentResult docResult in docs)
+            foreach (Query.DocumentResultForSort docResult in docs)
             {
                 docIds.Add(docResult.DocId);
             }

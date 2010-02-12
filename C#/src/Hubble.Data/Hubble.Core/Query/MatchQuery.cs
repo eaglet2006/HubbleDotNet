@@ -139,8 +139,8 @@ namespace Hubble.Core.Query
 
         #endregion
 
-        private void CalculateWithPosition(WhereDictionary<int, Query.DocumentResult> upDict,
-            ref WhereDictionary<int, Query.DocumentResult> docIdRank, WordIndexForQuery[] wordIndexes)
+        unsafe private void CalculateWithPosition(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
 
@@ -164,7 +164,7 @@ namespace Hubble.Core.Query
 
             if (docIdRank.Count == 0)
             {
-                docIdRank = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>(maxWordDocListCount);
+                docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(maxWordDocListCount);
             }
 
 #if PerformanceTest
@@ -221,9 +221,9 @@ namespace Hubble.Core.Query
                     {
                         docResult.Score += rank;
 
-                        WordIndexForQuery lastWordIndex = (WordIndexForQuery)docResult.Tag;
+                        //WordIndexForQuery lastWordIndex = (WordIndexForQuery)docResult.Tag;
 
-                        double queryPositionDelta = wifq.FirstPosition - lastWordIndex.FirstPosition;
+                        double queryPositionDelta = wifq.FirstPosition - docResult.LastWordIndexFirstPosition;
                         double positionDelta = docList.FirstPosition - docResult.LastPosition;
 
                         double delta = Math.Abs(queryPositionDelta - positionDelta);
@@ -241,13 +241,13 @@ namespace Hubble.Core.Query
                             delta = 1;
                         }
 
-                        delta = Math.Pow((1 / delta), ratio) * docList.Count * docResult.LastCount / 
-                            (double)(wifq.QueryCount * lastWordIndex.QueryCount);
+                        delta = Math.Pow((1 / delta), ratio) * docList.Count * docResult.LastCount /
+                            (double)(wifq.QueryCount * docResult.LastWordIndexQueryCount);
 
-                        if (i - docResult.lastIndex > 1)
+                        if (i - docResult.LastIndex > 1)
                         {
                             int sumWordRank = 10;
-                            for (int k = docResult.lastIndex + 1; k < i; k++)
+                            for (int k = docResult.LastIndex + 1; k < i; k++)
                             {
                                 sumWordRank += wordIndexes[k].WordRank;
                             }
@@ -256,7 +256,10 @@ namespace Hubble.Core.Query
                         }
 
                         docResult.Score = (long)(docResult.Score * delta);
-                        docResult.SortValue = docList.Count * 0x1000000000000 + i * 0x100000000 + docList.FirstPosition;
+                        docResult.LastIndex = (UInt16)i;
+                        docResult.LastPosition = docList.FirstPosition;
+                        docResult.LastCount = (UInt16)docList.Count;
+                        //docResult.SortValue = docList.Count * 0x1000000000000 + i * 0x100000000 + docList.FirstPosition;
 
                         docIdRank[docList.DocumentId] = docResult;
                     }
@@ -276,7 +279,7 @@ namespace Hubble.Core.Query
 
                         if (upDict == null)
                         {
-                            docResult = new DocumentResult(docList.DocumentId, rank, wifq, docList.FirstPosition, docList.Count, i);
+                            docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                             docIdRank.Add(docList.DocumentId, docResult);
                         }
                         else
@@ -285,7 +288,7 @@ namespace Hubble.Core.Query
                             {
                                 if (upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    docResult = new DocumentResult(docList.DocumentId, rank, wifq, docList.FirstPosition, docList.Count, i);
+                                    docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                                     docIdRank.Add(docList.DocumentId, docResult);
                                 }
                             }
@@ -293,7 +296,7 @@ namespace Hubble.Core.Query
                             {
                                 if (!upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    docResult = new DocumentResult(docList.DocumentId, rank, wifq, docList.FirstPosition, docList.Count, i);
+                                    docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                                     docIdRank.Add(docList.DocumentId, docResult);
                                 }
                             }
@@ -306,34 +309,35 @@ namespace Hubble.Core.Query
             {
                 List<DocumentResult> reduceDocs = new List<DocumentResult>(docIdRank.Count);
                 int lstIndex = wordIndexes.Length - 1;
-                foreach (DocumentResult dr in docIdRank.Values)
+                foreach (Core.SFQL.Parse.DocumentResultPoint drp in docIdRank.Values)
                 {
-                    DocumentResult dr1 = dr;
-                    if (dr.lastIndex != lstIndex)
+                    DocumentResult* dr = drp.pDocumentResult;
+                    //DocumentResult* dr1 = drp.pDocumentResult;
+                    if (dr->LastIndex != lstIndex)
                     {
                         int sumWordRank = 10;
-                        for (int k = dr.lastIndex + 1; k <= lstIndex; k++)
+                        for (int k = dr->LastIndex + 1; k <= lstIndex; k++)
                         {
                             sumWordRank += wordIndexes[k].WordRank;
                         }
 
                         double delta = 1 / (double)sumWordRank;
 
-                        dr1.Score = (long)((double)dr.Score * delta);
-                        reduceDocs.Add(dr1);
+                        dr->Score = (long)((double)dr->Score * delta);
+                        //reduceDocs.Add(dr1);
                     }
 
-                    if (dr.Score < 0)
+                    if (dr->Score < 0)
                     {
-                        dr1.Score = long.MaxValue / 10;
-                        reduceDocs.Add(dr1);
+                        dr->Score = long.MaxValue / 10;
+                        //reduceDocs.Add(dr1);
                     }
                 }
 
-                foreach (DocumentResult dr in reduceDocs)
-                {
-                    docIdRank[dr.DocId] = dr;
-                }
+                //foreach (DocumentResult dr in reduceDocs)
+                //{
+                //    docIdRank[dr.DocId] = dr;
+                //}
             }
 
 #if PerformanceTest
@@ -356,26 +360,31 @@ namespace Hubble.Core.Query
         }
 
 
-        private void Calculate(WhereDictionary<int, Query.DocumentResult> upDict,
-            ref WhereDictionary<int, Query.DocumentResult> docIdRank, WordIndexForQuery[] wordIndexes)
+        unsafe private void Calculate(DocumentResultWhereDictionary upDict,
+            ref DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
 
             //Get max word doc list count
             int maxWordDocListCount = 0;
+
             foreach (WordIndexForQuery wifq in wordIndexes)
             {
-                if (maxWordDocListCount < wifq.WordIndex.WordDocList.Count)
+                maxWordDocListCount += wifq.WordIndex.WordDocList.Count;
+                if (maxWordDocListCount > 32768)
                 {
-                    maxWordDocListCount = wifq.WordIndex.WordDocList.Count;
+                    break;
                 }
             }
 
-            maxWordDocListCount += maxWordDocListCount / 2;
+            //maxWordDocListCount += maxWordDocListCount / 2;
 
             if (docIdRank.Count == 0)
             {
-                docIdRank = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>(maxWordDocListCount);
+                if (maxWordDocListCount > 32768)
+                {
+                    docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(maxWordDocListCount);
+                }
             }
 
 #if PerformanceTest
@@ -426,21 +435,22 @@ namespace Hubble.Core.Query
 
                     rank = (long)wifq.FieldRank * (long)wifq.WordRank * (long)score;
 
-                    Query.DocumentResult docResult;
+                    Query.DocumentResult* pDocResult;
 
-                    if (docIdRank.TryGetValue(docList.DocumentId, out docResult))
+                    if (docIdRank.TryGetValue(docList.DocumentId, out pDocResult))
                     {
-                        docResult.Score += rank;
+                        pDocResult->Score += rank;
 
-                        docIdRank[docList.DocumentId] = docResult;
+                        //docIdRank[docList.DocumentId] = docResult;
                     }
                     else
                     {
 
                         if (upDict == null)
                         {
-                            docResult = new DocumentResult(docList.DocumentId, rank);
-                            docIdRank.Add(docList.DocumentId, docResult);
+                            //docResult = new DocumentResult(docList.DocumentId, rank);
+                            //docIdRank.Add(docList.DocumentId, docResult);
+                            docIdRank.Add(docList.DocumentId, rank);
                         }
                         else
                         {
@@ -448,16 +458,18 @@ namespace Hubble.Core.Query
                             {
                                 if (upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    docResult = new DocumentResult(docList.DocumentId, rank);
-                                    docIdRank.Add(docList.DocumentId, docResult);
+                                    //docResult = new DocumentResult(docList.DocumentId, rank);
+                                    //docIdRank.Add(docList.DocumentId, docResult);
+                                    docIdRank.Add(docList.DocumentId, rank);
                                 }
                             }
                             else
                             {
                                 if (!upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    docResult = new DocumentResult(docList.DocumentId, rank);
-                                    docIdRank.Add(docList.DocumentId, docResult);
+                                    //docResult = new DocumentResult(docList.DocumentId, rank);
+                                    //docIdRank.Add(docList.DocumentId, docResult);
+                                    docIdRank.Add(docList.DocumentId, rank);
                                 }
                             }
                         }
@@ -640,7 +652,7 @@ namespace Hubble.Core.Query
             }
         }
 
-        public WhereDictionary<int, DocumentResult> Search()
+        public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
 #if PerformanceTest
                 System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
@@ -649,7 +661,7 @@ namespace Hubble.Core.Query
                 sw.Start();
 #endif
 
-            WhereDictionary<int, DocumentResult> result = new WhereDictionary<int, DocumentResult>();
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
             if (_QueryWords.Count <= 0 || _WordIndexes.Length <= 0)
             {
@@ -710,9 +722,9 @@ namespace Hubble.Core.Query
             return result;
         }
 
-        WhereDictionary<int, DocumentResult> _UpDict;
+        Core.SFQL.Parse.DocumentResultWhereDictionary _UpDict;
 
-        public WhereDictionary<int, DocumentResult> UpDict
+        public Core.SFQL.Parse.DocumentResultWhereDictionary UpDict
         {
             get
             {

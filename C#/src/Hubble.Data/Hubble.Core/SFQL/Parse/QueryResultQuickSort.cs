@@ -102,11 +102,11 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         //Partition for QueryResultSort 
-        private static int PartitionDocumentResult(Query.DocumentResult[] array, int low, int high, int pivotIndex)
+        private static int PartitionDocumentResult(Query.DocumentResultForSort[] array, int low, int high, int pivotIndex)
         {
             if (array[pivotIndex].Asc)
             {
-                Query.DocumentResult pivotValue = array[pivotIndex];
+                Query.DocumentResultForSort pivotValue = array[pivotIndex];
                 array[pivotIndex] = array[low];
                 array[low] = pivotValue;
 
@@ -140,7 +140,7 @@ namespace Hubble.Core.SFQL.Parse
             }
             else
             {
-                Query.DocumentResult pivotValue = array[pivotIndex];
+                Query.DocumentResultForSort pivotValue = array[pivotIndex];
                 array[pivotIndex] = array[low];
                 array[low] = pivotValue;
 
@@ -178,7 +178,7 @@ namespace Hubble.Core.SFQL.Parse
         private static int Partition(T[] array, int low, int high, int pivotIndex, IComparer<T> comparer)
         {
             Array arr = array;
-            return PartitionDocumentResult((Query.DocumentResult[])arr, low, high, pivotIndex);
+            return PartitionDocumentResult((Query.DocumentResultForSort[])arr, low, high, pivotIndex);
         }
 
         public static void TopSort(T[] array, int top)
@@ -200,7 +200,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (typeof(T) != typeof(int) &&
                     typeof(T) != typeof(long) &&
-                    typeof(T) != typeof(Query.DocumentResult))
+                    typeof(T) != typeof(Query.DocumentResultForSort))
                 {
                     Array.Sort(array, 0, arrayLen);
                     return;

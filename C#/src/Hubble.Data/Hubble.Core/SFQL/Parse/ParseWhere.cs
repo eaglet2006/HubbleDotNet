@@ -66,7 +66,7 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private WhereDictionary<int, Query.DocumentResult> GetResultFromDatabase(
+        private Core.SFQL.Parse.DocumentResultWhereDictionary GetResultFromDatabase(
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
             string whereSql;
@@ -163,12 +163,12 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
-        private WhereDictionary<int, Query.DocumentResult> GetResultFromQuery(
-            SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<int, Query.DocumentResult> upDict)
+        private Core.SFQL.Parse.DocumentResultWhereDictionary GetResultFromQuery(
+            SyntaxAnalysis.ExpressionTree expressionTree, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
         {
 
-            WhereDictionary<int, Query.DocumentResult> orDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
-            WhereDictionary<int, Query.DocumentResult> andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+            Core.SFQL.Parse.DocumentResultWhereDictionary orDict = null;
+            Core.SFQL.Parse.DocumentResultWhereDictionary andDict = null;
 
             if (expressionTree.Expression.NeedReverse)
             {
@@ -533,17 +533,17 @@ namespace Hubble.Core.SFQL.Parse
         }
 
 
-        private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, WhereDictionary<int, Query.DocumentResult> upDict)
+        unsafe private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
         {
             Preprocess(expressionTree);
 
             List<int> delDocIdList = new List<int>();
 
-            foreach (Query.DocumentResult docResult in upDict.Values)
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in upDict.Values)
             {
-                if (!GetComparisionExpressionValue(docResult, expressionTree))
+                if (!GetComparisionExpressionValue(*drp.pDocumentResult, expressionTree))
                 {
-                    delDocIdList.Add(docResult.DocId);
+                    delDocIdList.Add(drp.pDocumentResult->DocId);
                 }
             }
 
@@ -607,20 +607,39 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        unsafe private WhereDictionary<int, Query.DocumentResult> MergeDict(WhereDictionary<int, Query.DocumentResult> and, WhereDictionary<int, Query.DocumentResult> or)
+        unsafe private Core.SFQL.Parse.DocumentResultWhereDictionary MergeDict(Core.SFQL.Parse.DocumentResultWhereDictionary and, Core.SFQL.Parse.DocumentResultWhereDictionary or)
         {
+            if (and == null)
+            {
+                and = new Core.SFQL.Parse.DocumentResultWhereDictionary();
+            }
+
+            if (or == null)
+            {
+                if (and.Not)
+                {
+                    return new DocumentResultWhereDictionary();
+                }
+                else
+                {
+                    return and;
+                }
+
+                //or = new DocumentResultWhereDictionary();
+            }
+
             if (and.Not)
             {
-                and = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+                and = new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
 
             if (or.Not)
             {
-                or = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+                or = new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
 
-            WhereDictionary<int, Query.DocumentResult> src;
-            WhereDictionary<int, Query.DocumentResult> dest;
+            Core.SFQL.Parse.DocumentResultWhereDictionary src;
+            Core.SFQL.Parse.DocumentResultWhereDictionary dest;
 
             if (and.Count > or.Count)
             {
@@ -633,20 +652,20 @@ namespace Hubble.Core.SFQL.Parse
                 dest = or;
             }
 
-            foreach (Query.DocumentResult docResult in src.Values)
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in src.Values)
             {
                 Query.DocumentResult dr;
-                if (dest.TryGetValue(docResult.DocId, out dr))
+                if (dest.TryGetValue(drp.pDocumentResult->DocId, out dr))
                 {
-                    dr.Score += docResult.Score;
-                    if (dr.PayloadData == null && docResult.PayloadData != null)
+                    dr.Score += drp.pDocumentResult->Score;
+                    if (dr.PayloadData == null && drp.pDocumentResult->PayloadData != null)
                     {
-                        dr.PayloadData = docResult.PayloadData;
+                        dr.PayloadData = drp.pDocumentResult->PayloadData;
                     }
                 }
                 else
                 {
-                    dest.Add(docResult.DocId, docResult);
+                    dest.Add(drp.pDocumentResult->DocId, *drp.pDocumentResult);
                 }
             }
 
@@ -663,20 +682,20 @@ namespace Hubble.Core.SFQL.Parse
             return dest;
         }
 
-        private WhereDictionary<int, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
+        private Core.SFQL.Parse.DocumentResultWhereDictionary InnerParse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
             return InnerParse(expressionTree, null);
         }
 
-        private WhereDictionary<int, Query.DocumentResult> InnerParse(SyntaxAnalysis.ExpressionTree expressionTree,
-            WhereDictionary<int, Query.DocumentResult> upDict)
+        private Core.SFQL.Parse.DocumentResultWhereDictionary InnerParse(SyntaxAnalysis.ExpressionTree expressionTree,
+            Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
         {
-            WhereDictionary<int, Query.DocumentResult> orDict = new WhereDictionary<int,Hubble.Core.Query.DocumentResult>();
-            WhereDictionary<int, Query.DocumentResult> andDict;
+            Core.SFQL.Parse.DocumentResultWhereDictionary orDict = null;
+            Core.SFQL.Parse.DocumentResultWhereDictionary andDict;
 
             if (upDict == null)
             {
-                andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+                andDict = new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
             else
             {
@@ -686,7 +705,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
-                    andDict = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+                    andDict = new Core.SFQL.Parse.DocumentResultWhereDictionary();
                 }
             }
 
@@ -732,15 +751,15 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public Query.DocumentResult[] Parse(SyntaxAnalysis.ExpressionTree expressionTree)
+        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree)
         {
             int relTotalCount;
             return Parse(expressionTree, out relTotalCount);
         }
 
-        public Query.DocumentResult[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out int relTotalCount)
+        unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out int relTotalCount)
         {
-            WhereDictionary<int, Query.DocumentResult> dict;
+            Core.SFQL.Parse.DocumentResultWhereDictionary dict;
 
             if (expressionTree == null)
             {
@@ -759,7 +778,7 @@ namespace Hubble.Core.SFQL.Parse
 
             //Sort
 
-            Query.DocumentResult[] result = new Hubble.Core.Query.DocumentResult[dict.Count];
+            Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[dict.Count];
 
 #if PerformanceTest
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
@@ -768,9 +787,9 @@ namespace Hubble.Core.SFQL.Parse
             sw.Start();
 #endif
             int i = 0;
-            foreach (Query.DocumentResult docResult in dict.Values)
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in dict.Values)
             {
-                result[i++] = docResult;
+                result[i++] = new Hubble.Core.Query.DocumentResultForSort(drp.pDocumentResult);
             }
 
 #if PerformanceTest

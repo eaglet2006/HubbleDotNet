@@ -24,32 +24,6 @@ namespace Hubble.Core.SFQL.Parse
     public class WhereDictionary<TKey, TValue> : Dictionary<int, TValue>
     //public class WhereDictionary<TKey, TValue> : Hubble.Framework.DataStructure.SortDictionary<TValue>
     {
-        public bool Not = false;
-
-        public bool ZeroResult = false;
-
-        private int _RelTotalCount = 0;
-
-        public int RelTotalCount
-        {
-            get
-            {
-                if (_RelTotalCount > this.Count)
-                {
-                    return _RelTotalCount;
-                }
-                else
-                {
-                    return this.Count;
-                }
-            }
-
-            set
-            {
-                _RelTotalCount = value;
-            }
-        }
-
         public WhereDictionary()
         {
         }
@@ -59,66 +33,66 @@ namespace Hubble.Core.SFQL.Parse
         {
         }
 
-        public WhereDictionary<int, TValue> AndMerge(WhereDictionary<int, TValue> fst, WhereDictionary<int, TValue> sec)
-        {
-            if (fst == null)
-            {
-                return sec;
-            }
+        //public WhereDictionary<int, TValue> AndMerge(WhereDictionary<int, TValue> fst, WhereDictionary<int, TValue> sec)
+        //{
+        //    if (fst == null)
+        //    {
+        //        return sec;
+        //    }
 
-            if (sec == null)
-            {
-                return fst;
-            }
+        //    if (sec == null)
+        //    {
+        //        return fst;
+        //    }
 
-            if (fst.Count > sec.Count)
-            {
-                //Swap input dictionaries
-                //Let fst count less then sec
+        //    if (fst.Count > sec.Count)
+        //    {
+        //        //Swap input dictionaries
+        //        //Let fst count less then sec
 
-                WhereDictionary<int, TValue> temp;
+        //        WhereDictionary<int, TValue> temp;
 
-                temp = fst;
-                fst = sec;
-                sec = temp;
-            }
+        //        temp = fst;
+        //        fst = sec;
+        //        sec = temp;
+        //    }
 
-            if (fst.Not && sec.Not)
-            {
-                foreach (int key in fst.Keys)
-                {
-                    if (!sec.ContainsKey(key))
-                    {
-                        sec.Add(key, fst[key]);
-                    }
-                }
+        //    if (fst.Not && sec.Not)
+        //    {
+        //        foreach (int key in fst.Keys)
+        //        {
+        //            if (!sec.ContainsKey(key))
+        //            {
+        //                sec.Add(key, fst[key]);
+        //            }
+        //        }
 
-                return sec;
-            }
-            else
-            {
-                WhereDictionary<int, TValue> yes;
-                WhereDictionary<int, TValue> not;
+        //        return sec;
+        //    }
+        //    else
+        //    {
+        //        WhereDictionary<int, TValue> yes;
+        //        WhereDictionary<int, TValue> not;
 
-                if (fst.Not)
-                {
-                    yes = sec;
-                    not = fst;
-                }
-                else
-                {
-                    yes = fst;
-                    not = sec;
-                }
+        //        if (fst.Not)
+        //        {
+        //            yes = sec;
+        //            not = fst;
+        //        }
+        //        else
+        //        {
+        //            yes = fst;
+        //            not = sec;
+        //        }
 
-                foreach (int key in not.Keys)
-                {
-                    yes.Remove(key);
-                }
+        //        foreach (int key in not.Keys)
+        //        {
+        //            yes.Remove(key);
+        //        }
 
-                return yes;
+        //        return yes;
 
-            }
-        }
+        //    }
+        //}
     }
 }

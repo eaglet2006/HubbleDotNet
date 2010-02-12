@@ -45,7 +45,7 @@ namespace Hubble.Core.Query
         /// <summary>
         /// The dictionary in up and condition. 
         /// </summary>
-        WhereDictionary<int, DocumentResult> UpDict{ get; set;}
+        Core.SFQL.Parse.DocumentResultWhereDictionary UpDict { get; set; }
 
         /// <summary>
         /// If this query need output not match result set it to true.
@@ -59,6 +59,6 @@ namespace Hubble.Core.Query
         bool CanLoadPartOfDocs { get; set; }
 
         //output
-        WhereDictionary<int, DocumentResult> Search();
+        Core.SFQL.Parse.DocumentResultWhereDictionary Search();
     }
 }

@@ -199,8 +199,8 @@ namespace Hubble.Core.Query
 
         #endregion
 
-        private void Calculate(WhereDictionary<int, Query.DocumentResult> upDict,
-            ref WhereDictionary<int, Query.DocumentResult> docIdRank, WordIndexForQuery[] wordIndexes)
+        private void Calculate(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
 
@@ -218,7 +218,7 @@ namespace Hubble.Core.Query
 
             if (docIdRank.Count == 0)
             {
-                docIdRank = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>(maxWordDocListCount);
+                docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(maxWordDocListCount);
             }
 
             //Merge
@@ -518,7 +518,7 @@ namespace Hubble.Core.Query
             }
         }
 
-        public WhereDictionary<int, DocumentResult> Search()
+        public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
 #if PerformanceTest
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
@@ -534,7 +534,7 @@ namespace Hubble.Core.Query
             sw.Start();
 #endif
 
-            WhereDictionary<int, DocumentResult> result = new WhereDictionary<int, DocumentResult>();
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
             if (_QueryWords.Count <= 0)
             {
@@ -588,9 +588,9 @@ namespace Hubble.Core.Query
             return result;
         }
 
-        WhereDictionary<int, DocumentResult> _UpDict;
+        Core.SFQL.Parse.DocumentResultWhereDictionary _UpDict;
 
-        public WhereDictionary<int, DocumentResult> UpDict
+        public Core.SFQL.Parse.DocumentResultWhereDictionary UpDict
         {
             get
             {

@@ -72,7 +72,7 @@ namespace Hubble.Core.Cache
 
     class QueryCacheDocuments
     {
-        public DocumentResult[] Documents;
+        public DocumentResultForSort[] Documents;
         public int Count;
         public int ResultLength;
 
@@ -82,7 +82,7 @@ namespace Hubble.Core.Cache
             Count = 0;
         }
 
-        public QueryCacheDocuments(int count, DocumentResult[] docResults)
+        public QueryCacheDocuments(int count, DocumentResultForSort[] docResults)
         {
             Documents = docResults;
             Count = count;
@@ -158,21 +158,21 @@ namespace Hubble.Core.Cache
             {
                 using (GZipStream g = new GZipStream(m, CompressionMode.Decompress, true))
                 {
-                    result.Documents = new DocumentResult[result.Count];
+                    result.Documents = new DocumentResultForSort[result.Count];
 
                     for (int i = 0; i < result.Count; i++)
                     {
-                        result.Documents[i] = DocumentResult.Deserialize(g);
+                        result.Documents[i] = DocumentResultForSort.Deserialize(g);
                     }
                 }
             }
             else
             {
-                result.Documents = new DocumentResult[result.Count];
+                result.Documents = new DocumentResultForSort[result.Count];
 
                 for (int i = 0; i < result.Count; i++)
                 {
-                    result.Documents[i] = DocumentResult.Deserialize(m);
+                    result.Documents[i] = DocumentResultForSort.Deserialize(m);
                 }
             }
 

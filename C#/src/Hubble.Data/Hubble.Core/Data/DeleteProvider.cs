@@ -113,7 +113,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Filter(SFQL.Parse.WhereDictionary<int, Query.DocumentResult> docIdResult)
+        public void Filter(Core.SFQL.Parse.DocumentResultWhereDictionary docIdResult)
         {
             lock (this)
             {

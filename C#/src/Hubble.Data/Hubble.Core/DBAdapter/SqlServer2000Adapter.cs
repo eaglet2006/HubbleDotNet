@@ -458,7 +458,7 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public void Update(Data.Document doc, IList<Query.DocumentResult> docs)
+        public void Update(Data.Document doc, IList<Query.DocumentResultForSort> docs)
         {
             StringBuilder sql = new StringBuilder();
 
@@ -480,7 +480,7 @@ namespace Hubble.Core.DBAdapter
                         {
                             textFieldCount++;
 
-                            foreach (Query.DocumentResult mydoc in docs)
+                            foreach (Query.DocumentResultForSort mydoc in docs)
                             {
                                 writeTextString.AppendLine(BuildWriteTextLine(Table.DBTableName,
                                     fv.FieldName, fv.Value.Replace("'", "''"), mydoc.DocId, fv.Type));
@@ -519,7 +519,7 @@ namespace Hubble.Core.DBAdapter
 
                 i = 0;
 
-                foreach (Query.DocumentResult docResult in docs)
+                foreach (Query.DocumentResultForSort docResult in docs)
                 {
                     int docId = docResult.DocId;
 
@@ -546,12 +546,12 @@ namespace Hubble.Core.DBAdapter
 
         }
 
-        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResult> docs)
+        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResultForSort> docs)
         {
             return Query(selectFields, docs, 0, docs.Count - 1);
         }
 
-        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end)
+        public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end)
         {
             StringBuilder sql = new StringBuilder();
 
@@ -603,7 +603,7 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
-        public WhereDictionary<int, Hubble.Core.Query.DocumentResult> GetDocumentResults(string where)
+        public Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(string where)
         {
             string sql;
 
@@ -616,7 +616,7 @@ namespace Hubble.Core.DBAdapter
                 sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
             }
 
-            WhereDictionary<int, Hubble.Core.Query.DocumentResult> result = new WhereDictionary<int, Hubble.Core.Query.DocumentResult>();
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {

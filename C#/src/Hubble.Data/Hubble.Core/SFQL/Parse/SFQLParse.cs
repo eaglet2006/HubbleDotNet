@@ -140,7 +140,7 @@ namespace Hubble.Core.SFQL.Parse
 
             parseWhere.Begin = update.Begin;
             parseWhere.End = update.End;
-            Query.DocumentResult[] result;
+            Query.DocumentResultForSort[] result;
 
             if (update.Where == null)
             {
@@ -184,7 +184,7 @@ namespace Hubble.Core.SFQL.Parse
 
             parseWhere.Begin = delete.Begin;
             parseWhere.End = delete.End;
-            Query.DocumentResult[] result;
+            Query.DocumentResultForSort[] result;
 
             if (delete.Where == null)
             {
@@ -542,8 +542,8 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private void GetQueryResult(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider, 
-             Query.DocumentResult[] result, List<Data.Field> selectFields, int allFieldsCount,
+        private void GetQueryResult(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider,
+             Query.DocumentResultForSort[] result, List<Data.Field> selectFields, int allFieldsCount,
             out System.Data.DataSet ds)
         {
             List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
@@ -618,7 +618,7 @@ namespace Hubble.Core.SFQL.Parse
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
-            Query.DocumentResult[] result;
+            Query.DocumentResultForSort[] result;
 
             //Query cache
             Cache.QueryCache queryCache = null;
@@ -971,8 +971,8 @@ namespace Hubble.Core.SFQL.Parse
                 SyntaxAnalysis.Select.Select select = _UnionSelects[0];
                 List<Data.Field> selectFields;
                 int allFieldsCount;
-                Query.DocumentResult[] result = new Hubble.Core.Query.DocumentResult[1];
-                result[0] = new Hubble.Core.Query.DocumentResult(int.Parse(row["DocId"].ToString()),
+                Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[1];
+                result[0] = new Hubble.Core.Query.DocumentResultForSort(int.Parse(row["DocId"].ToString()),
                     int.Parse(row["Score"].ToString()));
                 
                 string tableName = row["TableName"].ToString();

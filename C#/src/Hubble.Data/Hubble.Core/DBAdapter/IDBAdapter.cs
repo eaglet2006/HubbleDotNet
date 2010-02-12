@@ -39,12 +39,12 @@ namespace Hubble.Core.DBAdapter
 
         void Delete(IList<int> docIds);
 
-        void Update(Data.Document doc, IList<Query.DocumentResult> docs);
+        void Update(Data.Document doc, IList<Query.DocumentResultForSort> docs);
 
-        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs);
-        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResult> docs, int begin, int end);
+        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs);
+        System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end);
 
-        WhereDictionary<int, Query.DocumentResult> GetDocumentResults(string where);
+        Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(string where);
 
         int MaxDocId { get; }
 

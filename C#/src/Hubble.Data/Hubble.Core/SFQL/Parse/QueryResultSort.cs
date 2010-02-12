@@ -17,12 +17,12 @@ namespace Hubble.Core.SFQL.Parse
             _DBProvider = dbProvider;
         }
 
-        internal void Sort(Query.DocumentResult[] docResults)
+        internal void Sort(Query.DocumentResultForSort[] docResults)
         {
             Sort(docResults, -1);
         }
 
-        unsafe internal void Sort(Query.DocumentResult[] docResults, int top)
+        unsafe internal void Sort(Query.DocumentResultForSort[] docResults, int top)
         {
             if (_OrderBys.Count <= 0)
             {
@@ -39,7 +39,7 @@ namespace Hubble.Core.SFQL.Parse
                         docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
-                    QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
+                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                     return;
 
                 }
@@ -51,7 +51,7 @@ namespace Hubble.Core.SFQL.Parse
                         docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
-                    QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
+                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                     return;
                 }
                 else
@@ -84,7 +84,7 @@ namespace Hubble.Core.SFQL.Parse
                                         docResults[i].SortValue = sortInfo.IntValue;
                                     }
 
-                                    QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
+                                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                                     return;
 
                                 }
@@ -102,7 +102,7 @@ namespace Hubble.Core.SFQL.Parse
                                         docResults[i].SortValue = sortInfo.LongValue;
                                     }
 
-                                    QueryResultQuickSort<Query.DocumentResult>.TopSort(docResults, top, new Query.DocumentResultComparer());
+                                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                                     return;
 
                                 }
