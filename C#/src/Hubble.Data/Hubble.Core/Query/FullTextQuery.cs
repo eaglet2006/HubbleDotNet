@@ -630,7 +630,19 @@ namespace Hubble.Core.Query
             }
         }
 
+        bool _NoAndExpression = false;
 
+        public bool NoAndExpression
+        {
+            get
+            {
+                return _NoAndExpression;
+            }
+            set
+            {
+                _NoAndExpression = value;
+            }
+        }
         #endregion
 
 

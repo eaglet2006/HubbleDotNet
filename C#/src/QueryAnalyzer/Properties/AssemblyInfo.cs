@@ -27,7 +27,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hubble.net")]
 [assembly: AssemblyProduct("QueryAnalyzer")]
-[assembly: AssemblyCopyright("Copyright © eaglet 2009")]
+[assembly: AssemblyCopyright("Copyright © eaglet 2009-2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

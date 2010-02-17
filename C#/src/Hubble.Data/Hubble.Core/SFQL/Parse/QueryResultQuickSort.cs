@@ -208,7 +208,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             //Judge input
-            if (arrayLen <= 2 || top >= arrayLen / 2)
+            if (arrayLen <= 2 || top >= arrayLen / 2 || top <= 0)
             {
                 Array.Sort(array, 0, arrayLen, comparer);
                 return;

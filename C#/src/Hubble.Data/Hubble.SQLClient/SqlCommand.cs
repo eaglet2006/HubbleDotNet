@@ -161,6 +161,8 @@ namespace Hubble.SQLClient
 
             string tableTicks = "";
 
+            bool needCache = cacheTimeout >= 0;
+
             if (cacheTimeout >= 0)
             {
                 DateTime expireTime;
@@ -180,11 +182,19 @@ namespace Hubble.SQLClient
 
                     return _QueryResult.DataSet;
                 }
+                else
+                {
+                    if (orginalSql.Contains(";"))
+                    {
+                        //if multi select, disable data cache
+                        needCache = false;
+                    }
+                }
             }
 
             string sql = "";
 
-            if (cacheTimeout >= 0)
+            if (needCache)
             {
                 if (tableTicks == "")
                 {
@@ -201,7 +211,7 @@ namespace Hubble.SQLClient
             _QueryResult = _SqlConnection.QuerySql(sql);
 
             //Data cache
-            if (cacheTimeout >= 0)
+            if (cacheTimeout > 0 || needCache)
             {
                 if (_QueryResult.DataSet.Tables.Count >= 0)
                 {

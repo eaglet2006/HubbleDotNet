@@ -191,14 +191,16 @@ namespace Hubble.Core.Analysis
 
                 string stem = GetStem(lower);
 
-                if (lower != stem)
+                if (!string.IsNullOrEmpty(stem))
                 {
-                    Hubble.Core.Entity.WordInfo stemWord = wordinfo;
-                    stemWord.Word = stem;
-                    stemWord.Rank = StemRank;
-                    yield return stemWord;
+                    if (lower != stem)
+                    {
+                        Hubble.Core.Entity.WordInfo stemWord = wordinfo;
+                        stemWord.Word = stem;
+                        stemWord.Rank = StemRank;
+                        yield return stemWord;
+                    }
                 }
-
 
             }
         }

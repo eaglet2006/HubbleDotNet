@@ -233,6 +233,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 query.FieldRank = fieldRank;
                 query.CanLoadPartOfDocs = OrderByScore;
+                query.NoAndExpression = expressionTree.AndChild == null;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
 

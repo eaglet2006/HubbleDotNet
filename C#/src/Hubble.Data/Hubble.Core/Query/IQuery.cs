@@ -58,6 +58,8 @@ namespace Hubble.Core.Query
         /// </summary>
         bool CanLoadPartOfDocs { get; set; }
 
+        bool NoAndExpression { get; set; }
+
         //output
         Core.SFQL.Parse.DocumentResultWhereDictionary Search();
     }

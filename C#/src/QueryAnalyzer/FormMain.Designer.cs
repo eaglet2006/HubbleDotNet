@@ -37,6 +37,8 @@
             this.batchInsertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabelReport = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
@@ -49,7 +51,6 @@
             this.splitter2 = new System.Windows.Forms.Splitter();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageResults = new System.Windows.Forms.TabPage();
-            this.dataGridViewResult = new System.Windows.Forms.DataGridView();
             this.tabPageMessages = new System.Windows.Forms.TabPage();
             this.textBoxMessages = new System.Windows.Forms.TextBox();
             this.splitter1 = new System.Windows.Forms.Splitter();
@@ -59,9 +60,10 @@
             this.rebuildTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
-            this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panelResult = new System.Windows.Forms.Panel();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -69,7 +71,6 @@
             this.panel2.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabPageResults.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).BeginInit();
             this.tabPageMessages.SuspendLayout();
             this.contextMenuStripTree.SuspendLayout();
             this.SuspendLayout();
@@ -79,7 +80,8 @@
             this.menuStrip1.BackColor = System.Drawing.SystemColors.Control;
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.testToolStripMenuItem});
+            this.testToolStripMenuItem,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1016, 24);
@@ -129,6 +131,21 @@
             this.performanceToolStripMenuItem.Size = new System.Drawing.Size(135, 22);
             this.performanceToolStripMenuItem.Text = "Performance";
             this.performanceToolStripMenuItem.Click += new System.EventHandler(this.performanceToolStripMenuItem_Click);
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(40, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
@@ -238,7 +255,7 @@
             // 
             // tabPageResults
             // 
-            this.tabPageResults.Controls.Add(this.dataGridViewResult);
+            this.tabPageResults.Controls.Add(this.panelResult);
             this.tabPageResults.Location = new System.Drawing.Point(4, 22);
             this.tabPageResults.Name = "tabPageResults";
             this.tabPageResults.Padding = new System.Windows.Forms.Padding(3);
@@ -246,15 +263,6 @@
             this.tabPageResults.TabIndex = 0;
             this.tabPageResults.Text = "Results";
             this.tabPageResults.UseVisualStyleBackColor = true;
-            // 
-            // dataGridViewResult
-            // 
-            this.dataGridViewResult.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewResult.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewResult.Location = new System.Drawing.Point(3, 3);
-            this.dataGridViewResult.Name = "dataGridViewResult";
-            this.dataGridViewResult.Size = new System.Drawing.Size(870, 107);
-            this.dataGridViewResult.TabIndex = 17;
             // 
             // tabPageMessages
             // 
@@ -309,33 +317,40 @@
             this.refreshToolStripMenuItem,
             this.troubleshooterToolStripMenuItem});
             this.contextMenuStripTree.Name = "contextMenuStripTree";
-            this.contextMenuStripTree.Size = new System.Drawing.Size(153, 120);
+            this.contextMenuStripTree.Size = new System.Drawing.Size(148, 98);
             // 
             // tableInfoToolStripMenuItem
             // 
             this.tableInfoToolStripMenuItem.Name = "tableInfoToolStripMenuItem";
-            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.tableInfoToolStripMenuItem.Text = "Table Info";
             this.tableInfoToolStripMenuItem.Click += new System.EventHandler(this.tableInfoToolStripMenuItem_Click);
             // 
             // rebuildTableToolStripMenuItem
             // 
             this.rebuildTableToolStripMenuItem.Name = "rebuildTableToolStripMenuItem";
-            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.rebuildTableToolStripMenuItem.Text = "Rebuild Table";
             this.rebuildTableToolStripMenuItem.Click += new System.EventHandler(this.rebuildTableToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(135, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(144, 6);
             // 
             // refreshToolStripMenuItem
             // 
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(138, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
+            // 
+            // troubleshooterToolStripMenuItem
+            // 
+            this.troubleshooterToolStripMenuItem.Name = "troubleshooterToolStripMenuItem";
+            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.troubleshooterToolStripMenuItem.Text = "Troubleshooter";
+            this.troubleshooterToolStripMenuItem.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
             // imageListTreeView
             // 
@@ -353,12 +368,13 @@
             this.openFileDialogSql.Filter = "SQL|*.sql";
             this.openFileDialogSql.RestoreDirectory = true;
             // 
-            // troubleshooterToolStripMenuItem
+            // panelResult
             // 
-            this.troubleshooterToolStripMenuItem.Name = "troubleshooterToolStripMenuItem";
-            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.troubleshooterToolStripMenuItem.Text = "Troubleshooter";
-            this.troubleshooterToolStripMenuItem.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
+            this.panelResult.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelResult.Location = new System.Drawing.Point(3, 3);
+            this.panelResult.Name = "panelResult";
+            this.panelResult.Size = new System.Drawing.Size(870, 107);
+            this.panelResult.TabIndex = 0;
             // 
             // FormMain
             // 
@@ -387,7 +403,6 @@
             this.panel2.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabPageResults.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResult)).EndInit();
             this.tabPageMessages.ResumeLayout(false);
             this.tabPageMessages.PerformLayout();
             this.contextMenuStripTree.ResumeLayout(false);
@@ -407,7 +422,6 @@
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPageResults;
-        private System.Windows.Forms.DataGridView dataGridViewResult;
         private System.Windows.Forms.TabPage tabPageMessages;
         private System.Windows.Forms.TextBox textBoxMessages;
         private System.Windows.Forms.TextBox textBoxSql;
@@ -430,6 +444,9 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem rebuildTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem troubleshooterToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.Panel panelResult;
     }
 }
 

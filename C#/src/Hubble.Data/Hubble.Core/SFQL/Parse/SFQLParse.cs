@@ -710,7 +710,15 @@ namespace Hubble.Core.SFQL.Parse
                 QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
 
                 //qSort.Sort(result);
-                qSort.Sort(result, select.End + 1); // using part quick sort can reduce performance 40%
+
+                int sortLen = select.End + 1;
+
+                if (sortLen > 0)
+                {
+                    sortLen = ((sortLen -1) / 100 + 1) * 100;
+                }
+
+                qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
 
                 if (queryCache != null)
                 {
@@ -722,7 +730,7 @@ namespace Hubble.Core.SFQL.Parse
                     }
                     else
                     {
-                        count = Math.Min(result.Length, select.End + 1);
+                        count = Math.Min(result.Length, sortLen);
                     }
 
                     queryCache.Insert(whereSql,
@@ -900,9 +908,28 @@ namespace Hubble.Core.SFQL.Parse
             System.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
             int count = table.MinimumCapacity;
 
+            System.Data.DataTable statisticTable = new System.Data.DataTable(); //This table statistic the count of records for each tables
+
+            statisticTable.Columns.Add(new System.Data.DataColumn("TableName", typeof(string)));
+            statisticTable.Columns.Add(new System.Data.DataColumn("Count", typeof(int)));
+
+            //Statistic count of records for first table
+            System.Data.DataRow sRow = statisticTable.NewRow();
+
+            sRow["TableName"] = _UnionQueryResult[0].DataSet.Tables[0].Columns["TableName"].DefaultValue;
+            sRow["Count"] = _UnionQueryResult[0].DataSet.Tables[0].MinimumCapacity;
+            statisticTable.Rows.Add(sRow);
+
             for (int i = 1; i < _UnionQueryResult.Count; i++)
             {
                 count += _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
+
+                //Statistic count of records for this table
+                System.Data.DataRow sRow1 = statisticTable.NewRow();
+
+                sRow1["TableName"] = _UnionQueryResult[i].DataSet.Tables[0].Columns["TableName"].DefaultValue;
+                sRow1["Count"] = _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
+                statisticTable.Rows.Add(sRow1);
 
                 foreach (System.Data.DataRow srcRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
                 {
@@ -1009,6 +1036,7 @@ namespace Hubble.Core.SFQL.Parse
             finalTable.MinimumCapacity = count;
             ds = new System.Data.DataSet();
             ds.Tables.Add(finalTable);
+            ds.Tables.Add(statisticTable);
             return new QueryResult(ds);
         }
 

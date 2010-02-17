@@ -17,7 +17,7 @@ namespace Hubble.Core.SFQL.Parse
 
     unsafe public class DocumentResultWhereDictionary : WhereDictionary<int, DocumentResultPoint>, IDisposable
     {
-        const int DefaultSize = 32768;
+        public const int DefaultSize = 32768;
 
         List<IntPtr> _MemList;
         int _UnitSize;

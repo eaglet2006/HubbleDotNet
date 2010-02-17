@@ -965,7 +965,6 @@ namespace Hubble.Core.Store
                     return null;
                 }
 
-
                 return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
                     getInfo.DBProvider, getInfo.MaxReturnCount);
             }

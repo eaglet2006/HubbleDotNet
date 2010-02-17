@@ -215,20 +215,11 @@ namespace QueryAnalyzer
                     }
                 }
 
-                if (queryResult.DataSet.Tables.Count > 0)
+                MultiGridView mulitGridView = new MultiGridView(panelResult, queryResult.DataSet.Tables.Count);
+
+                for (int i = 0; i < queryResult.DataSet.Tables.Count; i++)
                 {
-                    if (queryResult.DataSet.Tables.Count == 1)
-                    {
-                        dataGridViewResult.DataSource = table;
-                    }
-                    else
-                    {
-                        dataGridViewResult.DataSource = table ;
-                    }
-                }
-                else
-                {
-                    dataGridViewResult.DataSource = null;
+                    mulitGridView.GridViewList[i].DataSource = queryResult.DataSet.Tables[i];
                 }
 
                 toolStripStatusLabelReport.Text = report.ToString();
@@ -475,6 +466,12 @@ namespace QueryAnalyzer
                     frmTroubleshooter.ShowDialog(tableInfo.InitError);
                 }
             }
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutBox aboutBox = new AboutBox();
+            aboutBox.ShowDialog();
         }
 
     }
