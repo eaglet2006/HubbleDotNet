@@ -65,6 +65,18 @@ namespace Hubble.Core.Data
         int _IndexCount = 0; //Count of IndexBuf
         int _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
         int _CurIndex = 0; //Current index of IndexBuf;
+        Field _DocIdReplaceField = null;
+
+        Dictionary<int, int> _ReplaceFieldValueIntToDocId = null;
+        Dictionary<long, int> _ReplaceFieldValueLongToDocId = null;
+
+        internal Field DocIdReplaceField
+        {
+            get
+            {
+                return _DocIdReplaceField;
+            }
+        }
 
         object _LockObj = new object();
 
@@ -145,7 +157,83 @@ namespace Hubble.Core.Data
         }
 
         public PayloadProvider()
+            :this(null)
         {
+
+        }
+
+        public PayloadProvider(Field docIdReplaceField)
+        {
+            if (docIdReplaceField != null)
+            {
+                _DocIdReplaceField = docIdReplaceField;
+
+                if (docIdReplaceField.DataType == DataType.BigInt)
+                {
+                    _ReplaceFieldValueLongToDocId = new Dictionary<long, int>();
+                }
+                else
+                {
+                    _ReplaceFieldValueIntToDocId = new Dictionary<int, int>();
+                }
+            }
+        }
+
+        internal void RemoveDocIdReplaceFieldValue(long value)
+        {
+            lock (_LockObj)
+            {
+                if (_DocIdReplaceField == null)
+                {
+                    return;
+                }
+
+                if (_DocIdReplaceField.DataType == DataType.BigInt)
+                {
+                    _ReplaceFieldValueLongToDocId.Remove(value);
+                }
+                else
+                {
+                    _ReplaceFieldValueIntToDocId.Remove((int)value);
+                }
+
+            }
+        }
+
+        public int GetDocIdByDocIdReplaceFieldValue(long value)
+        {
+            lock (_LockObj)
+            {
+                int docId = -1;
+
+                if (_DocIdReplaceField == null)
+                {
+                    throw new DataException("Can't get docid for the table that has not DocId Replace Field attribute.");
+                }
+
+                if (_DocIdReplaceField.DataType == DataType.BigInt)
+                {
+                    if (_ReplaceFieldValueLongToDocId.TryGetValue(value, out docId))
+                    {
+                        return docId;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    if (_ReplaceFieldValueIntToDocId.TryGetValue((int)value, out docId))
+                    {
+                        return docId;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+            }
         }
 
         unsafe public void SetFileIndex(int docId, int fileIndex)
@@ -247,6 +335,29 @@ namespace Hubble.Core.Data
                     return;
                 }
 
+
+                if (_DocIdReplaceField != null)
+                {
+                    if (_DocIdReplaceField.DataType == DataType.BigInt)
+                    {
+                        long value = (((long)payload.Data[_DocIdReplaceField.TabIndex]) << 32) +
+                            (uint)payload.Data[_DocIdReplaceField.TabIndex + 1];
+                        
+                        if (!_ReplaceFieldValueLongToDocId.ContainsKey(value))
+                        {
+                            _ReplaceFieldValueLongToDocId.Add(value, docId);
+                        }
+                    }
+                    else
+                    {
+                        int value = payload.Data[_DocIdReplaceField.TabIndex];
+
+                        if (!_ReplaceFieldValueIntToDocId.ContainsKey(value))
+                        {
+                            _ReplaceFieldValueIntToDocId.Add(value, docId);
+                        }
+                    }
+                }
 
                 if (_PayloadSize == 0)
                 {

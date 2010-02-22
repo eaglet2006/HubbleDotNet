@@ -230,7 +230,7 @@ namespace Hubble.Core.SFQL.Parse
             {
                 List<Field> fields = dBProvider.GetAllFields();
 
-                if (dBProvider.IndexOnly)
+                if (dBProvider.IndexOnly && dBProvider.DocIdReplaceField == null)
                 {
                     SyntaxAnalysis.Insert.InsertField insertField = new SyntaxAnalysis.Insert.InsertField();
                     insertField.Name = "docid";
@@ -314,6 +314,10 @@ namespace Hubble.Core.SFQL.Parse
                     case "indexonly":
                         table.IndexOnly = true;
                         break;
+                    case "docid":
+                        table.DocIdReplaceField = attr.Parameters[0];
+                        break;
+
                     case "forcecollectcount":
                         if (attr.Parameters.Count != 1)
                         {
@@ -423,12 +427,22 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
+            if (table.DocIdReplaceField != null)
+            {
+                if (!table.IndexOnly)
+                {
+                    throw new ParseException("DocId attribute only can be set at IndexOnly mode!");
+                }
+            }
+
             //Init fields
 
             if (createtable.Fields.Count <= 0)
             {
                 throw new ParseException("Table must have one field at least!");
             }
+
+            bool passCheckWhenSetDocIdAttr = false;
 
             foreach (SyntaxAnalysis.CreateTable.CreateTableField tfield in createtable.Fields)
             {
@@ -440,11 +454,44 @@ namespace Hubble.Core.SFQL.Parse
                 field.Mode = tfield.IndexMode;
                 field.Store = true;
                 field.AnalyzerName = tfield.AnalyzerName;
+
+                if (field.AnalyzerName != null)
+                {
+                    if (DBProvider.GetAnalyzer(field.AnalyzerName) == null)
+                    {
+                        throw new ParseException(string.Format("Unknown Analyzer name={0}!",
+                            field.AnalyzerName));
+                    }
+                }
+
                 field.CanNull = tfield.CanNull;
                 field.DataLength = tfield.DataLength;
                 field.DataType = tfield.DataType;
                 field.DefaultValue = tfield.Default;
                 field.PrimaryKey = tfield.PrimaryKey;
+
+                if (table.DocIdReplaceField != null)
+                {
+                    if (field.Name.Equals(table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (field.IndexType != Field.Index.Untokenized)
+                        {
+                            throw new ParseException("DocId Replace Field must be Untokenized field!");
+                        }
+
+                        switch (field.DataType)
+                        {
+                            case DataType.TinyInt:
+                            case DataType.SmallInt:
+                            case DataType.Int:
+                            case DataType.BigInt:
+                                passCheckWhenSetDocIdAttr = true;
+                                break;
+                            default:
+                                throw new ParseException("Can't set DocId attribute to a non-numeric field!");
+                        }
+                    }
+                }
 
                 if (field.Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
                 {
@@ -462,6 +509,11 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
                 table.Fields.Add(field);
+            }
+
+            if (table.DocIdReplaceField != null && !passCheckWhenSetDocIdAttr)
+            {
+                throw new ParseException("Can't set DocId attribute to an unknown field!");
             }
 
             if (table.DBTableName == null)

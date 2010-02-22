@@ -694,20 +694,66 @@ namespace Hubble.Core.Store
 
             int begin = mergeAck.BeginSerial;
             int end = mergeAck.EndSerial;
+            int time = 0;
 
             for (int serial = begin; serial <= end; serial++)
             {
-                string fileName = _IndexFile.IndexDir + GetHeadFileName(serial);
+                string fileName;
 
-                if (System.IO.File.Exists(fileName))
+                fileName = _IndexFile.IndexDir + GetHeadFileName(serial);
+
+                while (true)
                 {
-                    System.IO.File.Delete(fileName);
+                    try
+                    {
+                        if (System.IO.File.Exists(fileName))
+                        {
+                            System.IO.File.Delete(fileName);
+                        }
+
+                        break;
+                    }
+                    catch
+                    {
+                        if (time < 40)
+                        {
+                            System.Threading.Thread.Sleep(20);
+                            time++;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
                 }
 
+
                 fileName = _IndexFile.IndexDir + GetIndexFileName(serial);
-                if (System.IO.File.Exists(fileName))
+                time = 0;
+
+                while (true)
                 {
-                    System.IO.File.Delete(fileName);
+                    try
+                    {
+                        if (System.IO.File.Exists(fileName))
+                        {
+                            System.IO.File.Delete(fileName);
+                        }
+
+                        break;
+                    }
+                    catch
+                    {
+                        if (time < 40)
+                        {
+                            System.Threading.Thread.Sleep(20);
+                            time++;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
                 }
             }
 

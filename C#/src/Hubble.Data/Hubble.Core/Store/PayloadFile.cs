@@ -296,11 +296,11 @@ namespace Hubble.Core.Store
             }
         }
 
-        internal PayloadProvider Open(List<Data.Field> fields, int payloadLength, out int lastDocId)
+        internal PayloadProvider Open(Field docIdReplaceField, List<Data.Field> fields, int payloadLength, out int lastDocId)
         {
             lastDocId = -1;
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
-            PayloadProvider docPayload = new PayloadProvider();
+            PayloadProvider docPayload = new PayloadProvider(docIdReplaceField);
 
             foreach (Data.Field field in fields)
             {

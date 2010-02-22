@@ -405,6 +405,21 @@ namespace Hubble.Core.Global
 
         #region Public properties
 
+        bool _AppLogEnabled = false;
+
+        public bool AppLogEnabled
+        {
+            get
+            {
+                return _AppLogEnabled;
+            }
+
+            set
+            {
+                _AppLogEnabled = value;
+            }
+        }
+
         int _TcpPort = 7523;
 
         public int TcpPort

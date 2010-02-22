@@ -113,6 +113,25 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal IList<int> DelDocs 
+        {
+            get
+            {
+                lock (this)
+                {
+                    int[] docs = new int[Count];
+                    int i = 0;
+
+                    foreach (int docid in _DeleteTbl.Keys)
+                    {
+                        docs[i++] = docid;
+                    }
+
+                    return docs;
+                }
+            }
+        }
+
         public void Filter(Core.SFQL.Parse.DocumentResultWhereDictionary docIdResult)
         {
             lock (this)

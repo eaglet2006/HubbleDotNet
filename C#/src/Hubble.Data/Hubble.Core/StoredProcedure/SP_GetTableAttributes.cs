@@ -59,6 +59,10 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Value", dbProvider.IndexOnly.ToString());
 
             NewRow();
+            OutputValue("Attribute", "DocId");
+            OutputValue("Value", dbProvider.DocIdReplaceField);
+
+            NewRow();
             OutputValue("Attribute", "DBTableName");
             OutputValue("Value", dbProvider.Table.DBTableName);
 
@@ -69,7 +73,10 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "LastDocId");
             OutputValue("Value", dbProvider.LastDocId.ToString());
-            
+
+            NewRow();
+            OutputValue("Attribute", "MaxReturnCount");
+            OutputValue("Value", dbProvider.MaxReturnCount.ToString());
         }
 
         #endregion

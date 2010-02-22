@@ -233,7 +233,7 @@ namespace Hubble.Core.Service
 
             System.Threading.Thread.Sleep(2000);
 
-            Global.Report.WriteAppLog("Hubble.net close safely");
+            Global.Report.WriteAppLog("Hubble.net close safely", true);
 
             Environment.Exit(0);
         }
@@ -274,7 +274,7 @@ namespace Hubble.Core.Service
             _Server.RequireCustomSerialization = RequireCustomSerialization;
 
             _Server.Listen();
-            Global.Report.WriteAppLog("Hubble.net start successful");
+            Global.Report.WriteAppLog("Hubble.net start successful", true);
         }
     }
 }

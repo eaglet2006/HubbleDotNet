@@ -179,13 +179,15 @@ namespace Hubble.Core.Store
                 }
 
 
-#if DEBUG
                 foreach (System.IO.FileStream fs in indexSrcFileDict.Values)
                 {
+#if DEBUG
                     Console.WriteLine(string.Format("{0} len={1}", fs.Name, fs.Length));
+#endif
                     fs.Close();
                 }
 
+#if DEBUG
                 Console.WriteLine(string.Format("Merge Len = {0} one={1} more={2} max={3}",
                     TestLen, oneFileCount, moreFileCount, maxFileCount));
 #endif

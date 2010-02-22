@@ -47,6 +47,8 @@ namespace Hubble.Core.Data
 
         bool _IndexOnly = false;
 
+        private string _DocIdReplaceField = null;
+
         bool _QueryCacheEnabled = true;
 
         int _QueryCacheTimeout = 0; //In seconds
@@ -68,6 +70,23 @@ namespace Hubble.Core.Data
             set
             {
                 _IndexOnly = value;
+            }
+        }
+
+        /// <summary>
+        /// This field replace docid field connecting with database. 
+        /// It is only actively in index only mode.
+        /// </summary>
+        public string DocIdReplaceField
+        {
+            get
+            {
+                return _DocIdReplaceField;
+            }
+
+            set
+            {
+                _DocIdReplaceField = value;
             }
         }
 

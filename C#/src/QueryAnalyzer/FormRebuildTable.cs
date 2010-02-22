@@ -78,6 +78,7 @@ namespace QueryAnalyzer
         bool _IndexOnly;
         long _LastDocId;
         string _DBTableName;
+        string _DocIdReplaceField = null;
 
         public FormRebuildTable()
         {
@@ -110,6 +111,13 @@ namespace QueryAnalyzer
                         numericUpDownDocIdFrom.Minimum = long.Parse(row["Value"].ToString());
                         numericUpDownDocIdFrom.Value = numericUpDownDocIdFrom.Minimum;
                         _LastDocId = (long)numericUpDownDocIdFrom.Value;
+                    }
+                    else if (row["Attribute"].ToString() == "DocId")
+                    {
+                        if (row["Value"] != DBNull.Value)
+                        {
+                            _DocIdReplaceField = row["Value"].ToString();
+                        }
                     }
                 }
 
@@ -146,14 +154,38 @@ namespace QueryAnalyzer
 
             StringBuilder sb = new StringBuilder();
 
-            sb.AppendFormat("Select top {0} [DocId] ", numericUpDownStep.Value);
-
-            foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+            if (_DocIdReplaceField == null)
             {
-                sb.AppendFormat(", [{0}] ", row["FieldName"].ToString());
-            }
+                sb.AppendFormat("Select top {0} [DocId] ", numericUpDownStep.Value);
 
-            sb.AppendFormat(" from {0} where DocId >= {1} order by DocId", _DBTableName, from);
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    sb.AppendFormat(", [{0}] ", row["FieldName"].ToString());
+                }
+
+                sb.AppendFormat(" from {0} where DocId >= {1} order by DocId", _DBTableName, from);
+            }
+            else
+            {
+                sb.AppendFormat("Select top {0} ", numericUpDownStep.Value);
+
+                int i = 0;
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    if (i == 0)
+                    {
+                        sb.AppendFormat("[{0}] ", row["FieldName"].ToString());
+                    }
+                    else
+                    {
+                        sb.AppendFormat(", [{0}] ", row["FieldName"].ToString());
+                    }
+
+                    i++;
+                }
+
+                sb.AppendFormat(" from {0} where {1} >= {2} order by {1}", _DBTableName, _DocIdReplaceField, from);
+            }
 
             return sb.ToString();
         }
@@ -238,7 +270,14 @@ namespace QueryAnalyzer
             {
                 sb.AppendLine(GetOneRowSql(qResult.DataSet, row, TableName));
 
-                from = long.Parse(row["DocId"].ToString()) + 1;
+                if (_DocIdReplaceField == null)
+                {
+                    from = long.Parse(row["DocId"].ToString()) + 1;
+                }
+                else
+                {
+                    from = long.Parse(row[_DocIdReplaceField].ToString()) + 1;
+                }
 
                 if (remain > 0)
                 {

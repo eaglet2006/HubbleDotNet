@@ -674,11 +674,59 @@ namespace Hubble.Core.Data
         
         private string _InitError = ""; //Initialization error when table open
 
+        private Field _DocIdReplaceField = null;
+
+        int _LastDocId = 0;
+        DBAdapter.IDBAdapter _DBAdapter;
+
         #endregion
+
+        private void ClearVars()
+        {
+            _Table = null;
+
+            _FieldInvertedIndex = new Dictionary<string, InvertedIndex>();
+            _FieldIndex = new Dictionary<string, Field>();
+
+            _DocPayload = new PayloadProvider();
+
+            _Directory = null;
+
+            _PayloadLength = 0;
+            _PayloadFileName = null;
+            _PayloadFile = null;
+
+            _InsertCount = 0;
+            _DelProvider = null;
+
+            _LastModifyTicks = DateTime.Now.Ticks;
+
+            _QueryCache = null;
+
+            _NeedExit = false;
+            _BusyCount = 0;
+
+            _InitError = ""; //Initialization error when table open
+
+            _DocIdReplaceField = null;
+
+            _LastDocId = 0;
+            _DBAdapter = null;
+        }
 
         #region Properties
 
-        int _LastDocId = 0;
+        /// <summary>
+        /// This field replace docid field connecting with database. 
+        /// It is only actively in index only mode.
+        /// </summary>
+        public string DocIdReplaceField
+        {
+            get
+            {
+                return _Table.DocIdReplaceField;
+            }
+        }
 
         internal string InitError
         {
@@ -695,9 +743,6 @@ namespace Hubble.Core.Data
                 return _LastDocId;
             }
         }
-
-
-        DBAdapter.IDBAdapter _DBAdapter;
 
         public string Directory
         {
@@ -1167,6 +1212,8 @@ namespace Hubble.Core.Data
                     if (DBAdapter != null)
                     {
                         DBAdapter.Table = table;
+                        DBAdapter.DocIdReplaceField = DocIdReplaceField;
+                        DBAdapter.DBProvider = this;
 
                         int TryConnectDBTimes = 5;
 
@@ -1208,13 +1255,52 @@ namespace Hubble.Core.Data
 
                     lock (this)
                     {
+                        //Get doc id replace field
+                        if (DocIdReplaceField != null)
+                        {
+                            foreach (Field field in table.Fields)
+                            {
+                                if (field.Name.Equals(DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    if (field.IndexType != Field.Index.Untokenized)
+                                    {
+                                        throw new DataException("DocId Replace Field must be Untokenized field!");
+                                    }
+
+                                    switch (field.DataType)
+                                    {
+                                        case DataType.TinyInt:
+                                        case DataType.SmallInt:
+                                        case DataType.Int:
+                                        case DataType.BigInt:
+                                            break;
+                                        default:
+                                            throw new DataException("Can't set DocId attribute to a non-numeric field!");
+                                    }
+
+                                    _DocIdReplaceField = field;
+                                }
+                            }
+                        }
+
                         //Start payload message queue
                         if (_PayloadFile == null)
                         {
                             _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
 
                             //Open Payload file
-                            _DocPayload = _PayloadFile.Open(table.Fields, PayloadLength, out _LastDocId);
+                            _DocPayload = _PayloadFile.Open(_DocIdReplaceField, table.Fields, PayloadLength, out _LastDocId);
+
+                            //If set docid replace field, remove del docs
+                            if (_DocIdReplaceField != null)
+                            {
+                                foreach (int docId in _DelProvider.DelDocs)
+                                {
+                                    long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
+
+                                    _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                                }
+                            }
 
                             GC.Collect();
 
@@ -1263,6 +1349,41 @@ namespace Hubble.Core.Data
         public List<Document> Query(List<Field> selectFields, IList<Query.DocumentResultForSort> docs)
         {
             return Query(selectFields, docs, 0, docs.Count - 1);
+        }
+
+        public int GetDocIdFromDocIdReplaceFieldValue(long value)
+        {
+            return _DocPayload.GetDocIdByDocIdReplaceFieldValue(value);
+        }
+
+        unsafe public long GetDocIdReplaceFieldValue(int docId)
+        {
+            if (_DocIdReplaceField == null)
+            {
+                throw new DataException("_DocIdReplaceField == null");
+            }
+
+            int* payloadData = this.GetPayloadData(docId);
+
+            if (payloadData == null)
+            {
+                Global.Report.WriteErrorLog(string.Format("GetDocIdReplaceFieldValue fail, DocId={0} does not exist!", docId));
+                return -1;
+            }
+
+            switch (_DocIdReplaceField.DataType)
+            {
+                case DataType.TinyInt:
+                case DataType.SmallInt:
+                case DataType.Int:
+                    return payloadData[_DocIdReplaceField.TabIndex];
+                case DataType.BigInt:
+                    return (((long)payloadData[_DocIdReplaceField.TabIndex]) << 32) +
+                        (uint)payloadData[_DocIdReplaceField.TabIndex + 1];
+                default:
+                    throw new DataException(string.Format("Invalid DocIdReplaceField DataType:{0}", _DocIdReplaceField.DataType));
+            }
+
         }
 
         unsafe internal List<Document> Query(List<Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end)
@@ -1571,20 +1692,26 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                //Start payload file
-                _PayloadFile.Start();
+                _PayloadFile.Close(0);
 
-                //Add field inverted index 
-                foreach (Field field in table.Fields)
-                {
-                    if (field.IndexType == Field.Index.Tokenized)
-                    {
-                        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, field.Mode, true, this, 0);
-                        AddFieldInvertedIndex(field.Name, invertedIndex);
-                    }
+                ClearVars();
 
-                    AddFieldIndex(field.Name, field);
-                }
+                Open(directory);
+
+                ////Start payload file
+                //_PayloadFile.Start();
+
+                ////Add field inverted index 
+                //foreach (Field field in table.Fields)
+                //{
+                //    if (field.IndexType == Field.Index.Tokenized)
+                //    {
+                //        InvertedIndex invertedIndex = new InvertedIndex(directory, field.Name.Trim(), field.TabIndex, field.Mode, true, this, 0);
+                //        AddFieldInvertedIndex(field.Name, invertedIndex);
+                //    }
+
+                //    AddFieldIndex(field.Name, field);
+                //}
             }
 
             if (_QueryCache == null)
@@ -1625,7 +1752,7 @@ namespace Hubble.Core.Data
 
                     foreach (Document doc in docs)
                     {
-                        if (IndexOnly)
+                        if (IndexOnly && DocIdReplaceField == null)
                         {
                             if (doc.DocId < 0)
                             {
@@ -1860,7 +1987,7 @@ namespace Hubble.Core.Data
 
                 if (needDel)
                 {
-                    if (IndexOnly)
+                    if (IndexOnly && DocIdReplaceField == null)
                     {
                         throw new DataException("Can not update fulltext field when the table is index only.");
                     }
@@ -2025,6 +2152,17 @@ namespace Hubble.Core.Data
                 }
 
                 _DelProvider.Delete(docs);
+
+                if (_DocIdReplaceField != null)
+                {
+                    foreach(int docId in docs)
+                    {
+                        long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
+
+                        _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                    }
+                }
+
                 LastModifyTicks = DateTime.Now.Ticks;
             }
             finally

@@ -26,12 +26,12 @@ namespace Hubble.Core.Data
     /// <summary>
     /// Payload of each document
     /// </summary>
-    [StructLayout(LayoutKind.Explicit)]
+    //[StructLayout(LayoutKind.Explicit)]
     struct Payload
     {
-        [FieldOffset(0)]
+        //[FieldOffset(0)]
         public int FileIndex;
-        [FieldOffset(4)]
+        //[FieldOffset(4)]
         public int[] Data;
 
         unsafe public Payload(int fileIndex, int* data, int length)

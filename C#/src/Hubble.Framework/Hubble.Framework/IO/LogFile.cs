@@ -104,8 +104,13 @@ namespace Hubble.Framework.IO
             _LogFile.WriteLog(LogType.Error, message);
         }
 
-        public static void WriteAppLog(string message)
+        public static void WriteAppLog(string message, bool enabled)
         {
+            if (!enabled)
+            {
+                return;
+            }
+
             lock (_LockObj)
             {
                 if (_LogFile == null)

@@ -154,7 +154,18 @@ namespace Hubble.Core.DBAdapter
                 using (SQLDataProvider sqlData = new SQLDataProvider())
                 {
                     sqlData.Connect(Table.ConnectionString);
-                    System.Data.DataSet ds = sqlData.QuerySql("select max(DocId) as MaxDocId from " + Table.DBTableName);
+
+                    System.Data.DataSet ds;
+
+                    if (DocIdReplaceField == null)
+                    {
+                        ds = sqlData.QuerySql("select max(DocId) as MaxDocId from " + Table.DBTableName);
+                    }
+                    else
+                    {
+                        ds = sqlData.QuerySql(string.Format("select max({0}) as MaxDocId from " + Table.DBTableName,
+                            DocIdReplaceField));
+                    }
 
                     if (ds.Tables[0].Rows.Count <= 0)
                     {
@@ -394,8 +405,16 @@ namespace Hubble.Core.DBAdapter
                     sql.AppendFormat(",[{0}]={1}", fv.FieldName, value);
                 }
             }
+            
+            if (DocIdReplaceField == null)
+            {
+                sql.Append(" where docId in (");
+            }
+            else
+            {
+                sql.AppendFormat(" where {0} in (", DocIdReplaceField);
+            }
 
-            sql.Append(" where docId in (");
 
             i = 0;
 
@@ -403,14 +422,31 @@ namespace Hubble.Core.DBAdapter
             {
                 int docId = docResult.DocId;
 
-                if (i++ == 0)
+                if (DocIdReplaceField == null)
                 {
-                    sql.AppendFormat("{0}", docId);
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", docId);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", docId);
+                    }
                 }
                 else
                 {
-                    sql.AppendFormat(",{0}", docId);
+                    long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docId);
+
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", replaceFieldValue);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", replaceFieldValue);
+                    }
                 }
+
             }
 
             sql.Append(")");
@@ -437,6 +473,14 @@ namespace Hubble.Core.DBAdapter
             int i = 0;
             foreach (Hubble.Core.Data.Field field in selectFields)
             {
+                if (DocIdReplaceField != null)
+                {
+                    if (field.Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
                 if (i++ == 0)
                 {
                     sql.AppendFormat("[{0}]", field.Name);
@@ -447,9 +491,28 @@ namespace Hubble.Core.DBAdapter
                 }
             }
 
-            sql.AppendFormat(" from {0} where docId in (", Table.DBTableName);
+            if (DocIdReplaceField != null)
+            {
+                sql.AppendFormat(",[{0}]", DocIdReplaceField);
+            }
+
+            if (DocIdReplaceField == null)
+            {
+                sql.AppendFormat(" from {0} where docId in (", Table.DBTableName);
+            }
+            else
+            {
+                sql.AppendFormat(" from {0} where {1} in (", Table.DBTableName, DocIdReplaceField);
+            }
 
             i = 0;
+
+            Dictionary<long, int> replaceFieldValueToDocId = null;
+
+            if (DocIdReplaceField != null)
+            {
+                replaceFieldValueToDocId = new Dictionary<long, int>();
+            }
 
             for (int j = begin; j <= end; j++)
             {
@@ -460,13 +523,31 @@ namespace Hubble.Core.DBAdapter
 
                 int docId = docs[j].DocId;
 
-                if (i++ == 0)
+                if (DocIdReplaceField == null)
                 {
-                    sql.AppendFormat("{0}", docId);
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", docId);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", docId);
+                    }
                 }
                 else
                 {
-                    sql.AppendFormat(",{0}", docId);
+                    long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docId);
+
+                    replaceFieldValueToDocId.Add(replaceFieldValue, docId);
+
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", replaceFieldValue);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", replaceFieldValue);
+                    }
                 }
             }
 
@@ -475,7 +556,22 @@ namespace Hubble.Core.DBAdapter
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
-                return sqlData.QuerySql(sql.ToString()).Tables[0];
+
+                System.Data.DataTable table = sqlData.QuerySql(sql.ToString()).Tables[0];
+
+                if (DocIdReplaceField != null)
+                {
+                    table.Columns.Add(new System.Data.DataColumn("DocId", typeof(int)));
+
+                    for (i = 0; i < table.Rows.Count; i++)
+                    {
+                        table.Rows[i]["DocId"] =
+                            replaceFieldValueToDocId[long.Parse(table.Rows[i][DocIdReplaceField].ToString())];
+                    }
+                }
+
+                return table;
+
             }
         }
 
@@ -489,7 +585,14 @@ namespace Hubble.Core.DBAdapter
             }
             else
             {
-                sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
+                if (DocIdReplaceField == null)
+                {
+                    sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
+                }
+                else
+                {
+                    sql = string.Format("select {0} from {1} where {2}", DocIdReplaceField, Table.DBTableName, where);
+                }
             }
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
@@ -499,7 +602,21 @@ namespace Hubble.Core.DBAdapter
                 sqlData.Connect(Table.ConnectionString);
                 foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
                 {
-                    int docId = int.Parse(row[0].ToString());
+                    int docId;
+                    if (DocIdReplaceField == null)
+                    {
+                        docId = int.Parse(row[0].ToString());
+                    }
+                    else
+                    {
+                        docId = DBProvider.GetDocIdFromDocIdReplaceFieldValue(long.Parse(row[DocIdReplaceField].ToString()));
+
+                        if (docId < 0)
+                        {
+                            continue;
+                        }
+                    }
+
                     result.Add(docId, new Hubble.Core.Query.DocumentResult(docId));
                 }
             }
@@ -547,6 +664,33 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        string _DocIdReplaceField = null;
+
+        public string DocIdReplaceField
+        {
+            get
+            {
+                return _DocIdReplaceField;
+            }
+            set
+            {
+                _DocIdReplaceField = value;
+            }
+        }
+
+        DBProvider _DBProvder;
+        public DBProvider DBProvider
+        {
+            get
+            {
+                return _DBProvder;
+            }
+            set
+            {
+                _DBProvder = value;
+            }
+        }
+
         #endregion
 
 
@@ -561,6 +705,7 @@ namespace Hubble.Core.DBAdapter
         }
 
         #endregion
+
 
     }
 }
