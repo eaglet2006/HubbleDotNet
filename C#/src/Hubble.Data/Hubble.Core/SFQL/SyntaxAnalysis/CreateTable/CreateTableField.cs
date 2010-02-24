@@ -387,7 +387,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
         public Data.Field.IndexMode IndexMode = Hubble.Core.Data.Field.IndexMode.Complex;
         public string AnalyzerName;
         public string Default = null;
-        public bool CanNull = false;
+        public bool CanNull = true;
         public bool PrimaryKey = false;
 
         #endregion

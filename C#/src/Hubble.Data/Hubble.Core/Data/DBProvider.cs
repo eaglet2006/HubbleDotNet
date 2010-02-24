@@ -1298,7 +1298,15 @@ namespace Hubble.Core.Data
                                 {
                                     long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
 
-                                    _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                                    //If update tokenize field, the docid replace field value point to more then one docid
+                                    //GetDocIdByDocIdReplaceFieldValue can get last docid
+                                    //if last docid == input docid, this record is deleted not updated
+                                    //so remove it.
+                                    if (_DocPayload.GetDocIdByDocIdReplaceFieldValue(docIdReplaceFieldValue)
+                                        == docId)
+                                    {
+                                        _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                                    }
                                 }
                             }
 
@@ -1746,6 +1754,7 @@ namespace Hubble.Core.Data
                     }
                 }
 
+
                 lock (this)
                 {
                     List<Field> fields = GetAllFields();
@@ -1771,7 +1780,7 @@ namespace Hubble.Core.Data
                             doc.DocId = _LastDocId++;
                         }
 
-                        Dictionary<string, FieldValue> notnullFields = new Dictionary<string, FieldValue>();
+                        //Dictionary<string, FieldValue> notnullFields = new Dictionary<string, FieldValue>();
 
                         foreach (FieldValue fValue in doc.FieldValues)
                         {
@@ -1786,21 +1795,7 @@ namespace Hubble.Core.Data
                             fValue.Type = field.DataType;
                             fValue.DataLength = field.DataLength;
 
-                            if (fValue.Value != null)
-                            {
-                                if (notnullFields.ContainsKey(fValue.FieldName.ToLower().Trim()))
-                                {
-                                    throw new DataException(string.Format("Field:{0} in table {1} repeats in one insert sentence",
-                                        fValue.FieldName, _Table.Name));
-                                }
-
-                                notnullFields.Add(fValue.FieldName.ToLower().Trim(), fValue);
-                            }
-                        }
-
-                        foreach (Field field in fields)
-                        {
-                            if (!notnullFields.ContainsKey(field.Name.ToLower().Trim()))
+                            if (fValue.Value == null)
                             {
                                 if (!field.CanNull)
                                 {
@@ -1810,9 +1805,7 @@ namespace Hubble.Core.Data
 
                                 if (field.DefaultValue != null)
                                 {
-                                    FieldValue fv = new FieldValue(field.Name, field.DefaultValue);
-                                    fv.Type = field.DataType;
-                                    fv.DataLength = field.DataLength;
+                                    fValue.Value = field.DefaultValue;
                                 }
                                 else
                                 {
@@ -1823,7 +1816,45 @@ namespace Hubble.Core.Data
                                     }
                                 }
                             }
+
+                            //if (fValue.Value != null)
+                            //{
+                            //    if (notnullFields.ContainsKey(fValue.FieldName.ToLower().Trim()))
+                            //    {
+                            //        throw new DataException(string.Format("Field:{0} in table {1} repeats in one insert sentence",
+                            //            fValue.FieldName, _Table.Name));
+                            //    }
+
+                            //    notnullFields.Add(fValue.FieldName.ToLower().Trim(), fValue);
+                            //}
                         }
+
+                        //foreach (Field field in fields)
+                        //{
+                        //    if (!notnullFields.ContainsKey(field.Name.ToLower().Trim()))
+                        //    {
+                        //        if (!field.CanNull)
+                        //        {
+                        //            throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
+                        //                field.Name, _Table.Name));
+                        //        }
+
+                        //        if (field.DefaultValue != null)
+                        //        {
+                        //            FieldValue fv = new FieldValue(field.Name, field.DefaultValue);
+                        //            fv.Type = field.DataType;
+                        //            fv.DataLength = field.DataLength;
+                        //        }
+                        //        else
+                        //        {
+                        //            if (field.IndexType != Field.Index.None)
+                        //            {
+                        //                throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
+                        //                    field.Name, _Table.Name));
+                        //            }
+                        //        }
+                        //    }
+                        //}
 
                     }
                 }
@@ -2159,7 +2190,15 @@ namespace Hubble.Core.Data
                     {
                         long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
 
-                        _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                        //If update tokenize field, the docid replace field value point to more then one docid
+                        //GetDocIdByDocIdReplaceFieldValue can get last docid
+                        //if last docid == input docid, this record is deleted not updated
+                        //so remove it.
+                        if (_DocPayload.GetDocIdByDocIdReplaceFieldValue(docIdReplaceFieldValue)
+                            == docId)
+                        {
+                            _DocPayload.RemoveDocIdReplaceFieldValue(docIdReplaceFieldValue);
+                        }
                     }
                 }
 

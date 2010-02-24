@@ -498,9 +498,9 @@ namespace Hubble.Core.SFQL.Parse
                     throw new ParseException("DocId can not be field name!");
                 }
 
-                if (field.IndexType != Field.Index.None && field.CanNull)
+                if (field.IndexType != Field.Index.None && field.CanNull && field.DefaultValue == null)
                 {
-                    throw new ParseException("Can not be NULL when index type is Tokenized or Untokenized!");
+                    throw new ParseException("Can not be NULL when index type is Tokenized or Untokenized and hasn't default value!");
                 }
 
                 if (string.IsNullOrEmpty(field.AnalyzerName) && field.IndexType == Field.Index.Tokenized)

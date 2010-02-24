@@ -67,8 +67,7 @@ namespace Hubble.Core.Data
         int _CurIndex = 0; //Current index of IndexBuf;
         Field _DocIdReplaceField = null;
 
-        Dictionary<int, int> _ReplaceFieldValueIntToDocId = null;
-        Dictionary<long, int> _ReplaceFieldValueLongToDocId = null;
+        ReplaceFieldValueToDocId _ReplaceFieldValueToDocId = null;
 
         internal Field DocIdReplaceField
         {
@@ -168,14 +167,7 @@ namespace Hubble.Core.Data
             {
                 _DocIdReplaceField = docIdReplaceField;
 
-                if (docIdReplaceField.DataType == DataType.BigInt)
-                {
-                    _ReplaceFieldValueLongToDocId = new Dictionary<long, int>();
-                }
-                else
-                {
-                    _ReplaceFieldValueIntToDocId = new Dictionary<int, int>();
-                }
+                _ReplaceFieldValueToDocId = new ReplaceFieldValueToDocId(docIdReplaceField.DataType == DataType.BigInt);
             }
         }
 
@@ -190,11 +182,11 @@ namespace Hubble.Core.Data
 
                 if (_DocIdReplaceField.DataType == DataType.BigInt)
                 {
-                    _ReplaceFieldValueLongToDocId.Remove(value);
+                    _ReplaceFieldValueToDocId.Remove(value);
                 }
                 else
                 {
-                    _ReplaceFieldValueIntToDocId.Remove((int)value);
+                    _ReplaceFieldValueToDocId.Remove((int)value);
                 }
 
             }
@@ -204,7 +196,7 @@ namespace Hubble.Core.Data
         {
             lock (_LockObj)
             {
-                int docId = -1;
+                int docId = int.MinValue;
 
                 if (_DocIdReplaceField == null)
                 {
@@ -213,24 +205,24 @@ namespace Hubble.Core.Data
 
                 if (_DocIdReplaceField.DataType == DataType.BigInt)
                 {
-                    if (_ReplaceFieldValueLongToDocId.TryGetValue(value, out docId))
+                    if (_ReplaceFieldValueToDocId.TryGetValue(value, out docId))
                     {
                         return docId;
                     }
                     else
                     {
-                        return -1;
+                        return int.MinValue;
                     }
                 }
                 else
                 {
-                    if (_ReplaceFieldValueIntToDocId.TryGetValue((int)value, out docId))
+                    if (_ReplaceFieldValueToDocId.TryGetValue((int)value, out docId))
                     {
                         return docId;
                     }
                     else
                     {
-                        return -1;
+                        return int.MinValue;
                     }
                 }
             }
@@ -342,20 +334,29 @@ namespace Hubble.Core.Data
                     {
                         long value = (((long)payload.Data[_DocIdReplaceField.TabIndex]) << 32) +
                             (uint)payload.Data[_DocIdReplaceField.TabIndex + 1];
-                        
-                        if (!_ReplaceFieldValueLongToDocId.ContainsKey(value))
+
+                        if (!_ReplaceFieldValueToDocId.ContainsKey(value))
                         {
-                            _ReplaceFieldValueLongToDocId.Add(value, docId);
+                            _ReplaceFieldValueToDocId.Add(value, docId);
+                        }
+                        else
+                        {
+                            _ReplaceFieldValueToDocId[value] = docId;
                         }
                     }
                     else
                     {
                         int value = payload.Data[_DocIdReplaceField.TabIndex];
 
-                        if (!_ReplaceFieldValueIntToDocId.ContainsKey(value))
+                        if (!_ReplaceFieldValueToDocId.ContainsKey(value))
                         {
-                            _ReplaceFieldValueIntToDocId.Add(value, docId);
+                            _ReplaceFieldValueToDocId.Add(value, docId);
                         }
+                        else
+                        {
+                            _ReplaceFieldValueToDocId[value] = docId;
+                        }
+
                     }
                 }
 

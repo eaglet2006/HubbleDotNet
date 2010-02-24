@@ -205,6 +205,7 @@ namespace Hubble.Core.Entity
             wordCountSum = 0;
 
             int docsCount = VInt.sReadFromStream(stream);
+            int relDocCount = docsCount;
 
             int lastDocId = VInt.sReadFromStream(stream);
 
@@ -253,7 +254,7 @@ namespace Hubble.Core.Entity
                 wordCountSum += docCount;
             }
 
-            documentsCount = docsCount;
+            documentsCount = relDocCount;
 
             return result;
         }

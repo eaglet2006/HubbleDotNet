@@ -76,7 +76,15 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Insert
             switch (Func)
             {
                 case InsertValueFunction.Value:
-                    insertField.Value = dfa.CurrentToken.Text;
+
+                    if (dfa.CurrentToken.SyntaxType == SyntaxType.NULL)
+                    {
+                        insertField.Value = null;
+                    }
+                    else
+                    {
+                        insertField.Value = dfa.CurrentToken.Text;
+                    }
                     break;
             }
         }
@@ -89,7 +97,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Insert
 
         /*****************************************************
          * s0 -- ( , -- s1
-         * s1 -- String Numeric -- s2
+         * s1 -- String Numeric NULL -- s2
          * s2 -- , ) --squit
          * **************************************************/
 
@@ -100,7 +108,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Insert
 
             s0.AddNextState(new int[] { (int)SyntaxType.LBracket, (int)SyntaxType.Comma }, s1.Id);
 
-            s1.AddNextState(new int[] { (int)SyntaxType.String, (int)SyntaxType.Numeric }, s2.Id);
+            s1.AddNextState(new int[] { (int)SyntaxType.String, (int)SyntaxType.Numeric, (int)SyntaxType.NULL }, s2.Id);
 
             s2.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
 
