@@ -82,11 +82,11 @@ namespace Hubble.Core.Cache
             Count = 0;
         }
 
-        public QueryCacheDocuments(int count, DocumentResultForSort[] docResults)
+        public QueryCacheDocuments(int count, DocumentResultForSort[] docResults, int relDocCount)
         {
             Documents = docResults;
             Count = count;
-            ResultLength = docResults.Length;
+            ResultLength = relDocCount;
         }
 
     }

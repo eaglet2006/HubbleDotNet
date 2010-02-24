@@ -1402,6 +1402,11 @@ namespace Hubble.Core.Data
 
             List<Document> result;
 
+            if (begin >= docs.Count)
+            {
+                return new List<Document>();
+            }
+
             result = new List<Document>(docs.Count);
 
             if (docs.Count <= 0)

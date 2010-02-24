@@ -215,6 +215,12 @@ namespace Hubble.Core.Entity
 
             DocumentPositionList[] result = new DocumentPositionList[docsCount];
 
+            if (docsCount <= 0)
+            {
+                documentsCount = relDocCount;
+                return result;
+            }
+
             if (!simple)
             {
                 int firstPosition = VInt.sReadFromStream(stream);

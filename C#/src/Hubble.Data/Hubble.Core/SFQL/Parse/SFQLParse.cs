@@ -786,7 +786,7 @@ namespace Hubble.Core.SFQL.Parse
                     }
 
                     queryCache.Insert(whereSql,
-                        new Hubble.Core.Cache.QueryCacheDocuments(count, result),
+                        new Hubble.Core.Cache.QueryCacheDocuments(count, result, relTotalCount),
                         DateTime.Now.AddSeconds(dbProvider.QueryCacheTimeout),
                         new Cache.QueryCacheInformation(count, lastModifyTicks, select.End < 0));
                 }

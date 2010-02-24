@@ -526,6 +526,7 @@ namespace Hubble.Core.Store
                         {
                             docList.AddRange(wdl);
                             docList.WordCountSum += wdl.WordCountSum;
+                            docList.RelDocCount += wdl.RelDocCount;
                         }
 
                         remain -= wdl.Count;
