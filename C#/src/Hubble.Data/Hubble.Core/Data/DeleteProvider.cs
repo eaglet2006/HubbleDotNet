@@ -132,13 +132,28 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Filter(Core.SFQL.Parse.DocumentResultWhereDictionary docIdResult)
+        public bool DocIdDeleted(int docId)
         {
             lock (this)
             {
+                return _DeleteTbl.ContainsKey(docId);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="docIdResult">docid result dictionary</param>
+        /// <returns>Delete count</returns>
+        public int Filter(Core.SFQL.Parse.DocumentResultWhereDictionary docIdResult)
+        {
+            lock (this)
+            {
+                int deleteCount = 0;
+
                 if (_DeleteTbl.Count <= 0)
                 {
-                    return;
+                    return 0;
                 }
 
                 if (_DeleteTbl.Count < docIdResult.Count)
@@ -147,6 +162,7 @@ namespace Hubble.Core.Data
                     {
                         if (docIdResult.ContainsKey(docid))
                         {
+                            deleteCount++;
                             docIdResult.Remove(docid);
                         }
                     }
@@ -159,17 +175,20 @@ namespace Hubble.Core.Data
                     {
                         if (_DeleteTbl.ContainsKey(docid))
                         {
-                            docIdResult.Remove(docid);
+                            deleDocIdList.Add(docid);
                         }
                     }
 
                     foreach (int docid in deleDocIdList)
                     {
+                        deleteCount++;
                         docIdResult.Remove(docid);
                     }
 
                     deleDocIdList = null;
                 }
+
+                return deleteCount;
             }
         }
 

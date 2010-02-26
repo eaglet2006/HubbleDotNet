@@ -930,6 +930,19 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private SyntaxAnalysis.Select.Select GetUnionSelectByTableName(IList<SyntaxAnalysis.Select.Select> selects, string tableName)
+        {
+            foreach (SyntaxAnalysis.Select.Select select in selects)
+            {
+                if (select.SelectFroms[0].Name.Equals(tableName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return select;
+                }
+            }
+
+            return null;
+        }
+
         private QueryResult ExcuteUnionSelect()
         {
             _UnionQueryResult = new List<QueryResult>();
@@ -1042,6 +1055,11 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (table.Rows.Count <= i)
                 {
+                    if (finalTable == null)
+                    {
+                        finalTable = table.Clone();
+                    }
+
                     break;
                 }
                 
@@ -1057,7 +1075,8 @@ namespace Hubble.Core.SFQL.Parse
                 string tableName = row["TableName"].ToString();
                 Data.DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
 
-                GetSelectFields(select, dbProvider, out selectFields, out allFieldsCount);
+                GetSelectFields(GetUnionSelectByTableName(_UnionSelects, tableName), 
+                    dbProvider, out selectFields, out allFieldsCount);
 
                 System.Data.DataSet dataset;
                 GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out dataset);

@@ -406,7 +406,7 @@ namespace Hubble.Core.Query
             }
 
             DeleteProvider delProvider = _DBProvider.DelProvider;
-            delProvider.Filter(docIdRank);
+            int deleteCount = delProvider.Filter(docIdRank);
 
             if (CanLoadPartOfDocs)
             {
@@ -432,6 +432,8 @@ namespace Hubble.Core.Query
                     }
                 }
             }
+
+            docIdRank.RelTotalCount -= deleteCount;
         }
 
 

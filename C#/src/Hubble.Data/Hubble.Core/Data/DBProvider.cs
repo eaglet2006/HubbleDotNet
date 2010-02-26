@@ -1375,8 +1375,8 @@ namespace Hubble.Core.Data
 
             if (payloadData == null)
             {
-                Global.Report.WriteErrorLog(string.Format("GetDocIdReplaceFieldValue fail, DocId={0} does not exist!", docId));
-                return -1;
+                //Global.Report.WriteErrorLog(string.Format("GetDocIdReplaceFieldValue fail, DocId={0} does not exist!", docId));
+                return int.MaxValue;
             }
 
             switch (_DocIdReplaceField.DataType)

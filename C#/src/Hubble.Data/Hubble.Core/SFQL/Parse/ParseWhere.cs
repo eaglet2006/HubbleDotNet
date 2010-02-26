@@ -758,7 +758,8 @@ namespace Hubble.Core.SFQL.Parse
             return Parse(expressionTree, out relTotalCount);
         }
 
-        unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out int relTotalCount)
+        unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, 
+            out int relTotalCount)
         {
             Core.SFQL.Parse.DocumentResultWhereDictionary dict;
 
@@ -768,6 +769,48 @@ namespace Hubble.Core.SFQL.Parse
             }
             else if (!expressionTree.NeedTokenize)
             {
+                if (expressionTree.OrChild == null && expressionTree.AndChild == null)
+                {
+                    Core.SFQL.SyntaxAnalysis.Expression expression = 
+                        expressionTree.Expression as Core.SFQL.SyntaxAnalysis.Expression;
+
+                    if (_DBProvider.DocIdReplaceField != null)
+                    {
+                        if (expression != null)
+                        {
+                            if (expression.Left != null)
+                            {
+                                if (expression.Left.Count == 1)
+                                {
+                                    if (expression.Left[0].Text.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        if (expression.Operator.SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Equal)
+                                        {
+                                            int docid = int.Parse(expression.Right[0].Text);
+
+                                            if (_DBProvider.GetDocIdReplaceFieldValue(docid) != int.MaxValue &&
+                                                !_DBProvider.DelProvider.DocIdDeleted(docid))
+                                            {
+                                                Query.DocumentResultForSort[] dresult = new Hubble.Core.Query.DocumentResultForSort[1];
+                                                dresult[0] = new Hubble.Core.Query.DocumentResultForSort(docid);
+                                                relTotalCount = 1;
+                                                return dresult;
+                                            }
+                                            else
+                                            {
+                                                relTotalCount = 0;
+                                                return new Query.DocumentResultForSort[0];
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                }
+
                 dict = GetResultFromDatabase(expressionTree);
             }
             else

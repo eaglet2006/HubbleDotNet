@@ -94,7 +94,7 @@ namespace Hubble.Framework.DataStructure
     {
         private Dictionary<Bit16Int, T> _Dict;
 
-        static System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
+        System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
             new System.Security.Cryptography.MD5CryptoServiceProvider();
 
         public Bit16Int MD5(string key)
