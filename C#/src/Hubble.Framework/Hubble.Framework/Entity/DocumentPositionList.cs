@@ -105,9 +105,9 @@ namespace Hubble.Core.Entity
             Count = count;
             _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
 
-            if (_TotalWordsInThisDocumentIndex >= 8)
+            if (_TotalWordsInThisDocumentIndex >= 7)
             {
-                _TotalWordsInThisDocumentIndex = 8;
+                _TotalWordsInThisDocumentIndex = 7;
             }
 
             FirstPosition = firstPosition;
@@ -120,9 +120,9 @@ namespace Hubble.Core.Entity
             Count = count;
             _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
 
-            if (_TotalWordsInThisDocumentIndex >= 8)
+            if (_TotalWordsInThisDocumentIndex >= 7)
             {
-                _TotalWordsInThisDocumentIndex = 8;
+                _TotalWordsInThisDocumentIndex = 7;
             }
 
             FirstPosition = 0;
@@ -130,6 +130,20 @@ namespace Hubble.Core.Entity
 
 
         #region Static methods
+
+        static public Int16 GetTotalWordsInDocIndex(int count)
+        {
+            for (Int16 i = 0; i < TotalWordsInDocRank.Length; i++)
+            {
+                if (TotalWordsInDocRank[i] > count)
+                {
+                    return i;
+                }
+            }
+
+            return (Int16)(TotalWordsInDocRank.Length - 1);
+        }
+
 
         static public void Serialize(IList<DocumentPositionList> docPositions, System.IO.Stream stream, bool simple)
         {

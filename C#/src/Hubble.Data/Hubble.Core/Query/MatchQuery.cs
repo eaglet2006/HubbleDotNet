@@ -311,6 +311,7 @@ namespace Hubble.Core.Query
                         drp.pDocumentResult->LastIndex = (UInt16)i;
                         drp.pDocumentResult->LastPosition = docList.FirstPosition;
                         drp.pDocumentResult->LastCount = (UInt16)docList.Count;
+                        drp.pDocumentResult->LastWordIndexFirstPosition = (UInt16)wifq.FirstPosition;
                         //docResult.SortValue = docList.Count * 0x1000000000000 + i * 0x100000000 + docList.FirstPosition;
 
                         //docIdRank[docList.DocumentId] = docResult;
@@ -408,7 +409,7 @@ namespace Hubble.Core.Query
             DeleteProvider delProvider = _DBProvider.DelProvider;
             int deleteCount = delProvider.Filter(docIdRank);
 
-            if (CanLoadPartOfDocs)
+            if (CanLoadPartOfDocs && upDict == null)
             {
                 if (docIdRank.Count < wordIndexes[wordIndexes.Length - 1].RelTotalCount)
                 {

@@ -655,13 +655,13 @@ namespace Hubble.Core.SFQL.Parse
 
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in src.Values)
             {
-                Query.DocumentResult dr;
+                Query.DocumentResult* dr;
                 if (dest.TryGetValue(drp.pDocumentResult->DocId, out dr))
                 {
-                    dr.Score += drp.pDocumentResult->Score;
-                    if (dr.PayloadData == null && drp.pDocumentResult->PayloadData != null)
+                    dr->Score += drp.pDocumentResult->Score;
+                    if (dr->PayloadData == null && drp.pDocumentResult->PayloadData != null)
                     {
-                        dr.PayloadData = drp.pDocumentResult->PayloadData;
+                        dr->PayloadData = drp.pDocumentResult->PayloadData;
                     }
                 }
                 else
