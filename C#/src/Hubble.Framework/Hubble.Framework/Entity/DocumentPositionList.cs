@@ -98,11 +98,24 @@ namespace Hubble.Core.Entity
             FirstPosition = 0;
         }
 
-        public DocumentPositionList(int docId, Int16 count, Int16 totalWordsInDocIndex, int firstPosition)
+        public DocumentPositionList(int docId, int count, Int16 totalWordsInDocIndex, int firstPosition)
         {
             DocumentId = docId;
             //CountAndWordCount = 0;
-            Count = count;
+
+            if (count > Int16.MaxValue)
+            {
+                Count = Int16.MaxValue;
+            }
+            else if (count <= 0)
+            {
+                Count = 1;
+            }
+            else
+            {
+                Count = (Int16)count;
+            }
+
             _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
 
             if (_TotalWordsInThisDocumentIndex >= 7)
@@ -113,11 +126,24 @@ namespace Hubble.Core.Entity
             FirstPosition = firstPosition;
         }
 
-        public DocumentPositionList(int docId, Int16 count, Int16 totalWordsInDocIndex)
+        public DocumentPositionList(int docId, int count, Int16 totalWordsInDocIndex)
         {
             DocumentId = docId;
             //CountAndWordCount = 0;
-            Count = count;
+            
+            if (count > Int16.MaxValue)
+            {
+                Count = Int16.MaxValue;
+            }
+            else if (count <= 0)
+            {
+                Count = 1;
+            }
+            else
+            {
+                Count = (Int16)count;
+            }
+
             _TotalWordsInThisDocumentIndex = totalWordsInDocIndex;
 
             if (_TotalWordsInThisDocumentIndex >= 7)
@@ -238,11 +264,11 @@ namespace Hubble.Core.Entity
             if (!simple)
             {
                 int firstPosition = VInt.sReadFromStream(stream);
-                result[0] = new DocumentPositionList(lastDocId, (Int16)(count / 8), (Int16)(count % 8), firstPosition);
+                result[0] = new DocumentPositionList(lastDocId, count / 8, (Int16)(count % 8), firstPosition);
             }
             else
             {
-                result[0] = new DocumentPositionList(lastDocId, (Int16)(count / 8), (Int16)(count % 8));
+                result[0] = new DocumentPositionList(lastDocId, count / 8, (Int16)(count % 8));
             }
 
             if (docsCount == 1)
@@ -264,11 +290,11 @@ namespace Hubble.Core.Entity
                 if (!simple)
                 {
                     int firstPosition = VInt.sReadFromStream(stream);
-                    result[i] = new DocumentPositionList(lastDocId, (Int16)(docCount), (Int16)(count % 8), firstPosition);
+                    result[i] = new DocumentPositionList(lastDocId, docCount, (Int16)(count % 8), firstPosition);
                 }
                 else
                 {
-                    result[i] = new DocumentPositionList(lastDocId, (Int16)(docCount), (Int16)(count % 8));
+                    result[i] = new DocumentPositionList(lastDocId, docCount, (Int16)(count % 8));
                 }
 
                 wordCountSum += docCount;

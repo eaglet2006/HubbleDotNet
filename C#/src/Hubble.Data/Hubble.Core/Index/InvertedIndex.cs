@@ -394,7 +394,7 @@ namespace Hubble.Core.Index
                     {
                         if (_IndexMode == Hubble.Core.Data.Field.IndexMode.Simple)
                         {
-                            _ListForWriter.Add(new DocumentPositionList(TempDocumentId, (Int16)_TempPositionList.Count,
+                            _ListForWriter.Add(new DocumentPositionList(TempDocumentId, _TempPositionList.Count,
                                 DocumentPositionList.GetTotalWordsInDocIndex(TempTotalWordsInDoc)));
                         }
                         else
@@ -420,13 +420,13 @@ namespace Hubble.Core.Index
                             if (_TempPositionList.Count > 0)
                             {
                                 _ListForWriter.Add(new DocumentPositionList(TempDocumentId, 
-                                    (Int16)_TempPositionList.Count,
+                                    _TempPositionList.Count,
                                     DocumentPositionList.GetTotalWordsInDocIndex(TempTotalWordsInDoc), 
                                     _TempPositionList[0]));
                             }
                             else
                             {
-                                _ListForWriter.Add(new DocumentPositionList(TempDocumentId, (Int16)_TempPositionList.Count, 
+                                _ListForWriter.Add(new DocumentPositionList(TempDocumentId, _TempPositionList.Count, 
                                     DocumentPositionList.GetTotalWordsInDocIndex(TempTotalWordsInDoc)));
                             }
                         }

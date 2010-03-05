@@ -242,22 +242,29 @@ namespace Hubble.Core.Query
                         }
                     }
 
-                    long rank = (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
 
-                    int score = 0;
-
-                    if (rank > int.MaxValue - 4000000)
+                    if (score < 0)
                     {
-                        long high = rank % (int.MaxValue - 4000000);
-
-                        score = int.MaxValue - 4000000 + (int)(high / 1000);
-                    }
-                    else
-                    {
-                        score = (int)rank;
+                        //Overflow
+                        score = long.MaxValue - 4000000;
                     }
 
-                    rank = (long)wifq.FieldRank * (long)wifq.WordRank * (long)score;
+
+                    //int score = 0;
+
+                    //if (rank > int.MaxValue - 4000000)
+                    //{
+                    //    long high = rank % (int.MaxValue - 4000000);
+
+                    //    score = int.MaxValue - 4000000 + (int)(high / 1000);
+                    //}
+                    //else
+                    //{
+                    //    score = (int)rank;
+                    //}
+
+                    //rank = (long)wifq.FieldRank * (long)wifq.WordRank * (long)score;
 
                     //Query.DocumentResult docResult;
 
@@ -270,7 +277,7 @@ namespace Hubble.Core.Query
 
                     if (exits)
                     {
-                        drp.pDocumentResult->Score += rank;
+                        drp.pDocumentResult->Score += score;
                         //docResult.Score += rank;
 
                         //WordIndexForQuery lastWordIndex = (WordIndexForQuery)docResult.Tag;
@@ -327,12 +334,12 @@ namespace Hubble.Core.Query
                             }
 
                             double delta = 1 / (double)sumWordRank;
-                            rank = (long)(rank * delta);
+                            score = (long)(score * delta);
                         }
 
                         if (upDict == null)
                         {
-                            DocumentResult docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
+                            DocumentResult docResult = new DocumentResult(docList.DocumentId, score, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                             docIdRank.Add(docList.DocumentId, docResult);
                         }
                         else
@@ -341,7 +348,7 @@ namespace Hubble.Core.Query
                             {
                                 if (upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    DocumentResult docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
+                                    DocumentResult docResult = new DocumentResult(docList.DocumentId, score, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                                     docIdRank.Add(docList.DocumentId, docResult);
                                 }
                             }
@@ -349,7 +356,7 @@ namespace Hubble.Core.Query
                             {
                                 if (!upDict.ContainsKey(docList.DocumentId))
                                 {
-                                    DocumentResult docResult = new DocumentResult(docList.DocumentId, rank, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
+                                    DocumentResult docResult = new DocumentResult(docList.DocumentId, score, wifq.FirstPosition, wifq.QueryCount, docList.FirstPosition, docList.Count, i);
                                     docIdRank.Add(docList.DocumentId, docResult);
                                 }
                             }
@@ -532,22 +539,30 @@ namespace Hubble.Core.Query
                         }
                     }
 
-                    long rank = (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
 
-                    int score = 0;
-
-                    if (rank > int.MaxValue - 4000000)
+                    if (score < 0)
                     {
-                        long high = rank % (int.MaxValue - 4000000);
-
-                        score = int.MaxValue - 4000000 + (int)(high / 1000);
-                    }
-                    else
-                    {
-                        score = (int)rank;
+                        //Overflow
+                        score = long.MaxValue - 4000000;
                     }
 
-                    rank = (long)wifq.FieldRank * (long)wifq.WordRank * (long)score;
+                    //long rank = (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+
+                    //int score = 0;
+
+                    //if (rank > int.MaxValue - 4000000)
+                    //{
+                    //    long high = rank % (int.MaxValue - 4000000);
+
+                    //    score = int.MaxValue - 4000000 + (int)(high / 1000);
+                    //}
+                    //else
+                    //{
+                    //    score = (int)rank;
+                    //}
+
+                    //rank = (long)wifq.FieldRank * (long)wifq.WordRank * (long)score;
 
                     //Query.DocumentResult* pDocResult;
 
@@ -560,7 +575,7 @@ namespace Hubble.Core.Query
 
                     if (exits)
                     {
-                        drp.pDocumentResult->Score += rank;
+                        drp.pDocumentResult->Score += score;
 
                         //docIdRank[docList.DocumentId] = docResult;
                     }
@@ -571,7 +586,7 @@ namespace Hubble.Core.Query
                         {
                             //docResult = new DocumentResult(docList.DocumentId, rank);
                             //docIdRank.Add(docList.DocumentId, docResult);
-                            docIdRank.Add(docList.DocumentId, rank);
+                            docIdRank.Add(docList.DocumentId, score);
                         }
                         else
                         {
@@ -581,7 +596,7 @@ namespace Hubble.Core.Query
                                 {
                                     //docResult = new DocumentResult(docList.DocumentId, rank);
                                     //docIdRank.Add(docList.DocumentId, docResult);
-                                    docIdRank.Add(docList.DocumentId, rank);
+                                    docIdRank.Add(docList.DocumentId, score);
                                 }
                             }
                             else
@@ -590,7 +605,7 @@ namespace Hubble.Core.Query
                                 {
                                     //docResult = new DocumentResult(docList.DocumentId, rank);
                                     //docIdRank.Add(docList.DocumentId, docResult);
-                                    docIdRank.Add(docList.DocumentId, rank);
+                                    docIdRank.Add(docList.DocumentId, score);
                                 }
                             }
                         }
