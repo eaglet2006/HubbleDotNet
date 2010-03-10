@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Store
 {
     /// <summary>
     /// This class is the result of documents list for one word
     /// </summary>
-    public class WordDocumentsList : List<Entity.DocumentPositionList>
+    public class WordDocumentsList : SuperList<Entity.DocumentPositionList>
     {
         /// <summary>
         /// Sum of word count
@@ -19,5 +20,6 @@ namespace Hubble.Core.Store
         /// this field return rel doc count
         /// </summary>
         public int RelDocCount = 0;
+
     }
 }

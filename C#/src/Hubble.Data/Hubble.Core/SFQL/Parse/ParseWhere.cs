@@ -258,7 +258,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (query.UpDict != null)
                 {
-                    query.CanLoadPartOfDocs = true;
+                    query.CanLoadPartOfDocs = false;
                 }
 
                 query.QueryWords = queryWords;

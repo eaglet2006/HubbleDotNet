@@ -201,9 +201,12 @@ namespace Hubble.Core.Query
                     beginFilter = true;
                 }
 
+                Entity.DocumentPositionList[] wifqDocBuf = wifq.WordIndex.DocPositionBuf;
+
                 for (int j = 0; j < wifq.WordIndexesLength; j++)
                 {
-                    Entity.DocumentPositionList docList = wifq.WordIndex[j];
+                    //Entity.DocumentPositionList docList = wifq.WordIndex[j];
+                    Entity.DocumentPositionList docList = wifqDocBuf[j];
 
                     Core.SFQL.Parse.DocumentResultPoint drp;
                     drp.pDocumentResult = null;
@@ -498,9 +501,12 @@ namespace Hubble.Core.Query
                     beginFilter = true;
                 }
 
+                Entity.DocumentPositionList[] wifqDocBuf = wifq.WordIndex.DocPositionBuf;
+
                 for (int j = 0; j < wifq.WordIndexesLength; j++)
                 {
-                    Entity.DocumentPositionList docList = wifq.WordIndex[j];
+                    //Entity.DocumentPositionList docList = wifq.WordIndex[j];
+                    Entity.DocumentPositionList docList = wifqDocBuf[j];
 
                     Core.SFQL.Parse.DocumentResultPoint drp;
                     drp.pDocumentResult = null;
@@ -621,7 +627,7 @@ namespace Hubble.Core.Query
             }
 
             DeleteProvider delProvider = _DBProvider.DelProvider;
-            delProvider.Filter(docIdRank);
+            int deleteCount = delProvider.Filter(docIdRank);
 
             if (CanLoadPartOfDocs && upDict == null)
             {
@@ -648,6 +654,7 @@ namespace Hubble.Core.Query
                 }
             }
 
+            docIdRank.RelTotalCount -= deleteCount;
 #if PerformanceTest
                 sw.Stop();
 

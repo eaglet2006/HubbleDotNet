@@ -143,6 +143,13 @@ namespace Hubble.Core.Index
                 }
             }
 
+            public DocumentPositionList[] DocPositionBuf
+            {
+                get
+                {
+                    return _ListForReader.Buf;
+                }
+            }
 
             #endregion
 
