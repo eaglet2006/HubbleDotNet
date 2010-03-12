@@ -90,7 +90,7 @@
     <Compile Include="Query\DocumentRank.cs" />
     <Compile Include="Query\DocumentResult.cs" />
     <Compile Include="Query\DocumentResultForSort.cs" />
-    <Compile Include="Query\FullTextQuery.cs" />
+    <Compile Include="Query\LikeQuery.cs" />
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\MatchQuery.cs" />
     <Compile Include="Query\DocRankRadixSortedList.cs" />

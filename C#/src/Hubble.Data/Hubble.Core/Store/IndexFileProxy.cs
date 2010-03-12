@@ -377,84 +377,6 @@ namespace Hubble.Core.Store
         }
 
 
-        public class WordFilePostionList : IComparable<WordFilePostionList>
-        {
-            private string _Word;
-
-            public string Word
-            {
-                get
-                {
-                    return _Word;
-                }
-            }
-
-            private WordFilePositionList _FilePositionList;
-
-            internal WordFilePositionList FilePositionList
-            {
-                get
-                {
-                    return _FilePositionList;
-                }
-            }
-
-            public WordFilePostionList(string word)
-            {
-                _Word = word;
-                _FilePositionList = new WordFilePositionList();
-            }
-
-            #region IComparable<WordFilePostionList> Members
-
-            public int CompareTo(WordFilePostionList other)
-            {
-                if (other == null)
-                {
-                    return 1;
-                }
-
-                if (this.FilePositionList.Count == 0 && other.FilePositionList.Count == 0)
-                {
-                    return 0;
-                }
-
-                if (other.FilePositionList.Count == 0)
-                {
-                    return 1;
-                }
-
-                if (this.FilePositionList[0].Serial > other.FilePositionList[0].Serial)
-                {
-                    return 1;
-                }
-                else if (this.FilePositionList[0].Serial < other.FilePositionList[0].Serial)
-                {
-                    return -1;
-                }
-                else
-                {
-                    long myPosition = this.FilePositionList[0].Position;
-                    long otherPosition = other.FilePositionList[0].Position;
-
-                    if (myPosition > otherPosition)
-                    {
-                        return 1;
-                    }
-                    else if (myPosition < otherPosition)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
-            }
-
-            #endregion
-        }
-
         private IndexFile _IndexFile;
 
         private WordFilePositionProvider _WordFilePositionTable = new WordFilePositionProvider();
@@ -1066,6 +988,21 @@ namespace Hubble.Core.Store
 
             System.Threading.Monitor.Exit(_LockObj);
         }
+
+               
+        public List<string> InnerLike(string str, InnerLikeType type)
+        {
+            System.Threading.Monitor.Enter(_LockObj);
+            try
+            {
+                return _WordFilePositionTable.InnerLike(str, type);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+        }
+
 
         internal void Close(int millisecondsTimeout)
         {

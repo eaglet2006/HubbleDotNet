@@ -833,7 +833,14 @@ namespace Hubble.Core.Query
 
             if (_QueryWords.Count <= 0 || _WordIndexes.Length <= 0)
             {
-                return result;
+                if (Not && UpDict != null)
+                {
+                    return UpDict;
+                }
+                else
+                {
+                    return result;
+                }
             }
 
             if (this.Not)

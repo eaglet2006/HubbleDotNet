@@ -148,28 +148,18 @@ namespace Hubble.Core.Query
             Array.Sort(wordIndexes);
 
             //Get max word doc list count
-            int maxWordDocListCount = 0;
-            int maxDocId = 0;
+            int minWordDocListCount = 4 * 1024 * 1024; //4M
 
             foreach (WordIndexForQuery wifq in wordIndexes)
             {
-                maxWordDocListCount += wifq.WordIndex.WordDocList.Count;
-                if (maxWordDocListCount > MinResultCount)
-                {
-                    maxDocId = Math.Max(maxDocId, wifq.WordIndex.WordDocList[wifq.WordIndex.WordDocList.Count - 1].DocumentId);
-                    break;
-                }
-
-                maxDocId = Math.Max(maxDocId, wifq.WordIndex.WordDocList[wifq.WordIndex.WordDocList.Count - 1].DocumentId);
+                minWordDocListCount = Math.Min(minWordDocListCount, wifq.WordIndex.WordDocList.Count);
             }
-
-            //maxWordDocListCount += maxWordDocListCount / 2;
 
             if (docIdRank.Count == 0)
             {
-                if (maxWordDocListCount > DocumentResultWhereDictionary.DefaultSize)
+                if (minWordDocListCount > DocumentResultWhereDictionary.DefaultSize)
                 {
-                    docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(maxWordDocListCount);
+                    docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(minWordDocListCount);
                 }
             }
 
@@ -507,28 +497,18 @@ namespace Hubble.Core.Query
             Array.Sort(wordIndexes);
 
             //Get max word doc list count
-            int maxWordDocListCount = 0;
-            int maxDocId = 0;
-
+            int minWordDocListCount = 4 * 1024 * 1024; //4M
+             
             foreach (WordIndexForQuery wifq in wordIndexes)
             {
-                maxWordDocListCount += wifq.WordIndex.WordDocList.Count;
-                if (maxWordDocListCount > MinResultCount)
-                {
-                    maxDocId = Math.Max(maxDocId, wifq.WordIndex.WordDocList[wifq.WordIndex.WordDocList.Count - 1].DocumentId);
-                    break;
-                }
-
-                maxDocId = Math.Max(maxDocId, wifq.WordIndex.WordDocList[wifq.WordIndex.WordDocList.Count - 1].DocumentId);
+                minWordDocListCount = Math.Min(minWordDocListCount, wifq.WordIndex.WordDocList.Count);
             }
-
-            //maxWordDocListCount += maxWordDocListCount / 2;
 
             if (docIdRank.Count == 0)
             {
-                if (maxWordDocListCount > DocumentResultWhereDictionary.DefaultSize)
+                if (minWordDocListCount > DocumentResultWhereDictionary.DefaultSize)
                 {
-                    docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(maxWordDocListCount);
+                    docIdRank = new Core.SFQL.Parse.DocumentResultWhereDictionary(minWordDocListCount);
                 }
             }
 
@@ -920,6 +900,7 @@ namespace Hubble.Core.Query
 
                 List<WordIndexForQuery> wordIndexList = new List<WordIndexForQuery>(value.Count);
 
+                bool someWordNoRecords = false;
 
                 foreach (Hubble.Core.Entity.WordInfo wordInfo in value)
                 {
@@ -943,7 +924,8 @@ namespace Hubble.Core.Query
 
                         if (wordIndex == null)
                         {
-                            continue;
+                            someWordNoRecords = true;
+                            break;
                         }
 
                         wifq = new WordIndexForQuery(wordIndex,
@@ -963,18 +945,24 @@ namespace Hubble.Core.Query
                     //wordIndexList[wordIndexList.Count - 1].Rank += wordInfo.Rank;
                 }
 
-                _Norm_Ranks = 0;
-                foreach (WordIndexForQuery wq in wordIndexList)
+                if (!someWordNoRecords)
                 {
-                    _Norm_Ranks += wq.WordRank * wq.WordRank;
+                    _Norm_Ranks = 0;
+                    foreach (WordIndexForQuery wq in wordIndexList)
+                    {
+                        _Norm_Ranks += wq.WordRank * wq.WordRank;
+                    }
+
+                    _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
+
+                    _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
+                    wordIndexList.CopyTo(_WordIndexes, 0);
+                    wordIndexList = null;
                 }
-
-                _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
-
-                _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
-                wordIndexList.CopyTo(_WordIndexes, 0);
-                wordIndexList = null;
-
+                else
+                {
+                    _WordIndexes = new WordIndexForQuery[0];
+                }
 #if PerformanceTest
                 sw.Stop();
 
@@ -997,7 +985,14 @@ namespace Hubble.Core.Query
 
             if (_QueryWords.Count <= 0 || _WordIndexes.Length <= 0)
             {
-                return result;
+                if (Not && UpDict != null)
+                {
+                    return UpDict;
+                }
+                else
+                {
+                    return result;
+                }
             }
 
             if (this.Not)

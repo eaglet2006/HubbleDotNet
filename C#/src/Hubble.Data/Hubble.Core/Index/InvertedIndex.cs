@@ -570,6 +570,14 @@ namespace Hubble.Core.Index
 
         #region Public properties
 
+        public string FieldName
+        {
+            get
+            {
+                return _FieldName;
+            }
+        }
+
         public Data.Field.IndexMode IndexMode
         {
             get
@@ -690,7 +698,9 @@ namespace Hubble.Core.Index
 
         #endregion
 
-        internal InvertedIndex(string path, string fieldName, int tabIndex, 
+        #region Constructor
+
+        internal InvertedIndex(string path, string fieldName, int tabIndex,
             Data.Field.IndexMode mode, bool rebuild, Data.DBProvider dbProvider, int documnetCount)
         {
             _FieldName = fieldName;
@@ -705,7 +715,10 @@ namespace Hubble.Core.Index
             //InitCollectThread();
         }
 
-        #region Public Metheds
+        #endregion
+
+        #region internal Metheds
+
 
         internal void Close()
         {
@@ -719,43 +732,6 @@ namespace Hubble.Core.Index
 
             GC.Collect();
 
-        }
-
-        //public int GetDocumentWordCount(int docId)
-        //{
-        //    int count;
-
-        //    if (_DocumentWordCountTable.TryGetValue(docId, out count))
-        //    {
-        //        return count;
-        //    }
-        //    else
-        //    {
-        //        return 0;
-        //    }
-        //}
-
-        public WordIndexReader GetWordIndex(string word, bool orderByScore)
-        {
-            lock (this)
-            {
-                //WordIndexReader retVal;
-
-                //if (_WordTableReader.TryGetValue(word, out retVal))
-                //{
-                //    retVal.Hit();
-                //    return retVal;
-                //}
-
-                if (orderByScore)
-                {
-                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, _DBProvider.MaxReturnCount));
-                }
-                else
-                {
-                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, -1));
-                }
-            }
         }
 
         /// <summary>
@@ -853,13 +829,13 @@ namespace Hubble.Core.Index
             }
         }
 
-        public void FinishIndex()
+        internal void FinishIndex()
         {
             WriteCount = 0;
             StoreIndexToFile();
         }
 
-        public void Optimize()
+        internal void Optimize()
         {
             if (_IndexMerge != null)
             {
@@ -867,13 +843,14 @@ namespace Hubble.Core.Index
             }
         }
 
-        public void Optimize(OptimizationOption option)
+        internal void Optimize(OptimizationOption option)
         {
             if (_IndexMerge != null)
             {
                 _IndexMerge.Optimize(option);
             }
         }
+
 
         internal void StopOptimize()
         {
@@ -887,6 +864,41 @@ namespace Hubble.Core.Index
         {
             _IndexFileProxy.SafelyClose();
         }
+
+        #endregion
+
+
+        #region Public Metheds
+
+
+        public WordIndexReader GetWordIndex(string word, bool orderByScore)
+        {
+            lock (this)
+            {
+                //WordIndexReader retVal;
+
+                //if (_WordTableReader.TryGetValue(word, out retVal))
+                //{
+                //    retVal.Hit();
+                //    return retVal;
+                //}
+
+                if (orderByScore)
+                {
+                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, _DBProvider.MaxReturnCount));
+                }
+                else
+                {
+                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, -1));
+                }
+            }
+        }
+
+        public List<string> InnerLike(string str, InnerLikeType type)
+        {
+            return _IndexFileProxy.InnerLike(str, type);
+        }
+
 
         #endregion
 

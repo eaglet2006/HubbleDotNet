@@ -244,7 +244,18 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
 
-                List<Hubble.Core.Entity.WordInfo> queryWords = GetWordInfoList(cur.Right[0].Text);
+                List<Hubble.Core.Entity.WordInfo> queryWords ;
+
+                if (query is Query.LikeQuery)
+                {
+                    queryWords = new List<Hubble.Core.Entity.WordInfo>();
+                    queryWords.Add(new Hubble.Core.Entity.WordInfo(cur.Right[0].Text, 0));
+                }
+                else
+                {
+                    queryWords = GetWordInfoList(cur.Right[0].Text);
+                }
+
 
                 query.UpDict = null;
 
@@ -261,10 +272,10 @@ namespace Hubble.Core.SFQL.Parse
                     query.CanLoadPartOfDocs = false;
                 }
 
-                query.QueryWords = queryWords;
-
                 query.DBProvider = _DBProvider;
                 query.TabIndex = _DBProvider.GetField(fieldName).TabIndex;
+
+                query.QueryWords = queryWords;
 
                 Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
 
