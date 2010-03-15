@@ -1383,9 +1383,10 @@ namespace Hubble.Core.Query
 
                 _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
                 wordIndexList.CopyTo(_WordIndexes, 0);
+            Loop:
                 wordIndexList = null;
 
-            Loop:
+
 #if PerformanceTest
                 sw.Stop();
 
