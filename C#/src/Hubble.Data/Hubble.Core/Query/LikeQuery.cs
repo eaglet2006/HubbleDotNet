@@ -346,10 +346,10 @@ namespace Hubble.Core.Query
 
                             if (wifqDocBufs[curWord][k].DocumentId == firstDocId)
                             {
-                                //Equal with right
+                                //Equal with right, continue to next word
                                 curIndexes[curWord] = k;
                                 curWord++;
-                                break;
+                                continue;
                             }
 
                             k--;
@@ -689,10 +689,10 @@ namespace Hubble.Core.Query
 
                             if (wifqDocBufs[curWord][k].DocumentId == firstDocId)
                             {
-                                //Equal with right
+                                //Equal with right, continue to next word
                                 curIndexes[curWord] = k;
                                 curWord++;
-                                break;
+                                continue;
                             }
 
                             k--;

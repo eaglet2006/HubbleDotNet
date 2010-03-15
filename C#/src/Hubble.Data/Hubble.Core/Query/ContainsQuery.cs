@@ -270,6 +270,7 @@ namespace Hubble.Core.Query
 
                 bool terminate = false;
 
+                //Multi merge
                 for (int j = 0; j < fstWifq.WordIndexesLength && !terminate; j++)
                 {
                     curWord = 1;
@@ -321,10 +322,10 @@ namespace Hubble.Core.Query
 
                             if (wifqDocBufs[curWord][k].DocumentId == firstDocId)
                             {
-                                //Equal with right
+                                //Equal with right, Continue to next word
                                 curIndexes[curWord] = k;
                                 curWord++;
-                                break;
+                                continue;
                             }
 
                             k--;
@@ -664,10 +665,10 @@ namespace Hubble.Core.Query
 
                             if (wifqDocBufs[curWord][k].DocumentId == firstDocId)
                             {
-                                //Equal with right
+                                //Equal with right, continue to next word
                                 curIndexes[curWord] = k;
                                 curWord++;
-                                break;
+                                continue;
                             }
 
                             k--;

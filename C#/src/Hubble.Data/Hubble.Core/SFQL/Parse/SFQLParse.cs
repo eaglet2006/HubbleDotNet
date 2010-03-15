@@ -645,6 +645,8 @@ namespace Hubble.Core.SFQL.Parse
                             System.Data.DataTable table = new System.Data.DataTable();
                             table.MinimumCapacity = int.MaxValue;
                             qResult.DataSet.Tables.Add(table);
+                            qResult.PrintMessages.Add(string.Format("TotalDocuments:{0}", 
+                                dbProvider.DocumentCount));
                             return qResult;
                         }
                     }
@@ -817,7 +819,8 @@ namespace Hubble.Core.SFQL.Parse
 
             qResult.DataSet = ds;
 
-
+            qResult.PrintMessages.Add(string.Format("TotalDocuments:{0}",
+                dbProvider.DocumentCount));
             return qResult;
 
         }
@@ -868,7 +871,8 @@ namespace Hubble.Core.SFQL.Parse
 
                 SyntaxAnalysis.Select.Select qSelect = new Hubble.Core.SFQL.SyntaxAnalysis.Select.Select();
 
-                qSelect.Begin = select.Begin;
+                //qSelect.Begin = select.Begin;
+                qSelect.Begin = 0;
                 qSelect.End = select.End;
                 qSelect.Where = select.Where;
                 qSelect.OrderBys = select.OrderBys;
@@ -985,8 +989,50 @@ namespace Hubble.Core.SFQL.Parse
             sRow["Count"] = _UnionQueryResult[0].DataSet.Tables[0].MinimumCapacity;
             statisticTable.Rows.Add(sRow);
 
+            //Merge
+
+            bool hasScoreField = false;
+
+            long documentCountSum = 0;
+
+            if (_UnionQueryResult.Count > 0)
+            {
+                foreach (System.Data.DataColumn col in _UnionQueryResult[0].DataSet.Tables[0].Columns)
+                {
+                    if (col.ColumnName.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        hasScoreField = true;
+                    }
+                }
+            }
+
+            if (hasScoreField)
+            {
+                foreach (QueryResult qResult in _UnionQueryResult)
+                {
+                    documentCountSum += qResult.GetDocumentCount();
+                }
+
+                int firstDocCount = _UnionQueryResult[0].GetDocumentCount();
+
+                if (documentCountSum > 0)
+                {
+                    for (int i = 0; i < table.Rows.Count; i++)
+                    {
+                        table.Rows[i]["Score"] = (long)(double.Parse(table.Rows[i]["Score"].ToString())
+                            * Math.Sqrt((double)firstDocCount / (double)documentCountSum));
+                    }
+                }
+                else
+                {
+                    hasScoreField = false;
+                }
+            }
+
             for (int i = 1; i < _UnionQueryResult.Count; i++)
             {
+                int docCount = _UnionQueryResult[i].GetDocumentCount();
+
                 count += _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
 
                 //Statistic count of records for this table
@@ -1003,6 +1049,12 @@ namespace Hubble.Core.SFQL.Parse
                     for (int j = 0; j < table.Columns.Count; j++)
                     {
                         row[j] = srcRow[j];
+                    }
+
+                    if (hasScoreField && docCount > 0)
+                    {
+                        row["Score"] = (long)(double.Parse(row["Score"].ToString())
+                            * Math.Sqrt((double)docCount / (double)documentCountSum));
                     }
 
                     table.Rows.Add(row);
@@ -1079,6 +1131,7 @@ namespace Hubble.Core.SFQL.Parse
                     dbProvider, out selectFields, out allFieldsCount);
 
                 System.Data.DataSet dataset;
+                select.Begin = 0;
                 GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out dataset);
 
                 if (finalTable == null)

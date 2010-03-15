@@ -800,6 +800,22 @@ namespace Hubble.Core.Data
             }
         }
 
+        public int DocumentCount
+        {
+            get
+            {
+                lock (this)
+                {
+                    foreach (InvertedIndex index in _FieldInvertedIndex.Values)
+                    {
+                        return index.DocumentCount;
+                    }
+
+                    return 0;
+                }
+            }
+        }
+
         public int PayloadLength
         {
             get

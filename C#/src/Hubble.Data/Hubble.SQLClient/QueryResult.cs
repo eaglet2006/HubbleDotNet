@@ -27,7 +27,7 @@ namespace Hubble.SQLClient
         public System.Data.DataSet DataSet = new System.Data.DataSet();
 
         public List<string> PrintMessages = new List<string>();
-        
+
         public QueryResult()
         { 
         }
@@ -46,6 +46,21 @@ namespace Hubble.SQLClient
         public QueryResult(string printMessage)
         {
             PrintMessages.Add(printMessage);
+        }
+
+        public int GetDocumentCount()
+        {
+            foreach (string message in PrintMessages)
+            {
+                int index = message.IndexOf("TotalDocuments:");
+
+                if (index == 0)
+                {
+                    return int.Parse(message.Substring("TotalDocuments:".Length));
+                }
+            }
+
+            return 0;
         }
     }
 }
