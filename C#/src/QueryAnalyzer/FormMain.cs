@@ -152,7 +152,7 @@ namespace QueryAnalyzer
             textBoxMessages.Text = err;
         }
 
-        private void ShowMessages(List<string> messages)
+        private void ShowMessages(List<string> messages, bool showMessage)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -161,7 +161,11 @@ namespace QueryAnalyzer
                 sb.AppendLine(str);
             }
 
-            tabControl1.SelectedTab = tabPageMessages;
+            if (showMessage)
+            {
+                tabControl1.SelectedTab = tabPageMessages;
+            }
+
             textBoxMessages.ForeColor = Color.Black;
             textBoxMessages.Text = sb.ToString();
 
@@ -211,7 +215,7 @@ namespace QueryAnalyzer
                 {
                     if (queryResult.PrintMessages.Count > 0)
                     {
-                        ShowMessages(queryResult.PrintMessages);
+                        ShowMessages(queryResult.PrintMessages, table == null);
                     }
                 }
 
@@ -265,28 +269,38 @@ namespace QueryAnalyzer
             {
                 try
                 {
+                    contextMenuStripServer.Enabled = false;
+                    contextMenuStripDatabase.Enabled = false;
+                    contextMenuStripTable.Enabled = false;
+
                     troubleshooterToolStripMenuItem.Enabled = false;
+                    troubleshooterToolStripMenuItem1.Enabled = false;
+                    troubleshooterToolStripMenuItem2.Enabled = false;
+
 
                     if (treeViewData.SelectedNode.Tag.ToString() == "Table")
                     {
                         TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+                        treeViewData.ContextMenuStrip = contextMenuStripTable;
+                        contextMenuStripTable.Enabled = true;
+
+                        toolStripComboBoxDatabases.Text = treeViewData.SelectedNode.Parent.Text;
+
                         if (!string.IsNullOrEmpty(tableInfo.InitError))
                         {
                             troubleshooterToolStripMenuItem.Enabled = true;
                         }
                     }
-
-                    tableInfoToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Table";
-                    rebuildTableToolStripMenuItem.Enabled = tableInfoToolStripMenuItem.Enabled;
-
-                    refreshToolStripMenuItem.Enabled = treeViewData.SelectedNode.Tag.ToString() == "Server" ||
-                        treeViewData.SelectedNode.Tag.ToString() == "Database";
-
-                    if (treeViewData.SelectedNode.Tag.ToString() == "Table")
+                    else if (treeViewData.SelectedNode.Tag.ToString() == "Server")
                     {
-                        toolStripComboBoxDatabases.Text = treeViewData.SelectedNode.Parent.Text;
+                        treeViewData.ContextMenuStrip = contextMenuStripServer;
+                        contextMenuStripServer.Enabled = true;
                     }
-
+                    else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
+                    {
+                        treeViewData.ContextMenuStrip = contextMenuStripDatabase;
+                        contextMenuStripDatabase.Enabled = true;
+                    }
                 }
                 catch(Exception e1)
                 {

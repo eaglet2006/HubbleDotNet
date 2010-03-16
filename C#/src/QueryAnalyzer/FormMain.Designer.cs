@@ -51,11 +51,12 @@
             this.splitter2 = new System.Windows.Forms.Splitter();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPageResults = new System.Windows.Forms.TabPage();
+            this.panelResult = new System.Windows.Forms.Panel();
             this.tabPageMessages = new System.Windows.Forms.TabPage();
             this.textBoxMessages = new System.Windows.Forms.TextBox();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.treeViewData = new System.Windows.Forms.TreeView();
-            this.contextMenuStripTree = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.contextMenuStripTable = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tableInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rebuildTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
@@ -63,7 +64,12 @@
             this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
-            this.panelResult = new System.Windows.Forms.Panel();
+            this.contextMenuStripServer = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.refreshToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.troubleshooterToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.contextMenuStripDatabase = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.refreshToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
+            this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -72,7 +78,9 @@
             this.tabControl1.SuspendLayout();
             this.tabPageResults.SuspendLayout();
             this.tabPageMessages.SuspendLayout();
-            this.contextMenuStripTree.SuspendLayout();
+            this.contextMenuStripTable.SuspendLayout();
+            this.contextMenuStripServer.SuspendLayout();
+            this.contextMenuStripDatabase.SuspendLayout();
             this.SuspendLayout();
             // 
             // menuStrip1
@@ -264,6 +272,14 @@
             this.tabPageResults.Text = "Results";
             this.tabPageResults.UseVisualStyleBackColor = true;
             // 
+            // panelResult
+            // 
+            this.panelResult.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelResult.Location = new System.Drawing.Point(3, 3);
+            this.panelResult.Name = "panelResult";
+            this.panelResult.Size = new System.Drawing.Size(870, 107);
+            this.panelResult.TabIndex = 0;
+            // 
             // tabPageMessages
             // 
             this.tabPageMessages.Controls.Add(this.textBoxMessages);
@@ -296,7 +312,7 @@
             // 
             // treeViewData
             // 
-            this.treeViewData.ContextMenuStrip = this.contextMenuStripTree;
+            this.treeViewData.ContextMenuStrip = this.contextMenuStripTable;
             this.treeViewData.Dock = System.Windows.Forms.DockStyle.Left;
             this.treeViewData.ImageIndex = 0;
             this.treeViewData.ImageList = this.imageListTreeView;
@@ -308,47 +324,48 @@
             this.treeViewData.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewData_AfterSelect);
             this.treeViewData.MouseDown += new System.Windows.Forms.MouseEventHandler(this.treeViewData_MouseDown);
             // 
-            // contextMenuStripTree
+            // contextMenuStripTable
             // 
-            this.contextMenuStripTree.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.contextMenuStripTable.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tableInfoToolStripMenuItem,
             this.rebuildTableToolStripMenuItem,
             this.toolStripMenuItem1,
             this.refreshToolStripMenuItem,
             this.troubleshooterToolStripMenuItem});
-            this.contextMenuStripTree.Name = "contextMenuStripTree";
-            this.contextMenuStripTree.Size = new System.Drawing.Size(148, 98);
+            this.contextMenuStripTable.Name = "contextMenuStripTree";
+            this.contextMenuStripTable.Size = new System.Drawing.Size(153, 120);
             // 
             // tableInfoToolStripMenuItem
             // 
             this.tableInfoToolStripMenuItem.Name = "tableInfoToolStripMenuItem";
-            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tableInfoToolStripMenuItem.Text = "Table Info";
             this.tableInfoToolStripMenuItem.Click += new System.EventHandler(this.tableInfoToolStripMenuItem_Click);
             // 
             // rebuildTableToolStripMenuItem
             // 
             this.rebuildTableToolStripMenuItem.Name = "rebuildTableToolStripMenuItem";
-            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.rebuildTableToolStripMenuItem.Text = "Rebuild Table";
             this.rebuildTableToolStripMenuItem.Click += new System.EventHandler(this.rebuildTableToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(144, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // refreshToolStripMenuItem
             // 
+            this.refreshToolStripMenuItem.Enabled = false;
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
             // troubleshooterToolStripMenuItem
             // 
             this.troubleshooterToolStripMenuItem.Name = "troubleshooterToolStripMenuItem";
-            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.troubleshooterToolStripMenuItem.Text = "Troubleshooter";
             this.troubleshooterToolStripMenuItem.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
@@ -368,13 +385,49 @@
             this.openFileDialogSql.Filter = "SQL|*.sql";
             this.openFileDialogSql.RestoreDirectory = true;
             // 
-            // panelResult
+            // contextMenuStripServer
             // 
-            this.panelResult.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panelResult.Location = new System.Drawing.Point(3, 3);
-            this.panelResult.Name = "panelResult";
-            this.panelResult.Size = new System.Drawing.Size(870, 107);
-            this.panelResult.TabIndex = 0;
+            this.contextMenuStripServer.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshToolStripMenuItem1,
+            this.troubleshooterToolStripMenuItem1});
+            this.contextMenuStripServer.Name = "contextMenuStripServer";
+            this.contextMenuStripServer.Size = new System.Drawing.Size(148, 48);
+            // 
+            // refreshToolStripMenuItem1
+            // 
+            this.refreshToolStripMenuItem1.Name = "refreshToolStripMenuItem1";
+            this.refreshToolStripMenuItem1.Size = new System.Drawing.Size(147, 22);
+            this.refreshToolStripMenuItem1.Text = "Refresh";
+            this.refreshToolStripMenuItem1.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
+            // 
+            // troubleshooterToolStripMenuItem1
+            // 
+            this.troubleshooterToolStripMenuItem1.Name = "troubleshooterToolStripMenuItem1";
+            this.troubleshooterToolStripMenuItem1.Size = new System.Drawing.Size(147, 22);
+            this.troubleshooterToolStripMenuItem1.Text = "Troubleshooter";
+            this.troubleshooterToolStripMenuItem1.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
+            // 
+            // contextMenuStripDatabase
+            // 
+            this.contextMenuStripDatabase.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.refreshToolStripMenuItem2,
+            this.troubleshooterToolStripMenuItem2});
+            this.contextMenuStripDatabase.Name = "contextMenuStripDatabase";
+            this.contextMenuStripDatabase.Size = new System.Drawing.Size(148, 48);
+            // 
+            // refreshToolStripMenuItem2
+            // 
+            this.refreshToolStripMenuItem2.Name = "refreshToolStripMenuItem2";
+            this.refreshToolStripMenuItem2.Size = new System.Drawing.Size(147, 22);
+            this.refreshToolStripMenuItem2.Text = "Refresh";
+            this.refreshToolStripMenuItem2.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
+            // 
+            // troubleshooterToolStripMenuItem2
+            // 
+            this.troubleshooterToolStripMenuItem2.Name = "troubleshooterToolStripMenuItem2";
+            this.troubleshooterToolStripMenuItem2.Size = new System.Drawing.Size(147, 22);
+            this.troubleshooterToolStripMenuItem2.Text = "Troubleshooter";
+            this.troubleshooterToolStripMenuItem2.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -405,7 +458,9 @@
             this.tabPageResults.ResumeLayout(false);
             this.tabPageMessages.ResumeLayout(false);
             this.tabPageMessages.PerformLayout();
-            this.contextMenuStripTree.ResumeLayout(false);
+            this.contextMenuStripTable.ResumeLayout(false);
+            this.contextMenuStripServer.ResumeLayout(false);
+            this.contextMenuStripDatabase.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -429,7 +484,7 @@
         private System.Windows.Forms.ToolStripButton toolStripButtonExcute;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabelReport;
         private System.Windows.Forms.ImageList imageListTreeView;
-        private System.Windows.Forms.ContextMenuStrip contextMenuStripTree;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripTable;
         private System.Windows.Forms.ToolStripMenuItem tableInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openOToolStripMenuItem;
@@ -447,6 +502,12 @@
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.Panel panelResult;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripServer;
+        private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem troubleshooterToolStripMenuItem1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStripDatabase;
+        private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem troubleshooterToolStripMenuItem2;
     }
 }
 
