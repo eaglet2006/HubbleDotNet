@@ -46,10 +46,17 @@
             this.numericUpDownDocIdFrom = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
+            this.numericUpDownSleepSeconds = new System.Windows.Forms.NumericUpDown();
+            this.label9 = new System.Windows.Forms.Label();
+            this.numericUpDownSleepRows = new System.Windows.Forms.NumericUpDown();
+            this.label10 = new System.Windows.Forms.Label();
             this.groupBoxSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownImportCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepSeconds)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepRows)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -126,7 +133,7 @@
             // 
             // buttonRebuild
             // 
-            this.buttonRebuild.Location = new System.Drawing.Point(36, 318);
+            this.buttonRebuild.Location = new System.Drawing.Point(36, 347);
             this.buttonRebuild.Name = "buttonRebuild";
             this.buttonRebuild.Size = new System.Drawing.Size(75, 23);
             this.buttonRebuild.TabIndex = 11;
@@ -136,6 +143,11 @@
             // 
             // groupBoxSetting
             // 
+            this.groupBoxSetting.Controls.Add(this.label10);
+            this.groupBoxSetting.Controls.Add(this.numericUpDownSleepRows);
+            this.groupBoxSetting.Controls.Add(this.label9);
+            this.groupBoxSetting.Controls.Add(this.numericUpDownSleepSeconds);
+            this.groupBoxSetting.Controls.Add(this.label8);
             this.groupBoxSetting.Controls.Add(this.numericUpDownImportCount);
             this.groupBoxSetting.Controls.Add(this.label7);
             this.groupBoxSetting.Controls.Add(this.numericUpDownStep);
@@ -145,7 +157,7 @@
             this.groupBoxSetting.Controls.Add(this.label2);
             this.groupBoxSetting.Location = new System.Drawing.Point(36, 134);
             this.groupBoxSetting.Name = "groupBoxSetting";
-            this.groupBoxSetting.Size = new System.Drawing.Size(266, 168);
+            this.groupBoxSetting.Size = new System.Drawing.Size(390, 207);
             this.groupBoxSetting.TabIndex = 16;
             this.groupBoxSetting.TabStop = false;
             this.groupBoxSetting.Text = "groupBox1";
@@ -237,7 +249,7 @@
             // buttonStop
             // 
             this.buttonStop.Enabled = false;
-            this.buttonStop.Location = new System.Drawing.Point(135, 318);
+            this.buttonStop.Location = new System.Drawing.Point(135, 347);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 17;
@@ -245,11 +257,72 @@
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(24, 178);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(34, 13);
+            this.label8.TabIndex = 23;
+            this.label8.Text = "Sleep";
+            // 
+            // numericUpDownSleepSeconds
+            // 
+            this.numericUpDownSleepSeconds.Location = new System.Drawing.Point(64, 176);
+            this.numericUpDownSleepSeconds.Maximum = new decimal(new int[] {
+            1410065408,
+            2,
+            0,
+            0});
+            this.numericUpDownSleepSeconds.Name = "numericUpDownSleepSeconds";
+            this.numericUpDownSleepSeconds.Size = new System.Drawing.Size(64, 20);
+            this.numericUpDownSleepSeconds.TabIndex = 24;
+            this.numericUpDownSleepSeconds.Value = new decimal(new int[] {
+            120,
+            0,
+            0,
+            0});
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(134, 179);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(78, 13);
+            this.label9.TabIndex = 25;
+            this.label9.Text = "Seconds every";
+            // 
+            // numericUpDownSleepRows
+            // 
+            this.numericUpDownSleepRows.Location = new System.Drawing.Point(220, 175);
+            this.numericUpDownSleepRows.Maximum = new decimal(new int[] {
+            1410065408,
+            2,
+            0,
+            0});
+            this.numericUpDownSleepRows.Name = "numericUpDownSleepRows";
+            this.numericUpDownSleepRows.Size = new System.Drawing.Size(93, 20);
+            this.numericUpDownSleepRows.TabIndex = 26;
+            this.numericUpDownSleepRows.Value = new decimal(new int[] {
+            200000,
+            0,
+            0,
+            0});
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(312, 179);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(34, 13);
+            this.label10.TabIndex = 27;
+            this.label10.Text = "Rows";
+            // 
             // FormRebuildTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(329, 382);
+            this.ClientSize = new System.Drawing.Size(438, 382);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.groupBoxSetting);
             this.Controls.Add(this.buttonRebuild);
@@ -270,6 +343,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownImportCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownDocIdFrom)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepSeconds)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepRows)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -295,5 +370,10 @@
         private System.Windows.Forms.NumericUpDown numericUpDownDocIdFrom;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button buttonStop;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.NumericUpDown numericUpDownSleepRows;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.NumericUpDown numericUpDownSleepSeconds;
     }
 }

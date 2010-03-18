@@ -52,6 +52,8 @@ namespace Hubble.Core.DBAdapter
 
         int ExcuteSql(string sql);
 
+        void ConnectionTest();
+
         string DocIdReplaceField { get; set; }
 
         Data.DBProvider DBProvider { get; set; }

@@ -17,42 +17,36 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 
-namespace QueryAnalyzer
+namespace Hubble.Core.StoredProcedure
 {
-    public partial class FormAddDatabase : Form
+    class SP_TestConnectionString : StoredProcedure, IStoredProc
     {
-        public FormAddDatabase()
+        #region IStoredProc Members
+
+        public string Name
         {
-            InitializeComponent();
+            get
+            {
+                return "SP_TestConnectionString";
+            }
         }
 
-        private void buttonAdd_Click(object sender, EventArgs e)
+        public void Run()
         {
-            string databaseName = textBoxDatabaseName.Text.Trim();
-
-            if (databaseName == "")
+            if (Parameters.Count != 2)
             {
-                MessageBox.Show("Can't use empty database name!", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                throw new ArgumentException("the number of parameters must be 2. Parameter 1 is DBAdapter name, Parameter 2 is connection string.");
             }
 
-            try
-            {
-                GlobalSetting.DataAccess.Excute("exec sp_adddatabase {0}", databaseName);
-            }
-            catch (Exception e1)
-            {
-                MessageBox.Show(e1.Message, "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            DBAdapter.IDBAdapter dbAdapter = (DBAdapter.IDBAdapter)Hubble.Framework.Reflection.Instance.CreateInstance(
+                  Data.DBProvider.GetDBAdapter(Parameters[0]));
+            dbAdapter.ConnectionString = Parameters[1];
 
-
+            dbAdapter.ConnectionTest();
         }
+
+        #endregion
     }
 }

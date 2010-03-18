@@ -300,6 +300,9 @@ namespace QueryAnalyzer
                     {
                         treeViewData.ContextMenuStrip = contextMenuStripDatabase;
                         contextMenuStripDatabase.Enabled = true;
+
+                        dropDatabaseToolStripMenuItem.Enabled = treeViewData.SelectedNode.Nodes.Count == 0 &&
+                            !treeViewData.SelectedNode.Text.Trim().Equals("Master", StringComparison.CurrentCultureIgnoreCase);
                     }
                 }
                 catch(Exception e1)
@@ -486,6 +489,97 @@ namespace QueryAnalyzer
         {
             AboutBox aboutBox = new AboutBox();
             aboutBox.ShowDialog();
+        }
+
+        private void createDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DBAdapterList");
+
+                FormCreateDatabase frmCreateDatabase = new FormCreateDatabase();
+
+                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                {
+                    frmCreateDatabase.DBAdapterList.Add(row["Name"].ToString());
+                }
+
+                if (frmCreateDatabase.ShowDialog() == DialogResult.OK)
+                {
+                    ShowTree();
+                }
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void databaseInfoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string databaseName = treeViewData.SelectedNode.Text;
+
+                FormDatabaseInfo frmDatabaseInfo = new FormDatabaseInfo();
+                frmDatabaseInfo.DatabaseName = databaseName;
+
+                QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DBAdapterList");
+
+                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                {
+                    frmDatabaseInfo.DBAdapterList.Add(row["Name"].ToString());
+                }
+
+                queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
+                    databaseName);
+
+                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                {
+                    if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
+                    {
+                        frmDatabaseInfo.DefaultIndexFolder = row["Value"].ToString().Trim();
+                    }
+                    else if (row["Attribute"].ToString().Trim().Equals("DefaultDBAdapter"))
+                    {
+                        frmDatabaseInfo.DefaultDBAdapter = row["Value"].ToString().Trim();
+                    }
+                    else if (row["Attribute"].ToString().Trim().Equals("DefaultConnectionString"))
+                    {
+                        frmDatabaseInfo.DefaultConnectionString = row["Value"].ToString().Trim();
+                    }
+                }
+
+                if (frmDatabaseInfo.ShowDialog() == DialogResult.OK)
+                {
+                    ShowTree();
+                }
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dropDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string databaseName = treeViewData.SelectedNode.Text;
+
+                if (MessageBox.Show(string.Format("Are you sure you want to drop the database:{0}",
+                    databaseName), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                    DialogResult.Yes)
+                {
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DropDatabase {0}", databaseName);
+                    ShowTree();
+                }
+
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
     }

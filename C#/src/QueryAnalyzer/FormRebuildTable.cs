@@ -32,6 +32,8 @@ namespace QueryAnalyzer
     public partial class FormRebuildTable : Form
     {
         internal DbAccess DataAccess { get; set; }
+        int _SleepInterval = 120;
+        int _SleepRows = 200000;
 
         private bool _InitError = false;
 
@@ -367,6 +369,14 @@ namespace QueryAnalyzer
                     DataAccess.Excute(insertSql);
                     totalCount += count;
                     ShowCurrentCount(totalCount);
+
+                    if (_SleepRows > 0 && _SleepInterval > 0)
+                    {
+                        if (totalCount % _SleepRows == 0)
+                        {
+                            System.Threading.Thread.Sleep(_SleepInterval * 1000);
+                        }
+                    }
                 }
 
                 sw.Stop();
@@ -397,6 +407,9 @@ namespace QueryAnalyzer
 
         private void buttonRebuild_Click(object sender, EventArgs e)
         {
+            _SleepInterval = (int)numericUpDownSleepSeconds.Value;
+            _SleepRows = (int)numericUpDownSleepRows.Value;
+
             buttonStop.Enabled = true;
             groupBoxSetting.Enabled = false;
             buttonRebuild.Enabled = false;

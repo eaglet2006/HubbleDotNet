@@ -141,6 +141,9 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_SetDatabaseAttribute.cs" />
+    <Compile Include="StoredProcedure\SP_GetDatabaseAttributes.cs" />
+    <Compile Include="StoredProcedure\SP_TestConnectionString.cs" />
     <Compile Include="StoredProcedure\SP_SetTableAttribute.cs" />
     <Compile Include="StoredProcedure\SP_GetTableAttributes.cs" />
     <Compile Include="StoredProcedure\SP_TruncateTable.cs" />

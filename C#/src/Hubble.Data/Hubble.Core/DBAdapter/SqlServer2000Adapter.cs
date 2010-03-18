@@ -786,6 +786,24 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        public void ConnectionTest()
+        {
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                string connectionString;
+                if (Table == null)
+                {
+                    connectionString = this.ConnectionString;
+                }
+                else
+                {
+                    connectionString = Table.ConnectionString;
+                }
+
+                sqlData.Connect(connectionString);
+            }
+        }
+
         string _DocIdReplaceField = null;
 
         public string DocIdReplaceField
