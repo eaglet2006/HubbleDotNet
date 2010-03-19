@@ -50,7 +50,7 @@ namespace Hubble.Core.StoredProcedure
 
             foreach (string tableName in DBProvider.GetTables())
             {
-                DBProvider dbProvider = DBProvider.GetDBProviderByFullName(tableName);
+                DBProvider dbProvider = DBProvider.GetDBProviderByFullName(tableName, false);
 
                 if (dbProvider == null)
                 {

@@ -40,7 +40,7 @@ namespace Hubble.Core.StoredProcedure
                 throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
             }
 
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0]);
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0], false);
 
             if (dbProvider == null)
             {

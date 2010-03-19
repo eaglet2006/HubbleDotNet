@@ -509,6 +509,26 @@ namespace Hubble.Core.Global
 
         }
 
+        bool _InitTablesStartup = false;
+
+        /// <summary>
+        /// Initialize all the tables after startup
+        /// If false, the table will be initialized when it is accessed firstly.
+        /// </summary>
+        public bool InitTablesStartup
+        {
+            get
+            {
+                return _InitTablesStartup;
+            }
+
+            set
+            {
+                _InitTablesStartup = value;
+            }
+        }
+
+
         Directories _Directories = new Directories();
 
         public Directories Directories

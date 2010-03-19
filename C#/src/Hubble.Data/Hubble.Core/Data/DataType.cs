@@ -137,10 +137,10 @@ namespace Hubble.Core.Data
                 case DataType.Float:
                     {
                         long l;
-                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        l = (((long)buf[from]) << 32) + buf[from + 1];
 
                         float f = l;
-                        l = ((long)buf[from + 2]) << 32 + buf[from + 3];
+                        l = (((long)buf[from + 2]) << 32) + buf[from + 3];
 
                         f += (float)l / 1000000000000000000;
 
@@ -225,10 +225,10 @@ namespace Hubble.Core.Data
                 case DataType.Float:
                     {
                         long l;
-                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        l = (((long)buf[from]) << 32) + buf[from + 1];
 
                         float f = l;
-                        l = ((long)buf[from + 2]) << 32 + buf[from + 3];
+                        l = (((long)buf[from + 2]) << 32) + buf[from + 3];
 
                         f += (float)l / 1000000000000000000;
 
@@ -314,10 +314,10 @@ namespace Hubble.Core.Data
                 case DataType.Float:
                     {
                         long l;
-                        l = ((long)buf[from]) << 32 + buf[from + 1];
+                        l = (((long)buf[from]) << 32) + buf[from + 1];
 
                         float f = l;
-                        l = ((long)buf[from + 2]) << 32 + buf[from + 3];
+                        l = (((long)buf[from + 2]) << 32) + buf[from + 3];
 
                         f += (float)l / 1000000000000000000;
 

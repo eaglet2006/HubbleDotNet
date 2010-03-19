@@ -231,6 +231,16 @@ namespace Hubble.Core.Data
                 DBProvider dbProvider;
                 if (_DBProviderTable.TryGetValue(tableName.ToLower().Trim(), out dbProvider))
                 {
+                    if (!dbProvider._Inited)
+                    {
+                        Exception e = dbProvider.Open();
+
+                        if (e != null)
+                        {
+                            throw e;
+                        }
+                    }
+
                     return dbProvider;
                 }
                 else
@@ -242,11 +252,26 @@ namespace Hubble.Core.Data
 
         public static DBProvider GetDBProviderByFullName(string fullTableName)
         {
+            return GetDBProviderByFullName(fullTableName, true); 
+        }
+
+        public static DBProvider GetDBProviderByFullName(string fullTableName, bool init)
+        {
             lock (_sLockObj)
             {
                 DBProvider dbProvider;
                 if (_DBProviderTable.TryGetValue(fullTableName.ToLower().Trim(), out dbProvider))
                 {
+                    if (!dbProvider._Inited && init)
+                    {
+                        Exception e = dbProvider.Open();
+
+                        if (e != null)
+                        {
+                            throw e;
+                        }
+                    }
+
                     return dbProvider;
                 }
                 else
@@ -256,10 +281,14 @@ namespace Hubble.Core.Data
             }
         }
 
-
         public static DBProvider GetDBProvider(string tableName)
         {
-            return GetDBProviderByFullName(Setting.GetTableFullName(tableName));
+            return GetDBProvider(tableName, true);
+        }
+
+        public static DBProvider GetDBProvider(string tableName, bool init)
+        {
+            return GetDBProviderByFullName(Setting.GetTableFullName(tableName), init);
         }
 
         public static bool DBProviderExists(string tableName)
@@ -324,7 +353,7 @@ namespace Hubble.Core.Data
 
                 try
                 {
-                    DBProvider.GetDBProvider(table.Name).Create(table, directory);
+                    DBProvider.GetDBProvider(table.Name, false).Create(table, directory);
                 }
                 catch (Exception e)
                 {
@@ -358,7 +387,7 @@ namespace Hubble.Core.Data
             {
                 tableName = Setting.GetTableFullName(tableName);
 
-                DBProvider dbProvider = GetDBProvider(tableName);
+                DBProvider dbProvider = GetDBProvider(tableName, false);
 
 
                 if (dbProvider != null)
@@ -671,13 +700,16 @@ namespace Hubble.Core.Data
         private object _ExitLock = new object();
         private bool _NeedExit = false;
         private int _BusyCount = 0;
-        
+
+        private bool _Inited = false;
         private string _InitError = ""; //Initialization error when table open
+        private bool _InitedFail = false;
 
         private Field _DocIdReplaceField = null;
 
         int _LastDocId = 0;
         DBAdapter.IDBAdapter _DBAdapter;
+
 
         #endregion
 
@@ -707,6 +739,8 @@ namespace Hubble.Core.Data
             _BusyCount = 0;
 
             _InitError = ""; //Initialization error when table open
+            _Inited = false;
+            _InitedFail = false;
 
             _DocIdReplaceField = null;
 
@@ -1196,33 +1230,27 @@ namespace Hubble.Core.Data
             }
         }
 
-        private void Open(string directory)
+        private Exception Open()
         {
-            _Directory = directory;
-            _DelProvider = new DeleteProvider();
-
-            _Table = Table.Load(directory);
             Table table = _Table;
             int dbMaxDocId = 0;
 
             try
             {
-
                 lock (_LockObj)
                 {
-                    string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Optimize";
-                    DeleteOptimizeFiles(optimizeDir);
-
-                    //Get DB adapter
-                    if (!string.IsNullOrEmpty(table.DBAdapterTypeName))
+                    if (_InitedFail)
                     {
-                        Type dbAdapterType;
-
-                        if (_DBAdapterTable.TryGetValue(table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
-                        {
-                            DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
-                        }
+                        return new DataException("Table initialized fail! Please use trouble shooter to get the error message.");
                     }
+
+                    if (_Inited)
+                    {
+                        return null;
+                    }
+
+                    string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Optimize";
+                    DeleteOptimizeFiles(optimizeDir);
 
                     //init db table
                     if (DBAdapter != null)
@@ -1267,7 +1295,7 @@ namespace Hubble.Core.Data
                     OpenPayloadInformation(table);
 
                     //set payload file name
-                    _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(directory, '\\') + "Payload.db";
+                    _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
 
                     lock (this)
                     {
@@ -1350,7 +1378,7 @@ namespace Hubble.Core.Data
                     {
                         if (field.IndexType == Field.Index.Tokenized)
                         {
-                            InvertedIndex invertedIndex = new InvertedIndex(directory,
+                            InvertedIndex invertedIndex = new InvertedIndex(_Directory,
                                 field.Name.Trim(), field.TabIndex, field.Mode, false, this, documentsCount);
                             AddFieldInvertedIndex(field.Name, invertedIndex);
                         }
@@ -1363,10 +1391,48 @@ namespace Hubble.Core.Data
                 {
                     _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
                 }
+
+                _Inited = true;
+                return null;
             }
             catch (Exception e)
             {
                 _InitError = e.Message + "\r\n" + e.StackTrace;
+                _InitedFail = true;
+                return e;
+            }
+
+        }
+
+        private void Open(string directory)
+        {
+            _Directory = directory;
+            _DelProvider = new DeleteProvider();
+
+            _Table = Table.Load(directory);
+
+            //Get DB adapter
+            if (!string.IsNullOrEmpty(_Table.DBAdapterTypeName))
+            {
+                Type dbAdapterType;
+
+                if (_DBAdapterTable.TryGetValue(_Table.DBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                {
+                    DBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
+                }
+
+                if (DBAdapter != null)
+                {
+                    DBAdapter.Table = _Table;
+                    DBAdapter.DBProvider = this;
+                }
+            }
+
+            _Inited = false;
+
+            if (Global.Setting.Config.InitTablesStartup)
+            {
+                Open();
             }
         }
 

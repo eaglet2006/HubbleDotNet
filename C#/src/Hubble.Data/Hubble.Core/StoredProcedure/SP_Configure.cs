@@ -22,10 +22,16 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Note", "MB, Minimun is 1 MB");
 
             NewRow();
+            OutputValue("Name", "InitTablesStartup");
+            OutputValue("Value", Global.Setting.Config.InitTablesStartup.ToString());
+            OutputValue("Note", "Initialize all the tables after startup");
+
+            NewRow();
             OutputValue("Name", "LogDirectory");
             OutputValue("Value", Global.Setting.Config.Directories.LogDirectory);
             OutputValue("Note", "Dicrectory of log file in server");
-            
+
+
         }
 
         private void ShowValues(string name)
@@ -47,6 +53,13 @@ namespace Hubble.Core.StoredProcedure
                     OutputValue("Value", (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString());
                     OutputValue("Note", "MB, Minimun is 1 MB");
                     break;
+
+                case "inittablesstartup":
+                    OutputValue("Name", "InitTablesStartup");
+                    OutputValue("Value", Global.Setting.Config.InitTablesStartup);
+                    OutputValue("Note", "Initialize all the tables after startup");
+                    break;
+
 
                 case "logdirectory":
                     OutputValue("Name", "LogDirectory");
@@ -104,6 +117,17 @@ namespace Hubble.Core.StoredProcedure
                             name, oldValue, (Global.Setting.Config.QueryCacheMemoryLimited / (1024 * 1024)).ToString()));
                     }
 
+                    break;
+                case "inittablesstartup":
+
+                    oldValue = Global.Setting.Config.InitTablesStartup.ToString();
+
+                    Global.Setting.Config.InitTablesStartup = bool.Parse(value);
+
+                    Global.Setting.Save();
+
+                    OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
+                        name, oldValue, value));
                     break;
 
                 case "logdirectory":
