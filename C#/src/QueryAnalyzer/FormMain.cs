@@ -582,5 +582,26 @@ namespace QueryAnalyzer
             }
         }
 
+        private void truncateTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string tableName = treeViewData.SelectedNode.Text;
+
+                if (MessageBox.Show(string.Format("Are you sure you want to truncate table:{0}",
+                    tableName), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                    DialogResult.Yes)
+                {
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_TruncateTable {0}", tableName);
+                    ShowTree();
+                }
+
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }

@@ -157,6 +157,18 @@ namespace Hubble.Core.Store
         List<PayloadEntity> _PayloadEntities = new List<PayloadEntity>();
         int _StoreLength = 0;
         int _DocumentsCount = 0;
+        int _LastStoredId = -1;
+
+        /// <summary>
+        /// The last docid that is stored 
+        /// </summary>
+        internal int LastStoredId
+        {
+            get
+            {
+                return _LastStoredId;
+            }
+        }
 
         private object ProcessMessage(int evt, MessageFlag flag, object data)
         {
@@ -211,12 +223,30 @@ namespace Hubble.Core.Store
             }
         }
 
+        private void CheckPayloadEntities()
+        {
+            int lastDocId = this.LastStoredId;
+
+            for (int i = 0; i < _PayloadEntities.Count; i++)
+            {
+                if (_PayloadEntities[i].DocId <= lastDocId)
+                {
+                    throw new DataException(string.Format("DocId:{0} less then or equal with the last docid:{1}",
+                        _PayloadEntities[i].DocId, lastDocId));
+                }
+
+                lastDocId = _PayloadEntities[i].DocId;
+            }
+        }
+
         private void SaveToFile()
         {
             try
             {
                 if (_PayloadEntities.Count > 0)
                 {
+                    CheckPayloadEntities(); //Check docid is serialization.
+
                     int payloadLen = _PayloadEntities[0].Payload.Data.Length;
                     byte[] data = new byte[payloadLen * 4];
 
@@ -235,7 +265,8 @@ namespace Hubble.Core.Store
                             fs.Seek(HeadLength, System.IO.SeekOrigin.Begin);
                             
                             //Write last doc id
-                            byte[] buf = BitConverter.GetBytes((int)_PayloadEntities[_PayloadEntities.Count - 1].DocId);
+                            _LastStoredId = (int)_PayloadEntities[_PayloadEntities.Count - 1].DocId;
+                            byte[] buf = BitConverter.GetBytes(_LastStoredId);
                             fs.Write(buf, 0, buf.Length);
                             
                             //Write documents count
@@ -258,6 +289,7 @@ namespace Hubble.Core.Store
                         foreach (PayloadEntity pe in _PayloadEntities)
                         {
                             byte[] buf = BitConverter.GetBytes((int)pe.DocId);
+                            _LastStoredId = pe.DocId;
                             fs.Write(buf, 0, buf.Length);
 
                             pe.Payload.CopyTo(data);
@@ -302,6 +334,8 @@ namespace Hubble.Core.Store
             List<Data.Field> tmpFields = new List<Hubble.Core.Data.Field>();
             PayloadProvider docPayload = new PayloadProvider(docIdReplaceField);
 
+            long truncateLength = 0;
+
             foreach (Data.Field field in fields)
             {
                 if (field.IndexType != Hubble.Core.Data.Field.Index.None)
@@ -343,9 +377,19 @@ namespace Hubble.Core.Store
                 }
 
                 fs.Seek(HeadLength, System.IO.SeekOrigin.Begin);
+                bool breakForProctect = false; 
 
                 while (fs.Position < fs.Length)
                 {
+                    if (payloadLength == 0 && InsertProtect.InsertProtectInfo != null)
+                    {
+                        //Exit exception last time
+                        lastDocId = InsertProtect.InsertProtectInfo.LastDocId;
+                        _DocumentsCount = InsertProtect.InsertProtectInfo.DocumentsCount;
+                        break;
+                    }
+
+
                     int fileIndex = (int)((fs.Position - HeadLength) / _StoreLength);
 
                     byte[] buf = new byte[sizeof(int)];
@@ -353,6 +397,22 @@ namespace Hubble.Core.Store
                     fs.Read(buf, 0, buf.Length);
 
                     lastDocId = (int)BitConverter.ToInt32(buf, 0);
+
+                    if (InsertProtect.InsertProtectInfo != null)
+                    {
+                        if (lastDocId == InsertProtect.InsertProtectInfo.LastDocId)
+                        {
+                            breakForProctect = true;
+                        }
+
+                        //Exit exception last time
+                        if (lastDocId > InsertProtect.InsertProtectInfo.LastDocId)
+                        {
+                            lastDocId = InsertProtect.InsertProtectInfo.LastDocId;
+                            truncateLength = fs.Position - sizeof(int);
+                            break;
+                        }
+                    }
 
                     if (payloadLength == 0)
                     {
@@ -379,12 +439,68 @@ namespace Hubble.Core.Store
                         docPayload.Add(lastDocId, payload);
                         _DocumentsCount++;
                     }
+
+                    if (breakForProctect)
+                    {
+                        truncateLength = fs.Position;
+                        break;
+                    }
                 }
 
                 GC.Collect();
 
-                return docPayload;
             }
+
+            if (InsertProtect.InsertProtectInfo != null)
+            {
+                //Exit exception last time
+
+                if (InsertProtect.InsertProtectInfo.LastDocId < 0)
+                {
+                    //No Data
+                    lastDocId = -1;
+
+                    using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
+                    {
+                        fs.SetLength(HeadLength);
+                    }
+                }
+                else
+                {
+                    //Have data
+                    if (payloadLength == 0)
+                    {
+                        using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
+                        {
+                            //Seek to end of head
+                            fs.Seek(HeadLength, System.IO.SeekOrigin.Begin);
+
+                            //Write last doc id
+                            byte[] buf = BitConverter.GetBytes(InsertProtect.InsertProtectInfo.LastDocId);
+                            fs.Write(buf, 0, buf.Length);
+
+                            //Write documents count
+                            buf = BitConverter.GetBytes(InsertProtect.InsertProtectInfo.DocumentsCount);
+                            fs.Write(buf, 0, buf.Length);
+                        }
+
+                    }
+                    else
+                    {
+                        using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
+                        {
+                            if (truncateLength > 0 && truncateLength < fs.Length)
+                            {
+                                fs.SetLength(truncateLength);
+                            }
+                        }
+
+                    }
+                }
+            }
+
+            return docPayload;
+
         }
 
         internal void Create(List<Data.Field> fields)
@@ -424,7 +540,7 @@ namespace Hubble.Core.Store
 
         internal void Collect()
         {
-            ASendMessage((int)Event.Collect, null);
+            SSendMessage((int)Event.Collect, null, 300 * 1000);
         }
 
         internal void Update(IList<int> docIds, IList<Data.Payload> payloads, PayloadProvider payloadProvider)

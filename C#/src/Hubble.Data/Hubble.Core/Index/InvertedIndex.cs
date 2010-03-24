@@ -467,7 +467,7 @@ namespace Hubble.Core.Index
         private Store.IndexFileProxy _IndexFileProxy;
         private bool _IndexFinished = false;
 
-        private int _WriteCount = 0;
+        //private int _WriteCount = 0;
 
         private int _ForceCollectCount = 5000;
 
@@ -479,24 +479,24 @@ namespace Hubble.Core.Index
 
         #region Private Properties
 
-        private int WriteCount
-        {
-            get
-            {
-                lock (this)
-                {
-                    return _WriteCount;
-                }
-            }
+        //private int WriteCount
+        //{
+        //    get
+        //    {
+        //        lock (this)
+        //        {
+        //            return _WriteCount;
+        //        }
+        //    }
 
-            set
-            {
-                lock (this)
-                {
-                    _WriteCount = value;
-                }
-            }
-        }
+        //    set
+        //    {
+        //        lock (this)
+        //        {
+        //            _WriteCount = value;
+        //        }
+        //    }
+        //}
 
         private bool IndexFinished
         {
@@ -622,6 +622,35 @@ namespace Hubble.Core.Index
             get
             {
                 return _DocumentCount;
+            }
+        }
+
+        internal string LastHeadFilePath
+        {
+            get
+            {
+                return _IndexFileProxy.LastHeadFilePath;
+            }
+        }
+
+        internal string LastIndexFilePath
+        {
+            get
+            {
+                return _IndexFileProxy.LastIndexFilePath;
+            }
+        }
+
+        internal bool CanMerge
+        {
+            get
+            {
+                return _IndexFileProxy.CanMerge;
+            }
+
+            set
+            {
+                _IndexFileProxy.CanMerge = value;
             }
         }
 
@@ -815,15 +844,15 @@ namespace Hubble.Core.Index
                 }
 
 
-                if (WriteCount >= ForceCollectCount)
-                {
-                    WriteCount = 0;
-                    StoreIndexToFile();
-                }
-                else
-                {
-                    WriteCount++;
-                }
+                //if (WriteCount >= ForceCollectCount)
+                //{
+                //    WriteCount = 0;
+                //    StoreIndexToFile();
+                //}
+                //else
+                //{
+                //    WriteCount++;
+                //}
 
                 return retCount;
             }
@@ -831,7 +860,7 @@ namespace Hubble.Core.Index
 
         internal void FinishIndex()
         {
-            WriteCount = 0;
+            //WriteCount = 0;
             StoreIndexToFile();
         }
 

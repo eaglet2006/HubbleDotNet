@@ -65,6 +65,17 @@ namespace Hubble.Core.Store
                 _CanClose = true;
             }
 
+            while (!_IndexFileProxy.CanMerge)
+            {
+                if (_Closed)
+                {
+                    _Thread = null;
+                    return false;
+                }
+
+                System.Threading.Thread.Sleep(10);
+            }
+
             Dictionary<int, System.IO.FileStream> indexSrcFileDict = new Dictionary<int, System.IO.FileStream>();
 
             try

@@ -214,12 +214,12 @@ namespace Hubble.Core.DBAdapter
 
                     if (ds.Tables[0].Rows.Count <= 0)
                     {
-                        return 0;
+                        return -1;
                     }
 
                     if (ds.Tables[0].Rows[0][0] == System.DBNull.Value)
                     {
-                        return 0;
+                        return -1;
                     }
                     else
                     {

@@ -449,7 +449,7 @@ namespace Hubble.Core.Data
             {
                 string fullTableName = Setting.GetTableFullName(tableName);
 
-                DBProvider dbProvider = GetDBProvider(fullTableName);
+                DBProvider dbProvider = GetDBProvider(fullTableName, false);
 
                 if (dbProvider != null)
                 {
@@ -689,7 +689,6 @@ namespace Hubble.Core.Data
         private string _PayloadFileName;
         private Store.PayloadFile _PayloadFile;
 
-        private int _InsertCount = 0;
         private DeleteProvider _DelProvider;
         private Hubble.Framework.Threading.Lock _TableLock = new Hubble.Framework.Threading.Lock();
 
@@ -728,7 +727,6 @@ namespace Hubble.Core.Data
             _PayloadFileName = null;
             _PayloadFile = null;
 
-            _InsertCount = 0;
             _DelProvider = null;
 
             _LastModifyTicks = DateTime.Now.Ticks;
@@ -1149,6 +1147,8 @@ namespace Hubble.Core.Data
 
         private void DeleteAllFiles(string dir, string optimizeDir)
         {
+            InsertProtect.Remove(dir);
+
             foreach (string file in System.IO.Directory.GetFiles(dir, "*.hdx"))
             {
                 System.IO.File.Delete(file);
@@ -1247,6 +1247,37 @@ namespace Hubble.Core.Data
                     if (_Inited)
                     {
                         return null;
+                    }
+
+                    try
+                    {
+                        InsertProtect.Load(_Directory);
+
+                        if (InsertProtect.InsertProtectInfo != null)
+                        {
+                            if (!InsertProtect.InsertProtectInfo.IndexOnly)
+                            {
+                                DBAdapter.ExcuteSql(string.Format("delete {0} where docid > {1}",
+                                    this.Table.DBTableName, InsertProtect.InsertProtectInfo.LastDocId));
+                            }
+
+                            string idxDir = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\');
+
+                            foreach (string fileName in InsertProtect.InsertProtectInfo.IndexFiles)
+                            {
+                                if (System.IO.File.Exists(idxDir + fileName))
+                                {
+                                    System.IO.File.Delete(idxDir + fileName);
+                                }
+                            }
+
+                        }
+
+                    }
+                    catch(Exception e)
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Load insert protect file fail, err:{0}", e.Message));
+                        InsertProtect.Remove(_Directory);
                     }
 
                     string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Optimize";
@@ -1393,6 +1424,7 @@ namespace Hubble.Core.Data
                 }
 
                 _Inited = true;
+                InsertProtect.Remove(_Directory);
                 return null;
             }
             catch (Exception e)
@@ -1845,6 +1877,8 @@ namespace Hubble.Core.Data
                 lock (this)
                 {
                     List<Field> fields = GetAllFields();
+                    
+                    int lastDocId = _PayloadFile.LastStoredId;
 
                     foreach (Document doc in docs)
                     {
@@ -1903,121 +1937,71 @@ namespace Hubble.Core.Data
                                     }
                                 }
                             }
-
-                            //if (fValue.Value != null)
-                            //{
-                            //    if (notnullFields.ContainsKey(fValue.FieldName.ToLower().Trim()))
-                            //    {
-                            //        throw new DataException(string.Format("Field:{0} in table {1} repeats in one insert sentence",
-                            //            fValue.FieldName, _Table.Name));
-                            //    }
-
-                            //    notnullFields.Add(fValue.FieldName.ToLower().Trim(), fValue);
-                            //}
                         }
-
-                        //foreach (Field field in fields)
-                        //{
-                        //    if (!notnullFields.ContainsKey(field.Name.ToLower().Trim()))
-                        //    {
-                        //        if (!field.CanNull)
-                        //        {
-                        //            throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
-                        //                field.Name, _Table.Name));
-                        //        }
-
-                        //        if (field.DefaultValue != null)
-                        //        {
-                        //            FieldValue fv = new FieldValue(field.Name, field.DefaultValue);
-                        //            fv.Type = field.DataType;
-                        //            fv.DataLength = field.DataLength;
-                        //        }
-                        //        else
-                        //        {
-                        //            if (field.IndexType != Field.Index.None)
-                        //            {
-                        //                throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
-                        //                    field.Name, _Table.Name));
-                        //            }
-                        //        }
-                        //    }
-                        //}
-
                     }
-                }
 
-                if (!IndexOnly)
-                {
-                    _DBAdapter.Insert(docs);
-                }
-
-                foreach (Document doc in docs)
-                {
-                    int[] data = new int[_PayloadLength];
-
-                    int docId = doc.DocId;
-
-                    foreach (FieldValue fValue in doc.FieldValues)
+                    if (!IndexOnly)
                     {
-                        Field field = GetField(fValue.FieldName);
+                        _DBAdapter.Insert(docs);
+                    }
 
-                        int[] fieldPayload;
+                    foreach (Document doc in docs)
+                    {
+                        int[] data = new int[_PayloadLength];
 
-                        switch (field.IndexType)
+                        int docId = doc.DocId;
+
+                        foreach (FieldValue fValue in doc.FieldValues)
                         {
-                            case Field.Index.Untokenized:
-                                if (field.DataType == DataType.Varchar ||
-                                    field.DataType == DataType.NVarchar ||
-                                    field.DataType == DataType.Char ||
-                                    field.DataType == DataType.NChar)
-                                {
-                                    if (fValue.Value.Length > field.DataLength)
+                            Field field = GetField(fValue.FieldName);
+
+                            int[] fieldPayload;
+
+                            switch (field.IndexType)
+                            {
+                                case Field.Index.Untokenized:
+                                    if (field.DataType == DataType.Varchar ||
+                                        field.DataType == DataType.NVarchar ||
+                                        field.DataType == DataType.Char ||
+                                        field.DataType == DataType.NChar)
                                     {
-                                        throw new DataException(string.Format("Field:{0} string length is {1} large then {2}",
-                                            fValue.FieldName, fValue.Value.Length, field.DataLength));
+                                        if (fValue.Value.Length > field.DataLength)
+                                        {
+                                            throw new DataException(string.Format("Field:{0} string length is {1} large then {2}",
+                                                fValue.FieldName, fValue.Value.Length, field.DataLength));
+                                        }
                                     }
-                                }
 
-                                fieldPayload = DataTypeConvert.GetData(field.DataType, field.DataLength, fValue.Value);
+                                    fieldPayload = DataTypeConvert.GetData(field.DataType, field.DataLength, fValue.Value);
 
-                                Array.Copy(fieldPayload, 0, data, field.TabIndex, fieldPayload.Length);
+                                    Array.Copy(fieldPayload, 0, data, field.TabIndex, fieldPayload.Length);
 
-                                break;
-                            case Field.Index.Tokenized:
+                                    break;
+                                case Field.Index.Tokenized:
 
-                                InvertedIndex iIndex = GetInvertedIndex(field.Name);
+                                    InvertedIndex iIndex = GetInvertedIndex(field.Name);
 
-                                int count = iIndex.Index(fValue.Value, docId, field.GetAnalyzer());
+                                    int count = iIndex.Index(fValue.Value, docId, field.GetAnalyzer());
 
-                                //data[field.TabIndex] = count;
+                                    //data[field.TabIndex] = count;
 
-                                break;
+                                    break;
+                            }
                         }
-                    }
 
-                    lock (this)
-                    {
-                        _InsertCount++;
+                        Payload payload = new Payload(data);
 
-                        if (_InsertCount > _Table.ForceCollectCount)
-                        {
-                            _PayloadFile.Collect();
-                            _InsertCount = 0;
-                        }
-                    }
-
-                    Payload payload = new Payload(data);
-
-                    lock (this)
-                    {
                         _DocPayload.Add(docId, payload);
+
+                        _PayloadFile.Add(docId, payload, _DocPayload);
                     }
 
-                    _PayloadFile.Add(docId, payload, _DocPayload);
-                }
-                                    
-                Cache.CacheManager.InsertCount += docs.Count;
-                LastModifyTicks = DateTime.Now.Ticks;
+                    Cache.CacheManager.InsertCount += docs.Count;
+                    LastModifyTicks = DateTime.Now.Ticks;
+
+                    Collect(lastDocId);
+                }                 
+
             }
             finally
             {
@@ -2354,8 +2338,31 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Collect()
+        private void Collect()
         {
+            Collect(int.MinValue);
+        }
+
+        private void Collect(int lastDocId)
+        {
+            if (lastDocId != int.MinValue)
+            {
+                InsertProtect.InsertProtectInfo = new InsertProtect();
+                InsertProtect.InsertProtectInfo.LastDocId = lastDocId;
+                InsertProtect.InsertProtectInfo.DocumentsCount = _PayloadFile.DocumentsCount;
+
+                foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+                {
+                    InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastHeadFilePath);
+                    InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastIndexFilePath);
+                    iIndex.CanMerge = false;
+                }
+
+                InsertProtect.InsertProtectInfo.IndexOnly = this.IndexOnly;
+                InsertProtect.Save(_Directory);
+
+            }
+
             foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
             {
                 iIndex.FinishIndex();
@@ -2364,6 +2371,17 @@ namespace Hubble.Core.Data
             if (_PayloadFile != null)
             {
                 _PayloadFile.Collect();
+            }
+
+            if (lastDocId != int.MinValue)
+            {
+                InsertProtect.Remove(_Directory);
+                InsertProtect.InsertProtectInfo = null;
+
+                foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+                {
+                    iIndex.CanMerge = true;
+                }
             }
         }
 

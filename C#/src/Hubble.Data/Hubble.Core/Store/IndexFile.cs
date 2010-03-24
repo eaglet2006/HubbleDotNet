@@ -320,6 +320,22 @@ namespace Hubble.Core.Store
             }
         }
 
+        internal string LastHeadFilePath
+        {
+            get
+            {
+                return GetHeadFileName(_MaxSerial);
+            }
+        }
+
+        internal string LastIndexFilePath
+        {
+            get
+            {
+                return GetIndexFileName(_MaxSerial);
+            }
+        }
+
         public void ClearWordFilePositionList()
         {
             _WordFilePositionList = new List<WordFilePosition>();

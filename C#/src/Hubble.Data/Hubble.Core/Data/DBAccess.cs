@@ -25,8 +25,8 @@ namespace Hubble.Core.Data
 {
     public class DBAccess : IDisposable
     {
-        private DBProvider _DBInsertProvider = null;
-        private string _LastTableName = null;
+        //private DBProvider _DBInsertProvider = null;
+        //private string _LastTableName = null;
 
         private string _Host = null;
 
@@ -54,135 +54,135 @@ namespace Hubble.Core.Data
             return sfqlParse.Query(sql);
         }
 
-        public void CreateTable(Table table, string directory)
-        {
-            if (string.IsNullOrEmpty(Host))
-            {
-                lock (this)
-                {
-                    if (table.Name == null)
-                    {
-                        throw new System.ArgumentNullException("Null table name");
-                    }
+        //public void CreateTable(Table table, string directory)
+        //{
+        //    if (string.IsNullOrEmpty(Host))
+        //    {
+        //        lock (this)
+        //        {
+        //            if (table.Name == null)
+        //            {
+        //                throw new System.ArgumentNullException("Null table name");
+        //            }
 
-                    if (table.Name.Trim() == "")
-                    {
-                        throw new System.ArgumentException("Empty table name");
-                    }
+        //            if (table.Name.Trim() == "")
+        //            {
+        //                throw new System.ArgumentException("Empty table name");
+        //            }
 
-                    if (DBProvider.DBProviderExists(table.Name))
-                    {
-                        throw new DataException(string.Format("Table {0} exists already!", table.Name));
-                    }
+        //            if (DBProvider.DBProviderExists(table.Name))
+        //            {
+        //                throw new DataException(string.Format("Table {0} exists already!", table.Name));
+        //            }
 
-                    directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
+        //            directory = Hubble.Framework.IO.Path.AppendDivision(directory, '\\');
 
-                    if (!System.IO.Directory.Exists(directory))
-                    {
-                        System.IO.Directory.CreateDirectory(directory);
-                    }
+        //            if (!System.IO.Directory.Exists(directory))
+        //            {
+        //                System.IO.Directory.CreateDirectory(directory);
+        //            }
 
-                    DBProvider.NewDBProvider(table.Name, new DBProvider());
+        //            DBProvider.NewDBProvider(table.Name, new DBProvider());
 
-                    try
-                    {
-                        DBProvider.GetDBProvider(table.Name).Create(table, directory);
-                    }
-                    catch
-                    {
-                        DBProvider.Drop(table.Name);
-                        throw;
-                    }
-                }
-            }
-        }
+        //            try
+        //            {
+        //                DBProvider.GetDBProvider(table.Name).Create(table, directory);
+        //            }
+        //            catch
+        //            {
+        //                DBProvider.Drop(table.Name);
+        //                throw;
+        //            }
+        //        }
+        //    }
+        //}
 
-        public void Insert(string tableName, List<Document> docs)
-        {
-            if (string.IsNullOrEmpty(Host))
-            {
-                DBProvider dbProvider;
+        //public void Insert(string tableName, List<Document> docs)
+        //{
+        //    if (string.IsNullOrEmpty(Host))
+        //    {
+        //        DBProvider dbProvider;
 
-                lock (this)
-                {
-                    if (_DBInsertProvider != null && _LastTableName != tableName)
-                    {
-                        _DBInsertProvider.Collect();
-                    }
+        //        lock (this)
+        //        {
+        //            if (_DBInsertProvider != null && _LastTableName != tableName)
+        //            {
+        //                _DBInsertProvider.Collect();
+        //            }
 
-                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
-                    dbProvider = _DBInsertProvider;
-                }
+        //            _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+        //            dbProvider = _DBInsertProvider;
+        //        }
 
-                dbProvider.Insert(docs);
-            }
+        //        dbProvider.Insert(docs);
+        //    }
 
-            _LastTableName = tableName;
-        }
+        //    _LastTableName = tableName;
+        //}
 
-        public void Delete(string tableName, List<int> docs)
-        {
-            if (string.IsNullOrEmpty(Host))
-            {
-                DBProvider dbProvider;
+        //public void Delete(string tableName, List<int> docs)
+        //{
+        //    if (string.IsNullOrEmpty(Host))
+        //    {
+        //        DBProvider dbProvider;
 
-                lock (this)
-                {
-                    if (_DBInsertProvider != null && _LastTableName != tableName)
-                    {
-                        _DBInsertProvider.Collect();
-                    }
+        //        lock (this)
+        //        {
+        //            if (_DBInsertProvider != null && _LastTableName != tableName)
+        //            {
+        //                _DBInsertProvider.Collect();
+        //            }
 
-                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
-                    dbProvider = _DBInsertProvider;
-                }
+        //            _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+        //            dbProvider = _DBInsertProvider;
+        //        }
 
-                dbProvider.Delete(docs);
-            }
+        //        dbProvider.Delete(docs);
+        //    }
 
-            _LastTableName = tableName;
-        }
+        //    _LastTableName = tableName;
+        //}
 
-        public void Collect()
-        {
-            lock (this)
-            {
-                if (_DBInsertProvider != null)
-                {
-                    _DBInsertProvider.Collect();
-                    _DBInsertProvider = null;
-                    _LastTableName = null;
-                }
-            }
-        }
+        //public void Collect()
+        //{
+        //    lock (this)
+        //    {
+        //        if (_DBInsertProvider != null)
+        //        {
+        //            _DBInsertProvider.Collect();
+        //            _DBInsertProvider = null;
+        //            _LastTableName = null;
+        //        }
+        //    }
+        //}
 
-        public void Optimize(string tableName)
-        {
-            if (string.IsNullOrEmpty(Host))
-            {
-                DBProvider dbProvider;
+        //public void Optimize(string tableName)
+        //{
+        //    if (string.IsNullOrEmpty(Host))
+        //    {
+        //        DBProvider dbProvider;
 
-                lock (this)
-                {
-                    if (_DBInsertProvider != null && _LastTableName != tableName)
-                    {
-                        _DBInsertProvider.Collect();
-                    }
+        //        lock (this)
+        //        {
+        //            if (_DBInsertProvider != null && _LastTableName != tableName)
+        //            {
+        //                _DBInsertProvider.Collect();
+        //            }
 
-                    _DBInsertProvider = DBProvider.GetDBProvider(tableName);
-                    dbProvider = _DBInsertProvider;
-                }
+        //            _DBInsertProvider = DBProvider.GetDBProvider(tableName);
+        //            dbProvider = _DBInsertProvider;
+        //        }
 
-                dbProvider.Optimize();
-            }
+        //        dbProvider.Optimize();
+        //    }
 
-            _LastTableName = tableName;
-        }
+        //    _LastTableName = tableName;
+        //}
 
-        public void Close()
-        {
-            Collect();
-        }
+        //public void Close()
+        //{
+        //    Collect();
+        //}
 
         #region IDisposable Members
 

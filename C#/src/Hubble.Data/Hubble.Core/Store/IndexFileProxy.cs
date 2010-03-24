@@ -377,6 +377,10 @@ namespace Hubble.Core.Store
         }
 
 
+        private object _MergeLockObj = new object();
+
+        private bool _CanMerge = false;
+
         private IndexFile _IndexFile;
 
         private WordFilePositionProvider _WordFilePositionTable = new WordFilePositionProvider();
@@ -435,6 +439,25 @@ namespace Hubble.Core.Store
             }
         }
 
+        internal bool CanMerge
+        {
+            get
+            {
+                lock (_MergeLockObj)
+                {
+                    return _CanMerge;
+                }
+            }
+
+            set
+            {
+                lock (_MergeLockObj)
+                {
+                    _CanMerge = value ;
+                }
+            }
+        }
+
         internal bool CanClose
         {
             get
@@ -444,6 +467,22 @@ namespace Hubble.Core.Store
                     return _CanClose;
                 }
 
+            }
+        }
+
+        internal string LastHeadFilePath
+        {
+            get
+            {
+                return _IndexFile.LastHeadFilePath;
+            }
+        }
+
+        internal string LastIndexFilePath
+        {
+            get
+            {
+                return _IndexFile.LastIndexFilePath;
             }
         }
 

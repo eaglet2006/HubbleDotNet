@@ -1272,7 +1272,7 @@ namespace Hubble.Core.SFQL.Parse
                     affectedCount += docs.Count;
 
                     dbProvider.Insert(docs);
-                    dbProvider.Collect();
+                    //dbProvider.Collect();
 
                 }
 
