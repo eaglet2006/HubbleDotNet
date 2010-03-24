@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_TableIndexOnly : StoredProcedure, IStoredProc
+    class SP_TableIndexOnly : StoredProcedure, IStoredProc, IHelper
     {
         void ShowValue(string tableName)
         {
@@ -92,5 +92,17 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Set or get table index only. First parameter is table name. Second parameter is 'True' or 'False' if set";
+            }
+        }
+
+        #endregion
     }
 }

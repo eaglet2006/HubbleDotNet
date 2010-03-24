@@ -439,11 +439,79 @@ namespace Hubble.Core.SFQL.Parse
 
                         break;
                     case DataType.Float:
+                        #region Float
+                        float leftFloat;
+                        float rightFloat;
+
+                        long l;
+                        //Calculate left float
+                        l = (((long)docResult.PayloadData[cur.FieldTab]) << 32) + docResult.PayloadData[cur.FieldTab + 1];
+
+                        leftFloat = l;
+                        l = (((long)docResult.PayloadData[cur.FieldTab + 2]) << 32) + docResult.PayloadData[cur.FieldTab + 3];
+
+                        leftFloat += (float)l / 1000000000000000000;
+
+                        //Calculate right float
+                        l = (((long)cur.ComparisionData[cur.FieldTab - cur.FieldTab]) << 32) + cur.ComparisionData[cur.FieldTab - cur.FieldTab + 1];
+
+                        rightFloat = l;
+                        l = (((long)cur.ComparisionData[cur.FieldTab - cur.FieldTab + 2]) << 32) + cur.ComparisionData[cur.FieldTab - cur.FieldTab + 3];
+
+                        rightFloat += (float)l / 1000000000000000000;
+
+                        switch (cur.Operator.SyntaxType)
+                        {
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Lessthan:
+                                if (leftFloat >= rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.LessthanEqual:
+                                if (leftFloat > rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Largethan:
+                                if (leftFloat <= rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.LargethanEqual:
+                                if (leftFloat < rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Equal:
+                                if (leftFloat != rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+
+                            case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.NotEqual:
+                                if (leftFloat == rightFloat)
+                                {
+                                    return false;
+                                }
+                                break;
+                        }
+
+                        #endregion
+                        break;
                     case DataType.Varchar:
                     case DataType.NVarchar:
                     case DataType.Char:
                     case DataType.NChar:
-                        #region Float and String
+                        #region String
                         switch (cur.Operator.SyntaxType)
                         {
                             case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Lessthan:

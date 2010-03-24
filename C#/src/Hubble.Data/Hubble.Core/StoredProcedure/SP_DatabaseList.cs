@@ -22,7 +22,7 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_DatabaseList : StoredProcedure, IStoredProc
+    class SP_DatabaseList : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -52,6 +52,18 @@ namespace Hubble.Core.StoredProcedure
                 OutputValue("DefaultDBAdapter", database.DefaultDBAdapter);
                 OutputValue("DefaultConnectionString", database.DefaultConnectionString);
 
+            }
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "List all databases";
             }
         }
 

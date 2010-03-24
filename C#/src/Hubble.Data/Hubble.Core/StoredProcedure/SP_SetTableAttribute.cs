@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_SetTableAttribute : StoredProcedure, IStoredProc
+    class SP_SetTableAttribute : StoredProcedure, IStoredProc, IHelper
     {
         void SetValue(string tableName, string attrName, string value)
         {
@@ -83,5 +83,17 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Set table attribute. First parameter is table name. Second parameter is attribute name. Third is value";
+            }
+        }
+
+        #endregion
     }
 }

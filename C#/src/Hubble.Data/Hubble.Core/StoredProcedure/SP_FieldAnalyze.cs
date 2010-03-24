@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    public class SP_FieldAnalyze : StoredProcedure, IStoredProc
+    public class SP_FieldAnalyze : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -82,5 +82,16 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Analyze text using the analyzer of the field that input. Parameter 1 is table name, Parameter 2 is field name, Parameter 3 is a text for test, Parameter 4 is analyzer type(optional)";
+            }
+        }
+
+        #endregion
     }
 }

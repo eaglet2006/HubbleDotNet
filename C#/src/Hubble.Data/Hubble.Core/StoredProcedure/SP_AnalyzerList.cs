@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_AnalyzerList : StoredProcedure, IStoredProc
+    class SP_AnalyzerList : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -53,6 +53,18 @@ namespace Hubble.Core.StoredProcedure
                 OutputValue("FileName", type.Assembly.Location);
             }
 
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "List all analyzers!";
+            }
         }
 
         #endregion

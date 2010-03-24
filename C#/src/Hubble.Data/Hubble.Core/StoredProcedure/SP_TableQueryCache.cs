@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_TableQueryCache : StoredProcedure, IStoredProc
+    class SP_TableQueryCache : StoredProcedure, IStoredProc, IHelper
     {
         void ShowValue(string tableName)
         {
@@ -94,5 +94,17 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Get or set table query cache. First parameter is table name and second is 'True' or 'False', third is QueryCacheTimeout. If get, only need first parameter";
+            }
+        }
+
+        #endregion
     }
 }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_ExcuteSql : StoredProcedure, IStoredProc
+    class SP_ExcuteSql : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -70,6 +70,18 @@ namespace Hubble.Core.StoredProcedure
             int rows = dbAdapter.ExcuteSql(sql);
 
             OutputMessage(string.Format("Excute sql successul. Affect {0} rows!", rows));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Excute sql directly from database. Parameter 1 is table name or sql for excute. Parameter 2 is sql for excute if Parameter 1 is table name";
+            }
         }
 
         #endregion

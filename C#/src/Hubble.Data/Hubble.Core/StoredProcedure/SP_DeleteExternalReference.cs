@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_DeleteExternalReference : StoredProcedure, IStoredProc
+    class SP_DeleteExternalReference : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -67,5 +67,17 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Delete external reference. Parameter number must be 2. Parameter 1 is refer name and parameter 2 is assembly file path!";
+            }
+        }
+
+        #endregion
     }
 }

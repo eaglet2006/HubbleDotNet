@@ -188,6 +188,11 @@ namespace QueryAnalyzer
                 SFQLParse sfqlParse = new SFQLParse();
                 string sql = textBoxSql.Text;
 
+                if (sql.StartsWith("SP_", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    sql = "exec " + sql;
+                }
+
                 if (!string.IsNullOrEmpty(textBoxSql.SelectedText))
                 {
                     sql = textBoxSql.SelectedText;
@@ -593,6 +598,27 @@ namespace QueryAnalyzer
                     DialogResult.Yes)
                 {
                     QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_TruncateTable {0}", tableName);
+                    ShowTree();
+                }
+
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dropTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string tableName = treeViewData.SelectedNode.Text;
+
+                if (MessageBox.Show(string.Format("Are you sure you want to drop table:{0}",
+                    tableName), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                    DialogResult.Yes)
+                {
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DropTable {0}", tableName);
                     ShowTree();
                 }
 

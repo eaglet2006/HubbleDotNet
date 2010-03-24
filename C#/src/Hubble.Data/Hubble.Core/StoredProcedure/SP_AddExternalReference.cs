@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_AddExternalReference : StoredProcedure, IStoredProc
+    class SP_AddExternalReference : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -96,6 +96,18 @@ namespace Hubble.Core.StoredProcedure
 
             OutputMessage(string.Format("Add {0} on {1} successfully! Available after reboot hubble.net!", 
                 Parameters[1], Parameters[0]));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Add a extrenal reference. Parameter number must be 2. Parameter 1 is refer name and parameter 2 is assembly file path!";
+            }
         }
 
         #endregion

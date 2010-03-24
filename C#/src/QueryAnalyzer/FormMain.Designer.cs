@@ -58,6 +58,7 @@
             this.treeViewData = new System.Windows.Forms.TreeView();
             this.contextMenuStripTable = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.tableInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.truncateTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.rebuildTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -73,7 +74,8 @@
             this.dropDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
-            this.truncateTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dropTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -332,13 +334,15 @@
             // 
             this.contextMenuStripTable.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.tableInfoToolStripMenuItem,
-            this.truncateTableToolStripMenuItem,
             this.rebuildTableToolStripMenuItem,
             this.toolStripMenuItem1,
             this.refreshToolStripMenuItem,
-            this.troubleshooterToolStripMenuItem});
+            this.troubleshooterToolStripMenuItem,
+            this.toolStripMenuItem3,
+            this.dropTableToolStripMenuItem,
+            this.truncateTableToolStripMenuItem});
             this.contextMenuStripTable.Name = "contextMenuStripTree";
-            this.contextMenuStripTable.Size = new System.Drawing.Size(153, 142);
+            this.contextMenuStripTable.Size = new System.Drawing.Size(153, 170);
             // 
             // tableInfoToolStripMenuItem
             // 
@@ -346,6 +350,13 @@
             this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tableInfoToolStripMenuItem.Text = "Table Info";
             this.tableInfoToolStripMenuItem.Click += new System.EventHandler(this.tableInfoToolStripMenuItem_Click);
+            // 
+            // truncateTableToolStripMenuItem
+            // 
+            this.truncateTableToolStripMenuItem.Name = "truncateTableToolStripMenuItem";
+            this.truncateTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.truncateTableToolStripMenuItem.Text = "Truncate Table";
+            this.truncateTableToolStripMenuItem.Click += new System.EventHandler(this.truncateTableToolStripMenuItem_Click);
             // 
             // rebuildTableToolStripMenuItem
             // 
@@ -458,12 +469,17 @@
             this.troubleshooterToolStripMenuItem2.Text = "Troubleshooter";
             this.troubleshooterToolStripMenuItem2.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
-            // truncateTableToolStripMenuItem
+            // dropTableToolStripMenuItem
             // 
-            this.truncateTableToolStripMenuItem.Name = "truncateTableToolStripMenuItem";
-            this.truncateTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.truncateTableToolStripMenuItem.Text = "Truncate Table";
-            this.truncateTableToolStripMenuItem.Click += new System.EventHandler(this.truncateTableToolStripMenuItem_Click);
+            this.dropTableToolStripMenuItem.Name = "dropTableToolStripMenuItem";
+            this.dropTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.dropTableToolStripMenuItem.Text = "Drop Table";
+            this.dropTableToolStripMenuItem.Click += new System.EventHandler(this.dropTableToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(149, 6);
             // 
             // FormMain
             // 
@@ -548,6 +564,8 @@
         private System.Windows.Forms.ToolStripMenuItem dropDatabaseToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem databaseInfoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem truncateTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
+        private System.Windows.Forms.ToolStripMenuItem dropTableToolStripMenuItem;
     }
 }
 

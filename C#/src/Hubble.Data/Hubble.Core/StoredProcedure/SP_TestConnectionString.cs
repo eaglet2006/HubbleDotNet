@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_TestConnectionString : StoredProcedure, IStoredProc
+    class SP_TestConnectionString : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -45,6 +45,18 @@ namespace Hubble.Core.StoredProcedure
             dbAdapter.ConnectionString = Parameters[1];
 
             dbAdapter.ConnectionTest();
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Test database connection string. The number of parameters must be 2. Parameter 1 is DBAdapter name, Parameter 2 is connection string.";
+            }
         }
 
         #endregion

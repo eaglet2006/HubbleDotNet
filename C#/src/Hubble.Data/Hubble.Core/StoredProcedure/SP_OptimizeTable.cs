@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_OptimizeTable : StoredProcedure, IStoredProc
+    class SP_OptimizeTable : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -75,6 +75,18 @@ namespace Hubble.Core.StoredProcedure
 
             OutputMessage(string.Format("System optimizing {0} in background now. Maybe need a few minutes to finish it!", 
                 dbProvider.TableName));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Optimize table. Parameter 1 is table name. Parameter 2 is optimize option(optional)";
+            }
         }
 
         #endregion

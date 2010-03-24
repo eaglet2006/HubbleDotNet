@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_QuerySql : StoredProcedure, IStoredProc
+    class SP_QuerySql : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -75,5 +75,17 @@ namespace Hubble.Core.StoredProcedure
         }
 
         #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Query sql directly from database. Parameter 1 is table name or sql for query. Parameter 2 is sql for excute if Parameter 1 is table name";
+            }
+        }
+
+        #endregion 
     }
 }

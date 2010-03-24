@@ -22,7 +22,7 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_TableList : StoredProcedure, IStoredProc
+    class SP_TableList : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -72,6 +72,18 @@ namespace Hubble.Core.StoredProcedure
                 OutputValue("InitError", dbProvider.InitError);
             }
 
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "List all tables";
+            }
         }
 
         #endregion

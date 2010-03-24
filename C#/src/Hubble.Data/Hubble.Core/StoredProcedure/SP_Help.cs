@@ -22,7 +22,19 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_DBAdapterList : StoredProcedure, IStoredProc, IHelper
+    class StoreProcedureComparer : IComparer<IStoredProc>
+    {
+        #region IComparer<IStoredProc> Members
+
+        public int Compare(IStoredProc x, IStoredProc y)
+        {
+            return x.Name.CompareTo(y.Name);
+        }
+
+        #endregion
+    }
+
+    class SP_Help : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -30,36 +42,35 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "SP_DBAdapterList";
+                return "SP_Help";
             }
         }
 
         public void Run()
         {
             AddColumn("Name");
-            AddColumn("ClassName");
-            AddColumn("Assembly");
-            AddColumn("FileName");
+            AddColumn("Note");
 
-            Global.IDBAdapterConfig[] adapters = Global.Setting.Config.IDBAdapters.ToArray();
+            List<IStoredProc> spList = DBProvider.GetAllStoredProcs();
 
-            foreach (Type type in Data.DBProvider.GetDBAdapters())
+            spList.Sort(new StoreProcedureComparer());
+
+            foreach (IStoredProc storedProc in spList)
             {
+                IHelper helper = storedProc as IHelper;
+
+                if (helper == null || storedProc == null)
+                {
+                    continue;
+                }
+
                 NewRow();
-
-                Data.INamedExternalReference nameRef = Hubble.Framework.Reflection.Instance.CreateInstance(type)
-                    as Data.INamedExternalReference;
-
-                OutputValue("Name", nameRef.Name);
-                OutputValue("ClassName", type.FullName);
-                OutputValue("Assembly", type.Assembly.FullName);
-                OutputValue("FileName", type.Assembly.Location);
+                OutputValue("Name", storedProc.Name);
+                OutputValue("Note", helper.Help);
             }
-
         }
 
         #endregion
-
 
         #region IHelper Members
 
@@ -67,7 +78,7 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "List all db adapters";
+                return "List all store procedures";
             }
         }
 

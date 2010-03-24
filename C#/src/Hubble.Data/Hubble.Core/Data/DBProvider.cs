@@ -192,6 +192,25 @@ namespace Hubble.Core.Data
 
         }
 
+        internal static List<IStoredProc> GetAllStoredProcs()
+        {
+            List<IStoredProc> result = new List<IStoredProc>();
+
+            foreach (Type type in _StoredProcTable.Values)
+            {
+                IStoredProc storedProc = 
+                    Hubble.Framework.Reflection.Instance.CreateInstance(type)
+                    as Hubble.Core.StoredProcedure.IStoredProc;
+
+                if (storedProc != null)
+                {
+                    result.Add(storedProc);
+                }
+            }
+
+            return result;
+        }
+
         internal static List<DBProvider> GetDbProviders()
         {
             lock (_sLockObj)
@@ -1051,11 +1070,20 @@ namespace Hubble.Core.Data
             {
                 List<Field> selectFields = new List<Field>();
 
-                foreach (Field field in _FieldIndex.Values)
+                if (_FieldIndex.Count <= 0 && _Table.Fields.Count > 0)
                 {
-                    selectFields.Add(field);
+                    foreach (Field field in _Table.Fields)
+                    {
+                        selectFields.Add(field);
+                    }
                 }
-
+                else
+                {
+                    foreach (Field field in _FieldIndex.Values)
+                    {
+                        selectFields.Add(field);
+                    }
+                }
                 return selectFields;
             }
 
@@ -1251,6 +1279,7 @@ namespace Hubble.Core.Data
 
                     try
                     {
+                        //Insert protect
                         InsertProtect.Load(_Directory);
 
                         if (InsertProtect.InsertProtectInfo != null)

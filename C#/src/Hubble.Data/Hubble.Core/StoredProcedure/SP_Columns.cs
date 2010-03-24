@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_Columns : StoredProcedure, IStoredProc
+    class SP_Columns : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -23,7 +23,7 @@ namespace Hubble.Core.StoredProcedure
                 throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
             }
 
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0]);
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0], false);
 
             if (dbProvider == null)
             {
@@ -51,12 +51,20 @@ namespace Hubble.Core.StoredProcedure
                     OutputValue("IsNull", field.CanNull);
                     OutputValue("IsPrimaryKey", field.PrimaryKey);
                     OutputValue("Default", field.DefaultValue);
-
                 }
-
-
             }
+        }
 
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "List all columns in the table. The number of parameters must be 1. Parameter 1 is table name.";
+            }
         }
 
         #endregion

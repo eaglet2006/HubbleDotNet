@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_Version : StoredProcedure, IStoredProc
+    class SP_Version : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -20,6 +20,18 @@ namespace Hubble.Core.StoredProcedure
         {
             AddColumn("Version");
             OutputValue("Version", Hubble.Framework.Reflection.Assembly.GetCallingAssemblyVersion().ToString());
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Get hubble.net service version";
+            }
         }
 
         #endregion

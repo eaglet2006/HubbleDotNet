@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_TruncateTable : StoredProcedure, IStoredProc
+    class SP_TruncateTable : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -43,6 +43,18 @@ namespace Hubble.Core.StoredProcedure
             Data.DBProvider.Truncate(Parameters[0]);
 
             OutputMessage("Command(s) completed successfully.");
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Truncate table. The number of parameters must be 1. Parameter 1 is table name.";
+            }
         }
 
         #endregion

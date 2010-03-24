@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_DropTable : StoredProcedure, IStoredProc
+    class SP_DropTable : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -52,6 +52,18 @@ namespace Hubble.Core.StoredProcedure
             }
 
             OutputMessage(string.Format("Drop table {0} successul.", Parameters[0]));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Drop table. Parameter 1 is table name.";
+            }
         }
 
         #endregion

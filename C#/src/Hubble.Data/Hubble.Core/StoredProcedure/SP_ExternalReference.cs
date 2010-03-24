@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_ExternalReference : StoredProcedure, IStoredProc
+    class SP_ExternalReference : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -50,5 +50,17 @@ namespace Hubble.Core.StoredProcedure
 
         #endregion
 
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "List external reference";
+            }
+        }
+
+        #endregion
     }
 }

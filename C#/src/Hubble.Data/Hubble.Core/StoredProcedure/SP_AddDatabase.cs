@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_AddDatabase : StoredProcedure, IStoredProc
+    class SP_AddDatabase : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -79,6 +79,18 @@ namespace Hubble.Core.StoredProcedure
             Global.Setting.Save();
 
             OutputMessage(string.Format("Create database {0} successul.", database.DatabaseName));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Add a database. Parameter 1 is Database name. Parameter 2 is DefaultPath, Parameter 3 is DefaultDBAdapter, Parameter 4 is DefaultConnectionString";
+            }
         }
 
         #endregion

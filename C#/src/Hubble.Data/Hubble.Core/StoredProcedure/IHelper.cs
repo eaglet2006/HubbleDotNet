@@ -21,37 +21,8 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_QueryCacheReport : StoredProcedure, IStoredProc, IHelper
+    interface IHelper
     {
-        #region IStoredProc Members
-
-        public string Name
-        {
-            get
-            {
-                return "SP_QueryCacheReport";
-            }
-        }
-
-        public void Run()
-        {
-            string report = Cache.QueryCacheManager.Manager.GetQueryCacheReport();
-
-            OutputMessage(report);
-        }
-
-        #endregion
-
-        #region IHelper Members
-
-        public string Help
-        {
-            get 
-            {
-                return "Report the query cache";
-            }
-        }
-
-        #endregion
+        string Help { get; }
     }
 }

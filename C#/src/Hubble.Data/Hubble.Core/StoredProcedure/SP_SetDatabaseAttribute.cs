@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_SetDatabaseAttribute : StoredProcedure, IStoredProc
+    class SP_SetDatabaseAttribute : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -77,6 +77,18 @@ namespace Hubble.Core.StoredProcedure
 
             OutputMessage(string.Format("Set database {0} attribute {1} to {2} successul.", 
                 database.DatabaseName, Parameters[1], Parameters[2]));
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "Set database attribute. Parameter 1 is Database name. Parameter 2 is Attribute name, Parameter 3 is Attribute value";
+            }
         }
 
         #endregion

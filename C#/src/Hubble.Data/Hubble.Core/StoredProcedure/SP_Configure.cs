@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_Configure : StoredProcedure, IStoredProc
+    class SP_Configure : StoredProcedure, IStoredProc, IHelper
     {
         private void ShowValues()
         {
@@ -182,6 +182,18 @@ namespace Hubble.Core.StoredProcedure
                 throw new StoredProcException("The number of parameters is more then 2.");
             }
 
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        string IHelper.Help
+        {
+            get 
+            {
+                return "Configure system.";
+            }
         }
 
         #endregion
