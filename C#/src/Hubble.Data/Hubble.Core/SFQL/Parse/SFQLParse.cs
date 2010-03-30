@@ -136,7 +136,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
                 SyntaxAnalysis.Update.Update;
 
-            ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName), false);
+            ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName), false, "");
 
             parseWhere.Begin = update.Begin;
             parseWhere.End = update.End;
@@ -180,7 +180,7 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalysis.Delete.Delete delete = sentence.SyntaxEntity as
                 SyntaxAnalysis.Delete.Delete;
 
-            ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName), false);
+            ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName), false, "");
 
             parseWhere.Begin = delete.Begin;
             parseWhere.End = delete.End;
@@ -668,7 +668,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            ParseWhere parseWhere = new ParseWhere(tableName, dbProvider, orderByScore);
+            ParseWhere parseWhere = new ParseWhere(tableName, dbProvider, orderByScore, GetOrderByString(select));
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
@@ -945,6 +945,28 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             return null;
+        }
+
+        private string GetOrderByString(SyntaxAnalysis.Select.Select select)
+        {
+            if (select == null)
+            {
+                return "";
+            }
+
+            if (select.OrderBys == null)
+            {
+                return "";
+            }
+
+            StringBuilder sortString = new StringBuilder();
+
+            foreach (SyntaxAnalysis.Select.OrderBy orderBy in select.OrderBys)
+            {
+                sortString.AppendFormat("{0} ", orderBy.ToString());
+            }
+
+            return sortString.ToString();
         }
 
         private QueryResult ExcuteUnionSelect()

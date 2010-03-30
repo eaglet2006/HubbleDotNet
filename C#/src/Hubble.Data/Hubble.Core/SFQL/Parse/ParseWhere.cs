@@ -47,7 +47,11 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public ParseWhere(string tableName, DBProvider dbProvider, bool orderbyScore)
+
+        private string _OrderBy;
+
+
+        public ParseWhere(string tableName, DBProvider dbProvider, bool orderbyScore, string orderBy)
         {
             if (string.IsNullOrEmpty(tableName))
             {
@@ -56,6 +60,7 @@ namespace Hubble.Core.SFQL.Parse
 
             _TableName = tableName;
             _OrderByScore = orderbyScore;
+            _OrderBy = orderBy;
 
             //_DBProvider =  DBProvider.GetDBProvider(_TableName);
             _DBProvider = dbProvider;
@@ -80,7 +85,7 @@ namespace Hubble.Core.SFQL.Parse
                 whereSql = expressionTree.SqlText;
             }
 
-            return _DBProvider.DBAdapter.GetDocumentResults(whereSql);
+            return _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, _OrderBy);
         }
 
         private List<Entity.WordInfo> GetWordInfoList(string queryStr)
@@ -630,6 +635,7 @@ namespace Hubble.Core.SFQL.Parse
             foreach (int docId in delDocIdList)
             {
                 upDict.Remove(docId);
+                upDict.RelTotalCount--;
             }
         }
 

@@ -697,24 +697,45 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
-        public Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(string where)
+        public Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(int end, string where, string orderby)
         {
             string sql;
 
+            if (end >= 0)
+            {
+                sql = string.Format("select top {0} ", end + 1);
+            }
+            else
+            {
+                sql = "select ";
+            }
+
             if (string.IsNullOrEmpty(where))
             {
-                sql = string.Format("select docid from {0} ", Table.DBTableName);
+                if (DocIdReplaceField == null)
+                {
+                    sql += string.Format(" docid from {0} ", Table.DBTableName);
+                }
+                else
+                {
+                    sql += string.Format(" {0} from {1} ", DocIdReplaceField, Table.DBTableName);
+                }
             }
             else
             {
                 if (DocIdReplaceField == null)
                 {
-                    sql = string.Format("select docid from {0} where {1}", Table.DBTableName, where);
+                    sql += string.Format(" docid from {0} where {1}", Table.DBTableName, where);
                 }
                 else
                 {
-                    sql = string.Format("select {0} from {1} where {2}", DocIdReplaceField, Table.DBTableName, where);
+                    sql += string.Format(" {0} from {1} where {2}", DocIdReplaceField, Table.DBTableName, where);
                 }
+            }
+
+            if (!string.IsNullOrEmpty(orderby))
+            {
+                sql += " order by " + orderby;
             }
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
@@ -763,6 +784,21 @@ namespace Hubble.Core.DBAdapter
                 sqlData.Connect(connectionString);
 
                 return sqlData.QuerySql(sql);
+            }
+        }
+
+
+        public System.Data.DataSet GetSchema(string tableName)
+        {
+            string sql = string.Format("select * from {0}", tableName);
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                string connectionString = this.ConnectionString;
+
+                sqlData.Connect(connectionString);
+
+                return sqlData.GetSchema(sql);
             }
         }
 

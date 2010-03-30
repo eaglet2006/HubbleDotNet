@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -61,14 +60,14 @@ namespace QueryAnalyzer
             {
                 TableField tableField = new TableField();
 
-                tableField.labelFieldName.Text = row["FieldName"].ToString();
-                tableField.comboBoxDataType.Text = row["DataType"].ToString();
-                tableField.comboBoxIndexType.Text = row["IndexType"].ToString();
-                tableField.numericUpDownDataLength.Value = int.Parse(row["DataLength"].ToString());
-                tableField.comboBoxAnalyzer.Text = row["Analyzer"].ToString();
-                tableField.checkBoxNull.Checked = bool.Parse(row["IsNull"].ToString());
-                tableField.checkBoxPK.Checked = bool.Parse(row["IsPrimaryKey"].ToString());
-                tableField.textBoxDefault.Text = row["Default"].ToString();
+                tableField.FieldName = row["FieldName"].ToString();
+                tableField.DataType = row["DataType"].ToString();
+                tableField.IndexType = row["IndexType"].ToString();
+                tableField.DataLength = int.Parse(row["DataLength"].ToString());
+                tableField.AnalyzerName = row["Analyzer"].ToString();
+                tableField.IsNull = bool.Parse(row["IsNull"].ToString());
+                tableField.IsPK = bool.Parse(row["IsPrimaryKey"].ToString());
+                tableField.DefaultValue = row["Default"].ToString();
                 tableField.Top = currentTop;
                 tableField.Left = panelHead.Left;
                 tableField.Visible = true;

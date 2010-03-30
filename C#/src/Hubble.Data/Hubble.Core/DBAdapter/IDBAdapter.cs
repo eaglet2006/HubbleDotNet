@@ -44,11 +44,13 @@ namespace Hubble.Core.DBAdapter
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end);
 
-        Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(string where);
+        Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(int end, string where, string orderby);
 
         int MaxDocId { get; }
 
         DataSet QuerySql(string sql);
+
+        DataSet GetSchema(string tableName);
 
         int ExcuteSql(string sql);
 

@@ -92,6 +92,19 @@ namespace Hubble.Framework.Data
             return ds;
         }
 
+
+        public DataSet GetSchema(string sql)
+        {
+            SqlDataAdapter dadapter = new SqlDataAdapter();
+
+            dadapter.SelectCommand = new SqlCommand(sql, _Conn);
+
+            DataSet ds = new DataSet();
+            dadapter.FillSchema(ds, SchemaType.Mapped);
+
+            return ds;
+        }
+
         public void InsertEntity(string tableName, object entity)
         {
             StringBuilder sql = new StringBuilder();

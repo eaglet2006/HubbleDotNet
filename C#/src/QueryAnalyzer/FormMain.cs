@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
@@ -463,18 +462,26 @@ namespace QueryAnalyzer
             }
         }
 
-        private void rebuildTableToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ShowRebuildTable(string tableName, bool initError)
         {
             FormRebuildTable frmRebuildTable = new FormRebuildTable();
-            frmRebuildTable.TableName = treeViewData.SelectedNode.Text;
+            frmRebuildTable.TableName = tableName;
             frmRebuildTable.DataAccess = GlobalSetting.DataAccess;
+            frmRebuildTable.InitError = initError;
+            frmRebuildTable.ShowDialog();
+        }
+
+        private void rebuildTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
             TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+            bool initError = false;
+
             if (!string.IsNullOrEmpty(tableInfo.InitError))
             {
-                frmRebuildTable.InitError = true;
+                initError = true;
             }
 
-            frmRebuildTable.ShowDialog();
+            ShowRebuildTable(treeViewData.SelectedNode.Text, initError);
         }
 
         private void troubleshooterToolStripMenuItem_Click(object sender, EventArgs e)
@@ -622,6 +629,34 @@ namespace QueryAnalyzer
                     ShowTree();
                 }
 
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void createTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string databaseName = treeViewData.SelectedNode.Text;
+                toolStripComboBoxDatabases.Text = databaseName;
+
+                FormCreateTable frmCreateTable = new FormCreateTable(databaseName);
+
+                if (frmCreateTable.ShowDialog() == DialogResult.OK)
+                {
+                    refreshToolStripMenuItem_Click(sender, e);
+
+                    if (frmCreateTable.radioButtonCreateTableFromExistTable.Checked)
+                    {
+                        if (MessageBox.Show("Index this table now?", "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                        {
+                            ShowRebuildTable(frmCreateTable.textBoxTableName.Text.Trim(), false);
+                        }
+                    }
+                }
             }
             catch (Exception e1)
             {
