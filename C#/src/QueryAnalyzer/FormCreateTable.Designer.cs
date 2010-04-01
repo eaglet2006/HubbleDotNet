@@ -30,6 +30,7 @@
         {
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.buttonTestConnectionString = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxTableName = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
@@ -43,12 +44,18 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxIndexFolder = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.groupBoxIncrementalMode = new System.Windows.Forms.GroupBox();
+            this.radioButtonAll = new System.Windows.Forms.RadioButton();
+            this.radioButtonAppendOnly = new System.Windows.Forms.RadioButton();
             this.textBoxDBTableName = new System.Windows.Forms.TextBox();
             this.labelDBTableName = new System.Windows.Forms.Label();
             this.groupBoxMode = new System.Windows.Forms.GroupBox();
             this.radioButtonCreateTableFromExistTable = new System.Windows.Forms.RadioButton();
             this.radioButtonCreateNewTable = new System.Windows.Forms.RadioButton();
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.panelDocIdReplaceField = new System.Windows.Forms.Panel();
+            this.textBoxDocIdReplaceField = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
             this.buttonDelete = new System.Windows.Forms.Button();
             this.buttonAddField = new System.Windows.Forms.Button();
             this.panelFields = new System.Windows.Forms.Panel();
@@ -65,24 +72,17 @@
             this.textBoxScript = new System.Windows.Forms.TextBox();
             this.buttonBack = new System.Windows.Forms.Button();
             this.buttonNext = new System.Windows.Forms.Button();
-            this.buttonTestConnectionString = new System.Windows.Forms.Button();
-            this.groupBoxIncrementalMode = new System.Windows.Forms.GroupBox();
-            this.radioButtonAll = new System.Windows.Forms.RadioButton();
-            this.radioButtonAppendOnly = new System.Windows.Forms.RadioButton();
-            this.panelDocIdReplaceField = new System.Windows.Forms.Panel();
-            this.label7 = new System.Windows.Forms.Label();
-            this.textBoxDocIdReplaceField = new System.Windows.Forms.TextBox();
             this.buttonFinish = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
+            this.groupBoxIncrementalMode.SuspendLayout();
             this.groupBoxMode.SuspendLayout();
             this.tabPage3.SuspendLayout();
+            this.panelDocIdReplaceField.SuspendLayout();
             this.panelFields.SuspendLayout();
             this.panelHead.SuspendLayout();
             this.tabPage4.SuspendLayout();
-            this.groupBoxIncrementalMode.SuspendLayout();
-            this.panelDocIdReplaceField.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
@@ -121,6 +121,16 @@
             this.tabPage1.Text = "Database attributes";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // buttonTestConnectionString
+            // 
+            this.buttonTestConnectionString.Location = new System.Drawing.Point(31, 288);
+            this.buttonTestConnectionString.Name = "buttonTestConnectionString";
+            this.buttonTestConnectionString.Size = new System.Drawing.Size(169, 23);
+            this.buttonTestConnectionString.TabIndex = 29;
+            this.buttonTestConnectionString.Text = "Test DB Connection String";
+            this.buttonTestConnectionString.UseVisualStyleBackColor = true;
+            this.buttonTestConnectionString.Click += new System.EventHandler(this.buttonTestConnectionString_Click);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -136,6 +146,7 @@
             this.textBoxTableName.Name = "textBoxTableName";
             this.textBoxTableName.Size = new System.Drawing.Size(241, 20);
             this.textBoxTableName.TabIndex = 27;
+            this.textBoxTableName.TextChanged += new System.EventHandler(this.textBoxTableName_TextChanged);
             // 
             // label8
             // 
@@ -237,6 +248,40 @@
             this.tabPage2.Text = "Index Mode";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // groupBoxIncrementalMode
+            // 
+            this.groupBoxIncrementalMode.Controls.Add(this.radioButtonAll);
+            this.groupBoxIncrementalMode.Controls.Add(this.radioButtonAppendOnly);
+            this.groupBoxIncrementalMode.Location = new System.Drawing.Point(30, 248);
+            this.groupBoxIncrementalMode.Name = "groupBoxIncrementalMode";
+            this.groupBoxIncrementalMode.Size = new System.Drawing.Size(363, 103);
+            this.groupBoxIncrementalMode.TabIndex = 34;
+            this.groupBoxIncrementalMode.TabStop = false;
+            this.groupBoxIncrementalMode.Text = "Incremental Mode";
+            // 
+            // radioButtonAll
+            // 
+            this.radioButtonAll.AutoSize = true;
+            this.radioButtonAll.Location = new System.Drawing.Point(21, 61);
+            this.radioButtonAll.Name = "radioButtonAll";
+            this.radioButtonAll.Size = new System.Drawing.Size(140, 17);
+            this.radioButtonAll.TabIndex = 1;
+            this.radioButtonAll.Text = "Append, Delete, Update";
+            this.radioButtonAll.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonAppendOnly
+            // 
+            this.radioButtonAppendOnly.AutoSize = true;
+            this.radioButtonAppendOnly.Checked = true;
+            this.radioButtonAppendOnly.Location = new System.Drawing.Point(21, 28);
+            this.radioButtonAppendOnly.Name = "radioButtonAppendOnly";
+            this.radioButtonAppendOnly.Size = new System.Drawing.Size(86, 17);
+            this.radioButtonAppendOnly.TabIndex = 0;
+            this.radioButtonAppendOnly.TabStop = true;
+            this.radioButtonAppendOnly.Text = "Append Only";
+            this.radioButtonAppendOnly.UseVisualStyleBackColor = true;
+            this.radioButtonAppendOnly.CheckedChanged += new System.EventHandler(this.radioButtonAppendOnly_CheckedChanged);
+            // 
             // textBoxDBTableName
             // 
             this.textBoxDBTableName.Location = new System.Drawing.Point(30, 195);
@@ -301,6 +346,32 @@
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "Fields";
             this.tabPage3.UseVisualStyleBackColor = true;
+            // 
+            // panelDocIdReplaceField
+            // 
+            this.panelDocIdReplaceField.Controls.Add(this.textBoxDocIdReplaceField);
+            this.panelDocIdReplaceField.Controls.Add(this.label7);
+            this.panelDocIdReplaceField.Location = new System.Drawing.Point(461, 419);
+            this.panelDocIdReplaceField.Name = "panelDocIdReplaceField";
+            this.panelDocIdReplaceField.Size = new System.Drawing.Size(200, 30);
+            this.panelDocIdReplaceField.TabIndex = 3;
+            this.panelDocIdReplaceField.Visible = false;
+            // 
+            // textBoxDocIdReplaceField
+            // 
+            this.textBoxDocIdReplaceField.Location = new System.Drawing.Point(63, 5);
+            this.textBoxDocIdReplaceField.Name = "textBoxDocIdReplaceField";
+            this.textBoxDocIdReplaceField.Size = new System.Drawing.Size(126, 20);
+            this.textBoxDocIdReplaceField.TabIndex = 1;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(10, 10);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(43, 13);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "ID Field";
             // 
             // buttonDelete
             // 
@@ -469,75 +540,6 @@
             this.buttonNext.UseVisualStyleBackColor = true;
             this.buttonNext.Click += new System.EventHandler(this.buttonNext_Click);
             // 
-            // buttonTestConnectionString
-            // 
-            this.buttonTestConnectionString.Location = new System.Drawing.Point(31, 288);
-            this.buttonTestConnectionString.Name = "buttonTestConnectionString";
-            this.buttonTestConnectionString.Size = new System.Drawing.Size(169, 23);
-            this.buttonTestConnectionString.TabIndex = 29;
-            this.buttonTestConnectionString.Text = "Test DB Connection String";
-            this.buttonTestConnectionString.UseVisualStyleBackColor = true;
-            this.buttonTestConnectionString.Click += new System.EventHandler(this.buttonTestConnectionString_Click);
-            // 
-            // groupBoxIncrementalMode
-            // 
-            this.groupBoxIncrementalMode.Controls.Add(this.radioButtonAll);
-            this.groupBoxIncrementalMode.Controls.Add(this.radioButtonAppendOnly);
-            this.groupBoxIncrementalMode.Location = new System.Drawing.Point(30, 248);
-            this.groupBoxIncrementalMode.Name = "groupBoxIncrementalMode";
-            this.groupBoxIncrementalMode.Size = new System.Drawing.Size(363, 103);
-            this.groupBoxIncrementalMode.TabIndex = 34;
-            this.groupBoxIncrementalMode.TabStop = false;
-            this.groupBoxIncrementalMode.Text = "Incremental Mode";
-            // 
-            // radioButtonAll
-            // 
-            this.radioButtonAll.AutoSize = true;
-            this.radioButtonAll.Location = new System.Drawing.Point(21, 61);
-            this.radioButtonAll.Name = "radioButtonAll";
-            this.radioButtonAll.Size = new System.Drawing.Size(140, 17);
-            this.radioButtonAll.TabIndex = 1;
-            this.radioButtonAll.Text = "Append, Delete, Update";
-            this.radioButtonAll.UseVisualStyleBackColor = true;
-            // 
-            // radioButtonAppendOnly
-            // 
-            this.radioButtonAppendOnly.AutoSize = true;
-            this.radioButtonAppendOnly.Checked = true;
-            this.radioButtonAppendOnly.Location = new System.Drawing.Point(21, 28);
-            this.radioButtonAppendOnly.Name = "radioButtonAppendOnly";
-            this.radioButtonAppendOnly.Size = new System.Drawing.Size(86, 17);
-            this.radioButtonAppendOnly.TabIndex = 0;
-            this.radioButtonAppendOnly.TabStop = true;
-            this.radioButtonAppendOnly.Text = "Append Only";
-            this.radioButtonAppendOnly.UseVisualStyleBackColor = true;
-            this.radioButtonAppendOnly.CheckedChanged += new System.EventHandler(this.radioButtonAppendOnly_CheckedChanged);
-            // 
-            // panelDocIdReplaceField
-            // 
-            this.panelDocIdReplaceField.Controls.Add(this.textBoxDocIdReplaceField);
-            this.panelDocIdReplaceField.Controls.Add(this.label7);
-            this.panelDocIdReplaceField.Location = new System.Drawing.Point(461, 419);
-            this.panelDocIdReplaceField.Name = "panelDocIdReplaceField";
-            this.panelDocIdReplaceField.Size = new System.Drawing.Size(200, 30);
-            this.panelDocIdReplaceField.TabIndex = 3;
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(10, 10);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(43, 13);
-            this.label7.TabIndex = 0;
-            this.label7.Text = "ID Field";
-            // 
-            // textBoxDocIdReplaceField
-            // 
-            this.textBoxDocIdReplaceField.Location = new System.Drawing.Point(63, 5);
-            this.textBoxDocIdReplaceField.Name = "textBoxDocIdReplaceField";
-            this.textBoxDocIdReplaceField.Size = new System.Drawing.Size(126, 20);
-            this.textBoxDocIdReplaceField.TabIndex = 1;
-            // 
             // buttonFinish
             // 
             this.buttonFinish.Enabled = false;
@@ -566,18 +568,18 @@
             this.tabPage1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
             this.tabPage2.PerformLayout();
+            this.groupBoxIncrementalMode.ResumeLayout(false);
+            this.groupBoxIncrementalMode.PerformLayout();
             this.groupBoxMode.ResumeLayout(false);
             this.groupBoxMode.PerformLayout();
             this.tabPage3.ResumeLayout(false);
+            this.panelDocIdReplaceField.ResumeLayout(false);
+            this.panelDocIdReplaceField.PerformLayout();
             this.panelFields.ResumeLayout(false);
             this.panelHead.ResumeLayout(false);
             this.panelHead.PerformLayout();
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
-            this.groupBoxIncrementalMode.ResumeLayout(false);
-            this.groupBoxIncrementalMode.PerformLayout();
-            this.panelDocIdReplaceField.ResumeLayout(false);
-            this.panelDocIdReplaceField.PerformLayout();
             this.ResumeLayout(false);
 
         }

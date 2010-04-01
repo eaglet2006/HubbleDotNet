@@ -72,6 +72,7 @@
     <Compile Include="DataStructure\SortDictionary.cs" />
     <Compile Include="DataStructure\StepList.cs" />
     <Compile Include="DataStructure\SuperList.cs" />
+    <Compile Include="Data\OLEDataProvider.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />

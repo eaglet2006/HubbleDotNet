@@ -21,6 +21,21 @@ namespace QueryAnalyzer
 
         List<string> _AnalyzerList = new List<string>();
 
+        private string _DefaultIndexFolder;
+
+        internal string DefaultIndexFolder
+        {
+            get
+            {
+                return _DefaultIndexFolder;
+            }
+
+            set
+            {
+                _DefaultIndexFolder = value;
+            }
+        }
+
         private string _DatabaseName;
 
         internal string DatabaseName
@@ -404,6 +419,17 @@ namespace QueryAnalyzer
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void textBoxTableName_TextChanged(object sender, EventArgs e)
+        {
+            if (textBoxIndexFolder.Text.IndexOf(DefaultIndexFolder, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                textBoxIndexFolder.Text = Hubble.Framework.IO.Path.AppendDivision(
+                    Hubble.Framework.IO.Path.AppendDivision(DefaultIndexFolder, '\\') +
+                    textBoxTableName.Text, '\\');
+
             }
         }
     }

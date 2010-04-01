@@ -26,6 +26,10 @@ namespace QueryAnalyzer.CreateTable
                     if (col.ColumnName.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                     {
                         hasDocIdField = true;
+                        if (!frmCreateTable.radioButtonAll.Checked)
+                        {
+                            continue;
+                        }
                     }
 
                     frmCreateTable.AddTableField(col);

@@ -78,6 +78,7 @@
     <Compile Include="Data\PayloadProviderOld.cs" />
     <Compile Include="Data\ReplaceFieldValueToDocId.cs" />
     <Compile Include="Data\Table.cs" />
+    <Compile Include="DBAdapter\Oracle8iAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />

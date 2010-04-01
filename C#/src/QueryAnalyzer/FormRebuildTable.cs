@@ -166,7 +166,7 @@ namespace QueryAnalyzer
             }
         }
 
-        private string GetSelectSql(long from)
+        private string GetSqlServerSelectSql(long from)
         {
             QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
 
@@ -206,6 +206,79 @@ namespace QueryAnalyzer
             }
 
             return sb.ToString();
+        }
+
+        private string GetOracleFieldNameList(long from)
+        {
+            QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
+
+            StringBuilder sb = new StringBuilder();
+
+            if (_DocIdReplaceField == null)
+            {
+                sb.AppendFormat(" DocId ", numericUpDownStep.Value);
+
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    sb.AppendFormat(", {0} ", row["FieldName"].ToString());
+                }
+            }
+            else
+            {
+                int i = 0;
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    if (i == 0)
+                    {
+                        sb.AppendFormat("{0} ", row["FieldName"].ToString());
+                    }
+                    else
+                    {
+                        sb.AppendFormat(", {0} ", row["FieldName"].ToString());
+                    }
+
+                    i++;
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private string GetOracleSelectSql(long from)
+        {
+            string fields = GetOracleFieldNameList(from);
+
+            StringBuilder sb = new StringBuilder();
+
+            if (_DocIdReplaceField == null)
+            {
+                sb.AppendFormat("select {0} from {1} where DocId >= {2} and rownum <= {3} order by DocId ",
+                    fields, _DBTableName, from, numericUpDownStep.Value);
+            }
+            else
+            {
+                sb.AppendFormat("select {0} from {1} where {2} >= {3} and rownum <= {4} order by {2} ",
+                    fields, _DBTableName, _DocIdReplaceField, from, numericUpDownStep.Value);
+            }
+
+            return sb.ToString();
+        }
+
+        private string GetSelectSql(long from)
+        {
+            if (labelDbAdapterName.Text.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetSqlServerSelectSql(from);
+            }
+            else if (labelDbAdapterName.Text.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetOracleSelectSql(from);
+            }
+            else
+            {
+                return GetSqlServerSelectSql(from);
+            }
+
         }
 
         private string GetOneRowSql(DataSet schema, DataRow row, string tableName)
@@ -365,11 +438,16 @@ namespace QueryAnalyzer
                 while (remain != 0 && !Stop)
                 {
                     string insertSql = GetInsertSql(ref from, ref remain, out count);
-                    DataAccess.Excute(insertSql);
+
+                    if (!string.IsNullOrEmpty(insertSql))
+                    {
+                        DataAccess.Excute(insertSql);
+                    }
+
                     totalCount += count;
                     ShowCurrentCount(totalCount);
 
-                    if (_SleepRows > 0 && _SleepInterval > 0)
+                    if (_SleepRows > 0 && _SleepInterval > 0 && remain > 0)
                     {
                         if (totalCount % _SleepRows == 0)
                         {

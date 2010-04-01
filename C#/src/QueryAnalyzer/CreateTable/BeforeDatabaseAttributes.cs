@@ -34,6 +34,7 @@ namespace QueryAnalyzer.CreateTable
                     if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
                     {
                         frmCreateTable.textBoxIndexFolder.Text = row["Value"].ToString().Trim();
+                        frmCreateTable.DefaultIndexFolder = frmCreateTable.textBoxIndexFolder.Text;
                     }
                     else if (row["Attribute"].ToString().Trim().Equals("DefaultDBAdapter"))
                     {
