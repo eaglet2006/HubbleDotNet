@@ -617,10 +617,118 @@ namespace Hubble.Core.SFQL.Parse
             return true;
         }
 
+        unsafe internal static string GetInSql(Data.DBProvider dbProvider, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
+        {
+            StringBuilder sql = new StringBuilder();
+
+            if (dbProvider.DocIdReplaceField == null)
+            {
+                sql.Append("docId in (");
+            }
+            else
+            {
+                sql.AppendFormat("{0} in (", dbProvider.DocIdReplaceField);
+            }
+
+            Dictionary<long, int> replaceFieldValueToDocId = null;
+
+            if (dbProvider.DocIdReplaceField != null)
+            {
+                replaceFieldValueToDocId = new Dictionary<long, int>();
+            }
+
+            int i = 0;
+
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in upDict.Values)
+            {
+                int docId = drp.pDocumentResult->DocId;
+
+                if (dbProvider.DocIdReplaceField == null)
+                {
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", docId);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", docId);
+                    }
+                }
+                else
+                {
+                    long replaceFieldValue = dbProvider.GetDocIdReplaceFieldValue(docId);
+
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", replaceFieldValue);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", replaceFieldValue);
+                    }
+                }
+            }
+
+            sql.Append(")");
+
+            return sql.ToString();
+        }
+
+        unsafe private void RemoveByDatabaseQuery(SyntaxAnalysis.ExpressionTree expressionTree, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
+        {
+            int upDictCount = upDict.Count;
+
+            if (upDictCount == 0)
+            {
+                return;
+            }
+
+            Core.SFQL.Parse.DocumentResultWhereDictionary queryDict;
+
+            if (upDictCount < 8196)
+            {
+                queryDict = _DBProvider.DBAdapter.GetDocumentResults(-1,
+                    string.Format("({0}) and {1}", expressionTree.ToString(), GetInSql(_DBProvider, upDict)), null);
+            }
+            else
+            {
+                queryDict = _DBProvider.DBAdapter.GetDocumentResults(-1,
+                    string.Format("({0})", expressionTree.ToString()), null);
+            }
+
+            if (queryDict.Count == 0)
+            {
+                upDict.Clear();
+                return;
+            }
+
+            List<int> delDocIdList = new List<int>();
+
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in upDict.Values)
+            {
+                if (!queryDict.ContainsKey(drp.pDocumentResult->DocId))
+                {
+                    delDocIdList.Add(drp.pDocumentResult->DocId);
+                }
+            }
+
+            foreach (int docId in delDocIdList)
+            {
+                upDict.Remove(docId);
+                upDict.RelTotalCount--;
+            }
+        }
 
         unsafe private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
         {
-            Preprocess(expressionTree);
+            bool needQueryFromDatabase = false;
+            Preprocess(expressionTree, ref needQueryFromDatabase);
+
+            if (needQueryFromDatabase)
+            {
+                RemoveByDatabaseQuery(expressionTree, upDict);
+                return;
+            }
 
             List<int> delDocIdList = new List<int>();
 
@@ -639,16 +747,16 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private void Preprocess(SyntaxAnalysis.ExpressionTree expressionTree)
+        private void Preprocess(SyntaxAnalysis.ExpressionTree expressionTree, ref bool needQueryFromDatabase)
         {
             if (expressionTree.OrChild != null)
             {
-                Preprocess(expressionTree.OrChild);
+                Preprocess(expressionTree.OrChild, ref needQueryFromDatabase);
             }
 
             if (expressionTree.Expression.NeedReverse)
             {
-                Preprocess(expressionTree.Expression as SyntaxAnalysis.ExpressionTree);
+                Preprocess(expressionTree.Expression as SyntaxAnalysis.ExpressionTree, ref needQueryFromDatabase);
             }
             else
             {
@@ -675,7 +783,9 @@ namespace Hubble.Core.SFQL.Parse
 
                     if (field.IndexType != Field.Index.Untokenized)
                     {
-                        throw new ParseException(string.Format("Field: {0} is not Untokenized field!", fieldName));
+                        needQueryFromDatabase = true;
+                        return;
+                        //throw new ParseException(string.Format("Field: {0} is not Untokenized field!", fieldName));
                     }
 
                     value = cur.Right[0].Text;
@@ -688,7 +798,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.AndChild != null)
             {
-                Preprocess(expressionTree.AndChild);
+                Preprocess(expressionTree.AndChild, ref needQueryFromDatabase);
             }
 
         }

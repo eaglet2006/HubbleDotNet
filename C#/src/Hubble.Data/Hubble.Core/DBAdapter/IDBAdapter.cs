@@ -44,6 +44,10 @@ namespace Hubble.Core.DBAdapter
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end);
 
+
+        IList<Core.Query.DocumentResultForSort> GetDocumentResultForSortList(int end, string where, string orderby);
+        IList<Core.Query.DocumentResultForSort> GetDocumentResultForSortList(int end, Core.Query.DocumentResultForSort[] docResults, string orderby);
+
         Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(int end, string where, string orderby);
 
         int MaxDocId { get; }

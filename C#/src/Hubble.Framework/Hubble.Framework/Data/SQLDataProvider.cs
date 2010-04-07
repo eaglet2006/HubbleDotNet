@@ -26,6 +26,8 @@ namespace Hubble.Framework.Data
 {
     public class SQLDataProvider : IDisposable
     {
+        int _CommandTimeOut = 300;
+
         SqlConnection _Conn;
 
         private string GetSqlValue(object value)
@@ -55,28 +57,32 @@ namespace Hubble.Framework.Data
         /// Connect dataBase
         /// </summary>
         /// <param name="connectString">Connect string</param>
-        public void Connect(string connectString)
+        public void Connect(string connectionString)
         {
             Close();
-            if (!connectString.Contains("Connection Timeout"))
+            if (!connectionString.Contains("Connection Timeout") && !connectionString.Contains("Connect Timeout"))
             {
-                if (connectString.EndsWith(";"))
+                if (connectionString.EndsWith(";"))
                 {
-                    connectString += "Connection Timeout=120;";
+                    connectionString += "Connection Timeout=300;";
                 }
                 else
                 {
-                    connectString += ";Connection Timeout=120;";
+                    connectionString += ";Connection Timeout=300;";
                 }
             }
 
-            _Conn = new SqlConnection(connectString);
+            _Conn = new SqlConnection(connectionString);
+
+            _CommandTimeOut = _Conn.ConnectionTimeout;
+
             _Conn.Open();
         }
 
         public int ExcuteSql(string sql)
         {
             SqlCommand cmd = new SqlCommand(sql, _Conn);
+            cmd.CommandTimeout = _CommandTimeOut;
             return cmd.ExecuteNonQuery();
         }
 
@@ -85,6 +91,7 @@ namespace Hubble.Framework.Data
             SqlDataAdapter dadapter = new SqlDataAdapter();
 
             dadapter.SelectCommand = new SqlCommand(sql, _Conn);
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
             DataSet ds = new DataSet();
             dadapter.Fill(ds);
@@ -98,6 +105,7 @@ namespace Hubble.Framework.Data
             SqlDataAdapter dadapter = new SqlDataAdapter();
 
             dadapter.SelectCommand = new SqlCommand(sql, _Conn);
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
             DataSet ds = new DataSet();
             dadapter.FillSchema(ds, SchemaType.Mapped);

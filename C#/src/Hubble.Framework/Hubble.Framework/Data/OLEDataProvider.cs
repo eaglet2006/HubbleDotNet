@@ -26,12 +26,16 @@ namespace Hubble.Framework.Data
     public class OLEDataProvider : IDisposable
     {
         bool _Opened = false;
+        int _CommandTimeOut = 300;
 
         OleDbConnection _OleDbConnection = null;
 
         public void Connect(string connectionString)
         {
+            Close();
+
             _OleDbConnection = new OleDbConnection(connectionString);
+
             _OleDbConnection.Open();
             _Opened = true;
         }
@@ -48,6 +52,9 @@ namespace Hubble.Framework.Data
         public int ExcuteSql(string sql)
         {
             OleDbCommand cmd = new OleDbCommand(sql, _OleDbConnection);
+            
+            cmd.CommandTimeout = _CommandTimeOut;
+
             return cmd.ExecuteNonQuery();
         }
 
@@ -56,6 +63,7 @@ namespace Hubble.Framework.Data
             OleDbDataAdapter dadapter = new OleDbDataAdapter();
 
             dadapter.SelectCommand = new OleDbCommand(sql, _OleDbConnection);
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
             dadapter.AcceptChangesDuringFill = false;
 
@@ -71,6 +79,7 @@ namespace Hubble.Framework.Data
             OleDbDataAdapter dadapter = new OleDbDataAdapter();
 
             dadapter.SelectCommand = new OleDbCommand(sql, _OleDbConnection);
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
             DataSet ds = new DataSet();
             dadapter.FillSchema(ds, SchemaType.Mapped);

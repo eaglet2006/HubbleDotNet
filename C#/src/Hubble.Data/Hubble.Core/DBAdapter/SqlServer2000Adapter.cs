@@ -697,6 +697,175 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        unsafe private string GetInSql(Data.DBProvider dbProvider, Query.DocumentResultForSort[] result, int begin, int count)
+        {
+            if (begin + count > result.Length)
+            {
+                return null;
+            }
+
+            StringBuilder sql = new StringBuilder();
+
+            if (dbProvider.DocIdReplaceField == null)
+            {
+                sql.Append("docId in (");
+            }
+            else
+            {
+                sql.AppendFormat("{0} in (", dbProvider.DocIdReplaceField);
+            }
+
+            Dictionary<long, int> replaceFieldValueToDocId = null;
+
+            if (dbProvider.DocIdReplaceField != null)
+            {
+                replaceFieldValueToDocId = new Dictionary<long, int>();
+            }
+
+            int i = 0;
+
+            for (int j = begin; j < begin + count; j++)
+            {
+                Query.DocumentResultForSort docResult = result[j];
+                int docId = docResult.DocId;
+
+                if (dbProvider.DocIdReplaceField == null)
+                {
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", docId);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", docId);
+                    }
+                }
+                else
+                {
+                    long replaceFieldValue = dbProvider.GetDocIdReplaceFieldValue(docId);
+
+                    if (i++ == 0)
+                    {
+                        sql.AppendFormat("{0}", replaceFieldValue);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",{0}", replaceFieldValue);
+                    }
+                }
+            }
+
+            sql.Append(")");
+
+            return sql.ToString();
+        }
+
+        public IList<Core.Query.DocumentResultForSort> GetDocumentResultForSortList(int end,
+            Core.Query.DocumentResultForSort[] docResults, string orderby)
+        {
+            if (docResults.Length == 0)
+            {
+                return new List<Core.Query.DocumentResultForSort>();
+            }
+
+            int unitLength = Math.Max(10000, (end + 1) * 10);
+
+            List<IList<Core.Query.DocumentResultForSort>> docResultForSortList = new List<IList<Hubble.Core.Query.DocumentResultForSort>>();
+
+            for (int begin = 0; begin < docResults.Length; begin += unitLength)
+            {
+                int count = Math.Min(unitLength, docResults.Length - begin);
+                docResultForSortList.Add(GetDocumentResultForSortList(end,
+                    GetInSql(_DBProvder, docResults, begin, count), orderby));
+            }
+
+            if (docResultForSortList.Count == 1)
+            {
+                return docResultForSortList[0];
+            }
+
+            List<Core.Query.DocumentResultForSort> temp = new List<Hubble.Core.Query.DocumentResultForSort>();
+
+            foreach (List<Core.Query.DocumentResultForSort> docSort in docResultForSortList)
+            {
+                temp.AddRange(docSort);
+            }
+
+            return GetDocumentResultForSortList(end, temp.ToArray(), orderby);
+        }
+
+        public IList<Core.Query.DocumentResultForSort> GetDocumentResultForSortList(int end, string where, string orderby)
+        {
+            string sql;
+
+            if (end >= 0)
+            {
+                sql = string.Format("select top {0} ", end + 1);
+            }
+            else
+            {
+                sql = "select ";
+            }
+
+            if (string.IsNullOrEmpty(where))
+            {
+                if (DocIdReplaceField == null)
+                {
+                    sql += string.Format(" docid from {0} ", Table.DBTableName);
+                }
+                else
+                {
+                    sql += string.Format(" {0} from {1} ", DocIdReplaceField, Table.DBTableName);
+                }
+            }
+            else
+            {
+                if (DocIdReplaceField == null)
+                {
+                    sql += string.Format(" docid from {0} where {1}", Table.DBTableName, where);
+                }
+                else
+                {
+                    sql += string.Format(" {0} from {1} where {2}", DocIdReplaceField, Table.DBTableName, where);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(orderby))
+            {
+                sql += " order by " + orderby;
+            }
+
+            List<Core.Query.DocumentResultForSort> result = new List<Core.Query.DocumentResultForSort>();
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
+                {
+                    int docId;
+                    if (DocIdReplaceField == null)
+                    {
+                        docId = int.Parse(row[0].ToString());
+                    }
+                    else
+                    {
+                        docId = DBProvider.GetDocIdFromDocIdReplaceFieldValue(long.Parse(row[DocIdReplaceField].ToString()));
+
+                        if (docId < 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    result.Add(new Core.Query.DocumentResultForSort(docId));
+                }
+            }
+
+            return result;
+
+        }
+
+
         public Core.SFQL.Parse.DocumentResultWhereDictionary GetDocumentResults(int end, string where, string orderby)
         {
             string sql;

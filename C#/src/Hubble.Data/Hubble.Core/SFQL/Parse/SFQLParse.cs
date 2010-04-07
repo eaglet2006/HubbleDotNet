@@ -613,6 +613,43 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private bool OrderByFromDatabase(SyntaxAnalysis.Select.Select select, 
+            Data.DBProvider dbProvider)
+        {
+            if (select.OrderBys == null)
+            {
+                return false;
+            }
+
+            if (select.OrderBys.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (SFQL.SyntaxAnalysis.Select.OrderBy orderBy in select.OrderBys)
+            {
+                if (orderBy.Name.Equals("score", StringComparison.CurrentCultureIgnoreCase) ||
+                    orderBy.Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    continue;
+                }
+
+                Data.Field field = dbProvider.GetField(orderBy.Name);
+
+                if (field == null)
+                {
+                    return true;
+                }
+
+                if (field.IndexType != Field.Index.Untokenized)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
@@ -761,18 +798,35 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
-                QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
-
-                //qSort.Sort(result);
+                //Begin sort
 
                 int sortLen = select.End + 1;
 
                 if (sortLen > 0)
                 {
-                    sortLen = ((sortLen -1) / 100 + 1) * 100;
+                    sortLen = ((sortLen - 1) / 100 + 1) * 100;
                 }
 
-                qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
+                if (OrderByFromDatabase(select, dbProvider))
+                {
+                    IList<Query.DocumentResultForSort> dbResult = dbProvider.DBAdapter.GetDocumentResultForSortList(sortLen - 1, result, GetOrderByString(select));
+
+                    for (int i= 0; i < dbResult.Count; i++)
+                    {
+                        result[i] = dbResult[i];
+                        result[i].PayloadData = dbProvider.GetPayloadData(result[i].DocId);
+                    }
+
+                }
+                else
+                {
+
+                    QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
+
+                    //qSort.Sort(result);
+
+                    qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
+                }
 
                 if (queryCache != null)
                 {
@@ -961,9 +1015,19 @@ namespace Hubble.Core.SFQL.Parse
 
             StringBuilder sortString = new StringBuilder();
 
+            int i = 0;
             foreach (SyntaxAnalysis.Select.OrderBy orderBy in select.OrderBys)
             {
-                sortString.AppendFormat("{0} ", orderBy.ToString());
+                if (i == 0)
+                {
+                    sortString.AppendFormat("{0} ", orderBy.ToString());
+                }
+                else
+                {
+                    sortString.AppendFormat(",{0} ", orderBy.ToString());
+                }
+
+                i++;
             }
 
             return sortString.ToString();
