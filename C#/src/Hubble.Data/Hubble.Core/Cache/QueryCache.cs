@@ -24,7 +24,7 @@ using System.IO.Compression;
 
 namespace Hubble.Core.Cache
 {
-    class QueryCacheInformation
+    public class QueryCacheInformation
     {
         private bool _All;
         private int _Count;
@@ -70,7 +70,7 @@ namespace Hubble.Core.Cache
     }
 
 
-    class QueryCacheDocuments
+    public class QueryCacheDocuments
     {
         public DocumentResultForSort[] Documents;
         public int Count;
@@ -91,14 +91,65 @@ namespace Hubble.Core.Cache
 
     }
 
+    public class CacheFile
+    {
+        public string Key;
+        public QueryCacheDocuments Documents;
+        public QueryCacheInformation Info;
+
+        public CacheFile()
+        {
+        }
+
+        public CacheFile(string key, QueryCacheDocuments documents, QueryCacheInformation info)
+        {
+            Key = key;
+            Documents = documents;
+            Info = info;
+        }
+    }
+
     class QueryCache : Cache<QueryCacheDocuments>
     {
+        private object _LockObj = new object();
+        private string _CacheFileFolder = null;
+
         const int CompressFrom = 20;
 
         public QueryCache(QueryCacheManager cacheMgr, string name)
             : base(cacheMgr)
         {
             base.m_Name = name;
+        }
+
+        new public void Insert(string key, QueryCacheDocuments item, DateTime expireTime)
+        {
+            Insert(key, item, expireTime, null);
+        }
+
+        public void Insert(string key, QueryCacheDocuments item, DateTime expireTime, QueryCacheInformation cacheInfo)
+        {
+            lock (_LockObj)
+            {
+                base.Insert(key, item, expireTime, cacheInfo);
+            }
+        }
+
+        new public bool TryGetValue(string key, out QueryCacheDocuments value, out DateTime expireTime, out int hitCount)
+        {
+            object tag;
+            return TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+        }
+
+        public bool TryGetValue(string key, out QueryCacheDocuments value, out DateTime expireTime, out int hitCount, out QueryCacheInformation cacheInfo)
+        {
+            lock (_LockObj)
+            {
+                object tag;
+                bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+                cacheInfo = tag as QueryCacheInformation;
+                return result;
+            }
         }
 
         protected override byte[] GetBytes(QueryCacheDocuments data)

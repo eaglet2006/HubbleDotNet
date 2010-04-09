@@ -197,7 +197,16 @@ namespace QueryAnalyzer
                     sql = textBoxSql.SelectedText;
                 }
 
-                QueryResult queryResult = GlobalSetting.DataAccess.Excute(sql, 0);
+                QueryResult queryResult;
+
+                if (dataCacheToolStripMenuItem.Checked)
+                {
+                    queryResult = GlobalSetting.DataAccess.Excute(sql, 0);
+                }
+                else
+                {
+                    queryResult = GlobalSetting.DataAccess.Excute(sql);
+                }
 
                 System.Data.DataTable table = null;
 
@@ -661,6 +670,33 @@ namespace QueryAnalyzer
             catch (Exception e1)
             {
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void saveSToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (saveFileDialogSql.ShowDialog() == DialogResult.OK)
+                {
+                    Hubble.Framework.IO.File.WriteString(
+                        saveFileDialogSql.FileName, textBoxSql.Text, Encoding.UTF8);
+                }
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void textBoxSql_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control)
+            {
+                if (e.KeyValue == 'a' || e.KeyValue == 'A')
+                {
+                    textBoxSql.SelectAll();
+                }
             }
         }
 

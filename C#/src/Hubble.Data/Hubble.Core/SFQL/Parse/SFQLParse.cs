@@ -758,8 +758,8 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (select.Where == null)
                 {
-                    result = parseWhere.Parse(null);
-                    relTotalCount = result.Length;
+                    result = parseWhere.Parse(null, out relTotalCount);
+                    //relTotalCount = result.Length;
                 }
                 else
                 {

@@ -272,6 +272,22 @@ namespace QueryAnalyzer
                 throw new Exception("FieldName can't be empty!");
             }
 
+            if (checkBoxNull.Checked && DefaultValue == "" && IndexType != "None")
+            {
+                switch (comboBoxDataType.Text)
+                {
+                    case "TinyInt":
+                    case "SmallInt":
+                    case "Int":
+                    case "BigInt":
+                    case "Float":
+                    case "DateTime":
+                    case "SmallDateTime":
+                    case "Date":
+                        throw new Exception(string.Format("Nullabled Field:{0} must have a default value!", FieldName));
+                }
+            }
+
             sb.AppendFormat("{0} {1}", FieldName, DataType);
 
             switch (DataType)
@@ -315,44 +331,44 @@ namespace QueryAnalyzer
                 sb.Append("NOT NULL ");
             }
 
-            if (DefaultValue != "" || IsNull)
+            if (DefaultValue != "" || (IsNull && IndexType != "None"))
             {
                 switch (DataType)
                 {
                     case "TinyInt":
                         byte.Parse(DefaultValue);
-                        sb.AppendFormat("{0} ", DefaultValue);
+                        sb.AppendFormat("default {0} ", DefaultValue);
                         break;
                     case "SmallInt":
                         Int16.Parse(DefaultValue);
-                        sb.AppendFormat("{0} ", DefaultValue);
+                        sb.AppendFormat("default {0} ", DefaultValue);
                         break;
                     case "Int":
                         int.Parse(DefaultValue);
-                        sb.AppendFormat("{0} ", DefaultValue);
+                        sb.AppendFormat("default {0} ", DefaultValue);
                         break;
 
                     case "BigInt":
                         long.Parse(DefaultValue);
-                        sb.AppendFormat("{0} ", DefaultValue);
+                        sb.AppendFormat("default {0} ", DefaultValue);
                         break;
 
                     case "DateTime":
                     case "SmallDateTime":
                     case "Date":
                         DateTime.Parse(DefaultValue);
-                        sb.AppendFormat("'{0}' ", DefaultValue.Replace("'", "''"));
+                        sb.AppendFormat("default '{0}' ", DefaultValue.Replace("'", "''"));
                         break;
 
                     case "Float":
                         float.Parse(DefaultValue);
-                        sb.AppendFormat("{0} ", DefaultValue);
+                        sb.AppendFormat("default {0} ", DefaultValue);
                         break;
                     case "NVarchar":
                     case "Varchar":
                     case "NChar":
                     case "Char":
-                        sb.AppendFormat("'{0}' ", DefaultValue.Replace("'", "''"));
+                        sb.AppendFormat("default '{0}' ", DefaultValue.Replace("'", "''"));
                         break;
                     default:
                         break;
@@ -393,6 +409,27 @@ namespace QueryAnalyzer
 
         private void comboBoxIndexType_SelectedIndexChanged(object sender, EventArgs e)
         {
+
+            if (checkBoxNull.Checked && DefaultValue == "" && IndexType != "None")
+            {
+                switch (comboBoxDataType.Text)
+                {
+                    case "TinyInt":
+                    case "SmallInt":
+                    case "Int":
+                    case "BigInt":
+                    case "Float":
+                        DefaultValue = "0";
+                        break;
+                    case "DateTime":
+                    case "SmallDateTime":
+                    case "Date":
+                        DefaultValue = "1900-1-1";
+                        break;
+
+                }
+            }
+
             switch (comboBoxDataType.Text)
             {
                 case "TinyInt":
@@ -413,6 +450,7 @@ namespace QueryAnalyzer
                         comboBoxIndexType.Text = "None";
                         return;
                     }
+
                     break;
                 case "NVarchar":
                 case "Varchar":
@@ -441,6 +479,29 @@ namespace QueryAnalyzer
             else
             {
                 comboBoxAnalyzer.Enabled = false;
+            }
+        }
+
+        private void checkBoxNull_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBoxNull.Checked && DefaultValue == "" && IndexType != "None")
+            {
+                switch (comboBoxDataType.Text)
+                {
+                    case "TinyInt":
+                    case "SmallInt":
+                    case "Int":
+                    case "BigInt":
+                    case "Float":
+                        DefaultValue = "0";
+                        break;
+                    case "DateTime":
+                    case "SmallDateTime":
+                    case "Date":
+                        DefaultValue = "1900-1-1";
+                        break;
+
+                }
             }
         }
 

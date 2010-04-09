@@ -748,7 +748,7 @@ namespace Hubble.Core.Data
 
             _DelProvider = null;
 
-            _LastModifyTicks = DateTime.Now.Ticks;
+            SetLastModifyTicks(DateTime.Now);
 
             _QueryCache = null;
 
@@ -907,6 +907,14 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal void SetLastModifyTicks(DateTime time)
+        {
+            lock (this)
+            {
+                _LastModifyTicks = time.ToFileTimeUtc();
+            }
+        }
+
         internal long LastModifyTicks
         {
             get
@@ -916,15 +924,6 @@ namespace Hubble.Core.Data
                     return _LastModifyTicks;
                 }
             }
-
-            set
-            {
-                lock (this)
-                {
-                    _LastModifyTicks = value;
-                }
-            }
-
         }
 
         internal bool Closed
@@ -1258,6 +1257,43 @@ namespace Hubble.Core.Data
             }
         }
 
+        private DateTime GetLastModifyTimeAtStart()
+        {
+            string payloadFile = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
+            string deleteFile = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Delete.db";
+
+            DateTime result = DateTime.Now;
+            DateTime payloadTime = DateTime.Now;
+            DateTime deleteTime = DateTime.Now;
+
+            if (System.IO.File.Exists(payloadFile))
+            {
+                payloadTime = System.IO.File.GetLastWriteTime(payloadFile);
+            }
+
+            if (System.IO.File.Exists(deleteFile))
+            {
+                deleteTime = System.IO.File.GetLastWriteTime(deleteFile);
+            }
+
+            if (payloadTime > deleteTime)
+            {
+                if (result > payloadTime)
+                {
+                    result = payloadTime;
+                }
+            }
+            else
+            {
+                if (result > deleteTime)
+                {
+                    result = deleteTime;
+                }
+            }
+
+            return result;
+        }
+
         private Exception Open()
         {
             Table table = _Table;
@@ -1321,24 +1357,27 @@ namespace Hubble.Core.Data
 
                         int TryConnectDBTimes = 5;
 
-                        for (int i = 0; i < TryConnectDBTimes; i++)
+                        if (!IndexOnly)
                         {
-                            try
+                            for (int i = 0; i < TryConnectDBTimes; i++)
                             {
-                                dbMaxDocId = DBAdapter.MaxDocId;
-                                break;
-                            }
-                            catch (Exception e)
-                            {
-                                if (i == TryConnectDBTimes - 1)
+                                try
                                 {
-                                    throw;
+                                    dbMaxDocId = DBAdapter.MaxDocId;
+                                    break;
                                 }
+                                catch (Exception e)
+                                {
+                                    if (i == TryConnectDBTimes - 1)
+                                    {
+                                        throw;
+                                    }
 
-                                Global.Report.WriteErrorLog(string.Format("Get MaxDocId fail, Try again! Try times:{0} Err:{1}, Stack:{2}",
-                                    i + 1, e.Message, e.StackTrace));
+                                    Global.Report.WriteErrorLog(string.Format("Get MaxDocId fail, Try again! Try times:{0} Err:{1}, Stack:{2}",
+                                        i + 1, e.Message, e.StackTrace));
 
-                                System.Threading.Thread.Sleep(2000);
+                                    System.Threading.Thread.Sleep(2000);
+                                }
                             }
                         }
                     }
@@ -1353,6 +1392,8 @@ namespace Hubble.Core.Data
 
                     //Open payload information
                     OpenPayloadInformation(table);
+
+                    SetLastModifyTicks(GetLastModifyTimeAtStart());
 
                     //set payload file name
                     _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
@@ -2026,7 +2067,8 @@ namespace Hubble.Core.Data
                     }
 
                     Cache.CacheManager.InsertCount += docs.Count;
-                    LastModifyTicks = DateTime.Now.Ticks;
+
+                    SetLastModifyTicks(DateTime.Now);
 
                     Collect(lastDocId);
                 }                 
@@ -2240,7 +2282,9 @@ namespace Hubble.Core.Data
                 }
 
                 Collect();
-                LastModifyTicks = DateTime.Now.Ticks;
+
+                SetLastModifyTicks(DateTime.Now);
+
             }
             finally
             {
@@ -2302,7 +2346,8 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                LastModifyTicks = DateTime.Now.Ticks;
+                SetLastModifyTicks(DateTime.Now);
+
             }
             finally
             {

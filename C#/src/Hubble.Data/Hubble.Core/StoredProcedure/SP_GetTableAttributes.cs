@@ -77,6 +77,15 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "MaxReturnCount");
             OutputValue("Value", dbProvider.MaxReturnCount.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "StoreQueryCacheInFile");
+            OutputValue("Value", dbProvider.Table.StoreQueryCacheInFile.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "CleanupQueryCacheFileInDays");
+            OutputValue("Value", dbProvider.Table.CleanupQueryCacheFileInDays.ToString());
+
         }
 
         #endregion

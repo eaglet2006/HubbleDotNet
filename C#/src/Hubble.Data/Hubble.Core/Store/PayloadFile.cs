@@ -396,7 +396,13 @@ namespace Hubble.Core.Store
 
                     fs.Read(buf, 0, buf.Length);
 
-                    lastDocId = (int)BitConverter.ToInt32(buf, 0);
+                    int docidInFile = (int)BitConverter.ToInt32(buf, 0);
+                    if (docidInFile < lastDocId)
+                    {
+                        throw new Data.DataException(string.Format("docid = {0} < last docid ={1}", docidInFile, lastDocId));
+                    }
+
+                    lastDocId = docidInFile;
 
                     if (InsertProtect.InsertProtectInfo != null)
                     {

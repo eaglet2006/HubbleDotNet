@@ -101,8 +101,13 @@ namespace Hubble.Core.Query
     {
         public long Score;
         public long SortValue; //if SortInfoList == null, use SortValue to sort
+        
+        [System.Xml.Serialization.XmlIgnore]
         public int* PayloadData;
-        public object Tag;
+
+        //[System.Xml.Serialization.XmlIgnore]
+        //public object Tag;
+
         public List<SortInfo> SortInfoList;
         public int DocId;
         public bool Asc; // Contain with SortValue
@@ -121,7 +126,7 @@ namespace Hubble.Core.Query
         public DocumentResultForSort(int docId, long score, object tag, int lastPostion, int lastCount, int lastIndex)
             : this(docId, score, (int*)null)
         {
-            Tag = tag;
+            //Tag = tag;
             SortValue = lastCount * 0x1000000000000 + lastIndex * 0x100000000 + lastPostion;
         }
 
@@ -138,7 +143,7 @@ namespace Hubble.Core.Query
             SortValue = 0;
             Asc = true;
             SortInfoList = null;
-            Tag = null;
+            //Tag = null;
         }
 
         public void Serialize(System.IO.Stream stream)

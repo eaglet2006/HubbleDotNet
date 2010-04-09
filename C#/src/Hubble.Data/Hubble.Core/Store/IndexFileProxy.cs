@@ -379,7 +379,7 @@ namespace Hubble.Core.Store
 
         private object _MergeLockObj = new object();
 
-        private bool _CanMerge = false;
+        private bool _CanMerge = true;
 
         private IndexFile _IndexFile;
 

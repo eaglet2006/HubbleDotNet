@@ -34,6 +34,40 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "storequerycacheinfile":
+                    {
+                        bool storequerycacheinfile;
+
+                        if (bool.TryParse(value, out storequerycacheinfile))
+                        {
+                            dbProvider.Table.StoreQueryCacheInFile = storequerycacheinfile;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} StoreQueryCacheInFile to {1} sucessful!",
+                                tableName, dbProvider.Table.StoreQueryCacheInFile));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
+                case "cleanupquerycachefileindays":
+                    {
+                        int cleanupquerycachefileindays;
+
+                        if (int.TryParse(value, out cleanupquerycachefileindays))
+                        {
+                            dbProvider.Table.CleanupQueryCacheFileInDays = cleanupquerycachefileindays;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} CleanupQueryCacheFileInDays to {1} sucessful!",
+                                tableName, dbProvider.Table.CleanupQueryCacheFileInDays));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be number");
+                        }
+                    }
+                    break;
                 case "maxreturncount":
                     {
                         int count;
@@ -47,10 +81,11 @@ namespace Hubble.Core.StoredProcedure
                         }
                         else
                         {
-                            throw new StoredProcException("Parameter 3 must be number of bytes");
+                            throw new StoredProcException("Parameter 3 must be number");
                         }
                     }
                     break;
+
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");
             }

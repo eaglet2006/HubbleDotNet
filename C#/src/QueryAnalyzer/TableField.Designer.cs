@@ -111,6 +111,7 @@
             this.checkBoxNull.TabIndex = 5;
             this.checkBoxNull.Text = "NULL";
             this.checkBoxNull.UseVisualStyleBackColor = true;
+            this.checkBoxNull.CheckedChanged += new System.EventHandler(this.checkBoxNull_CheckedChanged);
             // 
             // checkBoxPK
             // 

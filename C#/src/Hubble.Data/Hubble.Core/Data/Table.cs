@@ -53,6 +53,10 @@ namespace Hubble.Core.Data
 
         int _QueryCacheTimeout = 0; //In seconds
 
+        bool _StoreQueryCacheInFile = true;
+
+        int _CleanupQueryCacheFileInDays = 7;
+
         #endregion
 
         #region Public properties
@@ -246,7 +250,40 @@ namespace Hubble.Core.Data
                 _QueryCacheTimeout = value;
             }
         }
-             
+
+
+        public bool StoreQueryCacheInFile
+        {
+            get
+            {
+                return _StoreQueryCacheInFile;
+            }
+
+            set
+            {
+                _StoreQueryCacheInFile = value;
+            }
+        }
+
+        public int CleanupQueryCacheFileInDays
+        {
+            get
+            {
+                return _CleanupQueryCacheFileInDays;
+            }
+
+            set
+            {
+                if (value < 0)
+                {
+                    _CleanupQueryCacheFileInDays = 0;
+                }
+                else
+                {
+                    _CleanupQueryCacheFileInDays = value;
+                }
+            }
+        }
 
         public void Save(string dir)
         {
