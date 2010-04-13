@@ -21,7 +21,7 @@ using System.Text;
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_GetTableAttributes : StoredProcedure, IStoredProc
+    class SP_GetTableAttributes : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -79,6 +79,14 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Value", dbProvider.MaxReturnCount.ToString());
 
             NewRow();
+            OutputValue("Attribute", "QueryCacheEnabled");
+            OutputValue("Value", dbProvider.QueryCacheEnabled.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "QueryCacheTimeout");
+            OutputValue("Value", dbProvider.QueryCacheTimeout.ToString());
+
+            NewRow();
             OutputValue("Attribute", "StoreQueryCacheInFile");
             OutputValue("Value", dbProvider.Table.StoreQueryCacheInFile.ToString());
 
@@ -86,6 +94,18 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Attribute", "CleanupQueryCacheFileInDays");
             OutputValue("Value", dbProvider.Table.CleanupQueryCacheFileInDays.ToString());
 
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get
+            {
+                return "Get table attribute. First parameter is table name.";
+            }
         }
 
         #endregion

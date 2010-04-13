@@ -67,32 +67,34 @@ namespace Hubble.Core.Store
 
         internal void AddOnly(IndexFile.FilePosition fp)
         {
-#if PerformanceTest
             if (_FPList.Count > 0)
             {
                 if (fp.Serial <= _FPList[_FPList.Count - 1].Serial)
                 {
-                    throw new ArgumentOutOfRangeException(string.Format("Add fp.Serial={0} last serial={1}",
-                        fp.Serial, _FPList[_FPList.Count - 1].Serial));
+                    //Global.Report.WriteErrorLog(string.Format("Add fp.Serial={0} last serial={1}",
+                    //    fp.Serial, _FPList[_FPList.Count - 1].Serial));
+                    return;
+                    //throw new ArgumentOutOfRangeException(string.Format("Add fp.Serial={0} last serial={1}",
+                    //    fp.Serial, _FPList[_FPList.Count - 1].Serial));
                 }
             }
-#endif
 
             _FPList.Add(fp);
         }
 
         internal void Add(IndexFile.FilePosition fp)
         {
-            #if PerformanceTest
             if (_FPList.Count > 0)
             {
                 if (fp.Serial <= _FPList[_FPList.Count - 1].Serial)
                 {
-                    throw new ArgumentOutOfRangeException(string.Format("Add fp.Serial={0} last serial={1}",
-                        fp.Serial, _FPList[_FPList.Count - 1].Serial));
+                    //Global.Report.WriteErrorLog(string.Format("Add fp.Serial={0} last serial={1}",
+                    //    fp.Serial, _FPList[_FPList.Count - 1].Serial));
+                    return;
+                    //throw new ArgumentOutOfRangeException(string.Format("Add fp.Serial={0} last serial={1}",
+                    //    fp.Serial, _FPList[_FPList.Count - 1].Serial));
                 }
             }
-            #endif
 
             _FPList.Add(fp);
 

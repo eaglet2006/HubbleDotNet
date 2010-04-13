@@ -140,6 +140,12 @@
     <Compile Include="FormTroubleshooter.Designer.cs">
       <DependentUpon>FormTroubleshooter.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormWaiting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormWaiting.designer.cs">
+      <DependentUpon>FormWaiting.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormWaittingGetTotalRecords.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -193,6 +199,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormTroubleshooter.resx">
       <DependentUpon>FormTroubleshooter.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormWaiting.resx">
+      <DependentUpon>FormWaiting.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormWaittingGetTotalRecords.resx">

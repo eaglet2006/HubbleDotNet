@@ -24,7 +24,7 @@ namespace Hubble.Core.StoredProcedure
                         if (bool.TryParse(value, out indexonly))
                         {
                             dbProvider.SetIndexOnly(indexonly);
-                            dbProvider.SaveTable();
+                            //dbProvider.SaveTable();
                             OutputMessage(string.Format("Set table {0} index only to {1} sucessful!",
                                 tableName, dbProvider.IndexOnly));
                         }
@@ -34,14 +34,49 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "querycacheenabled":
+                    {
+                        bool querycacheenabled;
+
+                        if (bool.TryParse(value, out querycacheenabled))
+                        {
+                            dbProvider.SetCacheQuery(querycacheenabled, dbProvider.QueryCacheTimeout);
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} QueryCacheEnabled to {1} sucessful!",
+                                tableName, dbProvider.QueryCacheEnabled));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
+                case "querycachetimeout":
+                    {
+                        int querycachetimeout;
+
+                        if (int.TryParse(value, out querycachetimeout))
+                        {
+                            dbProvider.SetCacheQuery(dbProvider.QueryCacheEnabled, querycachetimeout);
+                            dbProvider.SaveTable();
+
+                            OutputMessage(string.Format("Set table {0} QueryCacheTimeout to {1} sucessful!",
+                                tableName, dbProvider.QueryCacheTimeout));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be number");
+                        }
+                    }
+                    break;
                 case "storequerycacheinfile":
                     {
                         bool storequerycacheinfile;
 
                         if (bool.TryParse(value, out storequerycacheinfile))
                         {
-                            dbProvider.Table.StoreQueryCacheInFile = storequerycacheinfile;
-                            dbProvider.SaveTable();
+                            dbProvider.SetStoreQueryCacheInFile(storequerycacheinfile);
+                            //dbProvider.SaveTable();
                             OutputMessage(string.Format("Set table {0} StoreQueryCacheInFile to {1} sucessful!",
                                 tableName, dbProvider.Table.StoreQueryCacheInFile));
                         }

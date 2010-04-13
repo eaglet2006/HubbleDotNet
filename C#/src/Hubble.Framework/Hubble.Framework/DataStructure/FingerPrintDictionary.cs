@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework;
+using System.Globalization;
 
 namespace Hubble.Framework.DataStructure
 {
@@ -32,6 +33,14 @@ namespace Hubble.Framework.DataStructure
 
         int _StringLength;
         int _Sum;
+
+        public Bit16Int(long high, long low, int stringLength, int sum)
+        {
+            _High = (ulong)high;
+            _Low = (ulong)low;
+            _StringLength = stringLength;
+            _Sum = sum;
+        }
 
         public Bit16Int(byte[] data, int stringLength, int sum)
         {
@@ -87,6 +96,24 @@ namespace Hubble.Framework.DataStructure
             Bit16Int dest = (Bit16Int)obj;
             return (dest._High == this._High) && (dest._Low == this._Low) && 
                 (dest._StringLength == this._StringLength) && (dest._Sum == this._Sum);
+        }
+
+        public override string ToString()
+        {
+            return _High.ToString("X16") + _Low.ToString("X16") + _StringLength.ToString("X8") + _Sum.ToString("X8");
+        }
+
+        static public Bit16Int Parse(string s)
+        {
+            string highStr = s.Substring(0, 16);
+            string lowStr = s.Substring(16, 16);
+            string lenStr = s.Substring(32, 8);
+            string sumStr = s.Substring(40, 8);
+
+            return new Bit16Int((long)(ulong.Parse(highStr, NumberStyles.AllowHexSpecifier)),
+                (long)(ulong.Parse(lowStr, NumberStyles.AllowHexSpecifier)), 
+                int.Parse(lenStr, NumberStyles.AllowHexSpecifier),
+                int.Parse(sumStr, NumberStyles.AllowHexSpecifier));
         }
     }
 

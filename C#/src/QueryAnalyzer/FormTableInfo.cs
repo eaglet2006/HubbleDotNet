@@ -29,19 +29,52 @@ namespace QueryAnalyzer
 {
     public partial class FormTableInfo : Form
     {
+        class AttributeCtrl
+        {
+            public string OriginalValue;
+            public Control Ctrl;
+
+            public AttributeCtrl(Control ctrl)
+            {
+                OriginalValue = ctrl.Text;
+                Ctrl = ctrl;
+            }
+
+        }
+
         public FormTableInfo()
         {
             InitializeComponent();
+
+            InitTableInfoControlDict();
+
         }
 
         internal string TableName { get; set; }
         internal DbAccess DataAccess { get; set; }
 
+
+
+        private Dictionary<string, AttributeCtrl> _TableInfoControlDict;
+        
+        private void InitTableInfoControlDict()
+        {
+            _TableInfoControlDict = new Dictionary<string, AttributeCtrl>();
+
+            foreach (Control ctrl in tabPageAttributes.Controls)
+            {
+                if (ctrl.Tag != null)
+                {
+                    _TableInfoControlDict.Add(ctrl.Tag.ToString(), new AttributeCtrl(ctrl));
+                }
+            }
+        }
+
         private void FormTableInfo_Load(object sender, EventArgs e)
         {
             try
             {
-                QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
+                QueryResult qResult = DataAccess.Excute("exec sp_columns {0}", TableName);
                 ShowFields(qResult.DataSet.Tables[0]);
             }
             catch (Exception e1)
@@ -49,7 +82,53 @@ namespace QueryAnalyzer
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
             }
+        }
 
+        private void ShowTableAttributes(DataTable table)
+        {
+            foreach (DataRow row in table.Rows)
+            {
+                AttributeCtrl ctrl;
+                if (_TableInfoControlDict.TryGetValue(row["Attribute"].ToString(), out ctrl))
+                {
+                    if (ctrl.Ctrl is NumericUpDown)
+                    {
+                        (ctrl.Ctrl as NumericUpDown).Value = long.Parse(row["Value"].ToString());
+
+                        ctrl.OriginalValue = (ctrl.Ctrl as NumericUpDown).Value.ToString();
+                    }
+                    else
+                    {
+                        ctrl.Ctrl.Text = row["Value"].ToString();
+                        ctrl.OriginalValue = ctrl.Ctrl.Text;
+                    }
+
+                    
+                }
+            }
+        }
+
+        private void SetTableAttributes()
+        {
+            foreach (AttributeCtrl ctrl in _TableInfoControlDict.Values)
+            {
+                string value;
+
+                if (ctrl.Ctrl is NumericUpDown)
+                {
+                    value = (ctrl.Ctrl as NumericUpDown).Value.ToString();
+                }
+                else
+                {
+                    value = ctrl.Ctrl.Text;
+                }
+
+                if (ctrl.OriginalValue != value)
+                {
+                    DataAccess.Excute("exec SP_SetTableAttribute {0}, {1}, {2}",
+                        TableName, ctrl.Ctrl.Tag.ToString(), ctrl.Ctrl.Text);
+                }
+            }
         }
 
         private void ShowFields(DataTable table)
@@ -77,5 +156,32 @@ namespace QueryAnalyzer
 
             }
         }
+
+        private void buttonInfoCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void tabControl1_Selected(object sender, TabControlEventArgs e)
+        {
+            if (e.TabPage == tabPageAttributes)
+            {
+                FormWaiting frmWatting = new FormWaiting();
+                frmWatting.Show();
+
+                QueryResult qResult = DataAccess.Excute("exec SP_GetTableAttributes {0}", TableName);
+                ShowTableAttributes(qResult.DataSet.Tables[0]);
+
+                frmWatting.Close();
+            }
+        }
+
+        private void buttonSet_Click(object sender, EventArgs e)
+        {
+            SetTableAttributes();
+            Close();
+        }
+
+
     }
 }

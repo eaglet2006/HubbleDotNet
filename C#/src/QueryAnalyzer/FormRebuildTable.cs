@@ -105,6 +105,9 @@ namespace QueryAnalyzer
 
         private void FormRebuildTable_Load(object sender, EventArgs e)
         {
+            FormWaiting frmWatting = new FormWaiting();
+            frmWatting.Show();
+
             try
             {
                 QueryResult result = DataAccess.Excute("exec SP_GetTableAttributes {0}", TableName);
@@ -149,6 +152,10 @@ namespace QueryAnalyzer
             {
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Close();
+            }
+            finally
+            {
+                frmWatting.Close();
             }
         }
 

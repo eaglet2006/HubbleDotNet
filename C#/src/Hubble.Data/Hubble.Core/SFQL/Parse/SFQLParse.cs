@@ -728,12 +728,10 @@ namespace Hubble.Core.SFQL.Parse
                 
                 DateTime expireTime;
                 int hitCount;
-                object tag;
+                Cache.QueryCacheInformation qInfo;
 
-                if (queryCache.TryGetValue(whereSql, out qDocs, out expireTime, out hitCount, out tag))
+                if (queryCache.TryGetValue(whereSql, out qDocs, out expireTime, out hitCount, out qInfo))
                 {
-                    Cache.QueryCacheInformation qInfo = (Cache.QueryCacheInformation)tag;
-
                     if ((qInfo.Count >= select.End + 1 && select.End  >= 0) || (qInfo.All && select.End < 0))
                     {
                         if (DateTime.Now <= expireTime)

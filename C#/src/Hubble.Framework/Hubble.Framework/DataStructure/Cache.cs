@@ -30,6 +30,8 @@ namespace Hubble.Framework.DataStructure
 
         bool Clear(int stair, double ratio);
 
+        void DeleteExpireCacheFiles();
+
         List<string> BucketInfoList { get; }
 
         long GetBucketMemorySize(int stair);
@@ -349,6 +351,7 @@ namespace Hubble.Framework.DataStructure
 
         protected abstract byte[] GetBytes(T data);
         protected abstract T GetData(byte[] buf);
+        public abstract void DeleteExpireCacheFiles();
 
         #endregion
 
@@ -451,6 +454,18 @@ namespace Hubble.Framework.DataStructure
             }
 
             _CacheManage.Collect();
+        }
+
+        public Bit16Int MD5(string key)
+        {
+            return _Dict.MD5(key);
+        }
+
+        public string GetMD5String(string key)
+        {
+            Bit16Int bit16Int = _Dict.MD5(key);
+
+            return bit16Int.ToString();
         }
 
         public bool TryGetValue(string key, out T value, out DateTime expireTime, out int hitCount)

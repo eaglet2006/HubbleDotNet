@@ -52,5 +52,9 @@ namespace Hubble.SQLClient
 
             return QueryResultSerialization.Deserialize(m, false, 1);
         }
+
+        public override void DeleteExpireCacheFiles()
+        {
+        }
     }
 }

@@ -102,6 +102,16 @@ namespace Hubble.SQLClient
         {
             get
             {
+                if (_TcpClient == null)
+                {
+                    return false;
+                }
+
+                if (_TcpClient.Closed)
+                {
+                    return false;
+                }
+
                 return _Connected;
             }
         }

@@ -505,6 +505,22 @@ namespace OracleDBAdapter
 
                     result.Add(docId, new Hubble.Core.Query.DocumentResult(docId));
                 }
+
+                System.Data.DataSet ds;
+
+                if (string.IsNullOrEmpty(where))
+                {
+                    ds = sqlData.QuerySql(string.Format("select count(*) cnt from {0}",
+                        Table.DBTableName));
+                }
+                else
+                {
+                    ds = sqlData.QuerySql(string.Format("select count(*) cnt from {0} where {1}",
+                        Table.DBTableName, where));
+                }
+
+                result.RelTotalCount = int.Parse(ds.Tables[0].Rows[0][0].ToString());
+
             }
 
             return result;

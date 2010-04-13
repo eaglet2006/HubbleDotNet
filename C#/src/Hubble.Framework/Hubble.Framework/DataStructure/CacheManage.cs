@@ -42,6 +42,11 @@ namespace Hubble.Framework.DataStructure
 
         private long _TotalMemoryNotCollect = 0;
 
+        private Thread _Thread;
+
+        private bool _CacheAdded = false;
+        private int _Tick = 0;
+
         private long TotalMemoryNotCollect
         {
             get
@@ -83,7 +88,7 @@ namespace Hubble.Framework.DataStructure
                     if (_TotalMemoryNotCollect > _MaxMemorySize)
                     {
                         _TotalMemoryNotCollect = 0;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(ThreadProc));
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(GCCollect));
                     }
                 }
             }
@@ -141,7 +146,7 @@ namespace Hubble.Framework.DataStructure
             }
         }
 
-        static void ThreadProc(Object stateInfo)
+        static void GCCollect(Object stateInfo)
         {
             // No state object was passed to QueueUserWorkItem, so 
             // stateInfo is null.
@@ -149,15 +154,69 @@ namespace Hubble.Framework.DataStructure
             GC.Collect();
         }
 
+        void ThreadProc()
+        {
+            while (true)
+            {
+                Thread.Sleep(1000 * 60 * 60);
+                DeleteExpireCacheFiles();
+            }
+        }
+
         internal void Add(IManagedCache cache)
         {
             lock (_LockObj)
             {
+                _CacheAdded = true;
                 _ManagedCacheList.Add(cache);
                 _MaxStair = Math.Max(_MaxStair, cache.MaxStair);
             }
         }
 
+        private void DeleteExpireCacheFiles()
+        {
+            try
+            {
+                lock (_LockObj)
+                {
+                    if (_CacheAdded || _Tick >= 24)
+                    {
+                        _CacheAdded = false;
+                        _Tick = 0;
+
+                        foreach (IManagedCache cache in _ManagedCacheList)
+                        {
+                            try
+                            {
+                                cache.DeleteExpireCacheFiles();
+                            }
+                            catch(Exception e)
+                            {
+                                Console.WriteLine(string.Format("Delete expire Cache file fail, err:{0} stack:{1}",
+                                    e.Message, e.StackTrace));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _Tick++;
+                    }
+
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Collect cache
+        /// </summary>
+        /// <remarks>
+        /// This function will be called by 
+        /// Cache.Insert
+        /// So Only as Cache insert, it will collect.
+        /// </remarks>
         internal void Collect()
         {
             try
@@ -220,7 +279,7 @@ namespace Hubble.Framework.DataStructure
                         GC.Collect();
 
                         _TotalMemoryNotCollect = 0;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(ThreadProc));
+                        ThreadPool.QueueUserWorkItem(new WaitCallback(GCCollect));
                     }
                 }
             }
@@ -253,6 +312,12 @@ namespace Hubble.Framework.DataStructure
             }
 
             MaxMemorySize = maxMemorySize;
+
+            _Thread = new Thread(ThreadProc);
+
+            _Thread.IsBackground = true;
+
+            _Thread.Start();
 
         }
 

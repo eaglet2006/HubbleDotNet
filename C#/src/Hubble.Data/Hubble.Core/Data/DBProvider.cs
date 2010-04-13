@@ -516,6 +516,14 @@ namespace Hubble.Core.Data
 
         public static void Init()
         {
+            //Init XML Cache File Serialization
+            Hubble.Framework.Serialization.XmlSerialization<Cache.CacheFile>.Serialize(
+                            new Cache.CacheFile("",
+                                new Hubble.Core.Cache.QueryCacheDocuments(),
+                                new Hubble.Core.Cache.QueryCacheInformation()),
+                            Encoding.UTF8, new System.IO.MemoryStream());
+
+
             //Build QueryTable
 
             System.Reflection.Assembly asm = System.Reflection.Assembly.GetExecutingAssembly();
@@ -995,6 +1003,30 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal void SetStoreQueryCacheInFile(bool value)
+        {
+            try
+            {
+                _TableLock.Enter(Lock.Mode.Mutex, 30000);
+                _Table.StoreQueryCacheInFile = value;
+
+                if (value)
+                {
+                    _QueryCache.CacheFileFolder = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\";
+                }
+                else
+                {
+                    _QueryCache.CacheFileFolder = null;
+                }
+
+                SaveTable();
+            }
+            finally
+            {
+                _TableLock.Leave();
+            }
+        }
+
         internal void SetMaxReturnCount(int value)
         {
             try
@@ -1197,6 +1229,13 @@ namespace Hubble.Core.Data
             }
 
             foreach (string file in System.IO.Directory.GetFiles(dir, "tableinfo.xml"))
+            {
+                System.IO.File.Delete(file);
+            }
+
+            //Delete query cache file
+            foreach (string file in System.IO.Directory.GetFiles(Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\",
+                "*.xml"))
             {
                 System.IO.File.Delete(file);
             }
@@ -1490,7 +1529,15 @@ namespace Hubble.Core.Data
 
                 if (_QueryCache == null)
                 {
-                    _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
+                    if (Table.StoreQueryCacheInFile)
+                    {
+                        _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, Table, this.TableName,
+                            Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\");
+                    }
+                    else
+                    {
+                        _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, Table, this.TableName);
+                    }
                 }
 
                 _Inited = true;
@@ -1913,7 +1960,15 @@ namespace Hubble.Core.Data
 
             if (_QueryCache == null)
             {
-                _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, this.TableName);
+                if (Table.StoreQueryCacheInFile)
+                {
+                    _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, Table, this.TableName,
+                        Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\");
+                }
+                else
+                {
+                    _QueryCache = new Cache.QueryCache(Cache.QueryCacheManager.Manager, Table, this.TableName);
+                }
             }
         }
 

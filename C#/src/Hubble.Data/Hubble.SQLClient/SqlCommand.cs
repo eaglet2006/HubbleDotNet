@@ -152,11 +152,18 @@ namespace Hubble.SQLClient
             return sb.ToString();
         }
 
-        private System.Data.DataSet Query(string orginalSql, int cacheTimeout)
+        private System.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
         {
             if (!_SqlConnection.Connected)
             {
-                throw new System.Data.DataException("Sql Connection does not connect!");
+                try
+                {
+                    _SqlConnection.Open();
+                }
+                catch
+                {
+                    throw new System.Data.DataException("Sql Connection does not connect!");
+                }
             }
 
             string tableTicks = "";
@@ -276,6 +283,37 @@ namespace Hubble.SQLClient
             }
 
             return _QueryResult.DataSet;
+        }
+
+        private System.Data.DataSet Query(string orginalSql, int cacheTimeout)
+        {
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+            try
+            {
+                sw.Start();
+                return InnerQuery(orginalSql, cacheTimeout);
+            }
+            catch (System.IO.IOException ex)
+            {
+                sw.Stop();
+
+                if (sw.ElapsedMilliseconds < 1000)
+                {
+                    return InnerQuery(orginalSql, cacheTimeout);
+                }
+                else
+                {
+                    throw ex;
+                }
+            }
+            finally
+            {
+                if (sw.IsRunning)
+                {
+                    sw.Stop();
+                }
+            }
         }
 
         /// <summary>

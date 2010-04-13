@@ -36,6 +36,11 @@ namespace Hubble.Core.Cache
             {
                 return _All;
             }
+
+            set
+            {
+                _All = value;
+            }
         }
 
 
@@ -45,6 +50,11 @@ namespace Hubble.Core.Cache
             {
                 return _Count;
             }
+
+            set
+            {
+                _Count = value;
+            }
         }
 
         public long CacheTicks
@@ -53,6 +63,16 @@ namespace Hubble.Core.Cache
             {
                 return _CacheTicks;
             }
+
+            set
+            {
+                _CacheTicks = value;
+            }
+        }
+
+        public QueryCacheInformation()
+            :this(0, 0)
+        {
         }
 
         public QueryCacheInformation(int count, long cacheTicks)
@@ -84,7 +104,10 @@ namespace Hubble.Core.Cache
 
         public QueryCacheDocuments(int count, DocumentResultForSort[] docResults, int relDocCount)
         {
-            Documents = docResults;
+            Documents = new DocumentResultForSort[count];
+            Array.Copy(docResults, Documents, count);
+
+            //Documents = docResults;
             Count = count;
             ResultLength = relDocCount;
         }
@@ -113,14 +136,120 @@ namespace Hubble.Core.Cache
     {
         private object _LockObj = new object();
         private string _CacheFileFolder = null;
+        private Data.Table _Table;
 
         const int CompressFrom = 20;
 
-        public QueryCache(QueryCacheManager cacheMgr, string name)
+        private bool CacheFileEnabled
+        {
+            get
+            {
+                return _CacheFileFolder != null;
+            }
+        }
+
+        internal string CacheFileFolder
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _CacheFileFolder;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _CacheFileFolder = Hubble.Framework.IO.Path.AppendDivision(value, '\\');
+
+                    if (_CacheFileFolder != null)
+                    {
+                        if (!System.IO.Directory.Exists(_CacheFileFolder))
+                        {
+                            System.IO.Directory.CreateDirectory(_CacheFileFolder);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SetFileLastWriteTime(string filePath)
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(SetFileLastWriteTime), filePath);
+        }
+
+        private void SetFileLastWriteTime(object filePath)
+        {
+            try
+            {
+                try
+                {
+                    System.IO.File.SetLastWriteTime(filePath as string, DateTime.Now);
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Set file last write time fail. file name: {0} err:{1}",
+                        filePath as string, e.Message));
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        private void WriteCacheFile(CacheFile cacheFile)
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem(new System.Threading.WaitCallback(WriteCacheFile), cacheFile);
+        }
+
+        private void WriteCacheFile(object state)
+        {
+            try
+            {
+                string filePath = "";
+
+                try
+                {
+                    CacheFile cacheFile = state as CacheFile;
+
+                    string bit16String = base.GetMD5String(cacheFile.Key);
+
+                    filePath = _CacheFileFolder + bit16String + ".xml";
+
+                    using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
+                                 System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite))
+                    {
+                        Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Serialize(
+                            cacheFile, Encoding.UTF8, fs);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Write cahce file fail. file name: {0} err:{1}",
+                        filePath as string, e.Message));
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        public QueryCache(QueryCacheManager cacheMgr, Data.Table table, string name, string cacheFileFolder)
             : base(cacheMgr)
         {
             base.m_Name = name;
+            CacheFileFolder = cacheFileFolder;
+            _Table = table;
         }
+
+        public QueryCache(QueryCacheManager cacheMgr, Data.Table table, string name)
+            : this(cacheMgr, table, name, null)
+        {
+        }
+
+
 
         new public void Insert(string key, QueryCacheDocuments item, DateTime expireTime)
         {
@@ -132,6 +261,11 @@ namespace Hubble.Core.Cache
             lock (_LockObj)
             {
                 base.Insert(key, item, expireTime, cacheInfo);
+
+                if (CacheFileEnabled)
+                {
+                    WriteCacheFile(new CacheFile(key, item, cacheInfo));
+                }
             }
         }
 
@@ -145,10 +279,104 @@ namespace Hubble.Core.Cache
         {
             lock (_LockObj)
             {
-                object tag;
-                bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
-                cacheInfo = tag as QueryCacheInformation;
-                return result;
+                if (CacheFileEnabled)
+                {
+                    string bit16String = base.GetMD5String(key);
+
+                    object tag;
+                    bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+
+                    string filePath = _CacheFileFolder + bit16String + ".xml";
+
+                    if (!result)
+                    {
+                        if (System.IO.File.Exists(filePath))
+                        {
+                            using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
+                                 System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
+                            {
+                                CacheFile cacheFile;
+
+                                try
+                                {
+                                    cacheFile = Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Deserialize(fs);
+                                }
+                                catch
+                                {
+                                    cacheInfo = null;
+                                    return false;
+
+                                }
+
+                                value = cacheFile.Documents;
+                                cacheInfo = cacheFile.Info;
+                                expireTime = DateTime.Now;
+                                hitCount = 1;
+                                base.Insert(key, value, expireTime, cacheInfo);
+                            }
+
+                            System.IO.File.SetLastWriteTime(filePath, DateTime.Now);
+                            return true;
+                        }
+                        else
+                        {
+                            cacheInfo = null;
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        cacheInfo = tag as QueryCacheInformation;
+
+                        try
+                        {
+                            if (!System.IO.File.Exists(filePath))
+                            {
+                                WriteCacheFile(new CacheFile(key, value, cacheInfo));
+                            }
+                            else
+                            {
+                                SetFileLastWriteTime(filePath);
+                            }
+                        }
+                        catch
+                        {
+                        }
+
+                        return true;
+                    }
+                }
+                else
+                {
+                    object tag;
+                    bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+                    cacheInfo = tag as QueryCacheInformation;
+                    return result;
+                }
+            }
+        }
+
+        public override void DeleteExpireCacheFiles()
+        {
+            lock (_LockObj)
+            {
+                if (!CacheFileEnabled)
+                {
+                    return;
+                }
+
+                int days = _Table.CleanupQueryCacheFileInDays;
+
+                foreach (string file in System.IO.Directory.GetFiles(_CacheFileFolder, "*.xml"))
+                {
+                    TimeSpan span = DateTime.Now - System.IO.File.GetLastWriteTime(file);
+
+                    if (span.TotalDays > days)
+                    {
+                        System.IO.File.Delete(file);
+                    }
+                }
+
             }
         }
 

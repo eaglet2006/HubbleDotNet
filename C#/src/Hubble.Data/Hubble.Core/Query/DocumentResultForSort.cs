@@ -100,6 +100,8 @@ namespace Hubble.Core.Query
     unsafe public struct DocumentResultForSort : IComparable<DocumentResultForSort>
     {
         public long Score;
+
+        [System.Xml.Serialization.XmlIgnore]
         public long SortValue; //if SortInfoList == null, use SortValue to sort
         
         [System.Xml.Serialization.XmlIgnore]
@@ -108,8 +110,11 @@ namespace Hubble.Core.Query
         //[System.Xml.Serialization.XmlIgnore]
         //public object Tag;
 
+        [System.Xml.Serialization.XmlIgnore]
         public List<SortInfo> SortInfoList;
         public int DocId;
+
+        [System.Xml.Serialization.XmlIgnore]
         public bool Asc; // Contain with SortValue
 
         unsafe public DocumentResultForSort(DocumentResult* pDocResult)

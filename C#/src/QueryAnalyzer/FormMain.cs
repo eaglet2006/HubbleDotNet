@@ -187,14 +187,14 @@ namespace QueryAnalyzer
                 SFQLParse sfqlParse = new SFQLParse();
                 string sql = textBoxSql.Text;
 
-                if (sql.StartsWith("SP_", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    sql = "exec " + sql;
-                }
-
                 if (!string.IsNullOrEmpty(textBoxSql.SelectedText))
                 {
                     sql = textBoxSql.SelectedText;
+                }
+
+                if (sql.StartsWith("SP_", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    sql = "exec " + sql;
                 }
 
                 QueryResult queryResult;
