@@ -1050,7 +1050,7 @@ namespace Hubble.Core.SFQL.Parse
                 mCalc.Add(para);
             }
 
-            mCalc.Start();
+            mCalc.Start(8);
 
             if (_UnionQueryResult.Count == 0)
             {

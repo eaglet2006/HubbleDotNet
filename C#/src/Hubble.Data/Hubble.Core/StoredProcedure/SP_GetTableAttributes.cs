@@ -79,6 +79,10 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Value", dbProvider.MaxReturnCount.ToString());
 
             NewRow();
+            OutputValue("Attribute", "InitImmediatelyAfterStartup");
+            OutputValue("Value", dbProvider.Table.InitImmediatelyAfterStartup.ToString());
+
+            NewRow();
             OutputValue("Attribute", "QueryCacheEnabled");
             OutputValue("Value", dbProvider.QueryCacheEnabled.ToString());
 

@@ -509,6 +509,33 @@ namespace Hubble.Core.Global
 
         }
 
+        int _MaxUnionSelectThread = 8;
+
+        public int MaxUnionSelectThread
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _MaxUnionSelectThread;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _MaxUnionSelectThread = value;
+
+                    if (_MaxUnionSelectThread < 1)
+                    {
+                        _MaxUnionSelectThread = 1;
+                    }
+                }
+            }
+
+        }
+
         bool _InitTablesStartup = false;
 
         /// <summary>

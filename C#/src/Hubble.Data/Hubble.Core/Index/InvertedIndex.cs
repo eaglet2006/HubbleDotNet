@@ -545,6 +545,14 @@ namespace Hubble.Core.Index
 
         #region Internal properties
 
+        internal double MergeRate
+        {
+            get
+            {
+                return _IndexFileProxy.MergeRate;
+            }
+        }
+
         internal bool OptimizeStoped
         {
             get

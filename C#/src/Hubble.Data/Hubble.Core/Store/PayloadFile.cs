@@ -90,7 +90,7 @@ namespace Hubble.Core.Store
 
     }
 
-    class PayloadFile : MessageQueue
+    class PayloadFile //: MessageQueue
     {
         const int HeadLength = 4 * 1024;
 
@@ -159,6 +159,8 @@ namespace Hubble.Core.Store
         int _DocumentsCount = 0;
         int _LastStoredId = -1;
 
+        object _LockObj = new object();
+
         /// <summary>
         /// The last docid that is stored 
         /// </summary>
@@ -170,7 +172,7 @@ namespace Hubble.Core.Store
             }
         }
 
-        private object ProcessMessage(int evt, MessageFlag flag, object data)
+        private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
         {
             switch ((Event)evt)
             {
@@ -317,7 +319,7 @@ namespace Hubble.Core.Store
         public PayloadFile(string fileName)
         {
             _FileName = fileName;
-            OnMessageEvent = ProcessMessage;
+            //OnMessageEvent = ProcessMessage;
         }
 
         internal int DocumentsCount
@@ -541,12 +543,36 @@ namespace Hubble.Core.Store
 
         internal void Add(int docId, Hubble.Core.Data.Payload payLoad, PayloadProvider payloadProvider)
         {
-            ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad, payloadProvider));
+            System.Threading.Monitor.TryEnter(_LockObj);
+
+            try
+            {
+                _PayloadEntities.Add(new PayloadEntity(docId, payLoad, payloadProvider));
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+            //ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad, payloadProvider));
         }
 
         internal void Collect()
         {
-            SSendMessage((int)Event.Collect, null, 300 * 1000);
+            if (!System.Threading.Monitor.TryEnter(_LockObj, 300 * 1000))
+            {
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                SaveToFile();
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //SSendMessage((int)Event.Collect, null, 300 * 1000);
         }
 
         internal void Update(IList<int> docIds, IList<Data.Payload> payloads, PayloadProvider payloadProvider)
@@ -558,7 +584,18 @@ namespace Hubble.Core.Store
                 peList.Add(new PayloadEntity(docIds[i], payloads[i], payloadProvider));
             }
 
-            SSendMessage((int)Event.Update, peList, int.MaxValue);
+            System.Threading.Monitor.TryEnter(_LockObj);
+
+            try
+            {
+                UpdateToFile(peList);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+            //SSendMessage((int)Event.Update, peList, int.MaxValue);
         }
     }
 }

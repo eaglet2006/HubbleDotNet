@@ -143,6 +143,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_GetTableMergeRate.cs" />
     <Compile Include="StoredProcedure\SP_GetTableSchema.cs" />
     <Compile Include="StoredProcedure\IHelper.cs" />
     <Compile Include="StoredProcedure\SP_Help.cs" />

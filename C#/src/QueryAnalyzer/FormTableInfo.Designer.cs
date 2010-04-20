@@ -67,6 +67,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
+            this.comboBoxInitImmediatelyAfterStartup = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -199,6 +201,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.comboBoxInitImmediatelyAfterStartup);
+            this.tabPageAttributes.Controls.Add(this.label22);
             this.tabPageAttributes.Controls.Add(this.label21);
             this.tabPageAttributes.Controls.Add(this.label20);
             this.tabPageAttributes.Controls.Add(this.numericUpDownQueryCacheTimeout);
@@ -236,7 +240,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(308, 390);
+            this.label21.Location = new System.Drawing.Point(308, 423);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(29, 13);
             this.label21.TabIndex = 29;
@@ -245,7 +249,7 @@
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(308, 316);
+            this.label20.Location = new System.Drawing.Point(308, 349);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(20, 13);
             this.label20.TabIndex = 28;
@@ -253,7 +257,7 @@
             // 
             // numericUpDownQueryCacheTimeout
             // 
-            this.numericUpDownQueryCacheTimeout.Location = new System.Drawing.Point(168, 311);
+            this.numericUpDownQueryCacheTimeout.Location = new System.Drawing.Point(173, 344);
             this.numericUpDownQueryCacheTimeout.Maximum = new decimal(new int[] {
             -469762049,
             -590869294,
@@ -267,7 +271,7 @@
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(32, 316);
+            this.label18.Location = new System.Drawing.Point(32, 349);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(104, 13);
             this.label18.TabIndex = 26;
@@ -279,7 +283,7 @@
             this.comboBoxQueryCacheEnabled.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBoxQueryCacheEnabled.Location = new System.Drawing.Point(168, 274);
+            this.comboBoxQueryCacheEnabled.Location = new System.Drawing.Point(173, 309);
             this.comboBoxQueryCacheEnabled.Name = "comboBoxQueryCacheEnabled";
             this.comboBoxQueryCacheEnabled.Size = new System.Drawing.Size(121, 21);
             this.comboBoxQueryCacheEnabled.TabIndex = 25;
@@ -289,7 +293,7 @@
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(32, 279);
+            this.label19.Location = new System.Drawing.Point(32, 314);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(105, 13);
             this.label19.TabIndex = 24;
@@ -317,7 +321,7 @@
             // 
             // numericUpDownCleanupQueryCacheFileInDays
             // 
-            this.numericUpDownCleanupQueryCacheFileInDays.Location = new System.Drawing.Point(193, 385);
+            this.numericUpDownCleanupQueryCacheFileInDays.Location = new System.Drawing.Point(198, 418);
             this.numericUpDownCleanupQueryCacheFileInDays.Maximum = new decimal(new int[] {
             -469762049,
             -590869294,
@@ -330,7 +334,7 @@
             // 
             // numericUpDownMaxReturnCount
             // 
-            this.numericUpDownMaxReturnCount.Location = new System.Drawing.Point(168, 238);
+            this.numericUpDownMaxReturnCount.Location = new System.Drawing.Point(173, 238);
             this.numericUpDownMaxReturnCount.Maximum = new decimal(new int[] {
             -469762049,
             -590869294,
@@ -353,7 +357,7 @@
             // 
             // numericUpDownLastDocId
             // 
-            this.numericUpDownLastDocId.Location = new System.Drawing.Point(169, 199);
+            this.numericUpDownLastDocId.Location = new System.Drawing.Point(174, 199);
             this.numericUpDownLastDocId.Maximum = new decimal(new int[] {
             -469762049,
             -590869294,
@@ -368,7 +372,7 @@
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(32, 390);
+            this.label17.Location = new System.Drawing.Point(32, 423);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(154, 13);
             this.label17.TabIndex = 17;
@@ -381,7 +385,7 @@
             this.comboBoxIndexOnly.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBoxIndexOnly.Location = new System.Drawing.Point(168, 54);
+            this.comboBoxIndexOnly.Location = new System.Drawing.Point(173, 54);
             this.comboBoxIndexOnly.Name = "comboBoxIndexOnly";
             this.comboBoxIndexOnly.Size = new System.Drawing.Size(121, 21);
             this.comboBoxIndexOnly.TabIndex = 16;
@@ -394,7 +398,7 @@
             this.comboBoxStoreQueryCacheInFile.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBoxStoreQueryCacheInFile.Location = new System.Drawing.Point(168, 348);
+            this.comboBoxStoreQueryCacheInFile.Location = new System.Drawing.Point(173, 381);
             this.comboBoxStoreQueryCacheInFile.Name = "comboBoxStoreQueryCacheInFile";
             this.comboBoxStoreQueryCacheInFile.Size = new System.Drawing.Size(121, 21);
             this.comboBoxStoreQueryCacheInFile.TabIndex = 15;
@@ -404,7 +408,7 @@
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(32, 353);
+            this.label16.Location = new System.Drawing.Point(32, 386);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(116, 13);
             this.label16.TabIndex = 14;
@@ -430,7 +434,7 @@
             // 
             // textBoxDBAdapter
             // 
-            this.textBoxDBAdapter.Location = new System.Drawing.Point(168, 163);
+            this.textBoxDBAdapter.Location = new System.Drawing.Point(173, 163);
             this.textBoxDBAdapter.Name = "textBoxDBAdapter";
             this.textBoxDBAdapter.ReadOnly = true;
             this.textBoxDBAdapter.Size = new System.Drawing.Size(629, 20);
@@ -448,7 +452,7 @@
             // 
             // textBoxDBTableName
             // 
-            this.textBoxDBTableName.Location = new System.Drawing.Point(168, 127);
+            this.textBoxDBTableName.Location = new System.Drawing.Point(173, 127);
             this.textBoxDBTableName.Name = "textBoxDBTableName";
             this.textBoxDBTableName.ReadOnly = true;
             this.textBoxDBTableName.Size = new System.Drawing.Size(629, 20);
@@ -466,7 +470,7 @@
             // 
             // textBoxDocId
             // 
-            this.textBoxDocId.Location = new System.Drawing.Point(168, 91);
+            this.textBoxDocId.Location = new System.Drawing.Point(173, 91);
             this.textBoxDocId.Name = "textBoxDocId";
             this.textBoxDocId.ReadOnly = true;
             this.textBoxDocId.Size = new System.Drawing.Size(629, 20);
@@ -493,7 +497,7 @@
             // 
             // textBoxDirectory
             // 
-            this.textBoxDirectory.Location = new System.Drawing.Point(168, 18);
+            this.textBoxDirectory.Location = new System.Drawing.Point(173, 18);
             this.textBoxDirectory.Name = "textBoxDirectory";
             this.textBoxDirectory.ReadOnly = true;
             this.textBoxDirectory.Size = new System.Drawing.Size(629, 20);
@@ -508,6 +512,28 @@
             this.label9.Size = new System.Drawing.Size(78, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
+            // 
+            // comboBoxInitImmediatelyAfterStartup
+            // 
+            this.comboBoxInitImmediatelyAfterStartup.FormattingEnabled = true;
+            this.comboBoxInitImmediatelyAfterStartup.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(174, 273);
+            this.comboBoxInitImmediatelyAfterStartup.Name = "comboBoxInitImmediatelyAfterStartup";
+            this.comboBoxInitImmediatelyAfterStartup.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxInitImmediatelyAfterStartup.TabIndex = 31;
+            this.comboBoxInitImmediatelyAfterStartup.Tag = "InitImmediatelyAfterStartup";
+            this.comboBoxInitImmediatelyAfterStartup.Text = "True";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(33, 278);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(137, 13);
+            this.label22.TabIndex = 30;
+            this.label22.Text = "Init immediately after startup";
             // 
             // FormTableInfo
             // 
@@ -573,5 +599,7 @@
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.ComboBox comboBoxInitImmediatelyAfterStartup;
+        private System.Windows.Forms.Label label22;
     }
 }

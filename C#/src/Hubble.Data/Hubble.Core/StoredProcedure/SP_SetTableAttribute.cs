@@ -34,6 +34,25 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "initimmediatelyafterstartup":
+                    {
+                        bool initimmediatelyafterstartup;
+
+                        if (bool.TryParse(value, out initimmediatelyafterstartup))
+                        {
+                            dbProvider.Table.InitImmediatelyAfterStartup = initimmediatelyafterstartup;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} InitImmediatelyAfterStartup to {1} sucessful!",
+                                tableName, dbProvider.Table.InitImmediatelyAfterStartup));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
+
+
                 case "querycacheenabled":
                     {
                         bool querycacheenabled;

@@ -393,6 +393,9 @@ namespace Hubble.Core.Store
 
         private object _LockObj = new object();
 
+        private object _MergeRateLock = new object();
+        private double _MergeRate = -1;
+
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
 
         private int InnerWordTableSize
@@ -430,6 +433,26 @@ namespace Hubble.Core.Store
         //        _WordUpdateDelegate = value;
         //    }
         //}
+
+        internal double MergeRate
+        {
+            get
+            {
+                lock (_MergeRateLock)
+                {
+                    return _MergeRate;
+                }
+            }
+
+            set
+            {
+                lock (_MergeRateLock)
+                {
+                    _MergeRate = value;
+                }
+            }
+        }
+             
 
         public int WordTableSize
         {

@@ -44,20 +44,44 @@ namespace Hubble.Framework.Threading
             _Threads.Add(thread);
         }
 
-        public void Start()
+        public void Start(int maxThread)
         {
             sema = new System.Threading.Semaphore(0, _Threads.Count);
 
-            for (int i = 0; i < _Threads.Count; i++)
+            int finishTreads = 0;
+
+            int count = _Threads.Count;
+
+            maxThread = Math.Min(maxThread, count);
+
+            int i = 0;
+            for (i = 0; i < maxThread; i++)
             {
                 _Threads[i].Start(_Paras[i]);
             }
 
-            //Waitting
-            for (int i = 0; i < _Threads.Count; i++)
+            while (finishTreads < count)
             {
                 sema.WaitOne();
+                finishTreads++;
+
+                if (i < count)
+                {
+                    _Threads[i].Start(_Paras[i]);
+                    i++;
+                }
             }
+
+            //for (int i = 0; i < _Threads.Count; i++)
+            //{
+            //    _Threads[i].Start(_Paras[i]);
+            //}
+
+            //Waitting
+            //for (int i = 0; i < _Threads.Count; i++)
+            //{
+            //    sema.WaitOne();
+            //}
         }
 
         void ThreadProc(object para)

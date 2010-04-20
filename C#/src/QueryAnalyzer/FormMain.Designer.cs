@@ -68,6 +68,7 @@
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.dropTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.truncateTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optimizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStripServer = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -372,63 +373,71 @@
             this.refreshToolStripMenuItem,
             this.troubleshooterToolStripMenuItem,
             this.toolStripMenuItem3,
+            this.optimizeTableToolStripMenuItem,
             this.dropTableToolStripMenuItem,
             this.truncateTableToolStripMenuItem});
             this.contextMenuStripTable.Name = "contextMenuStripTree";
-            this.contextMenuStripTable.Size = new System.Drawing.Size(148, 148);
+            this.contextMenuStripTable.Size = new System.Drawing.Size(153, 192);
             // 
             // tableInfoToolStripMenuItem
             // 
             this.tableInfoToolStripMenuItem.Name = "tableInfoToolStripMenuItem";
-            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.tableInfoToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tableInfoToolStripMenuItem.Text = "Table Info";
             this.tableInfoToolStripMenuItem.Click += new System.EventHandler(this.tableInfoToolStripMenuItem_Click);
             // 
             // rebuildTableToolStripMenuItem
             // 
             this.rebuildTableToolStripMenuItem.Name = "rebuildTableToolStripMenuItem";
-            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.rebuildTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.rebuildTableToolStripMenuItem.Text = "Rebuild Table";
             this.rebuildTableToolStripMenuItem.Click += new System.EventHandler(this.rebuildTableToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(144, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
             // 
             // refreshToolStripMenuItem
             // 
             this.refreshToolStripMenuItem.Enabled = false;
             this.refreshToolStripMenuItem.Name = "refreshToolStripMenuItem";
-            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.refreshToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.refreshToolStripMenuItem.Text = "Refresh";
             this.refreshToolStripMenuItem.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
             // troubleshooterToolStripMenuItem
             // 
             this.troubleshooterToolStripMenuItem.Name = "troubleshooterToolStripMenuItem";
-            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.troubleshooterToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.troubleshooterToolStripMenuItem.Text = "Troubleshooter";
             this.troubleshooterToolStripMenuItem.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(144, 6);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(149, 6);
             // 
             // dropTableToolStripMenuItem
             // 
             this.dropTableToolStripMenuItem.Name = "dropTableToolStripMenuItem";
-            this.dropTableToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.dropTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.dropTableToolStripMenuItem.Text = "Drop Table";
             this.dropTableToolStripMenuItem.Click += new System.EventHandler(this.dropTableToolStripMenuItem_Click);
             // 
             // truncateTableToolStripMenuItem
             // 
             this.truncateTableToolStripMenuItem.Name = "truncateTableToolStripMenuItem";
-            this.truncateTableToolStripMenuItem.Size = new System.Drawing.Size(147, 22);
+            this.truncateTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.truncateTableToolStripMenuItem.Text = "Truncate Table";
             this.truncateTableToolStripMenuItem.Click += new System.EventHandler(this.truncateTableToolStripMenuItem_Click);
+            // 
+            // optimizeTableToolStripMenuItem
+            // 
+            this.optimizeTableToolStripMenuItem.Name = "optimizeTableToolStripMenuItem";
+            this.optimizeTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.optimizeTableToolStripMenuItem.Text = "Optimize Table";
+            this.optimizeTableToolStripMenuItem.Click += new System.EventHandler(this.optimizeTableToolStripMenuItem_Click);
             // 
             // imageListTreeView
             // 
@@ -623,6 +632,7 @@
         private System.Windows.Forms.ToolStripMenuItem dataCacheToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveSToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog saveFileDialogSql;
+        private System.Windows.Forms.ToolStripMenuItem optimizeTableToolStripMenuItem;
     }
 }
 

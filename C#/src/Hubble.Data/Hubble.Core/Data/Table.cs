@@ -57,6 +57,8 @@ namespace Hubble.Core.Data
 
         int _CleanupQueryCacheFileInDays = 7;
 
+        bool _InitImmediatelyAfterStartup = Global.Setting.Config.InitTablesStartup;
+
         #endregion
 
         #region Public properties
@@ -283,6 +285,22 @@ namespace Hubble.Core.Data
                     _CleanupQueryCacheFileInDays = value;
                 }
             }
+        }
+
+        /// <summary>
+        /// Initinalize immediately after hubble.net startup.
+        /// </summary>
+        public bool InitImmediatelyAfterStartup
+        {
+            get
+            {
+                return _InitImmediatelyAfterStartup;
+            }
+
+            set
+            {
+                _InitImmediatelyAfterStartup = value;
+            } 
         }
 
         public void Save(string dir)

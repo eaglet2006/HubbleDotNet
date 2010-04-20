@@ -120,8 +120,17 @@ namespace Hubble.Core.Store
                     {
                         System.IO.MemoryStream m = new System.IO.MemoryStream();
 
+                        _IndexFileProxy.MergeRate = 0;
+
+                        int count = mergeInfos.MergedWordFilePostionList.Count;
+
+                        int wplIndex = 0;
+
                         foreach (IndexFileProxy.MergedWordFilePostionList wpl in mergeInfos.MergedWordFilePostionList)
                         {
+                            wplIndex++;
+
+                            _IndexFileProxy.MergeRate = (double)wplIndex / (double)count;
 
                             List<Entity.MergeStream> mergeStreamList = new List<Hubble.Core.Entity.MergeStream>();
 

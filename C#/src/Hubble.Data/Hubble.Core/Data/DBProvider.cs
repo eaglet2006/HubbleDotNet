@@ -1041,6 +1041,26 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal InvertedIndex[] GetInvertedIndexes()
+        {
+            lock (this)
+            {
+                InvertedIndex[] result = new InvertedIndex[_FieldInvertedIndex.Count];
+
+                int i = 0;
+
+
+                foreach (InvertedIndex index in _FieldInvertedIndex.Values)
+                {
+                    result[i] = index;
+                    i++;
+                }
+
+                return result;
+
+            }
+        }
+
         internal InvertedIndex GetInvertedIndex(string fieldName)
         {
             lock (this)
@@ -1266,10 +1286,10 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                if (_PayloadFile != null)
-                {
-                    _PayloadFile.Close(2000);
-                }
+                //if (_PayloadFile != null)
+                //{
+                //    _PayloadFile.Close(2000);
+                //}
 
                 string dir = Directory;
                 string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "Optimize";
@@ -1511,7 +1531,7 @@ namespace Hubble.Core.Data
                     int documentsCount = _PayloadFile.DocumentsCount - _DelProvider.Count;
 
                     //Start payload file
-                    _PayloadFile.Start();
+                    //_PayloadFile.Start();
 
                     //Add field inverted index 
                     foreach (Field field in table.Fields)
@@ -1579,7 +1599,7 @@ namespace Hubble.Core.Data
 
             _Inited = false;
 
-            if (Global.Setting.Config.InitTablesStartup)
+            if (_Table.InitImmediatelyAfterStartup)
             {
                 Open();
             }
@@ -1936,7 +1956,7 @@ namespace Hubble.Core.Data
                     }
                 }
 
-                _PayloadFile.Close(0);
+                //_PayloadFile.Close(0);
 
                 ClearVars();
 
