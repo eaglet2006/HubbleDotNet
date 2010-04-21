@@ -135,18 +135,11 @@ namespace Hubble.Core.Store
 
         public WordDocumentsList GetDocList(long position, long length, int count)
         {
-      
-#if PerformanceTest
 
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            System.Diagnostics.Stopwatch sw1 = new System.Diagnostics.Stopwatch();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
+
             _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
             
-#if PerformanceTest
-            sw1.Start();
-#endif
             //byte[] buf = new byte[length];
             //System.IO.MemoryStream ms = new System.IO.MemoryStream(buf);
             //Hubble.Framework.IO.Stream.ReadToBuf(_IndexFile, buf, 0, buf.Length);
@@ -165,13 +158,9 @@ namespace Hubble.Core.Store
                 result.AddRange(Entity.DocumentPositionList.Deserialize(_IndexFile, simple, out result.WordCountSum));
                 result.RelDocCount = result.Count;
             }
-#if PerformanceTest
 
-            sw.Stop();
-            sw1.Stop();
-            Console.WriteLine(string.Format("Read index file: len={0}, {1} results, time={2} {3}", _IndexFile.Position - position, 
-                result.Count, sw.ElapsedMilliseconds, sw.ElapsedMilliseconds));
-#endif
+            performanceReport.Stop(string.Format("Read index file: len={0}, {1} results. ", _IndexFile.Position - position,
+                result.Count));
 
             return result;
 

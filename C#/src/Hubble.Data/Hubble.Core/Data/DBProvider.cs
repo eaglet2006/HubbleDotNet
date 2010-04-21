@@ -1761,20 +1761,11 @@ namespace Hubble.Core.Data
             {
                 dbFields.Add(new Field("DocId", DataType.Int));
 
-#if PerformanceTest
-                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-                sw.Reset();
-                sw.Start();
-#endif
+                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("DB Query");
 
                 System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs, begin, end);
-                
-#if PerformanceTest
-                sw.Stop();
 
-                Console.WriteLine("DB Query elapse:" + sw.ElapsedMilliseconds + "ms");
-#endif
+                performanceReport.Stop();
 
                 foreach (System.Data.DataRow row in dt.Rows)
                 {

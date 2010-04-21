@@ -66,9 +66,9 @@
             this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+            this.optimizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dropTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.truncateTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.optimizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStripServer = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -83,6 +83,7 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialogSql = new System.Windows.Forms.SaveFileDialog();
+            this.performanceReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -124,33 +125,34 @@
             // openOToolStripMenuItem
             // 
             this.openOToolStripMenuItem.Name = "openOToolStripMenuItem";
-            this.openOToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.openOToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openOToolStripMenuItem.Text = "Open(&O)";
             this.openOToolStripMenuItem.Click += new System.EventHandler(this.openOToolStripMenuItem_Click);
             // 
             // saveSToolStripMenuItem
             // 
             this.saveSToolStripMenuItem.Name = "saveSToolStripMenuItem";
-            this.saveSToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.saveSToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveSToolStripMenuItem.Text = "Save(&S)";
             this.saveSToolStripMenuItem.Click += new System.EventHandler(this.saveSToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(127, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // batchInsertToolStripMenuItem
             // 
             this.batchInsertToolStripMenuItem.Name = "batchInsertToolStripMenuItem";
-            this.batchInsertToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.batchInsertToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.batchInsertToolStripMenuItem.Text = "BatchInsert";
             this.batchInsertToolStripMenuItem.Click += new System.EventHandler(this.batchInsertToolStripMenuItem_Click);
             // 
             // queryToolStripMenuItem
             // 
             this.queryToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.dataCacheToolStripMenuItem});
+            this.dataCacheToolStripMenuItem,
+            this.performanceReportToolStripMenuItem});
             this.queryToolStripMenuItem.Name = "queryToolStripMenuItem";
             this.queryToolStripMenuItem.Size = new System.Drawing.Size(49, 20);
             this.queryToolStripMenuItem.Text = "Query";
@@ -161,8 +163,9 @@
             this.dataCacheToolStripMenuItem.CheckOnClick = true;
             this.dataCacheToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.dataCacheToolStripMenuItem.Name = "dataCacheToolStripMenuItem";
-            this.dataCacheToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.dataCacheToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
             this.dataCacheToolStripMenuItem.Text = "Data Cache";
+            this.dataCacheToolStripMenuItem.CheckedChanged += new System.EventHandler(this.dataCacheToolStripMenuItem_CheckedChanged);
             // 
             // testToolStripMenuItem
             // 
@@ -377,7 +380,7 @@
             this.dropTableToolStripMenuItem,
             this.truncateTableToolStripMenuItem});
             this.contextMenuStripTable.Name = "contextMenuStripTree";
-            this.contextMenuStripTable.Size = new System.Drawing.Size(153, 192);
+            this.contextMenuStripTable.Size = new System.Drawing.Size(148, 170);
             // 
             // tableInfoToolStripMenuItem
             // 
@@ -418,6 +421,13 @@
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
             this.toolStripMenuItem3.Size = new System.Drawing.Size(149, 6);
             // 
+            // optimizeTableToolStripMenuItem
+            // 
+            this.optimizeTableToolStripMenuItem.Name = "optimizeTableToolStripMenuItem";
+            this.optimizeTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.optimizeTableToolStripMenuItem.Text = "Optimize";
+            this.optimizeTableToolStripMenuItem.Click += new System.EventHandler(this.optimizeTableToolStripMenuItem_Click);
+            // 
             // dropTableToolStripMenuItem
             // 
             this.dropTableToolStripMenuItem.Name = "dropTableToolStripMenuItem";
@@ -431,13 +441,6 @@
             this.truncateTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.truncateTableToolStripMenuItem.Text = "Truncate Table";
             this.truncateTableToolStripMenuItem.Click += new System.EventHandler(this.truncateTableToolStripMenuItem_Click);
-            // 
-            // optimizeTableToolStripMenuItem
-            // 
-            this.optimizeTableToolStripMenuItem.Name = "optimizeTableToolStripMenuItem";
-            this.optimizeTableToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.optimizeTableToolStripMenuItem.Text = "Optimize Table";
-            this.optimizeTableToolStripMenuItem.Click += new System.EventHandler(this.optimizeTableToolStripMenuItem_Click);
             // 
             // imageListTreeView
             // 
@@ -541,6 +544,14 @@
             // 
             this.saveFileDialogSql.Filter = "SQL|*.sql";
             // 
+            // performanceReportToolStripMenuItem
+            // 
+            this.performanceReportToolStripMenuItem.CheckOnClick = true;
+            this.performanceReportToolStripMenuItem.Name = "performanceReportToolStripMenuItem";
+            this.performanceReportToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.performanceReportToolStripMenuItem.Text = "Performance Report";
+            this.performanceReportToolStripMenuItem.CheckedChanged += new System.EventHandler(this.performanceReportToolStripMenuItem_CheckedChanged);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -633,6 +644,7 @@
         private System.Windows.Forms.ToolStripMenuItem saveSToolStripMenuItem;
         private System.Windows.Forms.SaveFileDialog saveFileDialogSql;
         private System.Windows.Forms.ToolStripMenuItem optimizeTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem performanceReportToolStripMenuItem;
     }
 }
 

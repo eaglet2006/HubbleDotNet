@@ -169,7 +169,7 @@ namespace Hubble.Core.SFQL.Parse
 
             QueryResult qresult = new QueryResult();
 
-            qresult.PrintMessages.Add(string.Format("({0} Row(s) affected)", result.Length));
+            qresult.AddPrintMessage(string.Format("({0} Row(s) affected)", result.Length));
 
             return qresult;
 
@@ -206,7 +206,7 @@ namespace Hubble.Core.SFQL.Parse
 
             QueryResult qresult = new QueryResult();
 
-            qresult.PrintMessages.Add(string.Format("({0} Row(s) affected)", result.Length));
+            qresult.AddPrintMessage(string.Format("({0} Row(s) affected)", result.Length));
 
             return qresult;
         }
@@ -524,7 +524,7 @@ namespace Hubble.Core.SFQL.Parse
             DBProvider.CreateTable(table, directory);
 
             QueryResult result = new QueryResult();
-            result.PrintMessages.Add(string.Format("create table {0} successful!", table.Name));
+            result.AddPrintMessage(string.Format("create table {0} successful!", table.Name));
 
             return result;
         }
@@ -674,7 +674,7 @@ namespace Hubble.Core.SFQL.Parse
                         long datacacheTicks = connInfo.CurrentCommandContent.DataCache.GetTicks(
                             dbProvider.TableName);
 
-                        qResult.PrintMessages.Add(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
+                        qResult.AddPrintMessage(string.Format(@"<TableTicks>{0}={1};</TableTicks>",
                             dbProvider.TableName, lastModifyTicks));
 
                         if (lastModifyTicks <= datacacheTicks)
@@ -682,7 +682,7 @@ namespace Hubble.Core.SFQL.Parse
                             System.Data.DataTable table = new System.Data.DataTable();
                             table.MinimumCapacity = int.MaxValue;
                             qResult.DataSet.Tables.Add(table);
-                            qResult.PrintMessages.Add(string.Format("TotalDocuments:{0}", 
+                            qResult.AddPrintMessage(string.Format("TotalDocuments:{0}", 
                                 dbProvider.DocumentCount));
                             return qResult;
                         }
@@ -807,7 +807,11 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (OrderByFromDatabase(select, dbProvider))
                 {
+                    Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResultForSortList from DB");
+
                     IList<Query.DocumentResultForSort> dbResult = dbProvider.DBAdapter.GetDocumentResultForSortList(sortLen - 1, result, GetOrderByString(select));
+
+                    performanceReport.Stop();
 
                     for (int i= 0; i < dbResult.Count; i++)
                     {
@@ -871,7 +875,7 @@ namespace Hubble.Core.SFQL.Parse
 
             qResult.DataSet = ds;
 
-            qResult.PrintMessages.Add(string.Format("TotalDocuments:{0}",
+            qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",
                 dbProvider.DocumentCount));
             return qResult;
 
@@ -1031,8 +1035,92 @@ namespace Hubble.Core.SFQL.Parse
             return sortString.ToString();
         }
 
+        private void CheckUnionSelectSqlStatement()
+        {
+            if (_UnionSelects.Count <= 1)
+            {
+                throw new ParseException("UnionSelect need at least two select statements!");
+            }
+
+            List<string> _FirstSelectFieldNames = new List<string>(32);
+            int _FirstSelectBegin;
+            int _FirstSelectEnd;
+            List<string> _FirstSelectOrderBy = new List<string>(32);
+
+            foreach (SyntaxAnalysis.Select.SelectField field in _UnionSelects[0].SelectFields)
+            {
+                if (field.Alias == "*")
+                {
+                    throw new ParseException("Can't use * as the field name in UnionSelect!");
+                }
+
+                _FirstSelectFieldNames.Add(field.Alias);
+            }
+
+            foreach (SyntaxAnalysis.Select.OrderBy orderBy in _UnionSelects[0].OrderBys)
+            {
+                _FirstSelectOrderBy.Add(orderBy.Name);
+            }
+
+            _FirstSelectBegin = _UnionSelects[0].Begin;
+            _FirstSelectEnd = _UnionSelects[0].End;
+
+            for (int i = 1; i < _UnionSelects.Count; i++)
+            {
+                SyntaxAnalysis.Select.Select select = _UnionSelects[i];
+
+                if (_FirstSelectFieldNames.Count != select.SelectFields.Count)
+                {
+                    throw new ParseException("All select statement must have some count of select fields!");
+                }
+
+                if (select.Begin != _FirstSelectBegin)
+                {
+                    throw new ParseException("All select statement must have some begin row number!");
+                }
+
+                if (select.End != _FirstSelectEnd)
+                {
+                    throw new ParseException("All select statement must have some end row number!");
+                }
+
+                for(int j = 0; j < select.SelectFields.Count; j++)
+                {
+                    SyntaxAnalysis.Select.SelectField field = select.SelectFields[j];
+
+                    if (field.Alias == "*")
+                    {
+                        throw new ParseException("Can't use * as the field name in UnionSelect!");
+                    }
+
+                    if (!field.Alias.Equals(_FirstSelectFieldNames[j], StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        throw new ParseException("All select statement must have some order of select fields!");
+                    }
+                }
+
+                if (_FirstSelectOrderBy.Count != select.OrderBys.Count)
+                {
+                    throw new ParseException("All select statement must have some count of order by fields!");
+                }
+
+                for (int j = 0; j < select.OrderBys.Count; j++)
+                {
+                    SyntaxAnalysis.Select.OrderBy orderBy = select.OrderBys[j];
+
+                    if (!orderBy.Name.Equals(_FirstSelectOrderBy[j], StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        throw new ParseException("All select statement must have some order of orderby fields!");
+                    }
+                }
+
+            }
+        }
+
         private QueryResult ExcuteUnionSelect()
         {
+            CheckUnionSelectSqlStatement(); //Check sql statement.
+
             _UnionQueryResult = new List<QueryResult>();
 
             Hubble.Framework.Threading.MultiThreadCalculate mCalc =
@@ -1304,7 +1392,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 foreach (string message in queryResult.PrintMessages)
                 {
-                    result.PrintMessages.Add(message);
+                    result.AddPrintMessage(message);
                 }
             }
         }
@@ -1321,17 +1409,42 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalyse(sql);
             int tableNum = 0;
 
-#if PerformanceTest
-            long totalMem = GC.GetTotalMemory(false);
-
-            int[] gcCounts = new int[GC.MaxGeneration + 1];
-            for (int i = 0; i <= GC.MaxGeneration; i++)
+            if (_SFQLSentenceList.Count > 0)
             {
-                gcCounts[i] = GC.CollectionCount(i);
+                TSFQLSentence sentence = _SFQLSentenceList[0];
+                if (sentence.Attributes.Count > 0)
+                {
+                    if (sentence.Attributes.Contains(new TSFQLAttribute("PerformanceReport")))
+                    {
+                        Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport = true;
+                    }
+                    else
+                    {
+                        Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport = false;
+                    }
+                }
             }
-             
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
+
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("SFQLParase.Query");
+
+#if PerformanceTest
+            System.Diagnostics.Stopwatch sw = null;
+            long totalMem = 0;
+            int[] gcCounts = null;
+
+            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
+            {
+                totalMem = GC.GetTotalMemory(false);
+
+                gcCounts = new int[GC.MaxGeneration + 1];
+                for (int i = 0; i <= GC.MaxGeneration; i++)
+                {
+                    gcCounts[i] = GC.CollectionCount(i);
+                }
+
+                sw = new System.Diagnostics.Stopwatch();
+                sw.Start();
+            }
 #endif
 
             foreach (TSFQLSentence sentence in _SFQLSentenceList)
@@ -1360,7 +1473,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 }
 
-                result.PrintMessages.Add(string.Format("({0} Row(s) affected)", affectedCount));
+                result.AddPrintMessage(string.Format("({0} Row(s) affected)", affectedCount));
             }
 
             //Union select
@@ -1371,20 +1484,35 @@ namespace Hubble.Core.SFQL.Parse
                 AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 
+            performanceReport.Stop();
+
 #if PerformanceTest
-
-            sw.Stop();
-            Console.WriteLine(string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
-
-            Console.WriteLine(string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
-
-            for (int i = 0; i <= GC.MaxGeneration; i++)
+            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
             {
-                int count = GC.CollectionCount(i) - gcCounts[i];
-                Console.WriteLine("\tGen " + i + ": \t\t" + count);
+                sw.Stop();
+
+                result.AddPrintMessage("PerformanceReport", string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
+                result.AddPrintMessage("PerformanceReport", string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
+
+                Console.WriteLine(string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
+
+                Console.WriteLine(string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
+
+                for (int i = 0; i <= GC.MaxGeneration; i++)
+                {
+                    int count = GC.CollectionCount(i) - gcCounts[i];
+                    result.AddPrintMessage("PerformanceReport", "\tGen " + i + ": \t\t" + count);
+
+                    Console.WriteLine("\tGen " + i + ": \t\t" + count);
+                }
+            }
+#endif
+
+            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
+            {
+                result.AddPrintMessage(Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReportText);
             }
 
-#endif
             return result;
         }
     }

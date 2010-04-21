@@ -26,7 +26,31 @@ namespace Hubble.SQLClient
     {
         public System.Data.DataSet DataSet = new System.Data.DataSet();
 
-        public List<string> PrintMessages = new List<string>();
+        private List<string> _PrintMessages = new List<string>();
+
+        public int PrintMessageCount
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _PrintMessages.Count;
+                }
+            }
+        }
+
+        public string[] PrintMessages
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _PrintMessages.ToArray();
+                }
+            }
+        }
+
+        private object _LockObj = new object();
 
         public QueryResult()
         { 
@@ -34,7 +58,7 @@ namespace Hubble.SQLClient
 
         public QueryResult(string printMessage, System.Data.DataSet dataSet)
         {
-            PrintMessages.Add(printMessage);
+            _PrintMessages.Add(printMessage);
             DataSet = dataSet;
         }
 
@@ -45,12 +69,12 @@ namespace Hubble.SQLClient
 
         public QueryResult(string printMessage)
         {
-            PrintMessages.Add(printMessage);
+            _PrintMessages.Add(printMessage);
         }
 
         public int GetDocumentCount()
         {
-            foreach (string message in PrintMessages)
+            foreach (string message in _PrintMessages)
             {
                 int index = message.IndexOf("TotalDocuments:");
 
@@ -61,6 +85,30 @@ namespace Hubble.SQLClient
             }
 
             return 0;
+        }
+
+        public void AddPrintMessage(string message)
+        {
+            lock (_LockObj)
+            {
+                _PrintMessages.Add(message);
+            }
+        }
+
+        public void AddPrintMessage(string section, string message)
+        {
+            lock (_LockObj)
+            {
+                _PrintMessages.Add(string.Format("{0}:{1}", section, message));
+            }
+        }
+
+        public void RemovePrintMessage(string message)
+        {
+            lock (_LockObj)
+            {
+                _PrintMessages.Remove(message);
+            }
         }
     }
 }

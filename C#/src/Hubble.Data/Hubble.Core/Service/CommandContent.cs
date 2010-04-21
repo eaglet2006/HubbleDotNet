@@ -61,6 +61,55 @@ namespace Hubble.Core.Service
 
         }
 
+        private object _LockObj = new object();
+
+        private bool _PerformanceReport = false;
+
+        internal bool PerformanceReport
+        {
+            get
+            {
+                return _PerformanceReport;
+            }
+
+            set
+            {
+                _PerformanceReport = value;
+            }
+        }
+
+        private StringBuilder _PerformanceReportText = null;
+
+        internal string PerformanceReportText
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    if (_PerformanceReportText == null)
+                    {
+                        return "";
+                    }
+
+                    return _PerformanceReportText.ToString();
+                }
+            }
+        }
+
+        internal void WritePerformanceReportText(string text)
+        {
+            lock (_LockObj)
+            {
+                if (_PerformanceReportText == null)
+                {
+                    _PerformanceReportText = new StringBuilder();
+                }
+
+                _PerformanceReportText.AppendLine(text);
+            }
+        }
+
+
         private DataCacheInfo _DataCache = null;
 
         internal bool NeedDataCache

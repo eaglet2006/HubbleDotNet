@@ -85,7 +85,12 @@ namespace Hubble.Core.SFQL.Parse
                 whereSql = expressionTree.SqlText;
             }
 
-            return _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, _OrderBy);
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResults from DB");
+
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, _OrderBy);
+
+            performanceReport.Stop();
+            return result;
         }
 
         private List<Entity.WordInfo> GetWordInfoList(string queryStr)
@@ -687,8 +692,12 @@ namespace Hubble.Core.SFQL.Parse
 
             if (upDictCount < 8196)
             {
+                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResults from DB");
+
                 queryDict = _DBProvider.DBAdapter.GetDocumentResults(-1,
                     string.Format("({0}) and {1}", expressionTree.ToString(), GetInSql(_DBProvider, upDict)), null);
+
+                performanceReport.Stop();
             }
             else
             {
@@ -1019,24 +1028,12 @@ namespace Hubble.Core.SFQL.Parse
 
             Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[dict.Count];
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
             int i = 0;
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in dict.Values)
             {
                 result[i++] = new Hubble.Core.Query.DocumentResultForSort(drp.pDocumentResult);
             }
 
-#if PerformanceTest
-            sw.Stop();
-
-            Console.WriteLine(string.Format("Get {0} results  elapse:{1} ms", result.Length, sw.ElapsedMilliseconds));
-
-#endif
             return result;
         }
     }

@@ -68,7 +68,7 @@ namespace Hubble.Core.StoredProcedure
 
         protected void OutputMessage(string message)
         {
-            _QueryResult.PrintMessages.Add(message);
+            _QueryResult.AddPrintMessage(message);
         }
 
         protected void RemoveTable()

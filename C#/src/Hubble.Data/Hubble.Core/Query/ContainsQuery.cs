@@ -163,12 +163,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
             bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
@@ -488,13 +483,7 @@ namespace Hubble.Core.Query
                 docIdRank.RelTotalCount = docIdRank.Count;
             }
 
-
-#if PerformanceTest
-            sw.Stop();
-
-            Console.WriteLine(string.Format("Calculate {0} ms", sw.ElapsedMilliseconds));
-
-#endif
+            performanceReport.Stop();
         
         }
 
@@ -520,12 +509,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
             bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
@@ -797,13 +781,7 @@ namespace Hubble.Core.Query
                 docIdRank.RelTotalCount = docIdRank.Count;
             }
 
-
-#if PerformanceTest
-            sw.Stop();
-
-            Console.WriteLine(string.Format("Calculate {0} ms", sw.ElapsedMilliseconds));
-
-#endif
+            performanceReport.Stop();
         }
 
 
@@ -894,12 +872,7 @@ namespace Hubble.Core.Query
 
             set
             {
-#if PerformanceTest
-                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-                sw.Reset();
-                sw.Start();
-#endif
+                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("QueryWords");
 
                 Dictionary<string, WordIndexForQuery> wordIndexDict = new Dictionary<string, WordIndexForQuery>();
 
@@ -971,23 +944,14 @@ namespace Hubble.Core.Query
                 {
                     _WordIndexes = new WordIndexForQuery[0];
                 }
-#if PerformanceTest
-                sw.Stop();
 
-                Console.WriteLine("QueryWords elapse:" + sw.ElapsedMilliseconds + "ms");
-
-#endif
+                performanceReport.Stop();
             }
         }
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
@@ -1049,11 +1013,8 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            sw.Stop();
+            performanceReport.Stop();
 
-            Console.WriteLine("Search elapse:" + sw.ElapsedMilliseconds + "ms");
-#endif
             return result;
         }
 

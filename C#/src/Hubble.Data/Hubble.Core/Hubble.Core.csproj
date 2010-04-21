@@ -96,6 +96,7 @@
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\MatchQuery.cs" />
     <Compile Include="Query\DocRankRadixSortedList.cs" />
+    <Compile Include="Query\PerformanceReport.cs" />
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />

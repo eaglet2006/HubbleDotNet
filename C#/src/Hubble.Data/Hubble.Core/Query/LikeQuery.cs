@@ -166,12 +166,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
             bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
@@ -483,13 +478,7 @@ namespace Hubble.Core.Query
                 docIdRank.RelTotalCount = docIdRank.Count;
             }
 
-
-#if PerformanceTest
-            sw.Stop();
-
-            Console.WriteLine(string.Format("Calculate {0} ms", sw.ElapsedMilliseconds));
-
-#endif
+            performanceReport.Stop();
 
         }
 
@@ -515,12 +504,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
             bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
@@ -792,13 +776,7 @@ namespace Hubble.Core.Query
                 docIdRank.RelTotalCount = docIdRank.Count;
             }
 
-
-#if PerformanceTest
-            sw.Stop();
-
-            Console.WriteLine(string.Format("Calculate {0} ms", sw.ElapsedMilliseconds));
-
-#endif
+            performanceReport.Stop();
         }
 
 
@@ -834,12 +812,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
             bool beginFilter = false;
@@ -1009,12 +982,8 @@ namespace Hubble.Core.Query
             }
 
             docIdRank.RelTotalCount -= deleteCount;
-#if PerformanceTest
-            sw.Stop();
 
-            Console.WriteLine(string.Format("Calculate {0} ms", sw.ElapsedMilliseconds));
-
-#endif
+            performanceReport.Stop();
         }
 
         unsafe private DocumentResultWhereDictionary GetExternLikeDocResults(DocumentResultWhereDictionary docIdRank)
@@ -1207,12 +1176,7 @@ namespace Hubble.Core.Query
 
             set
             {
-#if PerformanceTest
-                System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-                sw.Reset();
-                sw.Start();
-#endif
+                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("QueryWords");
 
                 Dictionary<string, int> wordIndexDict = new Dictionary<string, int>();
 
@@ -1364,31 +1328,13 @@ namespace Hubble.Core.Query
             Loop:
                 wordIndexList = null;
 
-
-#if PerformanceTest
-                sw.Stop();
-
-                Console.WriteLine("QueryWords elapse:" + sw.ElapsedMilliseconds + "ms");
-
-#endif
+                performanceReport.Stop();
             }
         }
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-            //GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-            //int[] gcCounts = new int[GC.MaxGeneration + 1];
-            //for (int i = 0; i <= GC.MaxGeneration; i++)
-            //{
-            //    gcCounts[i] = GC.CollectionCount(i);
-            //}
-
-            sw.Reset();
-            sw.Start();
-#endif
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
@@ -1456,18 +1402,8 @@ namespace Hubble.Core.Query
                 result = GetExternLikeDocResults(result);
             }
 
-#if PerformanceTest
-            sw.Stop();
+            performanceReport.Stop();
 
-            Console.WriteLine("Search elapse:" + sw.ElapsedMilliseconds + "ms");
-
-            //for (int i = 0; i <= GC.MaxGeneration; i++)
-            //{
-            //    int count = GC.CollectionCount(i) - gcCounts[i];
-            //    Console.WriteLine("\tGen " + i + ": \t\t" + count);
-            //}
-
-#endif
             return result;
         }
 

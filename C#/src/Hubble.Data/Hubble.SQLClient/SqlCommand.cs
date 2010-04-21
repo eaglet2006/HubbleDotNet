@@ -146,7 +146,7 @@ namespace Hubble.SQLClient
 
             foreach (string message in removeMessages)
             {
-                qResult.PrintMessages.Remove(message);
+                qResult.RemovePrintMessage(message);
             }
 
             return sb.ToString();

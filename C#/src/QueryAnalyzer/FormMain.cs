@@ -151,7 +151,7 @@ namespace QueryAnalyzer
             textBoxMessages.Text = err;
         }
 
-        private void ShowMessages(List<string> messages, bool showMessage)
+        private void ShowMessages(IList<string> messages, bool showMessage)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -197,6 +197,11 @@ namespace QueryAnalyzer
                     sql = "exec " + sql;
                 }
 
+                if (performanceReportToolStripMenuItem.Checked)
+                {
+                    sql = "[PerformanceReport]\r\n" + sql;
+                }
+
                 QueryResult queryResult;
 
                 if (dataCacheToolStripMenuItem.Checked)
@@ -226,7 +231,7 @@ namespace QueryAnalyzer
 
                 if (queryResult.PrintMessages != null)
                 {
-                    if (queryResult.PrintMessages.Count > 0)
+                    if (queryResult.PrintMessageCount > 0)
                     {
                         ShowMessages(queryResult.PrintMessages, table == null);
                     }
@@ -241,6 +246,10 @@ namespace QueryAnalyzer
 
                 toolStripStatusLabelReport.Text = report.ToString();
 
+                if (performanceReportToolStripMenuItem.Checked)
+                {
+                    tabControl1.SelectedTab = tabPageMessages;
+                }
             }
             catch (Hubble.Core.SFQL.LexicalAnalysis.LexicalException lexicalEx)
             {
@@ -718,6 +727,22 @@ namespace QueryAnalyzer
             catch (Exception e1)
             {
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void dataCacheToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            if (dataCacheToolStripMenuItem.Checked)
+            {
+                performanceReportToolStripMenuItem.Checked = false;
+            }
+        }
+
+        private void performanceReportToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
+        {
+            if (performanceReportToolStripMenuItem.Checked)
+            {
+                dataCacheToolStripMenuItem.Checked = false;
             }
         }
 

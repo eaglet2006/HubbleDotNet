@@ -340,7 +340,7 @@ namespace Hubble.SQLClient
             else
             {
                 //Write PrintMessages Count
-                Write(g, typeof(int), qResult.PrintMessages.Count);
+                Write(g, typeof(int), qResult.PrintMessageCount);
 
                 //Write PrintMessages
                 foreach (string printMsg in qResult.PrintMessages)
@@ -430,7 +430,7 @@ namespace Hubble.SQLClient
                 {
                     //Read PrintMessage
 
-                    result.PrintMessages.Add(ToString(g));
+                    result.AddPrintMessage(ToString(g));
                 }
             }
 
