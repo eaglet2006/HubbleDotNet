@@ -45,11 +45,11 @@ namespace Hubble.Core.DBAdapter
                     case DataType.SmallInt:
                     case Hubble.Core.Data.DataType.Int:
                     case Hubble.Core.Data.DataType.BigInt:
-                    case Hubble.Core.Data.DataType.Date:
-                    case Hubble.Core.Data.DataType.SmallDateTime:
                     case Hubble.Core.Data.DataType.Float:
                         defaultValue = field.DefaultValue;
                         break;
+                    case Hubble.Core.Data.DataType.Date:
+                    case Hubble.Core.Data.DataType.SmallDateTime:
                     case Hubble.Core.Data.DataType.DateTime:
                     case Hubble.Core.Data.DataType.Varchar:
                     case Hubble.Core.Data.DataType.NVarchar:
@@ -83,7 +83,7 @@ namespace Hubble.Core.DBAdapter
                     sqlType = "Float";
                     break;
                 case Hubble.Core.Data.DataType.BigInt:
-                    sqlType = "Int64";
+                    sqlType = "BigInt";
                     break;
                 case Hubble.Core.Data.DataType.Varchar:
                     sqlType = "varchar ({1})";
@@ -225,7 +225,7 @@ namespace Hubble.Core.DBAdapter
 
             sql.AppendFormat("create table {0} (", Table.DBTableName);
 
-            sql.Append("DocId BigInt NOT NULL,");
+            sql.Append("DocId Int NOT NULL,");
 
             int i = 0;
 

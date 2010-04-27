@@ -19,18 +19,25 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
-using Hubble.Framework.Data;
+using System.Data.OracleClient;
+using System.IO;
+
+using Hubble.Core;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
+using Hubble.Core.DBAdapter;
+using Data = Hubble.Core.Data;
+using Core = Hubble.Core;
+using Query = Hubble.Core.Query;
 
-namespace Hubble.Core.DBAdapter
+namespace OracleDBAdapter
 {
-    public class Oracle8iAdapter : IDBAdapter, INamedExternalReference
+    public class Oracle9iAdapter : IDBAdapter, INamedExternalReference
     {
 
         #region Keywords
 
-        public static readonly string[] _KeyWords = {
+        static readonly string[] _KeyWords = {
             "ACCESS","ELSE","MODIFY","START","ADD","EXCLUSIVE","NOAUDIT","SELECT",
             "ALL","EXISTS","NOCOMPRESS","SESSION","ALTER","FILE","NOT","SET",
             "AND","FLOAT","NOTFOUND","SHARE","ANY","FOR","NOWAIT","SIZE",
@@ -70,9 +77,9 @@ namespace Hubble.Core.DBAdapter
             };
 
         static Dictionary<string, int> _KeywordsDict = null;
-        public static object _LockObj = new object();
+        static object _LockObj = new object();
 
-        public static string GetFieldName(string fieldName)
+        static private string GetFieldName(string fieldName)
         {
             lock (_LockObj)
             {
@@ -168,36 +175,66 @@ namespace Hubble.Core.DBAdapter
                     sqlType = "Double";
                     break;
                 case Hubble.Core.Data.DataType.Varchar:
-                    if (field.DataLength > 4000 || field.DataLength <= 0)
+                    if (field.DataLength <= 0)
                     {
-                        throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
-                            field.Name));
+                        sqlType = "clob";
                     }
-                    sqlType = "varchar2 ({1})";
+                    else
+                    {
+                        if (field.DataLength > 4000)
+                        {
+                            throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
+                                field.Name));
+                        }
+
+                        sqlType = "varchar2 ({1})";
+                    }
                     break;
                 case Hubble.Core.Data.DataType.NVarchar:
-                    if (field.DataLength > 2000 || field.DataLength <= 0)
+                    if (field.DataLength <= 0)
                     {
-                        throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
-                            field.Name));
+                        sqlType = "nclob";
                     }
-                    sqlType = "nvarchar2 ({1})";
+                    else
+                    {
+
+                        if (field.DataLength > 2000)
+                        {
+                            throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
+                                field.Name));
+                        }
+                        sqlType = "nvarchar2 ({1})";
+                    }
                     break;
                 case Hubble.Core.Data.DataType.Char:
-                    if (field.DataLength > 2000 || field.DataLength <= 0)
+                    if (field.DataLength <= 0)
                     {
-                        throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
-                            field.Name));
+                        sqlType = "clob";
                     }
-                    sqlType = "char ({1})";
+                    else
+                    {
+                        if (field.DataLength > 2000)
+                        {
+                            throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
+                                field.Name));
+                        }
+                        sqlType = "char ({1})";
+                    }
                     break;
                 case Hubble.Core.Data.DataType.NChar:
-                    if (field.DataLength > 1000 || field.DataLength <= 0)
+                    if (field.DataLength <= 0)
                     {
-                        throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
-                            field.Name));
+                        sqlType = "nclob";
                     }
-                    sqlType = "nchar ({1})";
+                    else
+                    {
+                        if (field.DataLength > 1000)
+                        {
+                            throw new ArgumentException(string.Format("Invalid data length is set in field:{0}",
+                                field.Name));
+                        }
+                        sqlType = "nchar ({1})";
+                    }
                     break;
                 default:
                     throw new ArgumentException(field.DataType.ToString());
@@ -256,7 +293,7 @@ namespace Hubble.Core.DBAdapter
 
             string sql = string.Format("drop table {0}", Table.DBTableName);
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 string testExistSql = string.Format("select * from {0} where rownum=1", Table.DBTableName);
 
@@ -333,7 +370,7 @@ namespace Hubble.Core.DBAdapter
 
             sql.Append(")");
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql.ToString());
@@ -356,17 +393,27 @@ namespace Hubble.Core.DBAdapter
             string sql = string.Format("truncate table {0}",
                 Table.DBTableName);
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql);
             }
         }
 
+        private string ReplaceTextValue(string text)
+        {
+            return Hubble.Framework.Text.Regx.Replace(text, @"\r|\n", "", true);
+        }
+
         public void Insert(IList<Document> docs)
         {
-            StringBuilder insertString = new StringBuilder();
+            if (docs.Count <= 0)
+            {
+                return;
+            }
 
+            StringBuilder insertString = new StringBuilder();
+            //insertString.AppendLine("DECLARE");
             insertString.Append("BEGIN ");
 
             foreach (Hubble.Core.Data.Document doc in docs)
@@ -396,18 +443,32 @@ namespace Hubble.Core.DBAdapter
                     {
                         case Hubble.Core.Data.DataType.NVarchar:
                         case Hubble.Core.Data.DataType.NChar:
-                            insertString.AppendFormat(",N'{0}'", fv.Value.Replace("'", "''"));
+                            if (fv.DataLength < 0)
+                            {
+                                insertString.Append(",N'A'");
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",N'{0}'", ReplaceTextValue(fv.Value.Replace("'", "''")));
+                            }
                             break;
                         case Hubble.Core.Data.DataType.Varchar:
                         case Hubble.Core.Data.DataType.Char:
                         case Hubble.Core.Data.DataType.Data:
-                            insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
+                            if (fv.DataLength < 0)
+                            {
+                                insertString.Append(",N'A'");
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",'{0}'", ReplaceTextValue(fv.Value.Replace("'", "''")));
+                            }
                             break;
                         case Hubble.Core.Data.DataType.DateTime:
                         case Hubble.Core.Data.DataType.Date:
                         case Hubble.Core.Data.DataType.SmallDateTime:
                             DateTime dateTime;
-                            if (!DateTime.TryParseExact(fv.Value, "yyyy-MM-dd HH:mm:ss", null, 
+                            if (!DateTime.TryParseExact(fv.Value, "yyyy-MM-dd HH:mm:ss", null,
                                 System.Globalization.DateTimeStyles.None, out dateTime))
                             {
                                 dateTime = DateTime.Parse(fv.Value);
@@ -426,10 +487,63 @@ namespace Hubble.Core.DBAdapter
 
             insertString.Append(" END;");
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(insertString.ToString());
+
+                string sql = string.Format("select * from {0} where docid >= {1} and docid <= {2} order by docid FOR UPDATE",
+                    _Table.DBTableName, docs[0].DocId, docs[docs.Count - 1].DocId);
+
+                OracleCommand cmd;
+
+                using (OracleDataReader reader = sqlData.ExecuteReader(sql, out cmd))
+                {
+                    cmd.Transaction = cmd.Connection.BeginTransaction();
+
+                    for (int i = 0; i < docs.Count; i++)
+                    {
+                        reader.Read();
+
+                        for (int j = 0; j < docs[i].FieldValues.Count; j++)
+                        {
+
+                            switch (docs[i].FieldValues[j].Type)
+                            {
+                                case Hubble.Core.Data.DataType.NVarchar:
+                                case Hubble.Core.Data.DataType.NChar:
+                                case Hubble.Core.Data.DataType.Varchar:
+                                case Hubble.Core.Data.DataType.Char:
+                                    if (docs[i].FieldValues[j].DataLength < 0)
+                                    {
+                                        OracleLob clob = reader.GetOracleLob(j + 1);
+                                        byte[] head = new byte[2];
+                                        //head[0] = 0xCC;
+                                        //head[1] = 0xDD;
+                                        //clob.Write(head, 0, 2);
+                                        //clob.Position = 0;
+                                        byte[] buffer = Encoding.Unicode.GetBytes(docs[i].FieldValues[j].Value);
+                                        clob.Write(buffer, 0, buffer.Length);
+
+                                        //Console.WriteLine(clob.LobType + ".Write(" + buffer + ", 0, 0) => " + clob.Value);
+
+                                        //OracleLob templob = sqlData.CreateTempLob(clob.LobType);
+
+                                        //long actual = clob.CopyTo(templob);
+
+                                        //Console.WriteLine(clob.LobType + ".CopyTo(" + templob.Value + ") => " + actual);
+
+
+                                    }
+
+                                    break;
+                            }
+
+                        }
+                    }
+
+                    cmd.Transaction.Commit();
+                }
             }
         }
 
@@ -456,7 +570,7 @@ namespace Hubble.Core.DBAdapter
 
             sql.Append(")");
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql.ToString());
@@ -558,7 +672,7 @@ namespace Hubble.Core.DBAdapter
 
             sql.Append(")");
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql.ToString());
@@ -659,7 +773,7 @@ namespace Hubble.Core.DBAdapter
 
             sql.Append(")");
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
 
@@ -834,7 +948,7 @@ namespace Hubble.Core.DBAdapter
 
             List<Core.Query.DocumentResultForSort> result = new List<Core.Query.DocumentResultForSort>();
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
@@ -917,7 +1031,7 @@ namespace Hubble.Core.DBAdapter
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 sqlData.Connect(Table.ConnectionString);
                 foreach (System.Data.DataRow row in sqlData.QuerySql(sql).Tables[0].Rows)
@@ -963,7 +1077,7 @@ namespace Hubble.Core.DBAdapter
         {
             get
             {
-                using (OLEDataProvider sqlData = new OLEDataProvider())
+                using (OracleDataProvider sqlData = new OracleDataProvider())
                 {
                     sqlData.Connect(Table.ConnectionString);
 
@@ -1000,7 +1114,7 @@ namespace Hubble.Core.DBAdapter
 
         public System.Data.DataSet QuerySql(string sql)
         {
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 string connectionString;
                 if (Table == null)
@@ -1022,7 +1136,7 @@ namespace Hubble.Core.DBAdapter
         {
             string sql = string.Format("select * from {0}", tableName);
 
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 string connectionString = this.ConnectionString;
 
@@ -1034,7 +1148,7 @@ namespace Hubble.Core.DBAdapter
 
         public int ExcuteSql(string sql)
         {
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 string connectionString;
                 if (Table == null)
@@ -1054,7 +1168,7 @@ namespace Hubble.Core.DBAdapter
 
         public void ConnectionTest()
         {
-            using (OLEDataProvider sqlData = new OLEDataProvider())
+            using (OracleDataProvider sqlData = new OracleDataProvider())
             {
                 string connectionString;
                 if (Table == null)
@@ -1103,9 +1217,9 @@ namespace Hubble.Core.DBAdapter
 
         public string Name
         {
-            get 
-            { 
-                return "Oracle8i"; 
+            get
+            {
+                return "Oracle9i";
             }
         }
 

@@ -56,6 +56,40 @@ namespace OracleDBAdapter
             }
         }
 
+        public void BeginTransaction()
+        {
+            _OracleConnection.BeginTransaction();
+        }
+
+        public OracleDataReader ExecuteReader(string sql, out OracleCommand cmd)
+        {
+            cmd = new OracleCommand(sql, _OracleConnection);
+            return cmd.ExecuteReader();
+        }
+
+        public OracleLob CreateTempLob(OracleType lobtype)
+        {
+            //Oracle server syntax to obtain a temporary LOB.
+            string sql =  "DECLARE A " + lobtype + "; " +
+                           "BEGIN " +
+                              "DBMS_LOB.CREATETEMPORARY(A, FALSE); " +
+                              ":LOC := A; " +
+                           "END;";
+
+            OracleCommand cmd = new OracleCommand(sql, _OracleConnection);
+
+            //Bind the LOB as an output parameter.
+            OracleParameter p = cmd.Parameters.Add("LOC", lobtype);
+            p.Direction = ParameterDirection.Output;
+
+            //Execute (to receive the output temporary LOB).
+            cmd.ExecuteNonQuery();
+
+            //Return the temporary LOB.
+            return (OracleLob)p.Value;
+        }
+
+
         public int ExcuteSql(string sql)
         {
             OracleCommand cmd = new OracleCommand(sql, _OracleConnection);

@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 
 using Hubble.SQLClient;
+using Hubble.Core.DBAdapter;
 
 namespace QueryAnalyzer
 {
@@ -227,7 +228,7 @@ namespace QueryAnalyzer
 
                 foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
                 {
-                    sb.AppendFormat(", {0} ", row["FieldName"].ToString());
+                    sb.AppendFormat(", {0} ", Oracle8iAdapter.GetFieldName(row["FieldName"].ToString()));
                 }
             }
             else
@@ -237,11 +238,11 @@ namespace QueryAnalyzer
                 {
                     if (i == 0)
                     {
-                        sb.AppendFormat("{0} ", row["FieldName"].ToString());
+                        sb.AppendFormat("{0} ", Oracle8iAdapter.GetFieldName(row["FieldName"].ToString()));
                     }
                     else
                     {
-                        sb.AppendFormat(", {0} ", row["FieldName"].ToString());
+                        sb.AppendFormat(", {0} ", Oracle8iAdapter.GetFieldName(row["FieldName"].ToString()));
                     }
 
                     i++;

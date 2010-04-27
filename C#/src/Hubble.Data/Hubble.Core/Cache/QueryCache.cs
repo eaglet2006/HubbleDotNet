@@ -310,7 +310,7 @@ namespace Hubble.Core.Cache
 
                                 value = cacheFile.Documents;
                                 cacheInfo = cacheFile.Info;
-                                expireTime = DateTime.Now;
+                                expireTime = new DateTime();
                                 hitCount = 1;
                                 base.Insert(key, value, expireTime, cacheInfo);
                             }

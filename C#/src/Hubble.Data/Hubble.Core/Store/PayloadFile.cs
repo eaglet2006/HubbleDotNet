@@ -330,6 +330,22 @@ namespace Hubble.Core.Store
             }
         }
 
+        public DateTime SetPayloadLastWriteTime(DateTime time)
+        {
+            System.Threading.Monitor.TryEnter(_LockObj);
+
+            try
+            {
+                System.IO.File.SetLastWriteTime(_FileName, time);
+
+                return System.IO.File.GetLastWriteTime(_FileName);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+        }
+
         internal PayloadProvider Open(Field docIdReplaceField, List<Data.Field> fields, int payloadLength, out int lastDocId)
         {
             lastDocId = -1;

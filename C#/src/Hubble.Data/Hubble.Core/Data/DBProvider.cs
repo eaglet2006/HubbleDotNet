@@ -376,6 +376,8 @@ namespace Hubble.Core.Data
                 }
                 catch (Exception e)
                 {
+                    Global.Report.WriteErrorLog("Create table fail!", e);
+
                     DBProvider.Drop(table.Name);
 
                     throw e;
@@ -734,6 +736,8 @@ namespace Hubble.Core.Data
         private Field _DocIdReplaceField = null;
 
         int _LastDocId = 0;
+        int _LastDocIdForIndexOnly = 0;
+
         DBAdapter.IDBAdapter _DBAdapter;
 
 
@@ -770,6 +774,7 @@ namespace Hubble.Core.Data
             _DocIdReplaceField = null;
 
             _LastDocId = 0;
+            _LastDocIdForIndexOnly = 0;
             _DBAdapter = null;
         }
 
@@ -795,11 +800,32 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal int LastDocIdForIndexOnly
+        {
+            get
+            {
+                lock (this)
+                {
+                    if (_Table.IndexOnly)
+                    {
+                        return _LastDocId;
+                    }
+                    else
+                    {
+                        return _LastDocIdForIndexOnly;
+                    }
+                }
+            }
+        }
+
         internal int LastDocId
         {
             get
             {
-                return _LastDocId;
+                lock (this)
+                {
+                    return _LastDocId;
+                }
             }
         }
 
@@ -919,7 +945,14 @@ namespace Hubble.Core.Data
         {
             lock (this)
             {
-                _LastModifyTicks = time.ToFileTimeUtc();
+                if (_PayloadFile != null)
+                {
+                    _LastModifyTicks = _PayloadFile.SetPayloadLastWriteTime(time).ToFileTimeUtc();
+                }
+                else
+                {
+                    _LastModifyTicks = time.ToFileTimeUtc();
+                }
             }
         }
 
@@ -994,7 +1027,19 @@ namespace Hubble.Core.Data
             {
                 _TableLock.Enter(Lock.Mode.Mutex, 30000);
 
+                if (value && !_Table.IndexOnly)
+                {
+                    _LastDocId = _LastDocIdForIndexOnly;
+                }
+                else if (!value && _Table.IndexOnly)
+                {
+                    _LastDocIdForIndexOnly = _LastDocId;
+                    _LastDocId = _DBAdapter.MaxDocId + 1;
+                }
+
                 _Table.IndexOnly = value;
+
+
                 SaveTable();
             }
             finally
@@ -1319,38 +1364,40 @@ namespace Hubble.Core.Data
         private DateTime GetLastModifyTimeAtStart()
         {
             string payloadFile = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
-            string deleteFile = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Delete.db";
+            //string deleteFile = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Delete.db";
 
             DateTime result = DateTime.Now;
             DateTime payloadTime = DateTime.Now;
-            DateTime deleteTime = DateTime.Now;
+            //DateTime deleteTime = DateTime.Now;
 
-            if (System.IO.File.Exists(payloadFile))
-            {
-                payloadTime = System.IO.File.GetLastWriteTime(payloadFile);
-            }
+            return System.IO.File.GetLastWriteTime(payloadFile);
 
-            if (System.IO.File.Exists(deleteFile))
-            {
-                deleteTime = System.IO.File.GetLastWriteTime(deleteFile);
-            }
+            //if (System.IO.File.Exists(payloadFile))
+            //{
+            //    payloadTime = System.IO.File.GetLastWriteTime(payloadFile);
+            //}
 
-            if (payloadTime > deleteTime)
-            {
-                if (result > payloadTime)
-                {
-                    result = payloadTime;
-                }
-            }
-            else
-            {
-                if (result > deleteTime)
-                {
-                    result = deleteTime;
-                }
-            }
+            //if (System.IO.File.Exists(deleteFile))
+            //{
+            //    deleteTime = System.IO.File.GetLastWriteTime(deleteFile);
+            //}
 
-            return result;
+            //if (payloadTime > deleteTime)
+            //{
+            //    if (result > payloadTime)
+            //    {
+            //        result = payloadTime;
+            //    }
+            //}
+            //else
+            //{
+            //    if (result > deleteTime)
+            //    {
+            //        result = deleteTime;
+            //    }
+            //}
+
+            //return result;
         }
 
         private Exception Open()
@@ -1452,8 +1499,6 @@ namespace Hubble.Core.Data
                     //Open payload information
                     OpenPayloadInformation(table);
 
-                    SetLastModifyTicks(GetLastModifyTimeAtStart());
-
                     //set payload file name
                     _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
 
@@ -1492,6 +1537,8 @@ namespace Hubble.Core.Data
                         {
                             _PayloadFile = new Hubble.Core.Store.PayloadFile(_PayloadFileName);
 
+                            SetLastModifyTicks(GetLastModifyTimeAtStart());
+
                             //Open Payload file
                             _DocPayload = _PayloadFile.Open(_DocIdReplaceField, table.Fields, PayloadLength, out _LastDocId);
 
@@ -1520,6 +1567,8 @@ namespace Hubble.Core.Data
 
                             if (!IndexOnly)
                             {
+                                _LastDocIdForIndexOnly = _LastDocId;
+
                                 if (_LastDocId <= dbMaxDocId)
                                 {
                                     _LastDocId = dbMaxDocId + 1;
@@ -2035,6 +2084,7 @@ namespace Hubble.Core.Data
                         else
                         {
                             doc.DocId = _LastDocId++;
+                            _LastDocIdForIndexOnly = _LastDocId;
                         }
 
                         //Dictionary<string, FieldValue> notnullFields = new Dictionary<string, FieldValue>();

@@ -72,7 +72,7 @@ namespace Hubble.Core.StoredProcedure
 
             NewRow();
             OutputValue("Attribute", "LastDocId");
-            OutputValue("Value", dbProvider.LastDocId.ToString());
+            OutputValue("Value", dbProvider.LastDocIdForIndexOnly.ToString());
 
             NewRow();
             OutputValue("Attribute", "MaxReturnCount");
