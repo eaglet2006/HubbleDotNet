@@ -516,7 +516,7 @@ namespace OracleDBAdapter
                                 case Hubble.Core.Data.DataType.Char:
                                     if (docs[i].FieldValues[j].DataLength < 0)
                                     {
-                                        OracleLob clob = reader.GetOracleLob(j + 1);
+                                        OracleLob clob = reader.GetOracleLob(reader.GetOrdinal(docs[i].FieldValues[j].FieldName));
                                         byte[] head = new byte[2];
                                         //head[0] = 0xCC;
                                         //head[1] = 0xDD;
