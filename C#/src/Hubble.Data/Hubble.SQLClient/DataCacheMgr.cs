@@ -43,7 +43,7 @@ namespace Hubble.SQLClient
             }
         }
 
-        static internal void OnConnect(SqlConnection conn)
+        static internal void OnConnect(HubbleConnection conn)
         {
             lock (_LockObj)
             {
@@ -55,7 +55,7 @@ namespace Hubble.SQLClient
             }
         }
 
-        static internal void ChangeExpireTime(SqlConnection conn,
+        static internal void ChangeExpireTime(HubbleConnection conn,
             string sql, DateTime expireTime)
         {
             DataCache dataCache;
@@ -73,7 +73,7 @@ namespace Hubble.SQLClient
         }
 
 
-        static internal void Insert(SqlConnection conn, 
+        static internal void Insert(HubbleConnection conn, 
             string sql, QueryResult qResult, DateTime expireTime, string tableTick)
         {
             DataCache dataCache;
@@ -90,7 +90,7 @@ namespace Hubble.SQLClient
             dataCache.Insert(sql.Trim(), qResult, expireTime, tableTick);
         }
 
-        static internal QueryResult Get(SqlConnection conn, string sql,
+        static internal QueryResult Get(HubbleConnection conn, string sql,
             out DateTime expireTime, out int hitCount, out string tableTicks)
         {
             DataCache dataCache;

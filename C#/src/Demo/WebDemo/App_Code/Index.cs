@@ -34,7 +34,7 @@ namespace Hubble.WebDemo
         private static string _TitleAnalyzerName = null;
         private static string _ContentAnalyzerName = null;
 
-        private static void GetAnalyzerName(SqlConnection conn, string tableName)
+        private static void GetAnalyzerName(HubbleConnection conn, string tableName)
         {
             if (_TitleAnalyzerName != null && _ContentAnalyzerName != null)
             {
@@ -43,7 +43,7 @@ namespace Hubble.WebDemo
 
             string sql = string.Format("exec SP_Columns '{0}'", tableName.Replace("'", "''"));
 
-            SqlCommand cmd = new SqlCommand(sql, conn);
+            HubbleCommand cmd = new HubbleCommand(sql, conn);
 
             foreach (System.Data.DataRow row in cmd.Query().Tables[0].Rows)
             {
@@ -81,7 +81,7 @@ namespace Hubble.WebDemo
 
             sw.Start();
 
-            using (SqlConnection conn = new SqlConnection(connectString))
+            using (HubbleConnection conn = new HubbleConnection(connectString))
             {
                 conn.Open();
 
@@ -94,17 +94,35 @@ namespace Hubble.WebDemo
 
                 string wordssplitbyspace;
 
-                SqlCommand matchCmd = new SqlCommand(conn);
+                HubbleCommand matchCmd = new HubbleCommand(conn);
 
                 string matchString = matchCmd.GetKeywordAnalyzerStringFromServer("News",
                     "Content", keywords, int.MaxValue, out wordssplitbyspace);
 
-                SqlCommand cmd = new SqlCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy,
-                    conn, (pageNo - 1) * pageLen, pageNo * pageLen - 1, matchString);
+                //HubbleCommand cmd = new HubbleCommand("select between {0} to {1} * from News where content match {2} or title^2 match {2} order by " + sortBy,
+                //    conn, (pageNo - 1) * pageLen, pageNo * pageLen - 1, matchString);
 
-                sql = cmd.Sql;
+
+                HubbleDataAdapter adapter = new HubbleDataAdapter();
+
+                adapter.SelectCommand = new HubbleCommand("select between @begin to @end * from News where content contains @matchString or title^2 contains @matchString order by " + sortBy,
+                    conn);
+
+                adapter.SelectCommand.Parameters.Add("@begin", (pageNo - 1) * pageLen);
+                adapter.SelectCommand.Parameters.Add("@end", pageNo * pageLen - 1);
+                adapter.SelectCommand.Parameters.Add("@matchString", matchString);
+
+                adapter.SelectCommand.CacheTimeout = CacheTimeout;
+
+                sql = adapter.SelectCommand.Sql;
+
+                ds = new System.Data.DataSet();
+                //adapter.Fill(ds);
+                
+                HubbleCommand cmd = adapter.SelectCommand;
 
                 ds = cmd.Query(CacheTimeout);
+
                 long[] docids = new long[ds.Tables[0].Rows.Count];
 
                 int i = 0;

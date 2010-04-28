@@ -27,7 +27,7 @@ namespace QueryAnalyzer
 {
     class DbAccess
     {
-        SqlConnection _Conn = null;
+        HubbleConnection _Conn = null;
 
         string _SettingPath = null;
 
@@ -97,7 +97,7 @@ namespace QueryAnalyzer
                 System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
                 sqlConnBuilder.DataSource = serverName;
                 sqlConnBuilder.InitialCatalog = DatabaseName;
-                _Conn = new SqlConnection(sqlConnBuilder.ConnectionString);
+                _Conn = new HubbleConnection(sqlConnBuilder.ConnectionString);
                 _Conn.Open();
             }
         }
@@ -129,7 +129,7 @@ namespace QueryAnalyzer
                 {
                     using (Hubble.Core.Data.DBAccess dbAccess = new DBAccess())
                     {
-                        return dbAccess.Query(SqlCommand.BuildSql(sql, parameters));
+                        return dbAccess.Query(HubbleCommand.BuildSql(sql, parameters));
                     }
                 }
                 finally
@@ -139,7 +139,7 @@ namespace QueryAnalyzer
             }
             else
             {
-                SqlCommand cmd = new SqlCommand(sql, _Conn, parameters);
+                HubbleCommand cmd = new HubbleCommand(sql, _Conn, parameters);
                 cmd.Query(cacheTimeout);
                 return cmd.Result;
             }

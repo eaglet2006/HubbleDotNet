@@ -31,6 +31,9 @@ namespace Hubble.Analyzer
 
         ICollection<WordInfo> _Tokenes = null;
 
+        static private object _InitLockObj = new object();
+        static private bool _Inited = false;
+
         private void LoadSqlClientSetting(string fileName)
         {
             if (System.IO.File.Exists(fileName))
@@ -74,6 +77,15 @@ namespace Hubble.Analyzer
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
+            lock (_InitLockObj)
+            {
+                if (!_Inited)
+                {
+                    Init();
+                    _Inited = true;
+                }
+            }
+
             PanGu.Segment segment = new Segment();
             _Tokenes = segment.DoSegment(text);
 
@@ -85,6 +97,15 @@ namespace Hubble.Analyzer
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> TokenizeForSqlClient(string text)
         {
+            lock (_InitLockObj)
+            {
+                if (!_Inited)
+                {
+                    Init();
+                    _Inited = true;
+                }
+            }
+
             PanGu.Segment segment = new Segment();
             foreach (PanGu.WordInfo wi in segment.DoSegment(text, _SqlClientSetting.MatchOptions, _SqlClientSetting.Parameters))
             {

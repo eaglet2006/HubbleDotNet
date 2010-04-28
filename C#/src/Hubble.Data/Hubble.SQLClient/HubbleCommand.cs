@@ -21,9 +21,10 @@ using System.Text;
 
 namespace Hubble.SQLClient
 {
-    public class SqlCommand
+    public class HubbleCommand : System.Data.Common.DbCommand, ICloneable
+
     {
-        private SqlConnection _SqlConnection;
+        private HubbleConnection _SqlConnection;
 
         private string _Sql;
 
@@ -31,11 +32,37 @@ namespace Hubble.SQLClient
         {
             get
             {
-                return BuildSql(_Sql, _Parameters); ;
+                if (_ObjParameters != null)
+                {
+                    return BuildSql(_Sql, _ObjParameters);
+                }
+                else if (base.Parameters.Count > 0)
+                {
+                    return BuildSqlWithSqlParameter(_Sql, base.Parameters);
+                }
+                else
+                {
+                    return _Sql;
+                }
             }
         }
 
-        private object[] _Parameters = null;
+        private object[] _ObjParameters = null;
+
+        private HubbleParameterCollection _Parameters = null;
+
+        new public HubbleParameterCollection Parameters
+        {
+            get
+            {
+                if (_Parameters == null)
+                {
+                    _Parameters = new HubbleParameterCollection();
+                }
+
+                return _Parameters;
+            }
+        }
 
         private QueryResult _QueryResult;
 
@@ -47,9 +74,130 @@ namespace Hubble.SQLClient
             }
         }
 
-        private string BuildSql()
+        private int _CacheTimeout = -1;
+
+        public int CacheTimeout
         {
-            return BuildSql(_Sql, _Parameters);
+            get
+            {
+                return _CacheTimeout;
+            }
+
+            set
+            {
+                _CacheTimeout = value;
+            }
+        }
+
+        private static string BuildSqlWithSqlParameter(string sql, System.Data.Common.DbParameterCollection paras)
+        {
+            object[] objParas = new object[paras.Count]; 
+
+            for (int i = 0; i < paras.Count; i++)
+            {
+                sql = sql.Replace(paras[i].ParameterName, "{" + i.ToString() + "}");
+
+                switch (paras[i].DbType)
+                {
+                    case System.Data.DbType.AnsiString:
+                    case System.Data.DbType.AnsiStringFixedLength:
+                    case System.Data.DbType.String:
+                    case System.Data.DbType.StringFixedLength:
+                    case System.Data.DbType.Xml:
+                        objParas[i] = paras[i].Value as string;
+                        break;
+
+                    case System.Data.DbType.Boolean:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = paras[i].Value.ToString();
+                        }
+                        break;
+
+                    case System.Data.DbType.Date:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = ((DateTime)paras[i].Value).ToString("yyyy-MM-dd");
+                        }
+                        break;
+
+                    case System.Data.DbType.DateTime:
+                    case System.Data.DbType.DateTime2:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = ((DateTime)paras[i].Value).ToString("yyyy-MM-dd HH:mm:ss");
+                        }
+                        break;
+                    case System.Data.DbType.Time:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = ((DateTime)paras[i].Value).ToString("HH:mm:ss");
+                        }
+                        break;
+                    case System.Data.DbType.Byte:
+                    case System.Data.DbType.UInt16:
+                    case System.Data.DbType.UInt32:
+                    case System.Data.DbType.UInt64:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = ulong.Parse(paras[i].Value.ToString());
+                        }
+                        break;
+
+                    case System.Data.DbType.Decimal:
+                    case System.Data.DbType.Double:
+                    case System.Data.DbType.Single:
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = double.Parse(paras[i].Value.ToString());
+                        }
+                        break;
+
+                    case System.Data.DbType.Int16:
+                    case System.Data.DbType.Int32:
+                    case System.Data.DbType.Int64:
+                    case System.Data.DbType.SByte:
+
+                        if (paras[i].Value == null)
+                        {
+                            objParas[i] = null;
+                        }
+                        else
+                        {
+                            objParas[i] = long.Parse(paras[i].Value.ToString());
+                        }
+                        break;
+
+                    default:
+                        throw new System.Data.DataException(string.Format("Invalid parameter DataType: {0}", paras[i].DbType));
+                }
+            }
+
+            return BuildSql(sql, objParas);
         }
 
         public static string BuildSql(string sql, object[] paras)
@@ -105,24 +253,24 @@ namespace Hubble.SQLClient
             }
         }
 
-        public SqlCommand(SqlConnection sqlConn)
+        public HubbleCommand(HubbleConnection sqlConn)
             :this("", sqlConn)
         {
 
         }
 
-        public SqlCommand(string sql, SqlConnection sqlConn)
+        public HubbleCommand(string sql, HubbleConnection sqlConn)
         {
             _Sql = sql;
             _SqlConnection = sqlConn;
-            _Parameters = null;
+            _ObjParameters = null;
         }
 
-        public SqlCommand(string sql, SqlConnection sqlConn, params object[] parameters)
+        public HubbleCommand(string sql, HubbleConnection sqlConn, params object[] parameters)
         {
             _Sql = sql;
             _SqlConnection = sqlConn;
-            _Parameters = parameters;
+            _ObjParameters = parameters;
         }
 
         private string GetTableTicks(QueryResult qResult)
@@ -323,27 +471,12 @@ namespace Hubble.SQLClient
         /// <returns></returns>
         public System.Data.DataSet Query(int cacheTimeout)
         {
-            return Query(BuildSql(), cacheTimeout);
+            return Query(Sql, cacheTimeout);
         }
 
         public System.Data.DataSet Query()
         {
-            return Query(-1);
-        }
-
-        public int ExecuteNonQuery()
-        {
-            Query();
-
-            if (_QueryResult.DataSet != null)
-            {
-                if (_QueryResult.DataSet.Tables.Count > 0)
-                {
-                    return _QueryResult.DataSet.Tables[0].MinimumCapacity;
-                }
-            }
-
-            return 0;
+            return Query(CacheTimeout);
         }
 
         public string GetKeywordAnalyzerStringFromServer(string tableName, string fieldName, string keywords, int cacheTimeout, out string bySpace)
@@ -399,6 +532,153 @@ namespace Hubble.SQLClient
 
             return Query(sb.ToString(), cacheTimeout).Tables[0];
         }
- 
+
+
+        #region ICloneable Members
+
+        public object Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        public override void Cancel()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string CommandText
+        {
+            get
+            {
+                return _Sql;
+            }
+            set
+            {
+                _Sql = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the wait time before terminating the attempt to execute a command and generating an error. 
+        /// The time in seconds to wait for the command to execute. The default is 300 seconds.
+        /// </summary>
+        public override int CommandTimeout
+        {
+            get
+            {
+                return _SqlConnection.ConnectionTimeout;
+            }
+            set
+            {
+                _SqlConnection.SetConnectionTimeout(value);
+            }
+        }
+
+
+        public override System.Data.CommandType CommandType
+        {
+            get
+            {
+                return System.Data.CommandType.Text;
+            }
+
+            set
+            {
+            }
+        }
+
+        protected override System.Data.Common.DbParameter CreateDbParameter()
+        {
+            return new System.Data.SqlClient.SqlParameter();
+        }
+
+        protected override System.Data.Common.DbConnection DbConnection
+        {
+            get
+            {
+                return _SqlConnection;
+            }
+
+            set
+            {
+                _SqlConnection = value as HubbleConnection;
+            }
+        }
+
+        protected override System.Data.Common.DbParameterCollection DbParameterCollection
+        {
+            get
+            {
+                return this.Parameters;
+            }
+        }
+
+        protected override System.Data.Common.DbTransaction DbTransaction
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override bool DesignTimeVisible
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override int ExecuteNonQuery()
+        {
+            Query();
+
+            if (_QueryResult.DataSet != null)
+            {
+                if (_QueryResult.DataSet.Tables.Count > 0)
+                {
+                    return _QueryResult.DataSet.Tables[0].MinimumCapacity;
+                }
+            }
+
+            return 0;
+        }
+
+        protected override System.Data.Common.DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override object ExecuteScalar()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Prepare()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override System.Data.UpdateRowSource UpdatedRowSource
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

@@ -27,6 +27,8 @@ namespace Hubble.Core.Analysis
     {
         private bool _Lowercase;
         LinkedList<Framework.WordInfo> _Tokenes = null;
+        static private object _InitLockObj = new object();
+        static private bool _Inited = false;
 
         private LinkedList<Framework.WordInfo> GetInitSegment(string text)
         {
@@ -106,6 +108,15 @@ namespace Hubble.Core.Analysis
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
+            lock (_InitLockObj)
+            {
+                if (!_Inited)
+                {
+                    Init();
+                    _Inited = true;
+                }
+            }
+
             _Tokenes = GetInitSegment(text);
 
             foreach (Framework.WordInfo wi in _Tokenes)

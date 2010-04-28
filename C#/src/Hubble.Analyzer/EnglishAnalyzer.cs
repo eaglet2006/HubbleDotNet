@@ -16,6 +16,8 @@ namespace Hubble.Core.Analysis
 
         private static Dictionary<string, string> _InfinitiveVerbTable = null;
 
+        static private object _InitLockObj = new object();
+        static private bool _Inited = false;
 
         private LinkedList<Framework.WordInfo> GetInitSegment(string text)
         {
@@ -153,6 +155,15 @@ namespace Hubble.Core.Analysis
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> Tokenize(string text)
         {
+            lock (_InitLockObj)
+            {
+                if (!_Inited)
+                {
+                    Init();
+                    _Inited = true;
+                }
+            }
+
             _Tokenes = GetInitSegment(text);
 
             foreach (Framework.WordInfo wi in _Tokenes)
