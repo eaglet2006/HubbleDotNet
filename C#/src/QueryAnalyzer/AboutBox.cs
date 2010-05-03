@@ -6,6 +6,9 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 
+using Hubble.Core.SFQL.Parse;
+using Hubble.SQLClient;
+
 namespace QueryAnalyzer
 {
     partial class AboutBox : Form
@@ -61,6 +64,20 @@ namespace QueryAnalyzer
                         sb.AppendFormat("{0} Version {1}\r\n", asm.GetName().Name, asm.GetName().Version);
                     }
                 }
+
+
+                string serverVersion = "Can't connect to server";
+                try
+                {
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec sp_version", 0);
+
+                    serverVersion = queryResult.DataSet.Tables[0].Rows[0][0].ToString();
+                }
+                catch
+                {
+                }
+
+                sb.AppendFormat("Hubble.net server Version {0}\r\n", serverVersion);
 
                 return sb.ToString(); ;
             }

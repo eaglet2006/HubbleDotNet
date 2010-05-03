@@ -169,10 +169,20 @@ namespace QueryAnalyzer
                 FormWaiting frmWatting = new FormWaiting();
                 frmWatting.Show();
 
-                QueryResult qResult = DataAccess.Excute("exec SP_GetTableAttributes {0}", TableName);
-                ShowTableAttributes(qResult.DataSet.Tables[0]);
+                try
+                {
+                    QueryResult qResult = DataAccess.Excute("exec SP_GetTableAttributes {0}", TableName);
+                    ShowTableAttributes(qResult.DataSet.Tables[0]);
+                    frmWatting.Close();
+                }
+                catch (Exception e1)
+                {
+                    MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                frmWatting.Close();
+                    frmWatting.Close();
+
+                    this.Close();
+                }
             }
         }
 

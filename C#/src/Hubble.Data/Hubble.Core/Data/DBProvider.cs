@@ -1299,10 +1299,15 @@ namespace Hubble.Core.Data
             }
 
             //Delete query cache file
-            foreach (string file in System.IO.Directory.GetFiles(Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\",
-                "*.xml"))
+
+            string cacheDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "QueryCache\\";
+
+            if (System.IO.Directory.Exists(cacheDir))
             {
-                System.IO.File.Delete(file);
+                foreach (string file in System.IO.Directory.GetFiles(cacheDir, "*.xml"))
+                {
+                    System.IO.File.Delete(file);
+                }
             }
 
             //Delete optimize files
