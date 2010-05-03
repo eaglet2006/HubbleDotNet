@@ -468,7 +468,7 @@ namespace QueryAnalyzer
                 MessageBox.Show(string.Format("During {0} ms", sw.ElapsedMilliseconds), "Rebuild finished!",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-
+                Close();
             }
             catch (Exception e1)
             {

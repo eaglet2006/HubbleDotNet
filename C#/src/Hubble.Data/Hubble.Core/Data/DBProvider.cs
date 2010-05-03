@@ -1426,6 +1426,12 @@ namespace Hubble.Core.Data
 
                         if (InsertProtect.InsertProtectInfo != null)
                         {
+                            Global.Report.WriteErrorLog(string.Format("Table:{0} insert protect. LastDocId={1}; Documents count={2}",
+                                Setting.GetTableFullName(TableName), 
+                                InsertProtect.InsertProtectInfo.LastDocId, 
+                                InsertProtect.InsertProtectInfo.DocumentsCount));
+
+
                             if (!InsertProtect.InsertProtectInfo.IndexOnly)
                             {
                                 DBAdapter.ExcuteSql(string.Format("delete {0} where docid > {1}",
@@ -1439,6 +1445,10 @@ namespace Hubble.Core.Data
                                 if (System.IO.File.Exists(idxDir + fileName))
                                 {
                                     System.IO.File.Delete(idxDir + fileName);
+
+                                    Global.Report.WriteErrorLog(string.Format("Table:{0} insert protect. Delete file: {1}",
+                                                          Setting.GetTableFullName(TableName),
+                                                          idxDir + fileName));
                                 }
                             }
 

@@ -274,8 +274,11 @@ namespace Hubble.Core.Store
                             //Write documents count
                             buf = BitConverter.GetBytes((int)_DocumentsCount);
                             fs.Write(buf, 0, buf.Length);
+
+                            fs.Flush();
                         }
 
+                        
                         _PayloadEntities.Clear();
 
                         return;
@@ -302,6 +305,8 @@ namespace Hubble.Core.Store
                             //pe.Payload.FileIndex = fileIndex;
                             fileIndex++;
                         }
+
+                        fs.Flush();
 
                         _DocumentsCount += _PayloadEntities.Count;
 

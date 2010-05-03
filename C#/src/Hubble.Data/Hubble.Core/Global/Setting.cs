@@ -555,6 +555,24 @@ namespace Hubble.Core.Global
             }
         }
 
+        string _DesKey = "87-45-A0-E8-39-C3-99-56";
+
+        /// <summary>
+        /// Initialize all the tables after startup
+        /// If false, the table will be initialized when it is accessed firstly.
+        /// </summary>
+        public string DesKey
+        {
+            get
+            {
+                return _DesKey;
+            }
+
+            set
+            {
+                _DesKey = value;
+            }
+        }
 
         Directories _Directories = new Directories();
 

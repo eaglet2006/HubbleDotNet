@@ -49,13 +49,40 @@ namespace Hubble.Core.Service
             _CurrentCommandContent = new CommandContent();
         }
 
-        public ConnectionInformation(string databaseName)
+        public ConnectionInformation(string connectionString)
         {
+            System.Data.SqlClient.SqlConnectionStringBuilder sqlConnString = null;
+
+            try
+            {
+                sqlConnString = new System.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+            }
+            catch 
+            {
+                throw new Data.DataException(string.Format("Invalid connection string: {0} , the version of sqlclient is less then 0.8.2.9!",
+                    connectionString));
+            }
+
+            if (string.IsNullOrEmpty(sqlConnString.InitialCatalog))
+            {
+                throw new Data.DataException("Database name is empty");
+            }
+
+            string databaseName = sqlConnString.InitialCatalog;
+
+            string userId = Hubble.Framework.Security.DesEncryption.Decrypt(Global.Setting.Config.DesKey,
+                sqlConnString.UserID);
+
+            string password = Hubble.Framework.Security.DesEncryption.Decrypt(Global.Setting.Config.DesKey,
+                sqlConnString.Password);
+
+
             if (!Global.Setting.DatabaseExists(databaseName))
             {
                 throw new Data.DataException(string.Format("Database name: {0} does not exist",
                     databaseName));
             }
+
             _DatabaseName = databaseName;
 
         }

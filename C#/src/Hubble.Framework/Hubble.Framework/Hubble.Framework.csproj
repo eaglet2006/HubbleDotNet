@@ -97,6 +97,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\Assembly.cs" />
     <Compile Include="Reflection\Instance.cs" />
+    <Compile Include="Security\DesEncryption.cs" />
     <Compile Include="Security\EncryptString.cs" />
     <Compile Include="Security\RSAEncryption.cs" />
     <Compile Include="Serialization\BinSerialization.cs" />

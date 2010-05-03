@@ -60,7 +60,7 @@ namespace Hubble.WebDemo
 
         }
 
-        public static List<TNews> Search(String indexDir, String q, int pageLen, int pageNo, string sortBy,
+        public static List<TNews> Search(String indexDir, string searchType, String q, int pageLen, int pageNo, string sortBy,
             out int recCount, out long elapsedMilliseconds, out string sql)
         {
             List<TNews> result = new List<TNews>();
@@ -105,12 +105,31 @@ namespace Hubble.WebDemo
 
                 HubbleDataAdapter adapter = new HubbleDataAdapter();
 
-                adapter.SelectCommand = new HubbleCommand("select between @begin to @end * from News where content contains @matchString or title^2 contains @matchString order by " + sortBy,
-                    conn);
+                if (searchType == "Precise")
+                {
+                    adapter.SelectCommand = new HubbleCommand("select between @begin to @end * from News where content contains @matchString or title^2 contains @matchString order by " + sortBy,
+                        conn);
+                }
+                else if (searchType == "Fuzzy")
+                {
+                    adapter.SelectCommand = new HubbleCommand("select between @begin to @end * from News where content match @matchString or title^2 match @matchString order by " + sortBy,
+                        conn);
+                }
+                else if (searchType == "Like")
+                {
+                    adapter.SelectCommand = new HubbleCommand("select between @begin to @end * from News where content like @likeString or title^2 like @likeString order by " + sortBy,
+                        conn);
+                }
+                else
+                {
+                    throw new ArgumentException(string.Format("Invalid search type: {0}", searchType));
+                }
+
 
                 adapter.SelectCommand.Parameters.Add("@begin", (pageNo - 1) * pageLen);
                 adapter.SelectCommand.Parameters.Add("@end", pageNo * pageLen - 1);
                 adapter.SelectCommand.Parameters.Add("@matchString", matchString);
+                adapter.SelectCommand.Parameters.Add("@likeString", "%" + q.Trim() + "%");
 
                 adapter.SelectCommand.CacheTimeout = CacheTimeout;
 

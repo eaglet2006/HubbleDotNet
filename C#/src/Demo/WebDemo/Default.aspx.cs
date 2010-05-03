@@ -70,7 +70,7 @@ public partial class _Default : System.Web.UI.Page
         long elapsedMilliseconds;
         string sql;
 
-        List<TNews> newsList = Index.Search(indexDir, text, pageSize, pageNo, DropDownListSort.Text,
+        List<TNews> newsList = Index.Search(indexDir, DropDownListSearchType.Text, text, pageSize, pageNo, DropDownListSort.Text,
             out recCount, out elapsedMilliseconds, out sql);
         LabelSql.Text = sql;
         LabelDuration.Text = "Duration:" + elapsedMilliseconds + "ms";
@@ -123,7 +123,7 @@ public partial class _Default : System.Web.UI.Page
         if (TextBoxSearch.Text != "")
         {
             AspNetPager.CurPage = 1;
-            ShowTable(TextBoxSearch.Text);
+            ShowTable(TextBoxSearch.Text.Trim());
         }
     }
 

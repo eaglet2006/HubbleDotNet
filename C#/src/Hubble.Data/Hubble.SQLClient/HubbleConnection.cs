@@ -32,6 +32,8 @@ namespace Hubble.SQLClient
 
     public class HubbleConnection : System.Data.Common.DbConnection,IDisposable , ICloneable
     {
+        static readonly byte[] _DefaultKey = {0x87, 0x45, 0xA0, 0xE8, 0x39, 0xC3, 0x99, 0x56 };
+
         TcpClient _TcpClient;
 
         System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder;
@@ -42,9 +44,29 @@ namespace Hubble.SQLClient
 
         private string _Database;
 
+        private string _UserId;
+
+        private string _Password;
+
         private int _TcpPort = 7523;
 
         private System.Data.ConnectionState _State = System.Data.ConnectionState.Closed;
+
+        private byte[] _DesKey = null;
+
+        public byte[] DesKey
+        {
+            get
+            {
+                return _DesKey;
+            }
+
+            set
+            {
+                _DesKey = value;
+            }
+        
+        }
 
         /// <summary>
         /// Tcp port of data source
@@ -77,6 +99,50 @@ namespace Hubble.SQLClient
             }
         }
 
+        public override string DataSource
+        {
+            get
+            {
+                return _DataSource;
+            }
+        }
+
+        public override string Database
+        {
+            get
+            {
+                return _Database;
+            }
+        }
+
+        public string UserId
+        {
+            get
+            {
+                return _UserId;
+            }
+        }
+
+        public string Password
+        {
+            get
+            {
+                return _Password;
+            }
+        }
+
+
+        /// <summary>
+        /// The time (in seconds) to wait for a connection to open. The default value is 300 seconds.
+        /// </summary>
+        public override int ConnectionTimeout
+        {
+            get
+            {
+                return _TcpClient.SendTimeout / 1000;
+            }
+        }
+
         #region Private methods
 
         private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
@@ -87,6 +153,24 @@ namespace Hubble.SQLClient
                     return new QueryResultSerialization((QueryResult)data);
             }
             return null;
+        }
+
+
+        private string BuildConnectionMessage()
+        {
+            System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
+            sqlConnBuilder.InitialCatalog = Database;
+
+            byte[] key = _DefaultKey;
+            if (_DesKey != null)
+            {
+                key = _DesKey;
+            }
+
+            sqlConnBuilder.UserID = Hubble.Framework.Security.DesEncryption.Encrypt(key, UserId);
+            sqlConnBuilder.Password = Hubble.Framework.Security.DesEncryption.Encrypt(key, Password);
+
+            return sqlConnBuilder.ConnectionString;
         }
 
         #endregion
@@ -161,6 +245,19 @@ namespace Hubble.SQLClient
 
                 _DataSource = strs[0];
                 _Database = _SqlConnBuilder.InitialCatalog;
+                _UserId = _SqlConnBuilder.UserID;
+
+                if (_UserId == null)
+                {
+                    _UserId = "";
+                }
+
+                _Password = _SqlConnBuilder.Password;
+
+                if (_Password == null)
+                {
+                    _Password = "";
+                }
 
                 _TcpClient = new TcpClient();
 
@@ -176,38 +273,10 @@ namespace Hubble.SQLClient
             }
         }
 
-        public override string DataSource
-        {
-            get
-            {
-                return _DataSource;
-            }
-        }
-
-        public override string Database
-        {
-            get
-            {
-                return _Database;
-            }
-        }
-
-        /// <summary>
-        /// The time (in seconds) to wait for a connection to open. The default value is 300 seconds.
-        /// </summary>
-        public override int ConnectionTimeout
-        {
-            get
-            {
-                return _TcpClient.SendTimeout / 1000;
-            }
-        }
-
-
         public override void Open()
         {
             _TcpClient.Connect();
-            _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, Database);
+            _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
 
             _Connected = true;
             _State = System.Data.ConnectionState.Open;
