@@ -335,6 +335,10 @@ namespace QueryAnalyzer
                     {
                         value = "'" + ((DateTime)(row[col.ColumnName])).ToString("yyyy-MM-dd HH:mm:ss") + "'";
                     }
+                    else if (col.DataType == typeof(double) || col.DataType == typeof(Single) || col.DataType == typeof(decimal))
+                    {
+                        value = string.Format("{0:0.################}", row[col.ColumnName]);
+                    }
                     else
                     {
                         value = row[col.ColumnName].ToString();

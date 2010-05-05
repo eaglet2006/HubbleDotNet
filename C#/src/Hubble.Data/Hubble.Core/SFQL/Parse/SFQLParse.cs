@@ -1397,6 +1397,31 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private void CheckQueryResult(QueryResult result)
+        {
+            if (result.DataSet != null)
+            {
+                if (result.DataSet.Tables != null)
+                {
+                    foreach (System.Data.DataTable table in result.DataSet.Tables)
+                    {
+                        foreach (System.Data.DataColumn col in table.Columns)
+                        {
+                            try
+                            {
+                                Hubble.SQLClient.QueryResultSerialization.GetDataType(col.DataType);
+                            }
+                            catch
+                            {
+                                throw new ParseException(string.Format("The data type: {0} of column {1} in table: {2} is not supported by hubble.net",
+                                    col.DataType.ToString(), col.ColumnName, table.TableName));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public QueryResult Query(string sql)
         {
             _NeedCollect = false;
@@ -1512,6 +1537,8 @@ namespace Hubble.Core.SFQL.Parse
             {
                 result.AddPrintMessage(Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReportText);
             }
+
+            CheckQueryResult(result);
 
             return result;
         }

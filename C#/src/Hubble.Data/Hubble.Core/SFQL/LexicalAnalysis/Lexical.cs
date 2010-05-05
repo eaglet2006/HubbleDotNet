@@ -219,6 +219,8 @@ namespace Hubble.Core.SFQL.LexicalAnalysis
 
     public class Lexical:DFA<int, LexicalFunction>
     {
+        //Last state id = 25
+
         public class Token
         {
             public string Text;
@@ -354,7 +356,8 @@ namespace Hubble.Core.SFQL.LexicalAnalysis
             s0.AddNextState('-', s11.Id);
 
             //s11 [-] s12
-            s11.AddNextState('-', s12.Id);
+            s11.AddNextState('-', s12.Id); //For comment
+            s11.AddNextState('0', '9', 5); //For Negative numeric
             s11.AddElseState(s15.Id);
 
             //s12 [\n] s13

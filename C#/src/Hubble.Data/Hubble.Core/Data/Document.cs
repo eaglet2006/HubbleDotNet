@@ -166,6 +166,26 @@ namespace Hubble.Core.Data
                     {
                         Type type = DataTypeConvert.GetClrType(fv.Type);
 
+                        if (fv.Type == DataType.TinyInt)
+                        {
+                            bool bitValue;
+
+                            //check the bit data type of database
+                            if (bool.TryParse(fv.Value, out bitValue))
+                            {
+                                if (bitValue)
+                                {
+                                    row[fv.FieldName] = (byte)1;
+                                }
+                                else
+                                {
+                                    row[fv.FieldName] = (byte)0;
+                                }
+
+                                continue;
+                            }
+                        }
+
                         row[fv.FieldName] =
                             System.ComponentModel.TypeDescriptor.GetConverter(type).ConvertFrom(fv.Value);
                     }

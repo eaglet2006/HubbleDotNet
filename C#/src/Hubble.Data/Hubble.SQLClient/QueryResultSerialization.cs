@@ -49,6 +49,10 @@ namespace Hubble.SQLClient
             {
                 return DataType.String;
             }
+            else if (type == typeof(bool)) //TinyInt
+            {
+                return DataType.Byte;
+            }
             else if (type == typeof(byte)) //TinyInt
             {
                 return DataType.Byte;
@@ -234,6 +238,17 @@ namespace Hubble.SQLClient
 
                 stream.Write(BitConverter.GetBytes(strBuf.Length), 0, sizeof(int));
                 stream.Write(strBuf, 0, strBuf.Length);
+            }
+            else if (type == typeof(bool)) //TinyInt
+            {
+                if ((bool)data)
+                {
+                    stream.WriteByte((byte)1);
+                }
+                else
+                {
+                    stream.WriteByte((byte)0);
+                }
             }
             else if (type == typeof(byte)) //TinyInt
             {
