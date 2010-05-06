@@ -301,11 +301,11 @@ namespace QueryAnalyzer
             {
                 if (i == 0)
                 {
-                    insertString.AppendFormat("[{0}]", col.ColumnName);
+                    insertString.AppendFormat("[{0}]", TableField.GetFieldName(col.ColumnName));
                 }
                 else
                 {
-                    insertString.AppendFormat(", [{0}]", col.ColumnName);
+                    insertString.AppendFormat(", [{0}]", TableField.GetFieldName(col.ColumnName));
                 }
 
                 i++;
@@ -418,6 +418,25 @@ namespace QueryAnalyzer
             }
         }
 
+        delegate void DelegateFinishRebuild(Stopwatch sw);
+
+        private void FinishRebuild(Stopwatch sw)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new DelegateFinishRebuild(FinishRebuild), sw);
+
+            }
+            else
+            {
+                MessageBox.Show(string.Format("During {0} ms", sw.ElapsedMilliseconds), "Rebuild finished!",
+    MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                Close();
+            }
+        }
+
+
         private void Rebuild()
         {
             try
@@ -469,10 +488,8 @@ namespace QueryAnalyzer
                 }
 
                 sw.Stop();
-                MessageBox.Show(string.Format("During {0} ms", sw.ElapsedMilliseconds), "Rebuild finished!",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                Close();
+                FinishRebuild(sw);
             }
             catch (Exception e1)
             {

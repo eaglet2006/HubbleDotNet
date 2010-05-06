@@ -263,6 +263,38 @@ namespace QueryAnalyzer
         {
         }
 
+        internal static string GetFieldName(string fieldName)
+        {
+            bool specialChar = false;
+
+            foreach (char c in fieldName)
+            {
+                if (c < 128)
+                {
+                    if (!(c == '_' || (c >= '0' && c <= '9') ||
+                        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
+                    {
+                        throw new System.Data.DataException(string.Format("Invalid character:{0} inf field name:{1}",
+                            c, fieldName));
+                    }
+                }
+                else
+                {
+                    specialChar = true;
+                }
+            }
+
+            if (specialChar)
+            {
+                return "'" + fieldName + "'";
+            }
+            else
+            {
+                return fieldName;
+            }
+        }
+
+
         public string GetSql()
         {
             StringBuilder sb = new StringBuilder();
@@ -288,7 +320,7 @@ namespace QueryAnalyzer
                 }
             }
 
-            sb.AppendFormat("{0} {1}", FieldName, DataType);
+            sb.AppendFormat("{0} {1}", GetFieldName(FieldName), DataType);
 
             switch (DataType)
             {

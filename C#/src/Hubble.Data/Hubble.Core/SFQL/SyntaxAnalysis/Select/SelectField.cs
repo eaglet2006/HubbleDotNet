@@ -146,7 +146,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
             s0.AddNextState(new int[]{(int)SyntaxType.SELECT, (int)SyntaxType.Comma}, s1.Id);
 
-            s1.AddNextState(new int[] {(int)SyntaxType.Identifer, (int)SyntaxType.Multiply}, s2.Id);
+            s1.AddNextState(new int[] { (int)SyntaxType.Identifer, (int)SyntaxType.Multiply, (int)SyntaxType.String }, s2.Id);
             s1.AddNextState((int)SyntaxType.TOP, s5.Id);
             s1.AddNextState((int)SyntaxType.BETWEEN, s6.Id);
 

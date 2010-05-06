@@ -68,14 +68,16 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
                     foreach(LexicalAnalysis.Lexical.Token token in Left)
                     {
-                        if (token.SyntaxType == SyntaxType.String)
-                        {
-                            str.AppendFormat("'{0}' ", token.Text.Replace("'", "''"));
-                        }
-                        else
-                        {
-                            str.AppendFormat("{0} ", token.Text);
-                        }
+                        str.AppendFormat("{0} ", token.Text); //Modified for string type field. 2010-5-6
+
+                        //if (token.SyntaxType == SyntaxType.String)
+                        //{
+                        //    str.AppendFormat("'{0}' ", token.Text.Replace("'", "''"));
+                        //}
+                        //else
+                        //{
+                        //    str.AppendFormat("{0} ", token.Text);
+                        //}
                     }
 
                     switch (Operator.SyntaxType)

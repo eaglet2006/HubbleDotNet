@@ -184,7 +184,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
 
         /******************************************************
          * s0 --(,-- s1
-         * s1 --Identifer--s2 //Field name
+         * s1 --Identifer, string--s2 //Field name
          * s2 --Identifer--s3 //Type
          * s3 --(--s4 //length
          * s3 --Tokenized UnTokenized None--s7
@@ -287,7 +287,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.CreateTable
 
             s0.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.LBracket }, s1.Id);
 
-            s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s1.AddNextState(new int[] {(int)SyntaxType.Identifer, (int)SyntaxType.String}, s2.Id);
 
             s2.AddNextState((int)SyntaxType.Identifer, s3.Id);
 

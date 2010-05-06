@@ -109,7 +109,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Update
 
             s0.AddNextState(new int[] { (int)SyntaxType.SET, (int)SyntaxType.Comma }, s1.Id);
 
-            s1.AddNextState(new int[] { (int)SyntaxType.Identifer}, s2.Id);
+            s1.AddNextState(new int[] { (int)SyntaxType.Identifer, (int)SyntaxType.String}, s2.Id);
 
             s2.AddNextState((int)SyntaxType.Equal, s3.Id);
 

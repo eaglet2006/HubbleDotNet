@@ -107,12 +107,12 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Insert
 
             s0.AddNextState(new int[] { (int)SyntaxType.LBracket, (int)SyntaxType.Comma }, s1.Id);
 
-            s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s1.AddNextState(new int[] { (int)SyntaxType.Identifer, (int)SyntaxType.String }, s2.Id);
             s1.AddNextState((int)SyntaxType.LSquareBracket, s3.Id);
 
             s2.AddNextState(new int[] { (int)SyntaxType.Comma, (int)SyntaxType.RBracket }, squit.Id);
 
-            s3.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s3.AddNextState(new int[] { (int)SyntaxType.Identifer, (int)SyntaxType.String }, s2.Id);
             s3.AddNextState((int)SyntaxType.BEGIN_KEYWORD, (int)SyntaxType.END_KEYWORD, s2.Id);
 
             s2.AddNextState((int)SyntaxType.RSquareBracket, s4.Id);
