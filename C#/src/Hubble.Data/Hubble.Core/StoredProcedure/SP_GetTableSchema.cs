@@ -16,6 +16,36 @@ namespace Hubble.Core.StoredProcedure
             }
         }
 
+        private void FixQueryResult(Hubble.SQLClient.QueryResult result)
+        {
+            List<System.Data.DataColumn> invaildColList = new List<System.Data.DataColumn>(); 
+
+            if (result.DataSet != null)
+            {
+                if (result.DataSet.Tables != null)
+                {
+                    foreach (System.Data.DataColumn col in result.DataSet.Tables[0].Columns)
+                    {
+                        try
+                        {
+                            Hubble.SQLClient.QueryResultSerialization.GetDataType(col.DataType);
+                        }
+                        catch
+                        {
+                            invaildColList.Add(col);
+                        }
+                    }
+
+                    foreach (System.Data.DataColumn col in invaildColList)
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Invalid data type = {0} in column:{1}",
+                            col.DataType.ToString(), col.ColumnName));
+                        result.DataSet.Tables[0].Columns.Remove(col);
+                    }
+                }
+            }
+        }
+
         public void Run()
         {
             if (Parameters.Count != 3)
@@ -41,6 +71,8 @@ namespace Hubble.Core.StoredProcedure
             tableName = Parameters[2];
 
             _QueryResult.DataSet = dbAdapter.GetSchema(tableName);
+
+            FixQueryResult(_QueryResult);
 
         }
 

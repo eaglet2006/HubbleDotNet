@@ -48,6 +48,11 @@ namespace QueryAnalyzer
             }
         }
 
+        public void ReConnect()
+        {
+            Close();
+            Connect(ServerName);
+        }
 
         public void Connect(string serverName)
         {

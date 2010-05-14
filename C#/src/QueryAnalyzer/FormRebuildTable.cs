@@ -468,6 +468,8 @@ namespace QueryAnalyzer
 
                 while (remain != 0 && !Stop)
                 {
+                    DataAccess.ReConnect();
+
                     string insertSql = GetInsertSql(ref from, ref remain, out count);
 
                     if (!string.IsNullOrEmpty(insertSql))
