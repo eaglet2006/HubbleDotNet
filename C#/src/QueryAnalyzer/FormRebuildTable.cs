@@ -468,7 +468,7 @@ namespace QueryAnalyzer
 
                 while (remain != 0 && !Stop)
                 {
-                    DataAccess.ReConnect();
+                    //DataAccess.ReConnect();
 
                     string insertSql = GetInsertSql(ref from, ref remain, out count);
 

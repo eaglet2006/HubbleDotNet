@@ -41,7 +41,7 @@ namespace Hubble.Framework.Net
         private IPAddress _LocalAddress = IPAddress.Parse("127.0.0.1");
         private int _Port = 8800;
         private int _MaxConnectNum = 32;
-        private Thread[] _ThreadPool = null;
+        //private Thread[] _ThreadPool = null;
         private Queue<int> _IdleThreadQueue = new Queue<int>();
 
         RequireCustomSerializationDelegate _RequireCustomSerialization;
@@ -211,12 +211,13 @@ namespace Hubble.Framework.Net
 
         private void InitThreadPool()
         {
-            _ThreadPool = new Thread[MaxConnectNum];
+            //_ThreadPool = new Thread[MaxConnectNum];
 
-            for (int id = 0; id < _ThreadPool.Length; id++)
+            for (int id = 0; id < MaxConnectNum; id++)
+            //for (int id = 0; id < _ThreadPool.Length; id++)
             {
-                Thread t = _ThreadPool[id];
-                t = new Thread(HandleClientComm);
+                //Thread t = _ThreadPool[id];
+                //t = new Thread(HandleClientComm);
                 _IdleThreadQueue.Enqueue(id);
             }
         }
@@ -344,6 +345,14 @@ namespace Hubble.Framework.Net
                     tcpStream.Write(sendBuf, 0, sendBuf.Length);
 
                     byte[] buf = Encoding.UTF8.GetBytes((returnMsg as string));
+
+                    for (int i = 0; i < buf.Length; i++)
+                    {
+                        if (buf[i] == 0)
+                        {
+                            buf[i] = 0x20;
+                        }
+                    }
 
                     tcpStream.Write(buf, 0, buf.Length);
                     tcpStream.WriteByte(0);

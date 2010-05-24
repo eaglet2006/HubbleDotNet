@@ -220,6 +220,14 @@ namespace Hubble.Framework.Net
 
                             byte[] buf = Encoding.UTF8.GetBytes((msg as string));
 
+                            for (int i = 0; i < buf.Length; i++)
+                            {
+                                if (buf[i] == 0)
+                                {
+                                    buf[i] = 0x20;
+                                }
+                            }
+
                             tcpStream.Write(buf, 0, buf.Length);
                             tcpStream.WriteByte(0);
                         }
