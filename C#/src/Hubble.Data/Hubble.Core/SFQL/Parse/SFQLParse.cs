@@ -1294,7 +1294,7 @@ namespace Hubble.Core.SFQL.Parse
                 int allFieldsCount;
                 Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[1];
                 result[0] = new Hubble.Core.Query.DocumentResultForSort(int.Parse(row["DocId"].ToString()),
-                    int.Parse(row["Score"].ToString()));
+                    long.Parse(row["Score"].ToString()));
                 
                 string tableName = row["TableName"].ToString();
                 Data.DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
