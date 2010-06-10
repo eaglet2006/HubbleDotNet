@@ -740,6 +740,7 @@ namespace Hubble.Core.Data
 
         DBAdapter.IDBAdapter _DBAdapter;
 
+        private object _InsertLock = new object();
 
         #endregion
 
@@ -2059,6 +2060,11 @@ namespace Hubble.Core.Data
         {
             try
             {
+                if (docs.Count <= 0)
+                {
+                    return;
+                }
+
                 _TableLock.Enter(Lock.Mode.Share, 30000);
 
                 lock (_ExitLock)
@@ -2074,12 +2080,13 @@ namespace Hubble.Core.Data
                 }
 
 
-                lock (this)
+                lock (_InsertLock)
                 {
                     List<Field> fields = GetAllFields();
                     
                     int lastDocId = _PayloadFile.LastStoredId;
 
+                    //Initial docid and initial fields
                     foreach (Document doc in docs)
                     {
                         if (IndexOnly && DocIdReplaceField == null)
@@ -2104,6 +2111,7 @@ namespace Hubble.Core.Data
 
                         //Dictionary<string, FieldValue> notnullFields = new Dictionary<string, FieldValue>();
 
+                        //Initial fields
                         foreach (FieldValue fValue in doc.FieldValues)
                         {
                             Field field = GetField(fValue.FieldName);
@@ -2141,11 +2149,13 @@ namespace Hubble.Core.Data
                         }
                     }
 
+                    //If not index only, insert to database
                     if (!IndexOnly)
                     {
                         _DBAdapter.Insert(docs);
                     }
 
+                    //Index payload
                     foreach (Document doc in docs)
                     {
                         int[] data = new int[_PayloadLength];
@@ -2178,17 +2188,10 @@ namespace Hubble.Core.Data
                                     Array.Copy(fieldPayload, 0, data, field.TabIndex, fieldPayload.Length);
 
                                     break;
-                                case Field.Index.Tokenized:
-
-                                    InvertedIndex iIndex = GetInvertedIndex(field.Name);
-
-                                    int count = iIndex.Index(fValue.Value, docId, field.GetAnalyzer());
-
-                                    //data[field.TabIndex] = count;
-
-                                    break;
                             }
                         }
+
+
 
                         Payload payload = new Payload(data);
 
@@ -2197,11 +2200,47 @@ namespace Hubble.Core.Data
                         _PayloadFile.Add(docId, payload, _DocPayload);
                     }
 
+                    BeginInsertProtect(lastDocId);
+                    
+                    //Index full text
+                    int fieldIndex = 0;
+
+                    MultiThreadIndex multiIndex = new MultiThreadIndex(Table.IndexThread);
+
+                    foreach (FieldValue fValue in docs[0].FieldValues)
+                    {
+                        Field field = GetField(fValue.FieldName);
+
+                        switch (field.IndexType)
+                        {
+                            case Field.Index.Tokenized:
+
+                                InvertedIndex iIndex = GetInvertedIndex(field.Name);
+
+                                multiIndex.Index(iIndex, docs, fieldIndex);
+                                //iIndex.Index(docs, fieldIndex);
+
+                                break;
+                        }
+
+                        fieldIndex++;
+                    }
+
+                    if (_PayloadFile != null)
+                    {
+                        _PayloadFile.Collect();
+                    }
+
+
+                    multiIndex.WaitForAllFinished();
+
                     Cache.CacheManager.InsertCount += docs.Count;
 
                     SetLastModifyTicks(DateTime.Now);
 
-                    Collect(lastDocId);
+                    EndInsertProtect();
+
+                    //Collect(lastDocId);
                 }                 
 
             }
@@ -2238,88 +2277,112 @@ namespace Hubble.Core.Data
 
                 Debug.Assert(fieldValues != null && docs != null);
 
-
-                if (fieldValues.Count <= 0)
+                lock (_InsertLock)
                 {
-                    return;
-                }
 
-                bool needDel = false;
-
-                Document doc = new Document();
-
-                List<PayloadSegment> payloadSegment = new List<PayloadSegment>();
-
-                foreach (FieldValue fv in fieldValues)
-                {
-                    string fieldNameKey = fv.FieldName.ToLower().Trim();
-                    if (fieldNameKey == "docid")
+                    if (fieldValues.Count <= 0)
                     {
-                        throw new DataException("DocId field is fixed field, can't update it manually!");
+                        return;
                     }
 
-                    Field field;
+                    bool needDel = false;
 
-                    if (!_FieldIndex.TryGetValue(fieldNameKey, out field))
-                    {
-                        throw new DataException(string.Format("Invalid column name '{0}'", fv.FieldName));
-                    }
+                    Document doc = new Document();
 
-                    if (field.IndexType == Field.Index.Tokenized)
-                    {
-                        needDel = true;
-                    }
-
-                    fv.Type = field.DataType;
-
-                    if (field.Store)
-                    {
-                        doc.FieldValues.Add(fv);
-                    }
-
-                    if (field.IndexType == Field.Index.Untokenized)
-                    {
-                        int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, fv.Value);
-                        payloadSegment.Add(new PayloadSegment(field.TabIndex, data));
-                    }
-                }
-
-                if (docs.Count <= 0)
-                {
-                    return;
-                }
-
-                if (needDel)
-                {
-                    if (IndexOnly && DocIdReplaceField == null)
-                    {
-                        throw new DataException("Can not update fulltext field when the table is index only.");
-                    }
-
-                    Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
+                    List<PayloadSegment> payloadSegment = new List<PayloadSegment>();
 
                     foreach (FieldValue fv in fieldValues)
                     {
-                        fieldNameValue.Add(fv.FieldName.ToLower().Trim(), fv.Value);
+                        string fieldNameKey = fv.FieldName.ToLower().Trim();
+                        if (fieldNameKey == "docid")
+                        {
+                            throw new DataException("DocId field is fixed field, can't update it manually!");
+                        }
+
+                        Field field;
+
+                        if (!_FieldIndex.TryGetValue(fieldNameKey, out field))
+                        {
+                            throw new DataException(string.Format("Invalid column name '{0}'", fv.FieldName));
+                        }
+
+                        if (field.IndexType == Field.Index.Tokenized)
+                        {
+                            needDel = true;
+                        }
+
+                        fv.Type = field.DataType;
+
+                        if (field.Store)
+                        {
+                            doc.FieldValues.Add(fv);
+                        }
+
+                        if (field.IndexType == Field.Index.Untokenized)
+                        {
+                            int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, fv.Value);
+                            payloadSegment.Add(new PayloadSegment(field.TabIndex, data));
+                        }
                     }
 
-                    List<Field> selectFields = new List<Field>();
-
-                    foreach (Field field in _FieldIndex.Values)
+                    if (docs.Count <= 0)
                     {
-                        selectFields.Add(field);
+                        return;
                     }
 
-                    List<Query.DocumentResultForSort> doDocs = new List<Query.DocumentResultForSort>();
-
-                    int i = 0;
-                    foreach (Query.DocumentResultForSort dResult in docs)
+                    if (needDel)
                     {
-                        //int docId = dResult.DocId;
+                        if (IndexOnly && DocIdReplaceField == null)
+                        {
+                            throw new DataException("Can not update fulltext field when the table is index only.");
+                        }
 
-                        doDocs.Add(dResult);
+                        Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
 
-                        if (++i % 100 == 0)
+                        foreach (FieldValue fv in fieldValues)
+                        {
+                            fieldNameValue.Add(fv.FieldName.ToLower().Trim(), fv.Value);
+                        }
+
+                        List<Field> selectFields = new List<Field>();
+
+                        foreach (Field field in _FieldIndex.Values)
+                        {
+                            selectFields.Add(field);
+                        }
+
+                        List<Query.DocumentResultForSort> doDocs = new List<Query.DocumentResultForSort>();
+
+                        int i = 0;
+                        foreach (Query.DocumentResultForSort dResult in docs)
+                        {
+                            //int docId = dResult.DocId;
+
+                            doDocs.Add(dResult);
+
+                            if (++i % 100 == 0)
+                            {
+                                List<Document> docResult = Query(selectFields, doDocs);
+
+                                foreach (Document updatedoc in docResult)
+                                {
+                                    foreach (FieldValue fv in updatedoc.FieldValues)
+                                    {
+                                        string value;
+                                        if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                        {
+                                            fv.Value = value;
+                                        }
+                                    }
+                                }
+
+                                Insert(docResult);
+                                Delete(doDocs);
+                                doDocs.Clear();
+                            }
+                        }
+
+                        if (doDocs.Count > 0)
                         {
                             List<Document> docResult = Query(selectFields, doDocs);
 
@@ -2337,85 +2400,63 @@ namespace Hubble.Core.Data
 
                             Insert(docResult);
                             Delete(doDocs);
-                            doDocs.Clear();
-                        }
-                    }
-
-                    if (doDocs.Count > 0)
-                    {
-                        List<Document> docResult = Query(selectFields, doDocs);
-
-                        foreach (Document updatedoc in docResult)
-                        {
-                            foreach (FieldValue fv in updatedoc.FieldValues)
-                            {
-                                string value;
-                                if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
-                                {
-                                    fv.Value = value;
-                                }
-                            }
                         }
 
-                        Insert(docResult);
-                        Delete(doDocs);
+
                     }
-
-
-                }
-                else
-                {
-                    if (!IndexOnly)
+                    else
                     {
-                        _DBAdapter.Update(doc, docs);
-                    }
-
-                    List<int> updateIds = new List<int>();
-                    List<Payload> updatePayloads = new List<Payload>();
-
-                    foreach (Query.DocumentResultForSort docResult in docs)
-                    {
-                        int docId = docResult.DocId;
-                        int* payLoadData;
-                        int payLoadFileIndex;
-                        lock (this)
+                        if (!IndexOnly)
                         {
-                            int payLoadLength;
-                            if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
+                            _DBAdapter.Update(doc, docs);
+                        }
+
+                        List<int> updateIds = new List<int>();
+                        List<Payload> updatePayloads = new List<Payload>();
+
+                        foreach (Query.DocumentResultForSort docResult in docs)
+                        {
+                            int docId = docResult.DocId;
+                            int* payLoadData;
+                            int payLoadFileIndex;
+                            lock (this)
                             {
-                                foreach (PayloadSegment ps in payloadSegment)
+                                int payLoadLength;
+                                if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
                                 {
-                                    for (int i = 0; i < ps.Data.Length; i++)
+                                    foreach (PayloadSegment ps in payloadSegment)
                                     {
-                                        payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                        for (int i = 0; i < ps.Data.Length; i++)
+                                        {
+                                            payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                        }
+
+                                        //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
                                     }
 
-                                    //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
+                                    updateIds.Add(docId);
+                                    updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
                                 }
+                            }
 
-                                updateIds.Add(docId);
-                                updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
+                            if (updateIds.Count >= 1000)
+                            {
+                                _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
+                                updateIds.Clear();
+                                updatePayloads.Clear();
                             }
                         }
 
-                        if (updateIds.Count >= 1000)
+                        if (updateIds.Count > 0)
                         {
                             _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
-                            updateIds.Clear();
-                            updatePayloads.Clear();
                         }
                     }
 
-                    if (updateIds.Count > 0)
-                    {
-                        _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
-                    }
+                    Collect();
+
+                    SetLastModifyTicks(DateTime.Now);
                 }
-
-                Collect();
-
-                SetLastModifyTicks(DateTime.Now);
-
             }
             finally
             {
@@ -2547,6 +2588,35 @@ namespace Hubble.Core.Data
         {
             Collect(int.MinValue);
         }
+
+        private void BeginInsertProtect(int lastDocId)
+        {
+            InsertProtect.InsertProtectInfo = new InsertProtect();
+            InsertProtect.InsertProtectInfo.LastDocId = lastDocId;
+            InsertProtect.InsertProtectInfo.DocumentsCount = _PayloadFile.DocumentsCount;
+
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastHeadFilePath);
+                InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastIndexFilePath);
+                iIndex.CanMerge = false;
+            }
+
+            InsertProtect.InsertProtectInfo.IndexOnly = this.IndexOnly;
+            InsertProtect.Save(_Directory);
+        }
+
+        private void EndInsertProtect()
+        {
+            InsertProtect.Remove(_Directory);
+            InsertProtect.InsertProtectInfo = null;
+
+            foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+            {
+                iIndex.CanMerge = true;
+            }
+        }
+
 
         private void Collect(int lastDocId)
         {

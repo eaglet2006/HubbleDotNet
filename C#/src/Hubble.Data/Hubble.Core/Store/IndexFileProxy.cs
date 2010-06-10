@@ -19,9 +19,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+
+using Hubble.Core.Data;
+using Hubble.Core.Entity;
+
 using Hubble.Framework.IO;
 using Hubble.Framework.Threading;
-using Hubble.Core.Data;
 
 namespace Hubble.Core.Store
 {
@@ -818,7 +821,7 @@ namespace Hubble.Core.Store
                 {
                     case Event.Add:
                         WordDocList wl = (WordDocList)data;
-                        _IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
+                        //_IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
                         //if (WordUpdateDelegate != null)
                         //{
                         //    WordUpdateDelegate(wl.Word, wl.DocList);
@@ -926,6 +929,7 @@ namespace Hubble.Core.Store
 
         public void DoMergeAck(MergeAck mergeAck)
         {
+MergeAckLoop:
             if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
@@ -935,6 +939,14 @@ namespace Hubble.Core.Store
 
                 throw new TimeoutException();
             }
+
+            if (!this.CanMerge) //if can't merge now, waitting for CanMerge
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+                System.Threading.Thread.Sleep(10);
+                goto MergeAckLoop;
+            }
+
 
             try
             {
@@ -948,8 +960,8 @@ namespace Hubble.Core.Store
             //SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
         }
 
-        public void AddWordPositionAndDocumentPositionList(string word,
-            List<Entity.DocumentPositionList> docList)
+        public void AddWordPositionAndDocumentPositionList(string word, DocumentPositionList first, int docsCount,
+            IEnumerable<Entity.DocumentPositionList> docList)
         {
             if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
             {
@@ -963,7 +975,7 @@ namespace Hubble.Core.Store
 
             try
             {
-                _IndexFile.AddWordAndDocList(word, docList);
+                _IndexFile.AddWordAndDocList(word, first, docsCount, docList);
             }
             finally
             {
@@ -974,7 +986,7 @@ namespace Hubble.Core.Store
         }
 
 
-        public Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(GetInfo getInfo)
+        public Hubble.Core.Index.WordIndexReader GetWordIndex(GetInfo getInfo)
         {
             if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
             {
@@ -1004,7 +1016,7 @@ namespace Hubble.Core.Store
             }
 
             //return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
-            //    Hubble.Core.Index.InvertedIndex.WordIndexReader;
+            //    Hubble.Core.Index.WordIndexReader;
 
             //lock (_LockObj)
             //{

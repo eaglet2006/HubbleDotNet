@@ -46,7 +46,7 @@ namespace Hubble.Core.Query
 
             private int _CurIndex;
 
-            private Index.InvertedIndex.WordIndexReader _WordIndex;
+            private Index.WordIndexReader _WordIndex;
 
             public int CurIndex
             {
@@ -62,7 +62,7 @@ namespace Hubble.Core.Query
             }
 
 
-            public Index.InvertedIndex.WordIndexReader WordIndex
+            public Index.WordIndexReader WordIndex
             {
                 get
                 {
@@ -70,7 +70,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            public WordIndexForQuery(Index.InvertedIndex.WordIndexReader wordIndex,
+            public WordIndexForQuery(Index.WordIndexReader wordIndex,
                 int totalDocuments, int wordRank, int fieldRank)
             {
                 FieldRank = fieldRank;
@@ -891,7 +891,7 @@ namespace Hubble.Core.Query
 
                     if (!wordIndexDict.TryGetValue(wordInfo.Word, out wifq))
                     {
-                        Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex ;
+                        Hubble.Core.Index.WordIndexReader wordIndex ;
 
                         if (value.Count == 1)
                         {

@@ -41,6 +41,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.comboBoxInitImmediatelyAfterStartup = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
             this.label20 = new System.Windows.Forms.Label();
             this.numericUpDownQueryCacheTimeout = new System.Windows.Forms.NumericUpDown();
@@ -67,8 +69,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.comboBoxInitImmediatelyAfterStartup = new System.Windows.Forms.ComboBox();
-            this.label22 = new System.Windows.Forms.Label();
+            this.numericUpDownIndexThread = new System.Windows.Forms.NumericUpDown();
+            this.label24 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -77,6 +79,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -201,6 +204,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.numericUpDownIndexThread);
+            this.tabPageAttributes.Controls.Add(this.label24);
             this.tabPageAttributes.Controls.Add(this.comboBoxInitImmediatelyAfterStartup);
             this.tabPageAttributes.Controls.Add(this.label22);
             this.tabPageAttributes.Controls.Add(this.label21);
@@ -236,6 +241,28 @@
             this.tabPageAttributes.TabIndex = 1;
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxInitImmediatelyAfterStartup
+            // 
+            this.comboBoxInitImmediatelyAfterStartup.FormattingEnabled = true;
+            this.comboBoxInitImmediatelyAfterStartup.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(174, 273);
+            this.comboBoxInitImmediatelyAfterStartup.Name = "comboBoxInitImmediatelyAfterStartup";
+            this.comboBoxInitImmediatelyAfterStartup.Size = new System.Drawing.Size(121, 21);
+            this.comboBoxInitImmediatelyAfterStartup.TabIndex = 31;
+            this.comboBoxInitImmediatelyAfterStartup.Tag = "InitImmediatelyAfterStartup";
+            this.comboBoxInitImmediatelyAfterStartup.Text = "True";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(33, 278);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(137, 13);
+            this.label22.TabIndex = 30;
+            this.label22.Text = "Init immediately after startup";
             // 
             // label21
             // 
@@ -301,7 +328,7 @@
             // 
             // buttonInfoCancel
             // 
-            this.buttonInfoCancel.Location = new System.Drawing.Point(129, 466);
+            this.buttonInfoCancel.Location = new System.Drawing.Point(129, 495);
             this.buttonInfoCancel.Name = "buttonInfoCancel";
             this.buttonInfoCancel.Size = new System.Drawing.Size(75, 23);
             this.buttonInfoCancel.TabIndex = 23;
@@ -311,7 +338,7 @@
             // 
             // buttonSet
             // 
-            this.buttonSet.Location = new System.Drawing.Point(35, 466);
+            this.buttonSet.Location = new System.Drawing.Point(35, 495);
             this.buttonSet.Name = "buttonSet";
             this.buttonSet.Size = new System.Drawing.Size(75, 23);
             this.buttonSet.TabIndex = 22;
@@ -513,27 +540,37 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // comboBoxInitImmediatelyAfterStartup
+            // numericUpDownIndexThread
             // 
-            this.comboBoxInitImmediatelyAfterStartup.FormattingEnabled = true;
-            this.comboBoxInitImmediatelyAfterStartup.Items.AddRange(new object[] {
-            "True",
-            "False"});
-            this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(174, 273);
-            this.comboBoxInitImmediatelyAfterStartup.Name = "comboBoxInitImmediatelyAfterStartup";
-            this.comboBoxInitImmediatelyAfterStartup.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxInitImmediatelyAfterStartup.TabIndex = 31;
-            this.comboBoxInitImmediatelyAfterStartup.Tag = "InitImmediatelyAfterStartup";
-            this.comboBoxInitImmediatelyAfterStartup.Text = "True";
+            this.numericUpDownIndexThread.Location = new System.Drawing.Point(199, 455);
+            this.numericUpDownIndexThread.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numericUpDownIndexThread.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownIndexThread.Name = "numericUpDownIndexThread";
+            this.numericUpDownIndexThread.Size = new System.Drawing.Size(96, 20);
+            this.numericUpDownIndexThread.TabIndex = 33;
+            this.numericUpDownIndexThread.Tag = "IndexThread";
+            this.numericUpDownIndexThread.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
             // 
-            // label22
+            // label24
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(33, 278);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(137, 13);
-            this.label22.TabIndex = 30;
-            this.label22.Text = "Init immediately after startup";
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(33, 460);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(67, 13);
+            this.label24.TabIndex = 32;
+            this.label24.Text = "IndexThread";
             // 
             // FormTableInfo
             // 
@@ -555,6 +592,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -601,5 +639,7 @@
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.ComboBox comboBoxInitImmediatelyAfterStartup;
         private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.NumericUpDown numericUpDownIndexThread;
+        private System.Windows.Forms.Label label24;
     }
 }

@@ -98,6 +98,10 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Attribute", "CleanupQueryCacheFileInDays");
             OutputValue("Value", dbProvider.Table.CleanupQueryCacheFileInDays.ToString());
 
+            NewRow();
+            OutputValue("Attribute", "IndexThread");
+            OutputValue("Value", dbProvider.Table.IndexThread.ToString());
+
         }
 
         #endregion

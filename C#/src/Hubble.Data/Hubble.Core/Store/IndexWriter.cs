@@ -18,7 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Core.Entity;
 using Hubble.Framework.IO;
+
 
 namespace Hubble.Core.Store
 {
@@ -65,11 +67,11 @@ namespace Hubble.Core.Store
 
         }
 
-        public long AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList, out int length)
+        public long AddWordAndDocList(string word, DocumentPositionList first, int docsCount, IEnumerable<Entity.DocumentPositionList> docList, out int length)
         {
             long position = _IndexFile.Position;
             bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
-            Entity.DocumentPositionList.Serialize(docList, _IndexFile, simple);
+            Entity.DocumentPositionList.Serialize(first, docsCount, docList, _IndexFile, simple);
 
             length = (int)(_IndexFile.Position - position);
 

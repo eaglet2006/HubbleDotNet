@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Index;
+using Hubble.Core.Entity;
 using Hubble.Framework.IO;
 using FilePositionType = System.Int64;
 using FileLengthType = System.Int32;
@@ -480,10 +481,10 @@ namespace Hubble.Core.Store
             }
         }
 
-        public void AddWordAndDocList(string word, List<Entity.DocumentPositionList> docList)
+        public void AddWordAndDocList(string word, DocumentPositionList first, int docsCount, IEnumerable<Entity.DocumentPositionList> docList)
         {
             FileLengthType length;
-            FilePositionType position = _IndexWriter.AddWordAndDocList(word, docList, out length);
+            FilePositionType position = _IndexWriter.AddWordAndDocList(word, first, docsCount, docList, out length);
 
             _WordFilePositionList.Add(new WordFilePosition(word, _MaxSerial, position, length));
         }
@@ -494,7 +495,7 @@ namespace Hubble.Core.Store
             return new LinkedSegmentFileStream.SegmentPosition();
         }
 
-        internal Hubble.Core.Index.InvertedIndex.WordIndexReader GetWordIndex(string word,
+        internal Hubble.Core.Index.WordIndexReader GetWordIndex(string word,
             WordFilePositionList filePositionList, int totalDocs, Data.DBProvider dbProvider, int maxReturnCount)
         {
             WordDocumentsList docList = new WordDocumentsList();
@@ -555,7 +556,7 @@ namespace Hubble.Core.Store
                 }
             }
 
-            return new InvertedIndex.WordIndexReader(word, docList, totalDocs, dbProvider);
+            return new WordIndexReader(word, docList, totalDocs, dbProvider);
         }
 
         /// <summary>

@@ -408,6 +408,7 @@ namespace Hubble.Core.Store
                     {
                         //Exit exception last time
                         lastDocId = InsertProtect.InsertProtectInfo.LastDocId;
+                        _LastStoredId = lastDocId;
                         _DocumentsCount = InsertProtect.InsertProtectInfo.DocumentsCount;
                         break;
                     }
@@ -426,6 +427,7 @@ namespace Hubble.Core.Store
                     }
 
                     lastDocId = docidInFile;
+                    _LastStoredId = lastDocId;
 
                     if (InsertProtect.InsertProtectInfo != null)
                     {
@@ -438,6 +440,7 @@ namespace Hubble.Core.Store
                         if (lastDocId > InsertProtect.InsertProtectInfo.LastDocId)
                         {
                             lastDocId = InsertProtect.InsertProtectInfo.LastDocId;
+                            _LastStoredId = lastDocId;
                             truncateLength = fs.Position - sizeof(int);
                             break;
                         }
@@ -488,6 +491,7 @@ namespace Hubble.Core.Store
                 {
                     //No Data
                     lastDocId = -1;
+                    _LastStoredId = lastDocId;
 
                     using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Open, System.IO.FileAccess.Write))
                     {

@@ -105,6 +105,7 @@
     <Compile Include="Serialization\MySerialization.cs" />
     <Compile Include="Serialization\XmlSerialization.cs" />
     <Compile Include="Text\Regex.cs" />
+    <Compile Include="Text\UnicodeString.cs" />
     <Compile Include="Threading\Lock.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
     <Compile Include="Threading\MultiThreadCalculate.cs" />

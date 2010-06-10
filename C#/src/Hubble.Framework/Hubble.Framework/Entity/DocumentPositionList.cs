@@ -81,13 +81,16 @@ namespace Hubble.Core.Entity
             }
         }
 
-
         //[FieldOffset(12)]
         /// <summary>
         /// First word position
         /// </summary>
         public int FirstPosition;
 
+        /// <summary>
+        /// Point to next item
+        /// </summary>
+        public int Next;
 
         public DocumentPositionList(int docId)
         {
@@ -96,6 +99,7 @@ namespace Hubble.Core.Entity
             Count = 0;
             _TotalWordsInThisDocumentIndex = 0;
             FirstPosition = 0;
+            Next = -1;
         }
 
         public DocumentPositionList(int docId, int count, Int16 totalWordsInDocIndex, int firstPosition)
@@ -124,6 +128,9 @@ namespace Hubble.Core.Entity
             }
 
             FirstPosition = firstPosition;
+
+            Next = -1;
+
         }
 
         public DocumentPositionList(int docId, int count, Int16 totalWordsInDocIndex)
@@ -152,6 +159,9 @@ namespace Hubble.Core.Entity
             }
 
             FirstPosition = 0;
+
+            Next = -1;
+
         }
 
 
@@ -171,14 +181,14 @@ namespace Hubble.Core.Entity
         }
 
 
-        static public void Serialize(IList<DocumentPositionList> docPositions, System.IO.Stream stream, bool simple)
+        static public void Serialize(DocumentPositionList first, int docsCount, IEnumerable<DocumentPositionList> docPositions, System.IO.Stream stream, bool simple)
         {
-            int docsCount = docPositions.Count;
+            //int docsCount = docPositions.Count;
            
             //Write documets count
             VInt.sWriteToStream(docsCount, stream);
 
-            DocumentPositionList first = docPositions[0];
+            //DocumentPositionList first = docPositions.GetEnumerator();
 
             //Write first document id
             int lstDocId = first.DocumentId;
@@ -191,37 +201,46 @@ namespace Hubble.Core.Entity
                 count = 32767;
             }
 
-            count *= 8;
+            count *= 8; //Shift 3 bit
             count += first._TotalWordsInThisDocumentIndex;
 
             VInt.sWriteToStream(count, stream);
             if (!simple)
             {
-                VInt.sWriteToStream(docPositions[0].FirstPosition, stream);
+                VInt.sWriteToStream(first.FirstPosition, stream);
             }
 
-            for (int i = 1; i < docPositions.Count; i++)
-            {
-                VInt.sWriteToStream(docPositions[i].DocumentId - lstDocId, stream);
+            int i = 0;
 
-                count = docPositions[i].Count;
+            foreach(DocumentPositionList docPosition in docPositions)
+            {
+                i++;
+
+                if (i == 1)
+                {
+                    continue;
+                }
+
+                VInt.sWriteToStream(docPosition.DocumentId - lstDocId, stream);
+
+                count = docPosition.Count;
 
                 if (count >= 32768)
                 {
                     count = 32767;
                 }
 
-                count *= 8;
-                count += docPositions[i]._TotalWordsInThisDocumentIndex;
+                count *= 8; //Shift 3 bit
+                count += docPosition._TotalWordsInThisDocumentIndex;
 
                 VInt.sWriteToStream(count, stream);
 
                 if (!simple)
                 {
-                    VInt.sWriteToStream(docPositions[i].FirstPosition, stream);
+                    VInt.sWriteToStream(docPosition.FirstPosition, stream);
                 }
 
-                lstDocId = docPositions[i].DocumentId;
+                lstDocId = docPosition.DocumentId;
             }
 
             byte[] lstDocIdBuf = BitConverter.GetBytes(lstDocId);

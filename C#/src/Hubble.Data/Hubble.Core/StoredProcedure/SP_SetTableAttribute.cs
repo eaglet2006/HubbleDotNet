@@ -139,6 +139,23 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "indexthread":
+                    {
+                        int indexthread;
+
+                        if (int.TryParse(value, out indexthread))
+                        {
+                            dbProvider.Table.IndexThread = indexthread;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} index thread to {1} sucessful!",
+                                tableName, dbProvider.Table.IndexThread));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be number");
+                        }
+                    }
+                    break;
 
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");

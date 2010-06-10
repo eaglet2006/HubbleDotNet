@@ -85,7 +85,7 @@ namespace Hubble.Core.StoredProcedure
 
             //foreach (string word in wordDict.Keys)
             //{
-            //    Hubble.Core.Index.InvertedIndex.WordIndexReader wordIndex = invertedIndex.GetWordIndex(word);
+            //    Hubble.Core.Index.WordIndexReader wordIndex = invertedIndex.GetWordIndex(word);
 
             //    if (wordIndex == null)
             //    {

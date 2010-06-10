@@ -86,7 +86,11 @@
     <Compile Include="Global\ReEntryException.cs" />
     <Compile Include="Global\Report.cs" />
     <Compile Include="Global\Setting.cs" />
+    <Compile Include="Index\DocumentPositionAlloc.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
+    <Compile Include="Index\MultiThreadIndex.cs" />
+    <Compile Include="Index\WordIndexReader.cs" />
+    <Compile Include="Index\WordIndexWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\ContainsQuery.cs" />
     <Compile Include="Query\DocumentRank.cs" />

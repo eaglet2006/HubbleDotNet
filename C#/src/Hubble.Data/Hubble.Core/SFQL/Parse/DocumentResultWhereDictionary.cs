@@ -99,7 +99,16 @@ namespace Hubble.Core.SFQL.Parse
 
         unsafe public void Add(int docId, Query.DocumentResult value)
         {
-            base.Add(docId, new DocumentResultPoint(_Cur));
+            try
+            {
+                base.Add(docId, new DocumentResultPoint(_Cur));
+            }
+            catch(Exception e)
+            {
+                throw new ParseException(string.Format("Docid={0} err:{1}",
+                    docId, e.Message));
+            }
+
             *_Cur = value;
 
             _UnitIndex++;

@@ -59,6 +59,8 @@ namespace Hubble.Core.Data
 
         bool _InitImmediatelyAfterStartup = Global.Setting.Config.InitTablesStartup;
 
+        int _IndexThread = 1;
+
         #endregion
 
         #region Public properties
@@ -302,6 +304,23 @@ namespace Hubble.Core.Data
                 _InitImmediatelyAfterStartup = value;
             } 
         }
+
+        /// <summary>
+        /// How many threads used for index
+        /// </summary>
+        public int IndexThread
+        {
+            get
+            {
+                return _IndexThread;
+            }
+
+            set
+            {
+                _IndexThread = value;
+            } 
+        }
+        
 
         public void Save(string dir)
         {
