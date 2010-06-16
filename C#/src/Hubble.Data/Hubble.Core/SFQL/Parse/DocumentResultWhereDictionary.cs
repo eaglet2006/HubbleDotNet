@@ -125,6 +125,11 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        unsafe public void Update(int docId, long score)
+        {
+            base[docId].pDocumentResult->Score = score;
+        }
+
         unsafe public void Add(int docId, long rank)
         {
             base.Add(docId, new DocumentResultPoint(_Cur));
@@ -190,6 +195,33 @@ namespace Hubble.Core.SFQL.Parse
                 value = new Hubble.Core.Query.DocumentResult();
                 return false;
             }
+        }
+
+        unsafe public DocumentResultWhereDictionary OrMerge(DocumentResultWhereDictionary fst, DocumentResultWhereDictionary sec)
+        {
+            if (fst == null)
+            {
+                return sec;
+            }
+
+            if (sec == null)
+            {
+                return fst;
+            }
+
+            foreach (int docid in sec.Keys)
+            {
+                if (fst.ContainsKey(docid))
+                {
+                    fst.Update(docid, fst[docid].Score + sec[docid].Score);
+                }
+                else
+                {
+                    fst.Add(docid, sec[docid]);
+                }
+            }
+
+            return fst;
         }
 
         public DocumentResultWhereDictionary AndMerge(DocumentResultWhereDictionary fst, DocumentResultWhereDictionary sec)
