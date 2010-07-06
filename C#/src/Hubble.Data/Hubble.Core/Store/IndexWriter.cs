@@ -28,11 +28,21 @@ namespace Hubble.Core.Store
     {
         string _HeadFilePath;
         string _IndexFilePath;
+        string _DDXFilePath;
 
-        System.IO.FileStream _HeadFile;
+        //System.IO.FileStream _HeadFile;
         System.IO.FileStream _IndexFile;
+        DDXFile _DDXFile;
 
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
+
+        public string DDXFilePath
+        {
+            get
+            {
+                return _DDXFilePath;
+            }
+        }
 
         public string HeadFilePath
         {
@@ -56,11 +66,17 @@ namespace Hubble.Core.Store
 
             _HeadFilePath = Path.AppendDivision(path, '\\') + 
                 string.Format("{0:D7}{1}.hdx", serial, fieldName);
+
+            _DDXFilePath = Path.AppendDivision(path, '\\') + 
+                string.Format("{0:D7}{1}.ddx", serial, fieldName);
+
             _IndexFilePath = Path.AppendDivision(path, '\\') +
                 string.Format("{0:D7}{1}.idx", serial, fieldName);
 
-            _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Create,
-                 System.IO.FileAccess.Write);
+            //_HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Create,
+            //     System.IO.FileAccess.Write);
+
+            _DDXFile = new DDXFile(_DDXFilePath, DDXFile.Mode.Write);
             _IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Create,
                  System.IO.FileAccess.Write);
 
@@ -75,15 +91,18 @@ namespace Hubble.Core.Store
 
             length = (int)(_IndexFile.Position - position);
 
-            WriteHeadFile(_HeadFile, word, position, length);
+            //WriteHeadFile(_HeadFile, word, position, length);
+            _DDXFile.Add(word, position, length);
 
             return position;
         }
 
         public void Close()
         {
-            _HeadFile.Close();
+            //_HeadFile.Close();
+            _DDXFile.Close();
             _IndexFile.Close();
+
         }
 
         #region static methods

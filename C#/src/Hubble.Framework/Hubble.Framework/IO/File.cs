@@ -77,6 +77,23 @@ namespace Hubble.Framework.IO
             }
         }
 
+        static public bool ReadToBuffer(System.IO.Stream fs, byte[] buffer)
+        {
+            int offset = 0;
+            int read = 0;
+
+            while ((read = fs.Read(buffer, offset, buffer.Length - offset)) > 0)
+            {
+                offset += read;
+                if (offset >= buffer.Length)
+                {
+                    break;
+                }
+            }
+
+            return offset == buffer.Length;
+        }
+
         static public MemoryStream ReadFileToStream(String FileName)
         {
             byte[] Bytes = new byte[32768];

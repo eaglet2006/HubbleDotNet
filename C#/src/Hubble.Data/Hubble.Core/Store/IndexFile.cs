@@ -106,10 +106,21 @@ namespace Hubble.Core.Store
 
             public FileSizeType Size;
 
-            public IndexFileInfo(int serial, FileSizeType size)
+            public DDXFile DDXFile;
+
+            public IndexFileInfo(int serial, FileSizeType size, DDXFile ddxFile, DDXFile.Mode mode)
             {
                 Serial = serial;
                 Size = size;
+
+                if (mode == DDXFile.Mode.Enum)
+                {
+                    DDXFile = new DDXFile(ddxFile.FilePath, DDXFile.Mode.Enum);
+                }
+                else
+                {
+                    DDXFile = ddxFile;
+                }
             }
 
             #region IComparable<IndexFileInfo> Members
@@ -139,7 +150,7 @@ namespace Hubble.Core.Store
         /// <summary>
         /// For the hash table from word to position
         /// </summary>
-        public struct WordFilePosition
+        public struct WordFilePosition : IComparable<WordFilePosition>
         {
             public string Word;
             public FilePosition Position;
@@ -149,6 +160,15 @@ namespace Hubble.Core.Store
                 Word = word;
                 Position = new FilePosition(serial, position, length);
             }
+
+            #region IComparable<WordFilePosition> Members
+
+            public int CompareTo(WordFilePosition other)
+            {
+                return Hubble.Framework.Text.UnicodeString.Comparer(this.Word, other.Word);
+            }
+
+            #endregion
         }
 
         public struct WordPosition : Hubble.Framework.Serialization.IMySerialization<WordPosition>
@@ -321,13 +341,21 @@ namespace Hubble.Core.Store
             }
         }
 
-        internal string LastHeadFilePath
+        internal string LastDDXFilePath
         {
             get
             {
-                return GetHeadFileName(_MaxSerial);
+                return GetDDXFileName(_MaxSerial);
             }
         }
+
+        //internal string LastHeadFilePath
+        //{
+        //    get
+        //    {
+        //        return GetHeadFileName(_MaxSerial);
+        //    }
+        //}
 
         internal string LastIndexFilePath
         {
@@ -346,9 +374,99 @@ namespace Hubble.Core.Store
 
         #region Private methods
 
+        public List<IndexFile.WordFilePosition> GetWordFilePositionList(System.IO.FileStream hFile, int serial)
+        {
+            List<IndexFile.WordFilePosition> list = new List<IndexFile.WordFilePosition>();
+
+            hFile.Seek(0, System.IO.SeekOrigin.Begin);
+
+            while (hFile.Position < hFile.Length)
+            {
+                byte[] buf = new byte[sizeof(int)];
+
+                hFile.Read(buf, 0, sizeof(int));
+
+                int size = BitConverter.ToInt32(buf, 0);
+
+                //byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
+                byte[] wordBuf = new byte[size];
+                hFile.Read(wordBuf, 0, size);
+
+                //_HeadFile.Read(buf, 0, sizeof(long));
+                long position = BitConverter.ToInt64(wordBuf, 0);
+
+                //_HeadFile.Read(buf, 0, sizeof(long));
+                int length = (int)BitConverter.ToInt64(wordBuf, sizeof(long));
+
+                //_HeadFile.Read(wordBuf, 0, wordBuf.Length);
+                string word = Encoding.UTF8.GetString(wordBuf, 2 * sizeof(long), size - 2 * sizeof(long));
+
+                list.Add(new IndexFile.WordFilePosition(word, serial, position, length));
+            }
+
+            list.Sort();
+
+            return list;
+        }
+
+        private void TransferHeadFiles()
+        {
+            //Get .hdx files in the index folder
+            string[] files = System.IO.Directory.GetFiles(_Path, "???????" + FieldName + ".hdx");
+
+            //Transfer .hdx to .ddx file
+            foreach (string file in files)
+            {
+                string fileName = System.IO.Path.GetFileName(file);
+                int serial = int.Parse(fileName.Substring(0, 7));
+
+                string ddxFileName = Path.AppendDivision(_Path, '\\') +
+                       GetDDXFileName(serial);
+
+                if (Hubble.Framework.IO.File.GetFileLength(file) <= 0)
+                {
+                    System.IO.File.Delete(file);
+                    continue;
+                }
+
+                if (System.IO.File.Exists(ddxFileName))
+                {
+                    System.IO.File.Delete(ddxFileName);
+                }
+
+                using (System.IO.FileStream hFile = new System.IO.FileStream(file, System.IO.FileMode.Open,
+                    System.IO.FileAccess.Read, System.IO.FileShare.Read))
+                {
+                    using (DDXFile ddxFile = new DDXFile(ddxFileName, DDXFile.Mode.Write))
+                    {
+                        foreach (IndexFile.WordFilePosition wfp in GetWordFilePositionList(hFile, serial))
+                        {
+                            ddxFile.Add(wfp.Word, wfp.Position.Position, wfp.Position.Length);
+                        }
+
+                        ddxFile.Close();
+                    }
+                }
+
+                string bakFile = Path.AppendDivision(_Path, '\\') + GetHeadBakFileName(serial);
+
+                if (System.IO.File.Exists(bakFile))
+                {
+                    System.IO.File.Delete(bakFile);
+                }
+
+                System.IO.File.Move(file, bakFile);
+            }
+        }
+
         private void LoadIndexFiles(bool createNew)
         {
-            string[] files = System.IO.Directory.GetFiles(_Path, "???????" + FieldName + ".hdx");
+            if (!createNew)
+            {
+                TransferHeadFiles();
+            }
+
+            string[] files = System.IO.Directory.GetFiles(_Path, "???????" + FieldName + ".ddx");
 
             foreach (string file in files)
             {
@@ -363,16 +481,39 @@ namespace Hubble.Core.Store
                     string iFile = Path.AppendDivision(_Path, '\\') +
                         GetIndexFileName(serial);
 
+                    string ddxFile = Path.AppendDivision(_Path, '\\') +
+                       GetDDXFileName(serial);
+
                     if (!System.IO.File.Exists(iFile))
                     {
-                        System.IO.File.Delete(hFile);
+                        if (System.IO.File.Exists(hFile))
+                        {
+                            System.IO.File.Delete(hFile);
+                        }
+
+                        if (System.IO.File.Exists(ddxFile))
+                        {
+                            System.IO.File.Delete(ddxFile);
+                        }
                     }
-                    else if (File.GetFileLength(hFile) == 0 || File.GetFileLength(iFile) == 0)
+                    else if (File.GetFileLength(ddxFile) == 0 || File.GetFileLength(iFile) == 0)
                     {
                         try
                         {
-                            System.IO.File.Delete(hFile);
-                            System.IO.File.Delete(iFile);
+                            if (System.IO.File.Exists(hFile))
+                            {
+                                System.IO.File.Delete(hFile);
+                            }
+
+                            if (System.IO.File.Exists(iFile))
+                            {
+                                System.IO.File.Delete(iFile);
+                            }
+
+                            if (System.IO.File.Exists(ddxFile))
+                            {
+                                System.IO.File.Delete(ddxFile);
+                            }
                         }
                         catch (Exception e)
                         {
@@ -384,8 +525,20 @@ namespace Hubble.Core.Store
                         {
                             try
                             {
-                                System.IO.File.Delete(hFile);
-                                System.IO.File.Delete(iFile);
+                                if (System.IO.File.Exists(hFile))
+                                {
+                                    System.IO.File.Delete(hFile);
+                                }
+
+                                if (System.IO.File.Exists(iFile))
+                                {
+                                    System.IO.File.Delete(iFile);
+                                }
+
+                                if (System.IO.File.Exists(ddxFile))
+                                {
+                                    System.IO.File.Delete(ddxFile);
+                                }
                             }
                             catch (Exception e)
                             {
@@ -393,7 +546,9 @@ namespace Hubble.Core.Store
                         }
                         else
                         {
-                            _IndexFileList.Add(new IndexFileInfo(serial, File.GetFileLength(iFile)));
+                            DDXFile iDDXFile = new DDXFile(ddxFile, DDXFile.Mode.Read);
+                            _IndexFileList.Add(new IndexFileInfo(serial, File.GetFileLength(iFile), 
+                                iDDXFile, DDXFile.Mode.Read));
                         }
                     }
                 }
@@ -405,20 +560,20 @@ namespace Hubble.Core.Store
 
             _IndexFileList.Sort();
 
-            foreach (IndexFileInfo fi in _IndexFileList)
-            {
-                using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName, _IndexMode))
-                {
-                    List<WordFilePosition> wfp = ir.GetWordFilePositionList();
+            //foreach (IndexFileInfo fi in _IndexFileList)
+            //{
+            //    using (IndexReader ir = new IndexReader(fi.Serial, _Path, FieldName, _IndexMode))
+            //    {
+            //        List<WordFilePosition> wfp = ir.GetWordFilePositionList();
 
-                    IndexFileInterface.ImportWordFilePositionList(wfp);
+            //        IndexFileInterface.ImportWordFilePositionList(wfp);
 
-                    wfp.Clear();
-                    wfp = null;
-                    GC.Collect();
-                    GC.Collect();
-                }
-            }
+            //        wfp.Clear();
+            //        wfp = null;
+            //        GC.Collect();
+            //        GC.Collect();
+            //    }
+            //}
 
             if (_IndexFileList.Count == 0)
             {
@@ -479,6 +634,54 @@ namespace Hubble.Core.Store
             {
                 _IndexWriter.Close();
             }
+
+            if (_IndexFileList != null)
+            {
+                foreach (IndexFileInfo fi in _IndexFileList)
+                {
+                    if (fi.DDXFile != null)
+                    {
+                        fi.DDXFile.Close();
+                    }
+                }
+            }
+        }
+
+        public void CloseSerial(int serial)
+        {
+            if (_IndexFileList != null)
+            {
+                foreach (IndexFileInfo fi in _IndexFileList)
+                {
+                    if (fi.DDXFile != null)
+                    {
+                        if (fi.Serial == serial)
+                        {
+                            fi.DDXFile.Close();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        public List<FilePosition> GetFilePositionListByWord(string word)
+        {
+            List<FilePosition> result = new List<FilePosition>();
+
+            foreach (IndexFileInfo ifi in _IndexFileList)
+            {
+                DDXUnit ddxUnit = ifi.DDXFile.Find(word);
+
+                if (ddxUnit != null)
+                {
+                    FilePosition fp = new FilePosition(ifi.Serial, ddxUnit.Position, (int)ddxUnit.Length);
+
+                    result.Add(fp);
+                }
+            }
+
+            return result;
         }
 
         public void AddWordAndDocList(string word, DocumentPositionList first, int docsCount, IEnumerable<Entity.DocumentPositionList> docList)
@@ -502,7 +705,7 @@ namespace Hubble.Core.Store
 
             if (maxReturnCount < 0)
             {
-                foreach (FilePosition filePosition in filePositionList.Values)
+                foreach (FilePosition filePosition in filePositionList.FPList)
                 {
                     using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
                     {
@@ -529,7 +732,7 @@ namespace Hubble.Core.Store
             {
                 int remain = maxReturnCount;
 
-                foreach (FilePosition filePosition in filePositionList.Values)
+                foreach (FilePosition filePosition in filePositionList.FPList)
                 {
                     using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
                     {
@@ -566,7 +769,12 @@ namespace Hubble.Core.Store
         {
             _IndexWriter.Close();
 
-            _IndexFileList.Add(new IndexFileInfo(_MaxSerial, File.GetFileLength(_IndexWriter.IndexFilePath)));
+            string ddxFile = Path.AppendDivision(_Path, '\\') +
+               GetDDXFileName(_MaxSerial);
+            DDXFile iDDXFile = new DDXFile(ddxFile, DDXFile.Mode.Read);
+
+            _IndexFileList.Add(new IndexFileInfo(_MaxSerial, File.GetFileLength(_IndexWriter.IndexFilePath),
+                iDDXFile, DDXFile.Mode.Read));
 
             _MaxSerial++;
 
@@ -585,8 +793,13 @@ namespace Hubble.Core.Store
                 {
                     if (fst)
                     {
+                        string ddxFile = Path.AppendDivision(_Path, '\\') +
+                           GetDDXFileName(mergedSerial);
+                        DDXFile iDDXFile = new DDXFile(ddxFile, DDXFile.Mode.Read);
+
                         IndexFileList[i] = new IndexFile.IndexFileInfo(mergedSerial,
-                            File.GetFileLength(IndexDir + GetIndexFileName(mergedSerial)));
+                            File.GetFileLength(IndexDir + GetIndexFileName(mergedSerial)),
+                            iDDXFile, DDXFile.Mode.Read);
                         fst = false;
                         i++;
                     }
@@ -608,6 +821,11 @@ namespace Hubble.Core.Store
             {
                 _IndexWriter.Close();
 
+                if (System.IO.File.Exists(_IndexWriter.DDXFilePath))
+                {
+                    System.IO.File.Delete(_IndexWriter.DDXFilePath);
+                }
+
                 if (System.IO.File.Exists(_IndexWriter.HeadFilePath))
                 {
                     System.IO.File.Delete(_IndexWriter.HeadFilePath);
@@ -622,6 +840,16 @@ namespace Hubble.Core.Store
                 _IndexWriter = new IndexWriter(_MaxSerial, _Path, 
                     System.IO.Path.GetFileNameWithoutExtension(_FieldName), _IndexMode);
             }
+        }
+
+        private string GetHeadBakFileName(int serialNo)
+        {
+            return string.Format("{0:D7}{1}.hbk", serialNo, FieldName);
+        }
+
+        public string GetDDXFileName(int serialNo)
+        {
+            return string.Format("{0:D7}{1}.ddx", serialNo, FieldName);
         }
 
         public string GetHeadFileName(int serialNo)

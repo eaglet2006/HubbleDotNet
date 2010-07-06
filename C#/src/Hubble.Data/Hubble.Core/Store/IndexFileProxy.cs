@@ -209,8 +209,36 @@ namespace Hubble.Core.Store
             }
         }
 
+
         public class MergeInfos
         {
+            class DDXFileEnum : IComparable<DDXFileEnum>
+            {
+                internal DDXFile DDXFile;
+
+                internal DDXUnit Current;
+
+                internal int Serial;
+
+                public DDXFileEnum(DDXFile file, int serial)
+                {
+                    DDXFile = new DDXFile(file.FilePath, DDXFile.Mode.Enum);
+                    Serial = serial;
+                    Current = DDXFile.GetNext();
+                }
+
+                #region IComparable<DDXFileEnum> Members
+
+                public int CompareTo(DDXFileEnum other)
+                {
+                    return this.Serial.CompareTo(other.Serial);
+                }
+
+                #endregion
+            }
+
+            private DDXFileEnum[] _DDXFileEnum = null; 
+
             private int _BeginSerial; // Begin file serial;
 
             public int BeginSerial
@@ -262,29 +290,151 @@ namespace Hubble.Core.Store
                 }
             }
 
-            List<MergedWordFilePostionList> _MergedWordFilePostionList;
+            List<IndexFile.IndexFileInfo> _IndexFileListForMerge;
 
-            public List<MergedWordFilePostionList> MergedWordFilePostionList
+            public List<IndexFile.IndexFileInfo> IndexFileListForMerge
             {
                 get
                 {
-                    return _MergedWordFilePostionList;
+                    return _IndexFileListForMerge;
                 }
             }
 
+            List<DDXFile> _DDXFiles;
+
+
+            //List<MergedWordFilePostionList> _MergedWordFilePostionList;
+
+            public IEnumerable<MergedWordFilePostionList> MergedWordFilePostionList
+            {
+                get
+                {
+                    while (true)
+                    {
+
+                        string minWord = null;
+
+                        if (_DDXFileEnum.Length <= 0)
+                        {
+                            yield break;
+                        }
+
+                        //Get Min Doc id
+                        for (int i = 0; i < _DDXFileEnum.Length; i++)
+                        {
+                            if (minWord == null)
+                            {
+                                minWord = _DDXFileEnum[i].Current.Word;
+                                continue;
+                            }
+
+                            if (Hubble.Framework.Text.UnicodeString.Comparer(_DDXFileEnum[i].Current.Word, minWord) < 0)
+                            {
+                                minWord = _DDXFileEnum[i].Current.Word;
+                            }
+                        }
+
+                        MergedWordFilePostionList result = new MergedWordFilePostionList(minWord);
+                        bool needShrink = false;
+
+                        //Return min word file position list;
+                        for (int i = 0; i < _DDXFileEnum.Length; i++)
+                        {
+                            if (minWord == _DDXFileEnum[i].Current.Word)
+                            {
+                                result.FilePositionList.Add(new IndexFile.FilePosition(_DDXFileEnum[i].Serial,
+                                    _DDXFileEnum[i].Current.Position, (int)_DDXFileEnum[i].Current.Length));
+
+                                _DDXFileEnum[i].Current = _DDXFileEnum[i].DDXFile.GetNext();
+
+                                if (_DDXFileEnum[i].Current == null)
+                                {
+                                    needShrink = true;
+                                }
+                            }
+                        }
+
+                        //Shrink 
+                        if (needShrink)
+                        {
+                            List<DDXFileEnum> ddxFileEnumList = new List<DDXFileEnum>();
+
+                            for (int i = 0; i < _DDXFileEnum.Length; i++)
+                            {
+                                if (_DDXFileEnum[i].Current != null)
+                                {
+                                    ddxFileEnumList.Add(_DDXFileEnum[i]);
+                                }
+                            }
+
+                            _DDXFileEnum = ddxFileEnumList.ToArray();
+                        }
+
+                        yield return result;
+                    }
+                }
+            }
+
+            int _Count;
+
+            public int Count
+            {
+                get
+                {
+                    return _Count;
+                }
+            }
+
+            private void InitCount()
+            {
+                _Count = 0;
+
+                List<DDXFileEnum> ddxFileEnumList = new List<DDXFileEnum>();
+                _DDXFiles = new List<DDXFile>();
+
+                foreach (IndexFile.IndexFileInfo ifi in _IndexFileListForMerge)
+                {
+                    if (_Count < ifi.DDXFile.GetTotalWords())
+                    {
+                        _Count = ifi.DDXFile.GetTotalWords();
+                    }
+
+                    ddxFileEnumList.Add(new DDXFileEnum(ifi.DDXFile, ifi.Serial));
+                    _DDXFiles.Add(ddxFileEnumList[ddxFileEnumList.Count - 1].DDXFile);
+
+                }
+
+                ddxFileEnumList.Sort();
+
+                _DDXFileEnum = ddxFileEnumList.ToArray();
+
+                _Count *= 2;
+            }
+
             public MergeInfos(string headFileName, string indexFileName,
-                List<MergedWordFilePostionList> list, int begin, int end, int mergedSerial)
+                List<IndexFile.IndexFileInfo> indexFileListForMerge, int begin, int end, int mergedSerial)
             {
                 _MergeHeadFileName = headFileName;
                 _MergeIndexFileName = indexFileName;
-                _MergedWordFilePostionList = list;
+                _IndexFileListForMerge = indexFileListForMerge;
+                //_MergedWordFilePostionList = list;
                 _BeginSerial = begin;
                 _EndSerial = end;
                 _MergedSerial = mergedSerial;
+
+                InitCount();
+            }
+
+            public void Close()
+            {
+                foreach (DDXFile file in _DDXFiles)
+                {
+                    file.Close();
+                }
             }
         }
 
-        public class MergedWordFilePostionList : IComparable<MergedWordFilePostionList>
+        public class MergedWordFilePostionList
         {
             private string _Word;
 
@@ -323,60 +473,6 @@ namespace Hubble.Core.Store
                 _FilePositionList = new WordFilePositionList();
             }
 
-            #region IComparable<WordFilePostionList> Members
-
-            public int CompareTo(MergedWordFilePostionList other)
-            {
-                if (other == null)
-                {
-                    return 1;
-                }
-
-                if (this.FilePositionList.Count == 0 && other.FilePositionList.Count == 0)
-                {
-                    return 0;
-                }
-
-                if (other.FilePositionList.Count == 0)
-                {
-                    return 1;
-                }
-
-                if (this.FilePositionList.Count == 0)
-                {
-                    return -1;
-                }
-
-                if (this.FilePositionList[0].Serial > other.FilePositionList[0].Serial)
-                {
-                    return 1;
-                }
-                else if (this.FilePositionList[0].Serial < other.FilePositionList[0].Serial)
-                {
-                    return -1;
-                }
-                else
-                {
-                    long myPosition = this.FilePositionList[0].Position;
-                    long otherPosition = other.FilePositionList[0].Position;
-
-                    if (myPosition > otherPosition)
-                    {
-                        return 1;
-                    }
-                    else if (myPosition < otherPosition)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
-
-            }
-
-            #endregion
         }
 
 
@@ -385,8 +481,6 @@ namespace Hubble.Core.Store
         private bool _CanMerge = true;
 
         private IndexFile _IndexFile;
-
-        private WordFilePositionProvider _WordFilePositionTable = new WordFilePositionProvider();
 
         private int _WordCount = 0;
 
@@ -496,13 +590,21 @@ namespace Hubble.Core.Store
             }
         }
 
-        internal string LastHeadFilePath
+        internal string LastDDXFilePath
         {
             get
             {
-                return _IndexFile.LastHeadFilePath;
+                return _IndexFile.LastDDXFilePath;
             }
         }
+
+        //internal string LastHeadFilePath
+        //{
+        //    get
+        //    {
+        //        return _IndexFile.LastHeadFilePath;
+        //    }
+        //}
 
         internal string LastIndexFilePath
         {
@@ -516,57 +618,70 @@ namespace Hubble.Core.Store
 
         private WordFilePositionList GetFilePositionListByWord(string word)
         {
-            WordFilePositionList pList;
+            List<IndexFile.FilePosition> fpList = _IndexFile.GetFilePositionListByWord(word);
 
-            if (_WordFilePositionTable.TryGetValue(word, out pList))
-            {
-                return pList;
-            }
-            else
+            if (fpList.Count <= 0)
             {
                 return null;
             }
+
+            //foreach (IndexFile.FilePosition fp in fpList)
+            //{
+            //    pList.AddOnly(fp);
+            //}
+
+
+            return new WordFilePositionList(fpList);
+
+            //if (_WordFilePositionTable.TryGetValue(word, out pList))
+            //{
+            //    return pList;
+            //}
+            //else
+            //{
+            //    return null;
+            //}
         }
 
-        private void PatchWordFilePositionTable(List<IndexFile.WordFilePosition> wordFilePostionList)
-        {
-            foreach (IndexFile.WordFilePosition p in wordFilePostionList)
-            {
-                WordFilePositionList pList;
+        //private void PatchWordFilePositionTable(List<IndexFile.WordFilePosition> wordFilePostionList)
+        //{
+        //    foreach (IndexFile.WordFilePosition p in wordFilePostionList)
+        //    {
+        //        WordFilePositionList pList;
 
-                if (_WordFilePositionTable.TryGetValue(p.Word, out pList))
-                {
-                    pList.Add(p.Position);
-                }
-                else
-                {
-                    pList = new WordFilePositionList();
-                    pList.AddOnly(p.Position);
+        //        if (_WordFilePositionTable.TryGetValue(p.Word, out pList))
+        //        {
+        //            pList.Add(p.Position);
+        //        }
+        //        else
+        //        {
+        //            pList = new WordFilePositionList();
+        //            pList.AddOnly(p.Position);
 
-                    string internedWord = string.IsInterned(p.Word);
+        //            string internedWord = string.IsInterned(p.Word);
 
-                    if (internedWord == null)
-                    {
-                        internedWord = p.Word;
-                    }
+        //            if (internedWord == null)
+        //            {
+        //                internedWord = p.Word;
+        //            }
 
-                    _WordFilePositionTable.Add(internedWord, pList);
-                }
-            }
+        //            _WordFilePositionTable.Add(internedWord, pList);
+        //        }
+        //    }
 
-            InnerWordTableSize = _WordFilePositionTable.Count;
+        //    InnerWordTableSize = _WordFilePositionTable.Count;
 
-            GC.Collect();
-            GC.Collect();
-            GC.Collect();
+        //    GC.Collect();
+        //    GC.Collect();
+        //    GC.Collect();
 
-        }
+        //}
 
         private object ProcessGetFilePositionList(int evt, MessageQueue.MessageFlag flag, object data)
         {
             OptimizationOption option = (OptimizationOption)data;
 
-            List<MergedWordFilePostionList> result = new List<MergedWordFilePostionList>();
+            //List<MergedWordFilePostionList> result = new List<MergedWordFilePostionList>();
 
             if (_IndexFile.IndexFileList.Count <= 2)
             {
@@ -642,21 +757,21 @@ namespace Hubble.Core.Store
                     return null;
             }
 
-            foreach (string word in _WordFilePositionTable.Keys)
-            {
-                WordFilePositionList pList = _WordFilePositionTable[word];
-                MergedWordFilePostionList wfpl = new MergedWordFilePostionList(word);
+            //foreach (string word in _WordFilePositionTable.Keys)
+            //{
+            //    WordFilePositionList pList = _WordFilePositionTable[word];
+            //    MergedWordFilePostionList wfpl = new MergedWordFilePostionList(word);
 
-                foreach (IndexFile.FilePosition fp in pList.Values)
-                {
-                    if (fp.Serial >= begin && fp.Serial <= end)
-                    {
-                        wfpl.FilePositionList.AddOnly(new IndexFile.FilePosition(fp.Serial, fp.Position, fp.Length));
-                    }
-                }
+            //    foreach (IndexFile.FilePosition fp in pList.Values)
+            //    {
+            //        if (fp.Serial >= begin && fp.Serial <= end)
+            //        {
+            //            wfpl.FilePositionList.AddOnly(new IndexFile.FilePosition(fp.Serial, fp.Position, fp.Length));
+            //        }
+            //    }
 
-                result.Add(wfpl);
-            }
+            //    result.Add(wfpl);
+            //}
 
             int serial;
 
@@ -669,10 +784,18 @@ namespace Hubble.Core.Store
                 serial = 1;
             }
 
+            List<IndexFile.IndexFileInfo> indexFileInfoForMerge = new List<IndexFile.IndexFileInfo>();
 
+            foreach (IndexFile.IndexFileInfo ifi in _IndexFile.IndexFileList)
+            {
+                if (ifi.Serial >= begin && ifi.Serial <= end)
+                {
+                    indexFileInfoForMerge.Add(ifi);
+                }
+            }
 
-            return new MergeInfos(_IndexFile.GetHeadFileName(serial),
-                _IndexFile.GetIndexFileName(serial), result, begin, end, serial);
+            return new MergeInfos(_IndexFile.GetDDXFileName(serial),
+                _IndexFile.GetIndexFileName(serial), indexFileInfoForMerge, begin, end, serial);
         }
 
         private void ProcessMergeAck(int evt, MessageQueue.MessageFlag flag, object data)
@@ -687,8 +810,12 @@ namespace Hubble.Core.Store
             {
                 string fileName;
 
-                fileName = _IndexFile.IndexDir + GetHeadFileName(serial);
+                fileName = _IndexFile.IndexDir + GetDDXFileName(serial);
+                
+                //Close DDX file of this serial
+                _IndexFile.CloseSerial(serial);
 
+                //Delete DDX File 
                 while (true)
                 {
                     try
@@ -772,43 +899,43 @@ namespace Hubble.Core.Store
                 throw e;
             }
 
-            foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
-            {
-                //WordFilePositionList pList = mfp.FilePostionList;
+            //foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
+            //{
+            //    //WordFilePositionList pList = mfp.FilePostionList;
 
-                WordFilePositionList pList = _WordFilePositionTable[mfp.Word];
+            //    WordFilePositionList pList = _WordFilePositionTable[mfp.Word];
 
-                if (pList == null)
-                {
-                    continue;
-                }
+            //    if (pList == null)
+            //    {
+            //        continue;
+            //    }
                 
-                int i = 0;
-                bool fst = true;
+            //    int i = 0;
+            //    bool fst = true;
 
-                while (i < pList.Count)
-                {
-                    if (pList[i].Serial >= begin && pList[i].Serial <= end)
-                    {
-                        if (fst)
-                        {
-                            pList[i] = mfp.MergedFilePostion;
-                            fst = false;
-                            i++;
-                        }
-                        else
-                        {
-                            pList.RemoveAt(i);
-                        }
-                    }
-                    else
-                    {
-                        i++;
-                    }
-                }
+            //    while (i < pList.Count)
+            //    {
+            //        if (pList[i].Serial >= begin && pList[i].Serial <= end)
+            //        {
+            //            if (fst)
+            //            {
+            //                pList[i] = mfp.MergedFilePostion;
+            //                fst = false;
+            //                i++;
+            //            }
+            //            else
+            //            {
+            //                pList.RemoveAt(i);
+            //            }
+            //        }
+            //        else
+            //        {
+            //            i++;
+            //        }
+            //    }
 
-                _WordFilePositionTable.Reset(pList.Word, pList.FPList);
-            }
+            //    _WordFilePositionTable.Reset(pList.Word, pList.FPList);
+            //}
 
             _IndexFile.AfterMerge(begin, end, mergeAck.MergedSerial);
         }
@@ -842,7 +969,7 @@ namespace Hubble.Core.Store
 
                         _IndexFile.Collect();
 
-                        PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
+                        //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
                         _IndexFile.ClearWordFilePositionList();
 
                         lock (_LockObj)
@@ -1043,7 +1170,7 @@ MergeAckLoop:
             {
                 _IndexFile.Collect();
 
-                PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
+                //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
                 _IndexFile.ClearWordFilePositionList();
             }
             finally
@@ -1069,7 +1196,8 @@ MergeAckLoop:
             System.Threading.Monitor.Enter(_LockObj);
             try
             {
-                return _WordFilePositionTable.InnerLike(str, type);
+                //return _WordFilePositionTable.InnerLike(str, type);
+                return new List<string>();
             }
             finally
             {
@@ -1082,11 +1210,17 @@ MergeAckLoop:
         {
             //base.Close(millisecondsTimeout);
 
-            _WordFilePositionTable.Clear();
+            //_WordFilePositionTable.Clear();
             _IndexFile.Close();
             _IndexFile = null;
             GC.Collect();
         }
+
+        public string GetDDXFileName(int serialNo)
+        {
+            return _IndexFile.GetDDXFileName(serialNo);
+        }
+
 
         public string GetHeadFileName(int serialNo)
         {
@@ -1102,12 +1236,12 @@ MergeAckLoop:
 
         public void ImportWordFilePositionList(List<IndexFile.WordFilePosition> wordFilePositionList)
         {
-            PatchWordFilePositionTable(wordFilePositionList);
+            //PatchWordFilePositionTable(wordFilePositionList);
         }
 
         public void CollectWordFilePositionList()
         {
-            _WordFilePositionTable.Collect();
+            //_WordFilePositionTable.Collect();
         }
 
         #endregion

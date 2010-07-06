@@ -191,13 +191,22 @@ namespace Hubble.Core.Index
             }
         }
 
-        internal string LastHeadFilePath
+        internal string LastDDXFilePath
         {
             get
             {
-                return _IndexFileProxy.LastHeadFilePath;
+                return _IndexFileProxy.LastDDXFilePath;
             }
         }
+
+
+        //internal string LastHeadFilePath
+        //{
+        //    get
+        //    {
+        //        return _IndexFileProxy.LastHeadFilePath;
+        //    }
+        //}
 
         internal string LastIndexFilePath
         {

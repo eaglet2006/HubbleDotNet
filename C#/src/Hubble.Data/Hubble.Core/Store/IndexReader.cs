@@ -29,7 +29,7 @@ namespace Hubble.Core.Store
         private int _Serial;
         bool _ReadHead;
 
-        System.IO.FileStream _HeadFile;
+        //System.IO.FileStream _HeadFile;
 
         System.IO.Stream _IndexFile;
         //System.IO.FileStream _IndexFile;
@@ -76,8 +76,8 @@ namespace Hubble.Core.Store
 
             if (_ReadHead)
             {
-                _HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Open,
-                     System.IO.FileAccess.Read, System.IO.FileShare.Read);
+                //_HeadFile = new System.IO.FileStream(_HeadFilePath, System.IO.FileMode.Open,
+                //     System.IO.FileAccess.Read, System.IO.FileShare.Read);
             }
 
             //_IndexFile = IndexFileStreamCache.GetIndexFile(_IndexFilePath);
@@ -98,39 +98,39 @@ namespace Hubble.Core.Store
 
         }
 
-        public List<IndexFile.WordFilePosition> GetWordFilePositionList()
-        {
+        //public List<IndexFile.WordFilePosition> GetWordFilePositionList()
+        //{
 
-            List<IndexFile.WordFilePosition> list = new List<IndexFile.WordFilePosition>();
+        //    List<IndexFile.WordFilePosition> list = new List<IndexFile.WordFilePosition>();
 
-            _HeadFile.Seek(0, System.IO.SeekOrigin.Begin);
+        //    _HeadFile.Seek(0, System.IO.SeekOrigin.Begin);
 
-            while (_HeadFile.Position < _HeadFile.Length)
-            {
-                byte[] buf = new byte[sizeof(int)];
+        //    while (_HeadFile.Position < _HeadFile.Length)
+        //    {
+        //        byte[] buf = new byte[sizeof(int)];
 
-                _HeadFile.Read(buf, 0, sizeof(int));
+        //        _HeadFile.Read(buf, 0, sizeof(int));
 
-                int size = BitConverter.ToInt32(buf, 0);
+        //        int size = BitConverter.ToInt32(buf, 0);
 
-                //byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
-                byte[] wordBuf = new byte[size];
-                _HeadFile.Read(wordBuf, 0, size);
+        //        //byte[] wordBuf = new byte[size - sizeof(long) - sizeof(long)];
+        //        byte[] wordBuf = new byte[size];
+        //        _HeadFile.Read(wordBuf, 0, size);
 
-                //_HeadFile.Read(buf, 0, sizeof(long));
-                long position = BitConverter.ToInt64(wordBuf, 0);
+        //        //_HeadFile.Read(buf, 0, sizeof(long));
+        //        long position = BitConverter.ToInt64(wordBuf, 0);
 
-                //_HeadFile.Read(buf, 0, sizeof(long));
-                int length = (int)BitConverter.ToInt64(wordBuf, sizeof(long));
+        //        //_HeadFile.Read(buf, 0, sizeof(long));
+        //        int length = (int)BitConverter.ToInt64(wordBuf, sizeof(long));
 
-                //_HeadFile.Read(wordBuf, 0, wordBuf.Length);
-                string word = Encoding.UTF8.GetString(wordBuf, 2 * sizeof(long), size - 2 * sizeof(long));
+        //        //_HeadFile.Read(wordBuf, 0, wordBuf.Length);
+        //        string word = Encoding.UTF8.GetString(wordBuf, 2 * sizeof(long), size - 2 * sizeof(long));
 
-                list.Add(new IndexFile.WordFilePosition(word, _Serial, position, length));
-            }
+        //        list.Add(new IndexFile.WordFilePosition(word, _Serial, position, length));
+        //    }
 
-            return list;
-        }
+        //    return list;
+        //}
 
 
         public WordDocumentsList GetDocList(long position, long length, int count)
@@ -170,8 +170,8 @@ namespace Hubble.Core.Store
         {
             if (_ReadHead)
             {
-                _HeadFile.Close();
-                _HeadFile = null;
+                //_HeadFile.Close();
+                //_HeadFile = null;
             }
 
             _IndexFile.Close();
@@ -186,7 +186,7 @@ namespace Hubble.Core.Store
         {
             try
             {
-                if (_HeadFile != null)
+                if (_IndexFile != null)
                 {
                     Close();
                 }

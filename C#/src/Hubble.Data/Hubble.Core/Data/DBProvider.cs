@@ -1258,6 +1258,11 @@ namespace Hubble.Core.Data
         {
             if (System.IO.Directory.Exists(optimizeDir))
             {
+                foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.ddx"))
+                {
+                    System.IO.File.Delete(file);
+                }
+
                 foreach (string file in System.IO.Directory.GetFiles(optimizeDir, "*.hdx"))
                 {
                     System.IO.File.Delete(file);
@@ -1273,6 +1278,11 @@ namespace Hubble.Core.Data
         private void DeleteAllFiles(string dir, string optimizeDir)
         {
             InsertProtect.Remove(dir);
+
+            foreach (string file in System.IO.Directory.GetFiles(dir, "*.ddx"))
+            {
+                System.IO.File.Delete(file);
+            }
 
             foreach (string file in System.IO.Directory.GetFiles(dir, "*.hdx"))
             {
@@ -2597,7 +2607,7 @@ namespace Hubble.Core.Data
 
             foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
             {
-                InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastHeadFilePath);
+                InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastDDXFilePath);
                 InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastIndexFilePath);
                 iIndex.CanMerge = false;
             }
@@ -2628,7 +2638,7 @@ namespace Hubble.Core.Data
 
                 foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
                 {
-                    InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastHeadFilePath);
+                    InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastDDXFilePath);
                     InsertProtect.InsertProtectInfo.IndexFiles.Add(iIndex.LastIndexFilePath);
                     iIndex.CanMerge = false;
                 }
