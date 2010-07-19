@@ -110,9 +110,10 @@ namespace Hubble.Core.Store
                     {
                         System.IO.MemoryStream m = new System.IO.MemoryStream();
 
-                        _IndexFileProxy.MergeRate = 0;
+                        _IndexFileProxy.MergeProgress = 0;
 
-                        int count = mergeInfos.Count;
+                        //int count = mergeInfos.Count;
+                        long totalFileLength = mergeInfos.TotalFileLength;
 
                         int wplIndex = 0;
 
@@ -120,12 +121,15 @@ namespace Hubble.Core.Store
                         {
                             wplIndex++;
 
-                            _IndexFileProxy.MergeRate = (double)wplIndex / (double)count;
+                            if ((wplIndex % 1000) == 0)
+                            {
+                                _IndexFileProxy.MergeProgress = (double)mergeInfos.FileLengthFinished / (double)totalFileLength;
+                            }
 
-                            if (_IndexFileProxy.MergeRate > 100)
+                            if (_IndexFileProxy.MergeProgress > 1)
                             {
                                 //Because of the count is approximate number
-                                _IndexFileProxy.MergeRate = 100;
+                                _IndexFileProxy.MergeProgress = 1;
                             }
 
                             List<Entity.MergeStream> mergeStreamList = new List<Hubble.Core.Entity.MergeStream>();
@@ -158,7 +162,6 @@ namespace Hubble.Core.Store
                                 fs.Position = fp.Position;
                             }
 
-
                             if (mergeStreamList.Count > 0)
                             {
                                 long position = indexFS.Position;
@@ -173,7 +176,7 @@ namespace Hubble.Core.Store
                             }
                         }
 
-                        _IndexFileProxy.MergeRate = 100;
+                        _IndexFileProxy.MergeProgress = 1;
 
                         mergeInfos.Close();
                     }
@@ -298,7 +301,7 @@ namespace Hubble.Core.Store
                     {
                         System.IO.MemoryStream m = new System.IO.MemoryStream();
 
-                        _IndexFileProxy.MergeRate = 0;
+                        _IndexFileProxy.MergeProgress = 0;
 
                         int count = mergeInfos.Count;
 
@@ -308,7 +311,7 @@ namespace Hubble.Core.Store
                         {
                             wplIndex++;
 
-                            _IndexFileProxy.MergeRate = (double)wplIndex / (double)count;
+                            _IndexFileProxy.MergeProgress = (double)wplIndex / (double)count;
 
                             List<Entity.MergeStream> mergeStreamList = new List<Hubble.Core.Entity.MergeStream>();
 

@@ -285,12 +285,21 @@ namespace Hubble.Core.SFQL.Parse
                 query.DBProvider = _DBProvider;
                 query.TabIndex = _DBProvider.GetField(fieldName).TabIndex;
 
-                query.QueryWords = queryWords;
+                try
+                {
+                    _DBProvider.MergeLock.Enter(Hubble.Framework.Threading.Lock.Mode.Share);
 
-                Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
+                    query.QueryWords = queryWords;
+
+                    Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);
 
 
-                return searcher.Search();
+                    return searcher.Search();
+                }
+                finally
+                {
+                    _DBProvider.MergeLock.Leave();
+                }
             }
 
         }

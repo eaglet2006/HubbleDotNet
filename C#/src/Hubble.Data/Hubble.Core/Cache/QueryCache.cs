@@ -162,7 +162,14 @@ namespace Hubble.Core.Cache
             {
                 lock (_LockObj)
                 {
-                    _CacheFileFolder = Hubble.Framework.IO.Path.AppendDivision(value, '\\');
+                    if (value == null)
+                    {
+                        _CacheFileFolder = null;
+                    }
+                    else
+                    {
+                        _CacheFileFolder = Hubble.Framework.IO.Path.AppendDivision(value, '\\');
+                    }
 
                     if (_CacheFileFolder != null)
                     {

@@ -1480,6 +1480,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             //Collect
+
             if (_NeedCollect)
             {
                 _NeedCollect = false;
@@ -1494,11 +1495,20 @@ namespace Hubble.Core.SFQL.Parse
                     affectedCount += docs.Count;
 
                     dbProvider.Insert(docs);
+
                     //dbProvider.Collect();
 
+                    if (dbProvider.TooManyIndexFiles)
+                    {
+                        result.AddPrintMessage("TooManyIndexFiles");
+                    }
                 }
 
                 result.AddPrintMessage(string.Format("({0} Row(s) affected)", affectedCount));
+
+
+
+
             }
 
             //Union select

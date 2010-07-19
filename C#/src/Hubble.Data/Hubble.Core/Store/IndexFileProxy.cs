@@ -377,6 +377,38 @@ namespace Hubble.Core.Store
 
             int _Count;
 
+            long _TotalFileLength;
+
+            /// <summary>
+            /// Total length of all ddx files that need be merged.
+            /// </summary>
+            public long TotalFileLength
+            {
+                get
+                {
+                    return _TotalFileLength;
+                }
+            }
+
+            /// <summary>
+            /// Get file length that has been finished merge.
+            /// </summary>
+            public long FileLengthFinished
+            {
+                get
+                {
+                    long length = 0;
+
+                    foreach (DDXFile ddxFile in _DDXFiles)
+                    {
+                        length += ddxFile.CurrentFilePosition;
+                    }
+
+                    return length;
+                }
+            }
+
+
             public int Count
             {
                 get
@@ -394,6 +426,8 @@ namespace Hubble.Core.Store
 
                 foreach (IndexFile.IndexFileInfo ifi in _IndexFileListForMerge)
                 {
+                    _TotalFileLength += ifi.DDXFile.FileLength;
+
                     if (_Count < ifi.DDXFile.GetTotalWords())
                     {
                         _Count = ifi.DDXFile.GetTotalWords();
@@ -490,10 +524,12 @@ namespace Hubble.Core.Store
 
         private object _LockObj = new object();
 
-        private object _MergeRateLock = new object();
-        private double _MergeRate = -1;
+        private object _MergeProgressLock = new object();
+        private double _MergeProgress = -1;
 
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
+
+        private DBProvider _DBProvider;
 
         private int InnerWordTableSize
         {
@@ -531,21 +567,24 @@ namespace Hubble.Core.Store
         //    }
         //}
 
-        internal double MergeRate
+        /// <summary>
+        /// get or set the progress of Merge
+        /// </summary>
+        internal double MergeProgress
         {
             get
             {
-                lock (_MergeRateLock)
+                lock (_MergeProgressLock)
                 {
-                    return _MergeRate;
+                    return _MergeProgress;
                 }
             }
 
             set
             {
-                lock (_MergeRateLock)
+                lock (_MergeProgressLock)
                 {
-                    _MergeRate = value;
+                    _MergeProgress = value;
                 }
             }
         }
@@ -677,7 +716,214 @@ namespace Hubble.Core.Store
 
         //}
 
+
+        internal const int MaxIndexFilesNeedMerge = 64;
+        internal const int MinIndexFilesNeedMerge = 32;
+        const int MergeThreshold = 10;
+
+        /// <summary>
+        /// Get the serial number range for merge
+        /// </summary>
+        /// <param name="option">Merge option</param>
+        /// <param name="serial">Merge to this serial. This is dest serial number.</param>
+        /// <param name="begin">begin serial number need be merged</param>
+        /// <param name="end">end serial number need be merged</param>
+        /// <returns>If don't need be merged, return false</returns>
+        private bool GetMergeRange(OptimizationOption option,
+            out int serial, out int begin, out int end)
+        {
+            serial = 0;
+            begin = 0;
+            end = 0;
+
+            if (_IndexFile.IndexFileList.Count <= 2)
+            {
+                if (_IndexFile.IndexFileList.Count <= 1)
+                {
+                    //If only one index file, don't need be merged.
+                    return false;
+                }
+                else if (option != OptimizationOption.Minimum)
+                {
+                    //If only two index files, and it is not Minimum option. don't need be merged.
+                    return false;
+                }
+            }
+
+            long lastFileSize = long.MaxValue;
+
+            int i;
+
+            for (i = _IndexFile.IndexFileList.Count - 1; i >= 0; i--)
+            {
+                if (lastFileSize == long.MaxValue)
+                {
+                    //last index file
+                    lastFileSize = _IndexFile.IndexFileList[i].Size;
+                    continue;
+                }
+
+                if (lastFileSize * MergeThreshold < _IndexFile.IndexFileList[i].Size)
+                {
+                    if (i < MinIndexFilesNeedMerge)
+                    {
+                        break;
+                    }
+                }
+
+                lastFileSize = _IndexFile.IndexFileList[i].Size;
+            }
+
+            if (i < 0)
+            {
+                if (_IndexFile.IndexFileList.Count < MaxIndexFilesNeedMerge && option == OptimizationOption.Speedy)
+                {
+                    return false;
+                }
+                else
+                {
+                    begin = _IndexFile.IndexFileList[0].Serial;
+                    end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                    serial = 0;
+                }
+            }
+            else
+            {
+                switch (option)
+                {
+                    case OptimizationOption.Speedy:
+                        {
+                            if (_IndexFile.IndexFileList.Count < MaxIndexFilesNeedMerge)
+                            {
+                                return false;
+                            }
+
+                            i++;
+
+                            if (i >= MinIndexFilesNeedMerge)
+                            {
+                                lastFileSize = long.MinValue;
+
+                                int j;
+                                for (j = 0; j < i ; j++)
+                                {
+                                    if (j == 0)
+                                    {
+                                        //firs index file
+                                        lastFileSize = _IndexFile.IndexFileList[j].Size;
+                                        continue;
+                                    }
+
+                                    if (lastFileSize > _IndexFile.IndexFileList[j].Size * MergeThreshold)
+                                    {
+                                        break;
+                                    }
+
+                                    lastFileSize = _IndexFile.IndexFileList[j].Size;
+                                }
+
+                                if (j >= i - 1)
+                                {
+                                    j = 0;
+                                }
+
+                                begin = _IndexFile.IndexFileList[j].Serial;
+                                end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                                serial = begin;
+
+                                if (j > 0)
+                                {
+                                    serial = _IndexFile.IndexFileList[j-1].Serial + 1;
+                                }
+                            }
+                            else
+                            {
+                                begin = _IndexFile.IndexFileList[i].Serial;
+                                end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                                serial = begin;
+
+                                if (i > 0)
+                                {
+                                    serial = _IndexFile.IndexFileList[i - 1].Serial + 1;
+                                }
+                            }
+                        }
+                        break;
+                    case OptimizationOption.Middle:
+                        {
+                            long sizeSumAfterFirst = 0;
+
+                            for (int j = 1; j < _IndexFile.IndexFileList.Count; j++)
+                            {
+                                sizeSumAfterFirst += _IndexFile.IndexFileList[j].Size;
+                            }
+
+                            if (_IndexFile.IndexFileList[0].Size > sizeSumAfterFirst)
+                            {
+                                //Fisrt index large then the others
+
+                                begin = _IndexFile.IndexFileList[1].Serial;
+                                end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                                //serial = begin;
+                                serial = _IndexFile.IndexFileList[0].Serial + 1;
+                            }
+                            else
+                            {
+                                begin = _IndexFile.IndexFileList[0].Serial;
+                                end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                                serial = 0;
+                            }
+                        }
+                        break;
+                    case OptimizationOption.Minimum:
+                        {
+                            begin = _IndexFile.IndexFileList[0].Serial;
+                            end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;
+                            serial = 0;
+                        }
+                        break;
+                    default:
+                        return false;
+                }
+
+
+            }
+
+
+            return true;
+        }
+
+
+
         private object ProcessGetFilePositionList(int evt, MessageQueue.MessageFlag flag, object data)
+        {
+            OptimizationOption option = (OptimizationOption)data;
+
+            int begin;
+            int end;
+            int serial;
+
+            if (!GetMergeRange(option, out serial, out begin, out end))
+            {
+                return null;
+            }
+
+            List<IndexFile.IndexFileInfo> indexFileInfoForMerge = new List<IndexFile.IndexFileInfo>();
+
+            foreach (IndexFile.IndexFileInfo ifi in _IndexFile.IndexFileList)
+            {
+                if (ifi.Serial >= begin && ifi.Serial <= end)
+                {
+                    indexFileInfoForMerge.Add(ifi);
+                }
+            }
+
+            return new MergeInfos(_IndexFile.GetDDXFileName(serial),
+                _IndexFile.GetIndexFileName(serial), indexFileInfoForMerge, begin, end, serial);
+        }
+
+
+        private object ProcessGetFilePositionList08(int evt, MessageQueue.MessageFlag flag, object data)
         {
             OptimizationOption option = (OptimizationOption)data;
 
@@ -800,144 +1046,153 @@ namespace Hubble.Core.Store
 
         private void ProcessMergeAck(int evt, MessageQueue.MessageFlag flag, object data)
         {
-            MergeAck mergeAck = (MergeAck)data;
-
-            int begin = mergeAck.BeginSerial;
-            int end = mergeAck.EndSerial;
-            int time = 0;
-
-            for (int serial = begin; serial <= end; serial++)
+            try
             {
-                string fileName;
+                _DBProvider.MergeLock.Enter(Lock.Mode.Mutex);
 
-                fileName = _IndexFile.IndexDir + GetDDXFileName(serial);
-                
-                //Close DDX file of this serial
-                _IndexFile.CloseSerial(serial);
+                MergeAck mergeAck = (MergeAck)data;
 
-                //Delete DDX File 
-                while (true)
+                int begin = mergeAck.BeginSerial;
+                int end = mergeAck.EndSerial;
+                int time = 0;
+
+                for (int serial = begin; serial <= end; serial++)
                 {
-                    try
-                    {
-                        if (System.IO.File.Exists(fileName))
-                        {
-                            System.IO.File.Delete(fileName);
-                        }
+                    string fileName;
 
-                        break;
-                    }
-                    catch
+                    fileName = _IndexFile.IndexDir + GetDDXFileName(serial);
+
+                    //Close DDX file of this serial
+                    _IndexFile.CloseSerial(serial);
+
+                    //Delete DDX File 
+                    while (true)
                     {
-                        if (time < 40)
+                        try
                         {
-                            System.Threading.Thread.Sleep(20);
-                            time++;
+                            if (System.IO.File.Exists(fileName))
+                            {
+                                System.IO.File.Delete(fileName);
+                            }
+
+                            break;
                         }
-                        else
+                        catch
                         {
-                            throw;
+                            if (time < 40)
+                            {
+                                System.Threading.Thread.Sleep(20);
+                                time++;
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                    }
+
+
+                    fileName = _IndexFile.IndexDir + GetIndexFileName(serial);
+                    time = 0;
+
+                    while (true)
+                    {
+                        try
+                        {
+                            if (System.IO.File.Exists(fileName))
+                            {
+                                System.IO.File.Delete(fileName);
+                            }
+
+                            break;
+                        }
+                        catch
+                        {
+                            if (time < 40)
+                            {
+                                System.Threading.Thread.Sleep(20);
+                                time++;
+                            }
+                            else
+                            {
+                                throw;
+                            }
                         }
                     }
                 }
 
+                System.Threading.Thread.Sleep(20);
 
-                fileName = _IndexFile.IndexDir + GetIndexFileName(serial);
-                time = 0;
-
-                while (true)
+                try
                 {
-                    try
-                    {
-                        if (System.IO.File.Exists(fileName))
-                        {
-                            System.IO.File.Delete(fileName);
-                        }
-
-                        break;
-                    }
-                    catch
-                    {
-                        if (time < 40)
-                        {
-                            System.Threading.Thread.Sleep(20);
-                            time++;
-                        }
-                        else
-                        {
-                            throw;
-                        }
-                    }
+                    System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeHeadFileName,
+                        _IndexFile.IndexDir + mergeAck.MergeHeadFileName);
                 }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
+                        begin, end, _IndexFile.IndexDir + mergeAck.MergeHeadFileName),
+                        e);
+                    throw e;
+                }
+
+                try
+                {
+                    System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeIndexFileName,
+                        _IndexFile.IndexDir + mergeAck.MergeIndexFileName);
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
+                        begin, end, _IndexFile.IndexDir + mergeAck.MergeIndexFileName),
+                        e);
+                    throw e;
+                }
+
+                //foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
+                //{
+                //    //WordFilePositionList pList = mfp.FilePostionList;
+
+                //    WordFilePositionList pList = _WordFilePositionTable[mfp.Word];
+
+                //    if (pList == null)
+                //    {
+                //        continue;
+                //    }
+
+                //    int i = 0;
+                //    bool fst = true;
+
+                //    while (i < pList.Count)
+                //    {
+                //        if (pList[i].Serial >= begin && pList[i].Serial <= end)
+                //        {
+                //            if (fst)
+                //            {
+                //                pList[i] = mfp.MergedFilePostion;
+                //                fst = false;
+                //                i++;
+                //            }
+                //            else
+                //            {
+                //                pList.RemoveAt(i);
+                //            }
+                //        }
+                //        else
+                //        {
+                //            i++;
+                //        }
+                //    }
+
+                //    _WordFilePositionTable.Reset(pList.Word, pList.FPList);
+                //}
+
+                _IndexFile.AfterMerge(begin, end, mergeAck.MergedSerial);
             }
-
-            System.Threading.Thread.Sleep(20);
-
-            try
+            finally
             {
-                System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeHeadFileName,
-                    _IndexFile.IndexDir + mergeAck.MergeHeadFileName);
+                _DBProvider.MergeLock.Leave();
             }
-            catch (Exception e)
-            {
-                Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
-                    begin, end, _IndexFile.IndexDir + mergeAck.MergeHeadFileName),
-                    e);
-                throw e;
-            }
-
-            try
-            {
-                System.IO.File.Move(_IndexFile.IndexDir + @"Optimize\" + mergeAck.MergeIndexFileName,
-                    _IndexFile.IndexDir + mergeAck.MergeIndexFileName);
-            }
-            catch (Exception e)
-            {
-                Global.Report.WriteErrorLog(string.Format("ProcessMergeAck begin = {0} end = {1} dest file name:{2}",
-                    begin, end, _IndexFile.IndexDir + mergeAck.MergeIndexFileName),
-                    e);
-                throw e;
-            }
-
-            //foreach (MergeAck.MergeFilePosition mfp in mergeAck.MergeFilePositionList)
-            //{
-            //    //WordFilePositionList pList = mfp.FilePostionList;
-
-            //    WordFilePositionList pList = _WordFilePositionTable[mfp.Word];
-
-            //    if (pList == null)
-            //    {
-            //        continue;
-            //    }
-                
-            //    int i = 0;
-            //    bool fst = true;
-
-            //    while (i < pList.Count)
-            //    {
-            //        if (pList[i].Serial >= begin && pList[i].Serial <= end)
-            //        {
-            //            if (fst)
-            //            {
-            //                pList[i] = mfp.MergedFilePostion;
-            //                fst = false;
-            //                i++;
-            //            }
-            //            else
-            //            {
-            //                pList.RemoveAt(i);
-            //            }
-            //        }
-            //        else
-            //        {
-            //            i++;
-            //        }
-            //    }
-
-            //    _WordFilePositionTable.Reset(pList.Word, pList.FPList);
-            //}
-
-            _IndexFile.AfterMerge(begin, end, mergeAck.MergedSerial);
         }
 
         private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
@@ -1006,19 +1261,24 @@ namespace Hubble.Core.Store
         }
 
 
-        public IndexFileProxy(string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode)
-            : this(path, fieldName, false, indexMode)
+        public IndexFileProxy(string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode, 
+            DBProvider dbProvider)
+            : this(path, fieldName, false, indexMode, dbProvider)
         {
 
         }
 
-        public IndexFileProxy(string path, string fieldName, bool rebuild, Hubble.Core.Data.Field.IndexMode indexMode)
+        public IndexFileProxy(string path, string fieldName, 
+            bool rebuild, Hubble.Core.Data.Field.IndexMode indexMode,
+            DBProvider dbProvider)
             : base()
         {
             _IndexMode = indexMode;
             //OnMessageEvent = ProcessMessage;
-            _IndexFile = new IndexFile(path, this);
+            _IndexFile = new IndexFile(path, this, this);
             _IndexFile.Create(fieldName, rebuild, indexMode);
+
+            _DBProvider = dbProvider;
 
             //this.Start();
         }
@@ -1112,8 +1372,40 @@ MergeAckLoop:
             //ASendMessage((int)Event.Add, new WordDocList(word, docList));
         }
 
+        public System.IO.MemoryStream GetIndexBuf(int serial, long position, long length)
+        {
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return null;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                return _IndexFile.GetIndexBuf(serial, position, length);
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+        }
 
         public Hubble.Core.Index.WordIndexReader GetWordIndex(GetInfo getInfo)
+        {
+            return GetWordIndex(getInfo, false);
+        }
+
+        /// <summary>
+        /// Get word index reader
+        /// </summary>
+        /// <param name="getInfo">get info</param>
+        /// <param name="onlyStepDocIndex">only return step doc index</param>
+        /// <returns>WordIndexReader</returns>
+        public Hubble.Core.Index.WordIndexReader GetWordIndex(GetInfo getInfo, bool onlyStepDocIndex)
         {
             if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
             {
@@ -1134,8 +1426,16 @@ MergeAckLoop:
                     return null;
                 }
 
-                return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
-                    getInfo.DBProvider, getInfo.MaxReturnCount);
+                if (onlyStepDocIndex)
+                {
+                    return _IndexFile.GetWordIndexWithWordStepDocIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                        getInfo.DBProvider, getInfo.MaxReturnCount);
+                }
+                else
+                {
+                    return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+                        getInfo.DBProvider, getInfo.MaxReturnCount);
+                }
             }
             finally
             {
@@ -1154,6 +1454,28 @@ MergeAckLoop:
             //}
         }
 
+        /// <summary>
+        /// Too many index files.
+        /// Need to pause index process and optimize the index.
+        /// </summary>
+        /// <returns></returns>
+        public bool TooManyIndexFiles()
+        {
+            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            {
+                return false;
+            }
+
+            try
+            {
+                return _IndexFile.IndexFileList.Count > MaxIndexFilesNeedMerge + MinIndexFilesNeedMerge;
+            }
+            finally
+            {
+                System.Threading.Monitor.Exit(_LockObj);
+            }
+
+        }
         public void Collect()
         {
             if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))

@@ -33,7 +33,7 @@ namespace Hubble.Core.Store
         Contains = 2,
     }
 
-    class WordFilePositionList 
+    public class WordFilePositionList 
     {
         List<IndexFile.FilePosition> _FPList;
  

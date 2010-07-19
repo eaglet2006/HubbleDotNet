@@ -45,6 +45,8 @@ namespace Hubble.Core.Index
         //delete
         DeleteProvider _DelProvider = null;
 
+        IndexReader _IndexReader = null;
+
         #endregion
 
         #region Private properties
@@ -89,7 +91,7 @@ namespace Hubble.Core.Index
             {
                 lock (this)
                 {
-                    return _ListForReader.Count;
+                    return _RelDocCount;
                 }
             }
         }
@@ -142,8 +144,6 @@ namespace Hubble.Core.Index
 
         #endregion
 
-        #region internal methods
-
         //internal void WordUpdate(string word, List<DocumentPositionList> docList)
         //{
         //    lock (this)
@@ -153,7 +153,7 @@ namespace Hubble.Core.Index
         //    }
         //}
 
-        internal WordIndexReader(string word, WordDocumentsList docList, int totalDocs,
+        public WordIndexReader(string word, WordDocumentsList docList, int totalDocs,
             Data.DBProvider dbProvider)
         {
             _Word = word;
@@ -168,7 +168,35 @@ namespace Hubble.Core.Index
             //UpdateDocScoreList();
         }
 
-        #endregion
+        public WordIndexReader(string word, WordStepDocIndex wordStepDocIndex, int totalDocs,
+            Data.DBProvider dbProvider, IndexFileProxy indexProxy)
+        {
+            _Word = word;
+            _IndexReader = new IndexReader(wordStepDocIndex, indexProxy);
+            _DBProvider = dbProvider;
+            _DelProvider = _DBProvider.DelProvider;
+            //_TabIndex = tabIndex;
+            _TotalDocs = totalDocs;
+            _WordCountSum = wordStepDocIndex.WordCountSum;
+            _RelDocCount = wordStepDocIndex.RelDocCount;
+
+            //UpdateDocScoreList();
+        }
+
+        public void Reset()
+        {
+            _IndexReader.Reset();
+        }
+
+        public DocumentPositionList Get(int docid)
+        {
+            return _IndexReader.Get(docid);
+        }
+
+        public DocumentPositionList GetNext()
+        {
+            return _IndexReader.GetNext();
+        }
 
         public override string ToString()
         {

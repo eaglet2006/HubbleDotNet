@@ -103,11 +103,19 @@ namespace Hubble.Core.Index
 
         #region Internal properties
 
+        internal bool TooManyIndexFiles
+        {
+            get
+            {
+                return _IndexFileProxy.TooManyIndexFiles();
+            }
+        }
+
         internal double MergeRate
         {
             get
             {
-                return _IndexFileProxy.MergeRate;
+                return _IndexFileProxy.MergeProgress;
             }
         }
 
@@ -235,7 +243,7 @@ namespace Hubble.Core.Index
 
         private void InitFileStore(string path, string fieldName, bool rebuild)
         {
-            _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild, _IndexMode);
+            _IndexFileProxy = new IndexFileProxy(path, fieldName, rebuild, _IndexMode, _DBProvider);
         }
 
         private void StoreIndexToFile()
@@ -494,8 +502,12 @@ namespace Hubble.Core.Index
 
         #region Public Metheds
 
-
         public WordIndexReader GetWordIndex(string word, bool orderByScore)
+        {
+            return GetWordIndex(word, orderByScore, false);
+        }
+
+        public WordIndexReader GetWordIndex(string word, bool orderByScore, bool onlyStepDocIndex)
         {
             lock (this)
             {
@@ -509,11 +521,11 @@ namespace Hubble.Core.Index
 
                 if (orderByScore)
                 {
-                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, _DBProvider.MaxReturnCount));
+                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, _DBProvider.MaxReturnCount), onlyStepDocIndex);
                 }
                 else
                 {
-                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, -1));
+                    return _IndexFileProxy.GetWordIndex(new IndexFileProxy.GetInfo(word, DocumentCount, _DBProvider, -1), onlyStepDocIndex);
                 }
             }
         }

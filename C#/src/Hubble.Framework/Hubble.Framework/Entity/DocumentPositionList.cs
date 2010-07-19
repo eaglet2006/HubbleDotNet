@@ -28,7 +28,9 @@ namespace Hubble.Core.Entity
     public class MergeStream
     {
         public System.IO.Stream Stream;
+        public int Count;
         public long Length;
+        public List<DocumentPosition> SkipDocIndex = null;
 
         public MergeStream(System.IO.Stream stream, long length)
         {
@@ -36,6 +38,24 @@ namespace Hubble.Core.Entity
             Length = length;
         }
     }
+
+    public struct DocumentPosition
+    {
+        public int DocId;
+
+        /// <summary>
+        /// Position is the relational position to the 
+        /// first byte of the index.
+        /// </summary>
+        public int Position;
+
+        public DocumentPosition(int docid, int position)
+        {
+            DocId = docid;
+            Position = position;
+        }
+    }
+
 
     /// <summary>
     /// This class record all the position for one word in one document.
@@ -258,12 +278,62 @@ namespace Hubble.Core.Entity
             return Deserialize(stream, ref count, simple, out wordCountSum);
         }
 
+        static public DocumentPositionList GetNextDocumentPositionList(ref int docId, System.IO.Stream stream, bool simple)
+        {
+            if (docId < 0)
+            {
+                docId = VInt.sReadFromStream(stream);
+
+                int count = VInt.sReadFromStream(stream);
+
+                if (!simple)
+                {
+                    int firstPosition = VInt.sReadFromStream(stream);
+                    return new DocumentPositionList(docId, count / 8, (Int16)(count % 8), firstPosition);
+                }
+                else
+                {
+                    return new DocumentPositionList(docId, count / 8, (Int16)(count % 8));
+                }
+            }
+            else
+            {
+                docId = VInt.sReadFromStream(stream) + docId;
+                int count = VInt.sReadFromStream(stream);
+                int docCount = (Int16)(count / 8);
+
+                if (docCount >= 32768)
+                {
+                    docCount = 32767;
+                }
+
+                if (!simple)
+                {
+                    int firstPosition = VInt.sReadFromStream(stream);
+                    return new DocumentPositionList(docId, docCount, (Int16)(count % 8), firstPosition);
+                }
+                else
+                {
+                    return new DocumentPositionList(docId, docCount, (Int16)(count % 8));
+                }
+            }
+        }
+
 
         static public DocumentPositionList[] Deserialize(System.IO.Stream stream, ref int documentsCount, bool simple, out long wordCountSum)
         {
             wordCountSum = 0;
 
             int docsCount = VInt.sReadFromStream(stream);
+
+            if (docsCount == 0)
+            {
+                //This index has skip doc index
+                DeserializeSkipDocIndex(stream, true);
+
+                docsCount = VInt.sReadFromStream(stream);
+            }
+
             int relDocCount = docsCount;
 
             int lastDocId = VInt.sReadFromStream(stream);
@@ -324,6 +394,84 @@ namespace Hubble.Core.Entity
             return result;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream">stream of the index</param>
+        /// <param name="skipBeginByte">if it is true, skip the first byte 0, sometime this byte has been read.</param>
+        /// <returns></returns>
+        static public List<DocumentPosition> DeserializeSkipDocIndex(System.IO.Stream stream, bool skipBeginByte)
+        {
+            int count;
+
+            return DeserializeSkipDocIndex(stream, skipBeginByte, out count);
+        }
+
+        /// <summary>
+        /// Get skip document index.
+        /// This index mark the document id and position skipping every 1000 records or more 
+        /// inside the index buffer.
+        /// </summary>
+        /// <param name="stream">stream of the index</param>
+        /// <param name="count">if has stepDocIndx, return count of stepDocIndex, else return count of the document records of this index</param>
+        /// <param name="skipBeginByte">if it is true, skip the first byte 0, sometime this byte has been read.</param>
+        /// <returns></returns>
+        static public List<DocumentPosition> DeserializeSkipDocIndex(System.IO.Stream stream, bool skipBeginByte, out int count)
+        {
+            if (!skipBeginByte)
+            {
+                count = VInt.sReadFromStream(stream); //First item is the count of the list;
+
+                if (count > 0)
+                {
+                    //if hasn't stepDocIndex, count > 0
+                    return null;
+                }
+            }
+
+            List<DocumentPosition> result = new List<DocumentPosition>();
+
+            count = VInt.sReadFromStream(stream); //First item is the count of the list;
+
+            int docId = 0;
+            int position = 0; // Position is the relational position to the first byte of the index.
+
+            for (int i = 0; i < count; i++)
+            {
+                docId += VInt.sReadFromStream(stream);
+                position += VInt.sReadFromStream(stream);
+
+                result.Add(new DocumentPosition(docId, position));
+            }
+
+            return result;
+        }
+
+        static private void SerializeSkipDocIndex(System.IO.Stream stream, List<DocumentPosition> skipDocIndex)
+        {
+            if (skipDocIndex.Count <= 0)
+            {
+                return;
+            }
+
+            VInt.sWriteToStream(0, stream); //Begin flag
+            VInt.sWriteToStream(skipDocIndex.Count, stream); //Write the count of skip doc index's items
+
+            int docId = 0;
+            int position = 0;
+
+            for (int i = 0; i < skipDocIndex.Count; i++)
+            {
+                VInt.sWriteToStream(skipDocIndex[i].DocId - docId, stream);
+
+                docId = skipDocIndex[i].DocId;
+
+                VInt.sWriteToStream(skipDocIndex[i].Position - position, stream);
+
+                position = skipDocIndex[i].Position;
+            }
+        }
+
         static public void Merge(IList<MergeStream> srcList, System.IO.Stream destStream)
         {
             List<long> srcEndPositionList = new List<long>();
@@ -335,21 +483,43 @@ namespace Hubble.Core.Entity
 
             int docsCount = 0;
 
+            List<DocumentPosition> skipDocIndex = new List<DocumentPosition>();
+
             foreach (MergeStream ms in srcList)
             {
-                docsCount += VInt.sReadFromStream(ms.Stream);
+                int count = VInt.sReadFromStream(ms.Stream);
+                ms.Count = count;
+
+                if (count == 0)
+                {
+                    //This index has skip doc index
+                    ms.SkipDocIndex = (DeserializeSkipDocIndex(ms.Stream, true));
+
+                    count = VInt.sReadFromStream(ms.Stream);
+                }
+
+                docsCount += count;
             }
 
-            //Write docs count
-            VInt.sWriteToStream(docsCount, destStream);
-
             int lastDocId = -1;
+
+            System.IO.Stream originalDestStream = destStream;
+
+            destStream = new System.IO.MemoryStream(8192);
+
+            int remainCount = 0; //remain count does not build in skip doc index
 
             for (int i = 0; i < srcList.Count; i++)
             {
                 System.IO.Stream src = srcList[i].Stream;
 
+                long srcFirstDocIdPosition = src.Position;
+
                 int firstDocId = VInt.sReadFromStream(src);
+
+                long srcFirstDocIdLength = src.Position - srcFirstDocIdPosition;
+
+                long destFirstDocIdPosition = destStream.Position;
 
                 if (lastDocId < 0)
                 {
@@ -359,6 +529,39 @@ namespace Hubble.Core.Entity
                 {
                     VInt.sWriteToStream(firstDocId - lastDocId, destStream);
                 }
+
+                long destFirstDocIdLength = destStream.Position - destFirstDocIdPosition;
+
+                int delta = (int)(destFirstDocIdLength - srcFirstDocIdLength);
+
+                //build skip doc index
+                if (srcList[i].SkipDocIndex != null)
+                {
+                    //Merge skip doc index
+                    if (i > 0)
+                    {
+                        skipDocIndex.Add(new DocumentPosition(lastDocId, (int)destFirstDocIdPosition));
+                    }
+
+                    foreach (DocumentPosition dp in srcList[i].SkipDocIndex)
+                    {
+                        skipDocIndex.Add(new DocumentPosition(dp.DocId,
+                            (int)(destFirstDocIdPosition + dp.Position + delta)));
+                    }
+                }
+                else
+                {
+                    if (remainCount > 1024)
+                    {
+                        skipDocIndex.Add(new DocumentPosition(lastDocId, (int)destFirstDocIdPosition));
+                        remainCount = 0;
+                    }
+                    else
+                    {
+                        remainCount += srcList[i].Count;
+                    }
+                }
+
 
                 byte[] buf = new byte[8192];
                 int remain = (int)(srcEndPositionList[i] - sizeof(int) - src.Position);
@@ -382,8 +585,35 @@ namespace Hubble.Core.Entity
                 lastDocId = BitConverter.ToInt32(lastDocIdBuf, 0);
             }
 
+            //Write last doc id
             destStream.Write(BitConverter.GetBytes(lastDocId), 0, sizeof(int));
 
+            //Write skip doc index
+            if (skipDocIndex.Count > 0)
+            {
+                SerializeSkipDocIndex(originalDestStream, skipDocIndex);
+            }
+
+            //Write docs count
+            VInt.sWriteToStream(docsCount, originalDestStream);
+
+
+            //Write memory buffer to original dest stream
+            destStream.Position = 0;
+
+            byte[] buffer = new byte[8192];
+            int c = 0;
+
+            do
+            {
+                c = destStream.Read(buffer, 0, buffer.Length);
+
+                if (c > 0)
+                {
+                    originalDestStream.Write(buffer, 0, c);
+                }
+
+            } while (c > 0);
         }
 
         static public void Merge(System.IO.Stream src1, long src1Length, System.IO.Stream src2, long src2Length, System.IO.Stream destStream)

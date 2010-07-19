@@ -148,6 +148,8 @@ namespace QueryAnalyzer
                     checkBoxRebuildWholeTable.Checked = true;
                     checkBoxRebuildWholeTable.Enabled = false;
                 }
+
+                labelOptimizeProgress.Visible = false;
             }
             catch (Exception e1)
             {
@@ -403,6 +405,30 @@ namespace QueryAnalyzer
             return sb.ToString();
         }
 
+        delegate void DelegateShowOptimizeProgress(double progress);
+
+        private void ShowOptimizeProgress(double progress)
+        {
+
+            if (labelOptimizeProgress.InvokeRequired)
+            {
+                labelOptimizeProgress.Invoke(new DelegateShowOptimizeProgress(ShowOptimizeProgress), progress);
+            }
+            else
+            {
+                labelOptimizeProgress.Text = string.Format("Optimize progress: {0:f2}%", progress);
+
+                if (progress >= 100)
+                {
+                    labelOptimizeProgress.Visible = false;
+                }
+                else
+                {
+                    labelOptimizeProgress.Visible = true;
+                }
+            }
+        }
+
         delegate void DelegateShowCurrentCount(long count);
 
         private void ShowCurrentCount(long count)
@@ -436,6 +462,79 @@ namespace QueryAnalyzer
             }
         }
 
+        private void DoFastOptimize()
+        {
+            try
+            {
+                DataAccess.Excute("exec SP_OptimizeTable {0}, 3", TableName);
+
+                int times = 0;
+
+                while (times++ < 1800) //Time out is 3600 s
+                {
+                    System.Threading.Thread.Sleep(2000);
+
+                    try
+                    {
+                        QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetTableMergeRate {0}", TableName);
+
+                        double totalRate = 0;
+
+                        foreach (DataRow row in queryResult.DataSet.Tables[0].Rows)
+                        {
+                            double rate = double.Parse(row["Rate"].ToString());
+
+                            if (rate < 0)
+                            {
+                                rate = 1;
+                            }
+
+                            totalRate += rate * 100;
+                        }
+
+                        double progress = totalRate / queryResult.DataSet.Tables[0].Rows.Count;
+
+                        if (progress >= 100)
+                        {
+                            ShowOptimizeProgress(100);
+                            break;
+                        }
+                        else
+                        {
+                            ShowOptimizeProgress(progress);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        break;
+                    }
+                }
+
+
+                
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private bool TooManyIndexFiles(QueryResult qResult)
+        {
+            foreach (string message in qResult.PrintMessages)
+            {
+                if (message != null)
+                {
+                    if (message.Equals("TooManyIndexFiles"))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
 
         private void Rebuild()
         {
@@ -443,6 +542,7 @@ namespace QueryAnalyzer
             {
                 DataAccess.Excute("exec SP_TableIndexOnly {0}, {1}",
                     TableName, "True");
+
 
                 int remain = -1;
                 long count;
@@ -474,7 +574,13 @@ namespace QueryAnalyzer
 
                     if (!string.IsNullOrEmpty(insertSql))
                     {
-                        DataAccess.Excute(insertSql);
+                        QueryResult qResult = DataAccess.Excute(insertSql);
+
+                        if (TooManyIndexFiles(qResult))
+                        {
+                            DoFastOptimize();//first optimize to optimize index or watting for exist optimizing.
+                            DoFastOptimize();
+                        }
                     }
 
                     totalCount += count;
@@ -515,6 +621,8 @@ namespace QueryAnalyzer
 
         private void buttonRebuild_Click(object sender, EventArgs e)
         {
+            labelOptimizeProgress.Visible = false;
+
             _SleepInterval = (int)numericUpDownSleepSeconds.Value;
             _SleepRows = (int)numericUpDownSleepRows.Value;
 

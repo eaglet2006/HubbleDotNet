@@ -68,6 +68,36 @@ namespace Hubble.Core.Store
             }
         }
 
+        public long FileLength
+        {
+            get
+            {
+                if (_File != null)
+                {
+                    return _File.Length;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public long CurrentFilePosition
+        {
+            get
+            {
+                if (_File != null)
+                {
+                    return _File.Position;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>

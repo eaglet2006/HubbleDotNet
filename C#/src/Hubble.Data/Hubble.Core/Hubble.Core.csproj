@@ -186,6 +186,7 @@
     <Compile Include="StoredProcedure\StoredProcedure.cs" />
     <Compile Include="StoredProcedure\StoredProcException.cs" />
     <Compile Include="Store\DDXFile.cs" />
+    <Compile Include="Store\IDXFile.cs" />
     <Compile Include="Store\IndexFile.cs" />
     <Compile Include="Store\IndexFileProxy.cs" />
     <Compile Include="Store\IndexFileStreamCache.cs" />

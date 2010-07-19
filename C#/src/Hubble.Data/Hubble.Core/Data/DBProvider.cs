@@ -742,6 +742,9 @@ namespace Hubble.Core.Data
 
         private object _InsertLock = new object();
 
+
+        internal Hubble.Framework.Threading.Lock MergeLock = new Hubble.Framework.Threading.Lock();
+
         #endregion
 
         private void ClearVars()
@@ -780,6 +783,26 @@ namespace Hubble.Core.Data
         }
 
         #region Properties
+
+        /// <summary>
+        /// Too many index files.
+        /// Need to pause indexing and optimize the index.
+        /// </summary>
+        internal bool TooManyIndexFiles
+        {
+            get
+            {
+                foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
+                {
+                    if (iIndex.TooManyIndexFiles)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        }
 
         /// <summary>
         /// This field replace docid field connecting with database. 
@@ -2066,6 +2089,7 @@ namespace Hubble.Core.Data
         #endregion
 
         #region public methods
+
         public void Insert(List<Document> docs)
         {
             try

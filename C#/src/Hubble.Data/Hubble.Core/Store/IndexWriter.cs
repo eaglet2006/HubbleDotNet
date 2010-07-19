@@ -31,8 +31,10 @@ namespace Hubble.Core.Store
         string _DDXFilePath;
 
         //System.IO.FileStream _HeadFile;
-        System.IO.FileStream _IndexFile;
         DDXFile _DDXFile;
+
+        //System.IO.FileStream _IndexFile;
+        IDXFile _IDXFile;
 
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
 
@@ -77,19 +79,25 @@ namespace Hubble.Core.Store
             //     System.IO.FileAccess.Write);
 
             _DDXFile = new DDXFile(_DDXFilePath, DDXFile.Mode.Write);
-            _IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Create,
-                 System.IO.FileAccess.Write);
+
+            //_IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Create,
+            //     System.IO.FileAccess.Write);
+
+            _IDXFile = new IDXFile(_IndexFilePath, IDXFile.Mode.Write);
 
 
         }
 
         public long AddWordAndDocList(string word, DocumentPositionList first, int docsCount, IEnumerable<Entity.DocumentPositionList> docList, out int length)
         {
-            long position = _IndexFile.Position;
-            bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
-            Entity.DocumentPositionList.Serialize(first, docsCount, docList, _IndexFile, simple);
+            long position = _IDXFile.AddWordAndDocList(word, _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple,
+                first, docsCount, docList, out length);
 
-            length = (int)(_IndexFile.Position - position);
+            //long position = _IndexFile.Position;
+            //bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
+            //Entity.DocumentPositionList.Serialize(first, docsCount, docList, _IndexFile, simple);
+
+            //length = (int)(_IndexFile.Position - position);
 
             //WriteHeadFile(_HeadFile, word, position, length);
             _DDXFile.Add(word, position, length);
@@ -101,7 +109,9 @@ namespace Hubble.Core.Store
         {
             //_HeadFile.Close();
             _DDXFile.Close();
-            _IndexFile.Close();
+            
+            //_IndexFile.Close();
+            _IDXFile.Close();
 
         }
 

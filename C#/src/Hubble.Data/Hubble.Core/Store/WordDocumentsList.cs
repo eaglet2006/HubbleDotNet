@@ -20,9 +20,60 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
+using Hubble.Core.Entity;
 
 namespace Hubble.Core.Store
 {
+    public class WordStepDocIndex
+    {
+        public class IndexFileInfo
+        {
+            public List<Hubble.Core.Entity.DocumentPosition> StepDocIndex; //Step doc index
+            public IndexFile.FilePosition IndexFilePostion; //Position of Index without step doc index 
+            public int DocumentCount; //Count of the document records in this index
+
+            public IndexFileInfo(List<Hubble.Core.Entity.DocumentPosition> stepDocIndex,
+                IndexFile.FilePosition indexFilePostion, int documentCount)
+            {
+                this.StepDocIndex = stepDocIndex;
+                this.IndexFilePostion = indexFilePostion;
+                this.DocumentCount = documentCount;
+            }
+        }
+
+        public List<IndexFileInfo> IndexFileInfoList = null;
+
+        public WordFilePositionList WordFilePositionList = null;
+
+        /// <summary>
+        /// Sum of word count
+        /// </summary>
+        public long WordCountSum = 0;
+
+        /// <summary>
+        /// if doc count > max return count
+        /// this field return rel doc count
+        /// </summary>
+        public int RelDocCount = 0;
+
+        /// <summary>
+        /// Index is Simple Mode
+        /// </summary>
+        public bool SimpleMode;
+
+        public WordStepDocIndex(List<IndexFileInfo> indexFileInfoList,
+            long wordCountSum, int relDocCount, bool simple)
+        {
+            IndexFileInfoList = indexFileInfoList;
+            WordCountSum = wordCountSum;
+            RelDocCount = relDocCount;
+            SimpleMode = simple;
+        }
+
+   
+
+    }
+
     /// <summary>
     /// This class is the result of documents list for one word
     /// </summary>

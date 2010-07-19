@@ -51,6 +51,7 @@
             this.numericUpDownDocIdFrom = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
+            this.labelOptimizeProgress = new System.Windows.Forms.Label();
             this.groupBoxSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepSeconds)).BeginInit();
@@ -133,7 +134,7 @@
             // 
             // buttonRebuild
             // 
-            this.buttonRebuild.Location = new System.Drawing.Point(36, 347);
+            this.buttonRebuild.Location = new System.Drawing.Point(36, 360);
             this.buttonRebuild.Name = "buttonRebuild";
             this.buttonRebuild.Size = new System.Drawing.Size(75, 23);
             this.buttonRebuild.TabIndex = 11;
@@ -155,7 +156,7 @@
             this.groupBoxSetting.Controls.Add(this.checkBoxRebuildWholeTable);
             this.groupBoxSetting.Controls.Add(this.numericUpDownDocIdFrom);
             this.groupBoxSetting.Controls.Add(this.label2);
-            this.groupBoxSetting.Location = new System.Drawing.Point(36, 134);
+            this.groupBoxSetting.Location = new System.Drawing.Point(36, 147);
             this.groupBoxSetting.Name = "groupBoxSetting";
             this.groupBoxSetting.Size = new System.Drawing.Size(390, 207);
             this.groupBoxSetting.TabIndex = 16;
@@ -208,11 +209,6 @@
             this.numericUpDownSleepSeconds.Name = "numericUpDownSleepSeconds";
             this.numericUpDownSleepSeconds.Size = new System.Drawing.Size(64, 20);
             this.numericUpDownSleepSeconds.TabIndex = 24;
-            this.numericUpDownSleepSeconds.Value = new decimal(new int[] {
-            120,
-            0,
-            0,
-            0});
             // 
             // label8
             // 
@@ -248,7 +244,7 @@
             // 
             this.numericUpDownStep.Location = new System.Drawing.Point(124, 96);
             this.numericUpDownStep.Maximum = new decimal(new int[] {
-            5000,
+            10000,
             0,
             0,
             0});
@@ -261,7 +257,7 @@
             this.numericUpDownStep.Size = new System.Drawing.Size(120, 20);
             this.numericUpDownStep.TabIndex = 20;
             this.numericUpDownStep.Value = new decimal(new int[] {
-            1000,
+            5000,
             0,
             0,
             0});
@@ -310,7 +306,7 @@
             // buttonStop
             // 
             this.buttonStop.Enabled = false;
-            this.buttonStop.Location = new System.Drawing.Point(135, 347);
+            this.buttonStop.Location = new System.Drawing.Point(135, 360);
             this.buttonStop.Name = "buttonStop";
             this.buttonStop.Size = new System.Drawing.Size(75, 23);
             this.buttonStop.TabIndex = 17;
@@ -318,11 +314,22 @@
             this.buttonStop.UseVisualStyleBackColor = true;
             this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
             // 
+            // labelOptimizeProgress
+            // 
+            this.labelOptimizeProgress.AutoSize = true;
+            this.labelOptimizeProgress.ForeColor = System.Drawing.Color.Red;
+            this.labelOptimizeProgress.Location = new System.Drawing.Point(32, 125);
+            this.labelOptimizeProgress.Name = "labelOptimizeProgress";
+            this.labelOptimizeProgress.Size = new System.Drawing.Size(91, 13);
+            this.labelOptimizeProgress.TabIndex = 18;
+            this.labelOptimizeProgress.Text = "Optimize Progress";
+            // 
             // FormRebuildTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(438, 382);
+            this.ClientSize = new System.Drawing.Size(439, 395);
+            this.Controls.Add(this.labelOptimizeProgress);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.groupBoxSetting);
             this.Controls.Add(this.buttonRebuild);
@@ -375,5 +382,6 @@
         private System.Windows.Forms.NumericUpDown numericUpDownSleepRows;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.NumericUpDown numericUpDownSleepSeconds;
+        private System.Windows.Forms.Label labelOptimizeProgress;
     }
 }
