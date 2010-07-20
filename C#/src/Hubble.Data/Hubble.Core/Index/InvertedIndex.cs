@@ -264,6 +264,11 @@ namespace Hubble.Core.Index
 
             int wordIndexWriterCount = _WordTableWriter.Count;
 
+            if (wordIndexWriterCount <= 0)
+            {
+                return;
+            }
+
             Array.Sort(_WordIndexWriterPool, 0, wordIndexWriterCount);
 
             for (int index = 0; index < wordIndexWriterCount; index++)
