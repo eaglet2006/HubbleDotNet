@@ -401,6 +401,27 @@ namespace Hubble.Core.Query
                 }
             }
 
+            //Merge score if upDict != null
+            if (upDict != null)
+            {
+                if (!upDict.Not)
+                {
+                    foreach (int docid in docIdRank.Keys)
+                    {
+                        DocumentResult* upDrp;
+
+                        if (upDict.TryGetValue(docid, out upDrp))
+                        {
+                            DocumentResult* drpResult;
+                            if (docIdRank.TryGetValue(docid, out drpResult))
+                            {
+                                drpResult->Score += upDrp->Score;
+                            }
+                        }
+                    }
+                }
+            }
+
             DeleteProvider delProvider = _DBProvider.DelProvider;
             int delCount = delProvider.Filter(docIdRank);
 
@@ -589,6 +610,27 @@ namespace Hubble.Core.Query
 
                     fstDocList = fstWifq.WordIndex.GetNext();
                     docListArr[0] = fstDocList;
+                }
+            }
+
+            //Merge score if upDict != null
+            if (upDict != null)
+            {
+                if (!upDict.Not)
+                {
+                    foreach (int docid in docIdRank.Keys)
+                    {
+                        DocumentResult* upDrp;
+
+                        if (upDict.TryGetValue(docid, out upDrp))
+                        {
+                            DocumentResult* drpResult;
+                            if (docIdRank.TryGetValue(docid, out drpResult))
+                            {
+                                drpResult->Score += upDrp->Score;
+                            }
+                        }
+                    }
                 }
             }
 

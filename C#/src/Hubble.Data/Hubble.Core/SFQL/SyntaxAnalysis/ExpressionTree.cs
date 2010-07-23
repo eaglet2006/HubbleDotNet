@@ -32,6 +32,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
     {
         //For parse
         public int FieldTab = -1;
+        public int SubTabIndex = -1;
         public int PayloadLength = 0;
         public Data.DataType DataType;
         public int[] ComparisionData = null;
@@ -159,6 +160,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         public ExpressionTree Parent = null;
         public ExpressionTree AndChild = null;
         public ExpressionTree OrChild = null;
+        public bool OrChildCalculated = false;
         public IExpression Expression = null;
 
         static public bool ExpressionNeedTokenize(Expression expression)

@@ -298,11 +298,10 @@ namespace Hubble.Core.Index
 
         #region Constructor
 
-        internal InvertedIndex(string path, string fieldName, int tabIndex,
+        internal InvertedIndex(string path, string fieldName, 
             Data.Field.IndexMode mode, bool rebuild, Data.DBProvider dbProvider, int documnetCount)
         {
             _FieldName = fieldName;
-            //_TabIndex = tabIndex;
             _IndexMode = mode;
             _DBProvider = dbProvider;
             InitFileStore(path, fieldName, rebuild);

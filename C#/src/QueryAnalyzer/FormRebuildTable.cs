@@ -40,6 +40,9 @@ namespace QueryAnalyzer
         bool _Finished = false;
         bool _Stop = false;
 
+        string _TableName;
+        string _DBAdapterName;
+
         internal bool InitError
         {
             get
@@ -77,11 +80,12 @@ namespace QueryAnalyzer
         {
             get
             {
-                return labelTableName.Text;
+                return _TableName;
             }
 
             set
             {
+                _TableName = value;
                 labelTableName.Text = value;
             }
         }
@@ -90,7 +94,7 @@ namespace QueryAnalyzer
         {
             get
             {
-                return labelDbAdapterName.Text;
+                return _DBAdapterName;
             }
         }
 
@@ -126,7 +130,8 @@ namespace QueryAnalyzer
                     }
                     else if (row["Attribute"].ToString() == "DBAdapter")
                     {
-                        labelDbAdapterName.Text = row["Value"].ToString();
+                        _DBAdapterName = row["Value"].ToString();
+                        labelDbAdapterName.Text = _DBAdapterName;
                     }
                     else if (row["Attribute"].ToString() == "LastDocId")
                     {
@@ -276,11 +281,11 @@ namespace QueryAnalyzer
 
         private string GetSelectSql(long from)
         {
-            if (labelDbAdapterName.Text.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
+            if (_DBAdapterName.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetSqlServerSelectSql(from);
             }
-            else if (labelDbAdapterName.Text.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
+            else if (_DBAdapterName.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetOracleSelectSql(from);
             }

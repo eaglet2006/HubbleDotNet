@@ -76,7 +76,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        unsafe static public Query.SortInfo GetSortInfo(bool asc, DataType type, int* buf, int from, int len)
+        unsafe static public Query.SortInfo GetSortInfo(bool asc, DataType type, int* buf, int from, int subTabIndex, int len)
         {
             switch (type)
             {
@@ -120,7 +120,20 @@ namespace Hubble.Core.Data
                 case DataType.Date:
                 case DataType.SmallDateTime:
                 case DataType.TinyInt:
+                    {
+                        int v = buf[from];
+                        sbyte* sbyteP = (sbyte*)&v + subTabIndex;
+                        return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, *sbyteP);
+                    }
                 case DataType.SmallInt:
+                    {
+                        int v = buf[from];
+                        sbyte* sbyteP = (sbyte*)&v + subTabIndex;
+                        short l = *sbyteP;
+                        short h = *(sbyteP + 1);
+                        h <<= 8;
+                        return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, l | h);
+                    }
                 case DataType.Int:
                     {
                         return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, buf[from]);
@@ -151,7 +164,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        unsafe static internal string GetString(DataType type, int* buf, int from, int len)
+        unsafe static internal string GetString(DataType type, int* buf, int from, int subTabIndex, int len)
         {
             switch (type)
             {
@@ -203,7 +216,15 @@ namespace Hubble.Core.Data
                         return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
                     }
                 case DataType.TinyInt:
+                    return (*((sbyte*)(&buf[from]) + subTabIndex)).ToString();
                 case DataType.SmallInt:
+                    {
+                        sbyte* sbyteP = (sbyte*)(&buf[from]) + subTabIndex;
+                        short l = *sbyteP;
+                        short h = *(sbyteP + 1);
+                        h <<= 8;
+                        return (l | h).ToString();
+                    }
                 case DataType.Int:
                     return buf[from].ToString();
 
@@ -240,7 +261,7 @@ namespace Hubble.Core.Data
         }
 
 
-        static public string GetString(DataType type, int[] buf, int from, int len)
+        static public string GetString(DataType type, int[] buf, int from, int subIndex, int len)
         {
             switch (type)
             {
@@ -328,7 +349,29 @@ namespace Hubble.Core.Data
             }
         }
 
-        static public int[] GetData(DataType type, int dataLength, string value)
+        unsafe static public int GetSubTabData(DataType type, int subTabIndex, int value)
+        {
+            switch (type)
+            {
+                case DataType.TinyInt:
+                    {
+                        sbyte* sbyteP = (sbyte*)&value + subTabIndex;
+                        return *sbyteP;
+                    }
+                case DataType.SmallInt:
+                    {
+                        sbyte* sbyteP = (sbyte*)&value + subTabIndex;
+                        short l = *sbyteP;
+                        short h = *(sbyteP + 1);
+                        h <<= 8;
+                        return l | h;
+                    }
+                default:
+                    throw new DataException(string.Format("Invalid data type: {0}", type));
+            }
+        }
+
+        unsafe static public int[] GetData(DataType type, int dataLength, int subTabIndex, string value)
         {
             int[] ret;
             long l;
@@ -398,7 +441,43 @@ namespace Hubble.Core.Data
                     ret[0] = SmallDateTimeToInt(smalldate);
                     return ret;
                 case DataType.TinyInt:
+                    {
+                        ret = new int[1];
+                        int temp;
+                        if (!int.TryParse(value, out temp))
+                        {
+                            temp = (int)double.Parse(value);
+                        }
+
+                        fixed (int* intp = &ret[0])
+                        {
+                            ((sbyte*)intp)[subTabIndex] = (sbyte)temp;
+                        }
+
+                        return ret;
+
+                    }
+
+
                 case DataType.SmallInt:
+                    {
+                        ret = new int[1];
+                        int temp;
+                        if (!int.TryParse(value, out temp))
+                        {
+                            temp = (int)double.Parse(value);
+                        }
+
+                        fixed (int* intp = &ret[0])
+                        {
+                            ((sbyte*)intp)[subTabIndex] = (sbyte)(temp);
+                            ((sbyte*)intp)[subTabIndex + 1] = (sbyte)(temp >> 8);
+                        }
+
+                        return ret;
+
+                    }
+
                 case DataType.Int:
                     ret = new int[1];
                     if (!int.TryParse(value, out ret[0]))

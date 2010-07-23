@@ -829,6 +829,27 @@ namespace Hubble.Core.Query
                 }
             }
 
+            //Merge score if upDict != null
+            if (upDict != null)
+            {
+                if (!upDict.Not)
+                {
+                    foreach (int docid in docIdRank.Keys)
+                    {
+                        DocumentResult* upDrp;
+
+                        if (upDict.TryGetValue(docid, out upDrp))
+                        {
+                            DocumentResult* drpResult;
+                            if (docIdRank.TryGetValue(docid, out drpResult))
+                            {
+                                drpResult->Score += upDrp->Score;
+                            }
+                        }
+                    }
+                }
+            }
+
             if (wordIndexes.Length > 1)
             {
                 List<DocumentResult> reduceDocs = new List<DocumentResult>(docIdRank.Count);
@@ -1013,6 +1034,27 @@ namespace Hubble.Core.Query
 
                     docList = wifq.WordIndex.GetNext();
                     j++;
+                }
+            }
+
+            //Merge score if upDict != null
+            if (upDict != null)
+            {
+                if (!upDict.Not)
+                {
+                    foreach (int docid in docIdRank.Keys)
+                    {
+                        DocumentResult* upDrp;
+
+                        if (upDict.TryGetValue(docid, out upDrp))
+                        {
+                            DocumentResult* drpResult;
+                            if (docIdRank.TryGetValue(docid, out drpResult))
+                            {
+                                drpResult->Score += upDrp->Score;
+                            }
+                        }
+                    }
                 }
             }
 

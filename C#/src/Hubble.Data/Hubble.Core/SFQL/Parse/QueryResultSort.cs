@@ -97,7 +97,7 @@ namespace Hubble.Core.SFQL.Parse
                                         docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
 
                                         Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
-                                            payLoadData, field.TabIndex, field.DataLength);
+                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                                         docResults[i].SortValue = sortInfo.IntValue;
                                     }
 
@@ -115,7 +115,7 @@ namespace Hubble.Core.SFQL.Parse
                                         docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
 
                                         Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
-                                            payLoadData, field.TabIndex, field.DataLength);
+                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                                         docResults[i].SortValue = sortInfo.LongValue;
                                     }
 
@@ -198,7 +198,7 @@ namespace Hubble.Core.SFQL.Parse
                         }
 
                         docResults[i].SortInfoList.Add(Data.DataTypeConvert.GetSortInfo(isAsc,
-                            field.DataType, docResults[i].PayloadData, field.TabIndex, field.DataLength));
+                            field.DataType, docResults[i].PayloadData, field.TabIndex, field.SubTabIndex, field.DataLength));
                     }
                 }
             }

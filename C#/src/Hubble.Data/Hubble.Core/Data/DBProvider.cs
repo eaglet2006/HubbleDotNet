@@ -692,11 +692,15 @@ namespace Hubble.Core.Data
         struct PayloadSegment
         {
             public int TabIndex;
+            public int SubTabIndex;
             public int[] Data;
+            public DataType DataType;
 
-            public PayloadSegment(int tabIndex, int[] data)
+            public PayloadSegment(int tabIndex, int subTabIndex, DataType dataType, int[] data)
             {
                 TabIndex = tabIndex;
+                SubTabIndex = subTabIndex;
+                this.DataType = dataType;
                 Data = data;
             }
         }
@@ -1233,6 +1237,8 @@ namespace Hubble.Core.Data
         {
             _PayloadLength = 0;
 
+            int lastTabIndex = -1;
+
             foreach (Field field in table.Fields)
             {
                 switch (field.IndexType)
@@ -1241,7 +1247,13 @@ namespace Hubble.Core.Data
                     //    _PayloadLength++;
                     //    break;
                     case Field.Index.Untokenized:
-                        _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                        if (field.TabIndex != lastTabIndex)
+                        {
+                            _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                        }
+
+                        lastTabIndex = field.TabIndex;
+
                         break;
                     default:
                         continue;
@@ -1255,10 +1267,12 @@ namespace Hubble.Core.Data
         {
             _PayloadLength = 0;
 
+            int subTabIndex = -1;
+            int nextSubTabIndex = 0;
+            int tabIndex = -1;
+
             foreach (Field field in table.Fields)
             {
-                int tabIndex = -1;
-
                 switch (field.IndexType)
                 {
                     //case Field.Index.Tokenized:
@@ -1266,14 +1280,62 @@ namespace Hubble.Core.Data
                     //    _PayloadLength++;
                     //    break;
                     case Field.Index.Untokenized:
-                        tabIndex = _PayloadLength;
-                        _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                        switch (field.DataType)
+                        {
+                            case DataType.TinyInt:
+                                if (nextSubTabIndex == 0)
+                                {
+                                    tabIndex = _PayloadLength;
+                                    _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                                }
+
+                                if (nextSubTabIndex >= 4)
+                                {
+                                    _PayloadLength += 1;
+                                    tabIndex++;
+                                    nextSubTabIndex = 0;
+                                }
+
+                                subTabIndex = nextSubTabIndex;
+                                nextSubTabIndex++;
+
+                                break;
+                            case DataType.SmallInt:
+                                if (nextSubTabIndex == 0)
+                                {
+                                    tabIndex = _PayloadLength;
+                                    _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+                                }
+
+                                if (nextSubTabIndex >= 3)
+                                {
+                                    _PayloadLength += 1;
+                                    tabIndex++;
+                                    nextSubTabIndex = 0;
+                                }
+
+                                subTabIndex = nextSubTabIndex;
+                                nextSubTabIndex += 2;
+                                break;
+                            default:
+                                tabIndex = _PayloadLength;
+                                _PayloadLength += DataTypeConvert.GetDataLength(field.DataType, field.DataLength);
+
+                                subTabIndex = -1;
+                                nextSubTabIndex = 0;
+                                break;
+                        }
+
+                        field.TabIndex = tabIndex;
+                        field.SubTabIndex = subTabIndex;
+
                         break;
                     default:
+                        field.TabIndex = -1;
+                        field.SubTabIndex = -1;
                         continue;
                 }
 
-                field.TabIndex = tabIndex;
             }
         }
 
@@ -1637,7 +1699,7 @@ namespace Hubble.Core.Data
                         if (field.IndexType == Field.Index.Tokenized)
                         {
                             InvertedIndex invertedIndex = new InvertedIndex(_Directory,
-                                field.Name.Trim(), field.TabIndex, field.Mode, false, this, documentsCount);
+                                field.Name.Trim(), field.Mode, false, this, documentsCount);
                             AddFieldInvertedIndex(field.Name, invertedIndex);
                         }
 
@@ -1731,7 +1793,13 @@ namespace Hubble.Core.Data
             switch (_DocIdReplaceField.DataType)
             {
                 case DataType.TinyInt:
+                    return (long)(((sbyte*)(&payloadData[_DocIdReplaceField.TabIndex]))[_DocIdReplaceField.SubTabIndex]);
                 case DataType.SmallInt:
+                    sbyte* sbyteP = (sbyte*)&payloadData[_DocIdReplaceField.TabIndex] + _DocIdReplaceField.SubTabIndex;
+                    short l = *sbyteP;
+                    short h = *(sbyteP + 1);
+                    h <<= 8;
+                    return l | h;
                 case DataType.Int:
                     return payloadData[_DocIdReplaceField.TabIndex];
                 case DataType.BigInt:
@@ -1830,7 +1898,7 @@ namespace Hubble.Core.Data
                         if (field.IndexType == Field.Index.Untokenized)
                         {
                             value = DataTypeConvert.GetString(field.DataType,
-                                payloadData, field.TabIndex, field.DataLength);
+                                payloadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                         }
                     }
                     
@@ -2081,11 +2149,6 @@ namespace Hubble.Core.Data
             }
         }
 
-        internal int GetTabIndex(string fieldName)
-        {
-            return GetField(fieldName).TabIndex;
-        }
-
         #endregion
 
         #region public methods
@@ -2195,6 +2258,9 @@ namespace Hubble.Core.Data
                         int[] data = new int[_PayloadLength];
 
                         int docId = doc.DocId;
+                        int[] subTabFieldPayload = new int[1];
+                        int lastTabIndex = -1;
+                        bool lastIsSubTab = false;
 
                         foreach (FieldValue fValue in doc.FieldValues)
                         {
@@ -2217,7 +2283,35 @@ namespace Hubble.Core.Data
                                         }
                                     }
 
-                                    fieldPayload = DataTypeConvert.GetData(field.DataType, field.DataLength, fValue.Value);
+                                    fieldPayload = DataTypeConvert.GetData(field.DataType, field.DataLength, field.SubTabIndex, fValue.Value);
+
+                                    if (field.DataType == DataType.TinyInt ||
+                                        field.DataType == DataType.SmallInt)
+                                    {
+                                        if (field.TabIndex == lastTabIndex || !lastIsSubTab)
+                                        {
+                                            subTabFieldPayload[0] |= fieldPayload[0];
+                                        }
+                                        else
+                                        {
+                                            Array.Copy(subTabFieldPayload, 0, data, lastTabIndex, subTabFieldPayload.Length);
+                                            lastTabIndex = field.TabIndex;
+                                            subTabFieldPayload[0] = 0;
+                                            subTabFieldPayload[0] |= fieldPayload[0];
+                                        }
+
+                                        lastIsSubTab = true;
+                                        lastTabIndex = field.TabIndex;
+                                        continue;
+                                    }
+                                    else if (lastIsSubTab)
+                                    {
+                                        lastIsSubTab = false;
+                                        Array.Copy(subTabFieldPayload, 0, data, lastTabIndex, subTabFieldPayload.Length);
+                                        lastTabIndex = field.TabIndex;
+                                        subTabFieldPayload[0] = 0;
+                                    }
+
 
                                     Array.Copy(fieldPayload, 0, data, field.TabIndex, fieldPayload.Length);
 
@@ -2225,7 +2319,12 @@ namespace Hubble.Core.Data
                             }
                         }
 
-
+                        //last field is subtab field
+                        if (lastIsSubTab)
+                        {
+                            lastIsSubTab = false;
+                            Array.Copy(subTabFieldPayload, 0, data, lastTabIndex, subTabFieldPayload.Length);
+                        }
 
                         Payload payload = new Payload(data);
 
@@ -2354,8 +2453,8 @@ namespace Hubble.Core.Data
 
                         if (field.IndexType == Field.Index.Untokenized)
                         {
-                            int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, fv.Value);
-                            payloadSegment.Add(new PayloadSegment(field.TabIndex, data));
+                            int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, field.SubTabIndex, fv.Value);
+                            payloadSegment.Add(new PayloadSegment(field.TabIndex, field.SubTabIndex, field.DataType, data));
                         }
                     }
 
@@ -2460,11 +2559,31 @@ namespace Hubble.Core.Data
                                 {
                                     foreach (PayloadSegment ps in payloadSegment)
                                     {
-                                        for (int i = 0; i < ps.Data.Length; i++)
+                                        if (ps.SubTabIndex >= 0)
                                         {
-                                            payLoadData[i + ps.TabIndex] = ps.Data[i];
-                                        }
+                                            if (ps.DataType == DataType.TinyInt)
+                                            {
+                                                ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
+                                                payLoadData[ps.TabIndex] |= ps.Data[0];
+                                            }
+                                            else if (ps.DataType == DataType.SmallInt)
+                                            {
+                                                *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
+                                                payLoadData[ps.TabIndex] |= ps.Data[0];
+                                            }
+                                            else
+                                            {
+                                                throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
+                                            }
 
+                                        }
+                                        else
+                                        {
+                                            for (int i = 0; i < ps.Data.Length; i++)
+                                            {
+                                                payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                            }
+                                        }
                                         //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
                                     }
 

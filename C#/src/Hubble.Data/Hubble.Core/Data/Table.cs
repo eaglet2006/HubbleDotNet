@@ -320,6 +320,24 @@ namespace Hubble.Core.Data
                 _IndexThread = value;
             } 
         }
+
+        private static void TableCheck(Table table)
+        {
+            foreach (Field field in table.Fields)
+            {
+                switch (field.DataType)
+                {
+                    case DataType.TinyInt:
+                    case DataType.SmallInt:
+                        if (field.SubTabIndex < 0)
+                        {
+                            throw new DataException(string.Format("SubTabIndex of field:{0} less then zero, the payload file is for old version, please truncate table and rebuild it!",
+                                field.Name));
+                        }
+                        break;
+                }
+            }
+        }
         
 
         public void Save(string dir)
@@ -341,11 +359,17 @@ namespace Hubble.Core.Data
 
             string fileName = dir + "tableinfo.xml";
 
+            Table table;
+
             using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Open,
                  System.IO.FileAccess.Read))
             {
-                return XmlSerialization<Table>.Deserialize(fs);
+                table = XmlSerialization<Table>.Deserialize(fs);
             }
+
+            TableCheck(table);
+
+            return table;
         }
 
         #endregion

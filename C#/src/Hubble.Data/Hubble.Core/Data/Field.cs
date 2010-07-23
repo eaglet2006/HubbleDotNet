@@ -47,6 +47,7 @@ namespace Hubble.Core.Data
         Index _IndexType = Index.None;
         IndexMode _IndexMode = IndexMode.Complex;
         int _TabIndex = 0;
+        int _SubTabIndex = -1;
         string _AnalyzerName = null;
         Analysis.IAnalyzer _Analyzer;
         bool _CanNull = false;
@@ -183,6 +184,23 @@ namespace Hubble.Core.Data
             set
             {
                 _TabIndex = value;
+            }
+        }
+
+        /// <summary>
+        /// Sub tab index
+        /// Used by tinyint and smallint data type
+        /// </summary>
+        public int SubTabIndex
+        {
+            get
+            {
+                return _SubTabIndex;
+            }
+
+            set
+            {
+                _SubTabIndex = value;
             }
         }
 

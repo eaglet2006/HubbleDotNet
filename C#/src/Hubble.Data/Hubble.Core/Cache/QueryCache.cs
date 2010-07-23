@@ -135,6 +135,8 @@ namespace Hubble.Core.Cache
     class QueryCache : Cache<QueryCacheDocuments>
     {
         private object _LockObj = new object();
+        private object _WriteLockObj = new object();
+
         private string _CacheFileFolder = null;
         private Data.Table _Table;
 
@@ -189,20 +191,23 @@ namespace Hubble.Core.Cache
 
         private void SetFileLastWriteTime(object filePath)
         {
-            try
+            lock (_WriteLockObj)
             {
                 try
                 {
-                    System.IO.File.SetLastWriteTime(filePath as string, DateTime.Now);
+                    try
+                    {
+                        System.IO.File.SetLastWriteTime(filePath as string, DateTime.Now);
+                    }
+                    catch (Exception e)
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Set file last write time fail. file name: {0} err:{1}",
+                            filePath as string, e.Message));
+                    }
                 }
-                catch (Exception e)
+                catch
                 {
-                    Global.Report.WriteErrorLog(string.Format("Set file last write time fail. file name: {0} err:{1}",
-                        filePath as string, e.Message));
                 }
-            }
-            catch
-            {
             }
         }
 
@@ -213,33 +218,36 @@ namespace Hubble.Core.Cache
 
         private void WriteCacheFile(object state)
         {
-            try
+            lock (_WriteLockObj)
             {
-                string filePath = "";
-
                 try
                 {
-                    CacheFile cacheFile = state as CacheFile;
+                    string filePath = "";
 
-                    string bit16String = base.GetMD5String(cacheFile.Key);
-
-                    filePath = _CacheFileFolder + bit16String + ".xml";
-
-                    using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
-                                 System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite))
+                    try
                     {
-                        Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Serialize(
-                            cacheFile, Encoding.UTF8, fs);
+                        CacheFile cacheFile = state as CacheFile;
+
+                        string bit16String = base.GetMD5String(cacheFile.Key);
+
+                        filePath = _CacheFileFolder + bit16String + ".xml";
+
+                        using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
+                                     System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite))
+                        {
+                            Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Serialize(
+                                cacheFile, Encoding.UTF8, fs);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Write cahce file fail. file name: {0} err:{1}",
+                            filePath as string, e.Message));
                     }
                 }
-                catch (Exception e)
+                catch
                 {
-                    Global.Report.WriteErrorLog(string.Format("Write cahce file fail. file name: {0} err:{1}",
-                        filePath as string, e.Message));
                 }
-            }
-            catch
-            {
             }
         }
 
