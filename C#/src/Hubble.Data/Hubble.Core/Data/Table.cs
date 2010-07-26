@@ -325,16 +325,19 @@ namespace Hubble.Core.Data
         {
             foreach (Field field in table.Fields)
             {
-                switch (field.DataType)
+                if (field.IndexType == Field.Index.Untokenized)
                 {
-                    case DataType.TinyInt:
-                    case DataType.SmallInt:
-                        if (field.SubTabIndex < 0)
-                        {
-                            throw new DataException(string.Format("SubTabIndex of field:{0} less then zero, the payload file is for old version, please truncate table and rebuild it!",
-                                field.Name));
-                        }
-                        break;
+                    switch (field.DataType)
+                    {
+                        case DataType.TinyInt:
+                        case DataType.SmallInt:
+                            if (field.SubTabIndex < 0)
+                            {
+                                throw new DataException(string.Format("SubTabIndex of field:{0} less then zero, the payload file is for old version, please truncate table and rebuild it!",
+                                    field.Name));
+                            }
+                            break;
+                    }
                 }
             }
         }
