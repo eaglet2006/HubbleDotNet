@@ -30,7 +30,7 @@ namespace Hubble.Core.Store
 {
     public class IndexFileProxy : /*MessageQueue,*/ IIndexFile
     {
-        const int Timeout = 5 * 60 * 1000;
+        const int Timeout = 300000; //300s
 
         enum Event
         {
@@ -621,7 +621,7 @@ namespace Hubble.Core.Store
         {
             get
             {
-                System.Threading.Monitor.TryEnter(_LockObj);
+                HBMonitor.Enter(_LockObj);
 
                 try
                 {
@@ -635,7 +635,7 @@ namespace Hubble.Core.Store
                 }
                 finally
                 {
-                    System.Threading.Monitor.Exit(_LockObj);
+                    HBMonitor.Exit(_LockObj);
 
                     if (_DBProvider.Table.Debug)
                     {
@@ -1307,7 +1307,7 @@ namespace Hubble.Core.Store
 
         public MergeInfos GetMergeInfos(Data.OptimizationOption option)
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
@@ -1329,7 +1329,7 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1347,7 +1347,7 @@ namespace Hubble.Core.Store
         public void DoMergeAck(MergeAck mergeAck)
         {
 MergeAckLoop:
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
@@ -1365,7 +1365,7 @@ MergeAckLoop:
 
             if (!this.CanMerge) //if can't merge now, waitting for CanMerge
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1384,7 +1384,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1399,12 +1399,19 @@ MergeAckLoop:
         public void AddWordPositionAndDocumentPositionList(string word, DocumentPositionList first, int docsCount,
             IEnumerable<Entity.DocumentPositionList> docList)
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            DateTime startTime = DateTime.Now;
+
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
                     return;
                 }
+
+                TimeSpan timeSpan = DateTime.Now - startTime;
+
+                Global.Report.WriteAppLog(string.Format("AddWordPositionAndDocumentPositionList timeout. Span={0}ms Timeout={1}ms",
+                    timeSpan.TotalMilliseconds, Timeout), true);
 
                 throw new TimeoutException();
             }
@@ -1415,7 +1422,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
 
             //ASendMessage((int)Event.Add, new WordDocList(word, docList));
@@ -1423,7 +1430,7 @@ MergeAckLoop:
 
         public System.IO.MemoryStream GetIndexBuf(int serial, long position, long length)
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
@@ -1445,7 +1452,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1468,7 +1475,7 @@ MergeAckLoop:
         /// <returns>WordIndexReader</returns>
         public Hubble.Core.Index.WordIndexReader GetWordIndex(GetInfo getInfo, bool onlyStepDocIndex)
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
@@ -1506,7 +1513,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1534,7 +1541,7 @@ MergeAckLoop:
         /// <returns></returns>
         public bool TooManyIndexFiles()
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 return false;
             }
@@ -1551,7 +1558,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1564,7 +1571,7 @@ MergeAckLoop:
         }
         public void Collect()
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, Timeout))
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
             {
                 if (_NeedClose)
                 {
@@ -1589,7 +1596,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
 
                 if (_DBProvider.Table.Debug)
                 {
@@ -1604,17 +1611,17 @@ MergeAckLoop:
 
         internal void SafelyClose()
         {
-            System.Threading.Monitor.Enter(_LockObj);
+            HBMonitor.Enter(_LockObj);
 
             _NeedClose = true;
 
-            System.Threading.Monitor.Exit(_LockObj);
+            HBMonitor.Exit(_LockObj);
         }
 
                
         public List<string> InnerLike(string str, InnerLikeType type)
         {
-            System.Threading.Monitor.Enter(_LockObj);
+            HBMonitor.Enter(_LockObj);
             try
             {
                 //return _WordFilePositionTable.InnerLike(str, type);
@@ -1622,7 +1629,7 @@ MergeAckLoop:
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
         }
 

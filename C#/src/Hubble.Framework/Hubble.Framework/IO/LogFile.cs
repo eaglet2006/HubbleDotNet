@@ -74,7 +74,7 @@ namespace Hubble.Framework.IO
                        logType.ToString() + ".log";
 
                 StringBuilder line = new StringBuilder();
-                line.AppendFormat("LogTime:{0}\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                line.AppendFormat("LogTime:{0}.{1}\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), DateTime.Now.Millisecond);
                 line.AppendFormat("Process:{0}\r\n", System.Diagnostics.Process.GetCurrentProcess().ProcessName);
                 line.AppendFormat("Message:{0}\r\n", message);
                 File.WriteLine(file, line.ToString());

@@ -337,7 +337,7 @@ namespace Hubble.Core.Store
 
         public DateTime SetPayloadLastWriteTime(DateTime time)
         {
-            System.Threading.Monitor.TryEnter(_LockObj);
+            HBMonitor.Enter(_LockObj);
 
             try
             {
@@ -347,7 +347,7 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
         }
 
@@ -568,7 +568,7 @@ namespace Hubble.Core.Store
 
         internal void Add(int docId, Hubble.Core.Data.Payload payLoad, PayloadProvider payloadProvider)
         {
-            System.Threading.Monitor.TryEnter(_LockObj);
+            HBMonitor.Enter(_LockObj);
 
             try
             {
@@ -576,14 +576,14 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
             //ASendMessage((int)Event.Add, new PayloadEntity(docId, payLoad, payloadProvider));
         }
 
         internal void Collect()
         {
-            if (!System.Threading.Monitor.TryEnter(_LockObj, 300 * 1000))
+            if (!HBMonitor.TryEnter(_LockObj, 300 * 1000))
             {
                 throw new TimeoutException();
             }
@@ -594,7 +594,7 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
 
             //SSendMessage((int)Event.Collect, null, 300 * 1000);
@@ -609,7 +609,7 @@ namespace Hubble.Core.Store
                 peList.Add(new PayloadEntity(docIds[i], payloads[i], payloadProvider));
             }
 
-            System.Threading.Monitor.TryEnter(_LockObj);
+            HBMonitor.Enter(_LockObj);
 
             try
             {
@@ -617,7 +617,7 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                System.Threading.Monitor.Exit(_LockObj);
+                HBMonitor.Exit(_LockObj);
             }
 
             //SSendMessage((int)Event.Update, peList, int.MaxValue);
