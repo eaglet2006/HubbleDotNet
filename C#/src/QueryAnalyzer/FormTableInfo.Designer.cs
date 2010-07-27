@@ -41,6 +41,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.numericUpDownIndexThread = new System.Windows.Forms.NumericUpDown();
+            this.label24 = new System.Windows.Forms.Label();
             this.comboBoxInitImmediatelyAfterStartup = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
             this.label21 = new System.Windows.Forms.Label();
@@ -69,17 +71,17 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.numericUpDownIndexThread = new System.Windows.Forms.NumericUpDown();
-            this.label24 = new System.Windows.Forms.Label();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
             this.tabPageAttributes.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -204,6 +206,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.comboBox1);
+            this.tabPageAttributes.Controls.Add(this.label23);
             this.tabPageAttributes.Controls.Add(this.numericUpDownIndexThread);
             this.tabPageAttributes.Controls.Add(this.label24);
             this.tabPageAttributes.Controls.Add(this.comboBoxInitImmediatelyAfterStartup);
@@ -241,6 +245,38 @@
             this.tabPageAttributes.TabIndex = 1;
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
+            // 
+            // numericUpDownIndexThread
+            // 
+            this.numericUpDownIndexThread.Location = new System.Drawing.Point(199, 455);
+            this.numericUpDownIndexThread.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numericUpDownIndexThread.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numericUpDownIndexThread.Name = "numericUpDownIndexThread";
+            this.numericUpDownIndexThread.Size = new System.Drawing.Size(96, 20);
+            this.numericUpDownIndexThread.TabIndex = 33;
+            this.numericUpDownIndexThread.Tag = "IndexThread";
+            this.numericUpDownIndexThread.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Location = new System.Drawing.Point(33, 460);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(67, 13);
+            this.label24.TabIndex = 32;
+            this.label24.Text = "IndexThread";
             // 
             // comboBoxInitImmediatelyAfterStartup
             // 
@@ -540,37 +576,27 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // numericUpDownIndexThread
+            // comboBox1
             // 
-            this.numericUpDownIndexThread.Location = new System.Drawing.Point(199, 455);
-            this.numericUpDownIndexThread.Maximum = new decimal(new int[] {
-            8,
-            0,
-            0,
-            0});
-            this.numericUpDownIndexThread.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numericUpDownIndexThread.Name = "numericUpDownIndexThread";
-            this.numericUpDownIndexThread.Size = new System.Drawing.Size(96, 20);
-            this.numericUpDownIndexThread.TabIndex = 33;
-            this.numericUpDownIndexThread.Tag = "IndexThread";
-            this.numericUpDownIndexThread.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBox1.Location = new System.Drawing.Point(489, 54);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(121, 21);
+            this.comboBox1.TabIndex = 35;
+            this.comboBox1.Tag = "Debug";
+            this.comboBox1.Text = "False";
             // 
-            // label24
+            // label23
             // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(33, 460);
-            this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(67, 13);
-            this.label24.TabIndex = 32;
-            this.label24.Text = "IndexThread";
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(348, 57);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(132, 13);
+            this.label23.TabIndex = 34;
+            this.label23.Text = "Record Debug Information";
             // 
             // FormTableInfo
             // 
@@ -588,11 +614,11 @@
             this.panelHead.PerformLayout();
             this.tabPageAttributes.ResumeLayout(false);
             this.tabPageAttributes.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -641,5 +667,7 @@
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.NumericUpDown numericUpDownIndexThread;
         private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.ComboBox comboBox1;
+        private System.Windows.Forms.Label label23;
     }
 }

@@ -164,13 +164,70 @@ namespace Hubble.Core.Data
             }
         }
 
+        unsafe static public sbyte GetSByte(DataType type, int* buf, int from, int subTabIndex, int len)
+        {
+            switch (type)
+            {
+                case DataType.TinyInt:
+                    return (*((sbyte*)(&buf[from]) + subTabIndex));
+                default:
+                    throw new DataException(string.Format("Invalid type:{0}", type.ToString()));
+            }
+        }
+
+        unsafe static public short GetShort(DataType type, int* buf, int from, int subTabIndex, int len)
+        {
+            switch (type)
+            {
+                case DataType.SmallInt:
+                    {
+                        sbyte* sbyteP = (sbyte*)(&buf[from]) + subTabIndex;
+                        short l = *sbyteP;
+                        short h = *(sbyteP + 1);
+                        h <<= 8;
+                        return (short)(l | h);
+                    }
+                default:
+                    throw new DataException(string.Format("Invalid type:{0}", type.ToString()));
+            }
+        }
+
+        unsafe static public int GetInt(DataType type, int* buf, int from, int subTabIndex, int len)
+        {
+            switch (type)
+            {
+                case DataType.Date:
+                case DataType.SmallDateTime:
+                case DataType.Int:
+                    return buf[from];
+                default:
+                    throw new DataException(string.Format("Invalid type:{0}", type.ToString()));
+            }
+        }
+
+        unsafe static public long GetLong(DataType type, int* buf, int from, int subTabIndex, int len)
+        {
+            switch (type)
+            {
+                case DataType.BigInt:
+                case DataType.DateTime:
+                    {
+                        long l;
+                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
+                        return l;
+                    }
+                default:
+                    throw new DataException(string.Format("Invalid type:{0}", type.ToString()));
+            }
+        }
+
         unsafe static internal string GetString(DataType type, int* buf, int from, int subTabIndex, int len)
         {
             switch (type)
             {
                 case DataType.Data:
 
-                    throw new Exception("Not finished!");
+                    throw new DataException("Not finished!");
 
                 case DataType.Varchar:
                 case DataType.NVarchar:

@@ -200,6 +200,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
         public List<SelectFrom> SelectFroms = new List<SelectFrom>();
         public List<OrderBy> OrderBys = new List<OrderBy>();
         public Where Where;
+        public TSFQLSentence Sentence = null;
 
         #endregion
 

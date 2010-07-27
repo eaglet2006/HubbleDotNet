@@ -45,7 +45,11 @@ namespace Hubble.Core.Data
 
         int _MaxReturnCount = 2 * 1024 * 1024;
 
+        int _GroupByLimit = 40000;
+
         bool _IndexOnly = false;
+
+        bool _Debug = false;
 
         private string _DocIdReplaceField = null;
 
@@ -183,7 +187,19 @@ namespace Hubble.Core.Data
             }
         }
 
+        public bool Debug
+        {
+            get
+            {
+                return _Debug;
+            }
 
+            set
+            {
+                _Debug = value;
+            }
+
+        }
 
         public int ForceCollectCount
         {
@@ -228,6 +244,29 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// limit number for group by.
+        /// Only group by limit number of records from the query result.
+        /// </summary>
+        public int GroupByLimit
+        {
+            get
+            {
+                return _GroupByLimit;
+            }
+
+            set
+            {
+                if (value <= 0)
+                {
+                    _GroupByLimit = 40000;
+                }
+                else
+                {
+                    _GroupByLimit = value;
+                }
+            }
+        }
 
         public bool QueryCacheEnabled
         {

@@ -168,7 +168,7 @@ namespace Hubble.Core.Query
         }
 
         #region Private fields
-        const int MinResultCount = 32768;
+        int MinResultCount = 32768;
 
         string _FieldName;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
@@ -181,14 +181,14 @@ namespace Hubble.Core.Query
 
         long _Norm_Ranks = 0; //sqrt(sum_t(rank)^2))
 
-        MatchQuery _MatchQuery = null;
-
         #endregion
 
         unsafe private void CalculateWithPosition(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
             ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
+
+            MinResultCount = _DBProvider.Table.GroupByLimit;
 
             //Get max word doc list count
             int minWordDocListCount = 1 * 1024 * 1024; //1M
@@ -443,6 +443,8 @@ namespace Hubble.Core.Query
             ref DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
+
+            MinResultCount = _DBProvider.Table.GroupByLimit;
 
             //Get max word doc list count
             int minWordDocListCount = 1 * 1024 * 1024; //1M

@@ -127,7 +127,7 @@ namespace Hubble.Core.Query
         }
 
         #region Private fields
-        const int MinResultCount = 32768;
+        int MinResultCount = 32768;
 
         string _FieldName;
         Hubble.Core.Index.InvertedIndex _InvertedIndex;
@@ -161,6 +161,7 @@ namespace Hubble.Core.Query
             foreach (WordIndexForQuery wifq in wordIndexes)
             {
                 maxWordDocListCount += wifq.WordIndex.WordDocList.Count;
+
                 if (maxWordDocListCount > MinResultCount)
                 {
                     maxDocId = Math.Max(maxDocId, wifq.WordIndex.WordDocList[wifq.WordIndex.WordDocList.Count - 1].DocumentId);
@@ -651,6 +652,8 @@ namespace Hubble.Core.Query
         {
             Array.Sort(wordIndexes);
 
+            MinResultCount = _DBProvider.Table.GroupByLimit;
+
             double ratio = 1;
             if (wordIndexes.Length > 1)
             {
@@ -922,6 +925,8 @@ namespace Hubble.Core.Query
             ref DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
+
+            MinResultCount = _DBProvider.Table.GroupByLimit;
 
             //Get max word doc list count
             int maxWordDocListCount = 0;

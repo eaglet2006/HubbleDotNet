@@ -34,6 +34,24 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "debug":
+                    {
+                        bool debug;
+
+                        if (bool.TryParse(value, out debug))
+                        {
+                            dbProvider.Table.Debug = debug;
+                            
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} debug to {1} sucessful!",
+                                tableName, dbProvider.Table.Debug));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
                 case "initimmediatelyafterstartup":
                     {
                         bool initimmediatelyafterstartup;

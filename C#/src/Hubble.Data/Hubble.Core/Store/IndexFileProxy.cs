@@ -621,9 +621,27 @@ namespace Hubble.Core.Store
         {
             get
             {
-                lock (_LockObj)
+                System.Threading.Monitor.TryEnter(_LockObj);
+
+                try
                 {
+                    if (_DBProvider.Table.Debug)
+                    {
+                        Global.Report.WriteAppLog(string.Format("CanClose of field:{0} Locked.",
+                            _IndexFile.FieldName), true);
+                    }
+
                     return _CanClose;
+                }
+                finally
+                {
+                    System.Threading.Monitor.Exit(_LockObj);
+
+                    if (_DBProvider.Table.Debug)
+                    {
+                        Global.Report.WriteAppLog(string.Format("CanClose of field:{0} Unlocked.",
+                            _IndexFile.FieldName), true);
+                    }
                 }
 
             }
@@ -1195,70 +1213,70 @@ namespace Hubble.Core.Store
             }
         }
 
-        private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
-        {
-            try
-            {
-                switch ((Event)evt)
-                {
-                    case Event.Add:
-                        WordDocList wl = (WordDocList)data;
-                        //_IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
-                        //if (WordUpdateDelegate != null)
-                        //{
-                        //    WordUpdateDelegate(wl.Word, wl.DocList);
-                        //}
+        //private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
+        //{
+        //    try
+        //    {
+        //        switch ((Event)evt)
+        //        {
+        //            case Event.Add:
+        //                WordDocList wl = (WordDocList)data;
+        //                //_IndexFile.AddWordAndDocList(wl.Word, wl.DocList);
+        //                //if (WordUpdateDelegate != null)
+        //                //{
+        //                //    WordUpdateDelegate(wl.Word, wl.DocList);
+        //                //}
 
-                        break;
-                    case Event.Collect:
+        //                break;
+        //            case Event.Collect:
 
-                        lock (_LockObj)
-                        {
-                            if (_NeedClose)
-                            {
-                                break;
-                            }
+        //                lock (_LockObj)
+        //                {
+        //                    if (_NeedClose)
+        //                    {
+        //                        break;
+        //                    }
 
-                            _CanClose = false;
-                        }
+        //                    _CanClose = false;
+        //                }
 
-                        _IndexFile.Collect();
+        //                _IndexFile.Collect();
 
-                        //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
-                        _IndexFile.ClearWordFilePositionList();
+        //                //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
+        //                _IndexFile.ClearWordFilePositionList();
 
-                        lock (_LockObj)
-                        {
-                            _CanClose = true;
-                        }
+        //                lock (_LockObj)
+        //                {
+        //                    _CanClose = true;
+        //                }
 
-                        break;
-                    case Event.Get:
-                        {
-                            GetInfo getInfo = data as GetInfo;
-                            WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
-                            return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
-                                getInfo.DBProvider, getInfo.MaxReturnCount);
-                        }
-                    case Event.GetFilePositionList:
-                        return ProcessGetFilePositionList(evt, flag, data);
+        //                break;
+        //            case Event.Get:
+        //                {
+        //                    GetInfo getInfo = data as GetInfo;
+        //                    WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
+        //                    return _IndexFile.GetWordIndex(getInfo.Word, pList, getInfo.TotalDocs,
+        //                        getInfo.DBProvider, getInfo.MaxReturnCount);
+        //                }
+        //            case Event.GetFilePositionList:
+        //                return ProcessGetFilePositionList(evt, flag, data);
 
-                    case Event.MergeAck:
-                        ProcessMergeAck(evt, flag, data);
-                        break;
+        //            case Event.MergeAck:
+        //                ProcessMergeAck(evt, flag, data);
+        //                break;
 
-                }
+        //        }
 
-            }
-            catch (Exception e)
-            {
-                Global.Report.WriteErrorLog(string.Format("Index File Proxy Fail! Event={0}", ((Event)evt).ToString()), e);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Global.Report.WriteErrorLog(string.Format("Index File Proxy Fail! Event={0}", ((Event)evt).ToString()), e);
 
-                throw e;
-            }
+        //        throw e;
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
 
         public IndexFileProxy(string path, string fieldName, Hubble.Core.Data.Field.IndexMode indexMode, 
@@ -1301,11 +1319,23 @@ namespace Hubble.Core.Store
 
             try
             {
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetMergeInfos of field:{0} Locked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 return (MergeInfos)ProcessGetFilePositionList((int)Event.GetFilePositionList, MessageQueue.MessageFlag.None, option);
             }
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetMergeInfos of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
             }
 
 
@@ -1327,9 +1357,22 @@ MergeAckLoop:
                 throw new TimeoutException();
             }
 
+            if (_DBProvider.Table.Debug)
+            {
+                Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Locked.",
+                    _IndexFile.FieldName), true);
+            }
+
             if (!this.CanMerge) //if can't merge now, waitting for CanMerge
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 System.Threading.Thread.Sleep(10);
                 goto MergeAckLoop;
             }
@@ -1342,6 +1385,12 @@ MergeAckLoop:
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
             }
 
             //SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
@@ -1362,7 +1411,7 @@ MergeAckLoop:
 
             try
             {
-                _IndexFile.AddWordAndDocList(word, first, docsCount, docList);
+                 _IndexFile.AddWordAndDocList(word, first, docsCount, docList);
             }
             finally
             {
@@ -1386,11 +1435,23 @@ MergeAckLoop:
 
             try
             {
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetIndexBuf of field:{0} Locked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 return _IndexFile.GetIndexBuf(serial, position, length);
             }
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetIndexBuf of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
             }
         }
 
@@ -1419,6 +1480,12 @@ MergeAckLoop:
 
             try
             {
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetWordIndex of field:{0} Locked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
 
                 if (pList == null)
@@ -1440,6 +1507,12 @@ MergeAckLoop:
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("GetWordIndex of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
             }
 
             //return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
@@ -1468,11 +1541,24 @@ MergeAckLoop:
 
             try
             {
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("TooManyIndexFiles of field:{0} Locked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 return _IndexFile.IndexFileList.Count > MaxIndexFilesNeedMerge + MinIndexFilesNeedMerge;
             }
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("TooManyIndexFiles of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
+
             }
 
         }
@@ -1490,6 +1576,12 @@ MergeAckLoop:
 
             try
             {
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("Collect of field:{0} Locked.",
+                        _IndexFile.FieldName), true);
+                }
+
                 _IndexFile.Collect();
 
                 //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
@@ -1498,6 +1590,13 @@ MergeAckLoop:
             finally
             {
                 System.Threading.Monitor.Exit(_LockObj);
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("Collect of field:{0} Unlocked.",
+                        _IndexFile.FieldName), true);
+                }
+
             }
 
             //ASendMessage((int)Event.Collect, null);

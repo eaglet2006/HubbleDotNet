@@ -370,7 +370,7 @@ namespace Hubble.SQLClient
             {
                 if (_QueryResult.DataSet.Tables.Count >= 0)
                 {
-                    System.Data.DataSet ds = new System.Data.DataSet();
+                    QueryResult qr = new QueryResult();
 
                     tableTicks = GetTableTicks(_QueryResult);
 
@@ -381,11 +381,18 @@ namespace Hubble.SQLClient
 
                     int noChangedTables = 0;
 
+                    List<System.Data.DataTable> sourceTables = new List<System.Data.DataTable>();
+
                     for (int i = 0; i < _QueryResult.DataSet.Tables.Count; i++)
+                    {
+                        sourceTables.Add(_QueryResult.DataSet.Tables[i]);
+                    }
+
+                    for (int i = 0; i < sourceTables.Count; i++)
                     {
                         System.Data.DataTable table;
 
-                        if (_QueryResult.DataSet.Tables[i].MinimumCapacity == int.MaxValue)
+                        if (sourceTables[i].MinimumCapacity == int.MaxValue)
                         {
                             if (qResult == null)
                             {
@@ -398,26 +405,26 @@ namespace Hubble.SQLClient
                                 noChangedTables++;
                                 table = qResult.DataSet.Tables[i];
                                 qResult.DataSet.Tables.Remove(table);
-                                ds.Tables.Add(table);
+                                qr.AddDataTable(table);
                             }
                             else
                             {
-                                table = _QueryResult.DataSet.Tables[i];
+                                table = sourceTables[i];
                                 _QueryResult.DataSet.Tables.Remove(table);
 
-                                ds.Tables.Add(table);
+                                qr.AddDataTable(table);
                             }
                         }
                         else
                         {
-                            table = _QueryResult.DataSet.Tables[i];
+                            table = sourceTables[i];
                             _QueryResult.DataSet.Tables.Remove(table);
 
-                            ds.Tables.Add(table);
+                            qr.AddDataTable(table);
                         }
                     }
 
-                    _QueryResult.DataSet = ds;
+                    _QueryResult.DataSet = qr.DataSet;
 
                     if (noChangedTables != _QueryResult.DataSet.Tables.Count)
                     {

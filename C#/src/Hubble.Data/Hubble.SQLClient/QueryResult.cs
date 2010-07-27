@@ -53,7 +53,8 @@ namespace Hubble.SQLClient
         private object _LockObj = new object();
 
         public QueryResult()
-        { 
+        {
+ 
         }
 
         public QueryResult(string printMessage, System.Data.DataSet dataSet)
@@ -85,6 +86,42 @@ namespace Hubble.SQLClient
             }
 
             return 0;
+        }
+
+        public void AddDataTable(System.Data.DataTable table)
+        {
+            string tableName = table.TableName;
+
+            int serial = 0;
+            bool find = false;
+
+            foreach (System.Data.DataTable tb in DataSet.Tables)
+            {
+                int index = tb.TableName.IndexOf(tableName, 0, StringComparison.CurrentCultureIgnoreCase);
+
+                if (index >= 0)
+                {
+                    find = true;
+
+                    string serialStr = tb.TableName.Substring(index + tableName.Length);
+
+                    if (serialStr == "")
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        serial = int.Parse(serialStr);
+                    }
+                }
+            }
+
+            if (find)
+            {
+                table.TableName = tableName + serial.ToString();
+            }
+
+            DataSet.Tables.Add(table);
         }
 
         public void AddPrintMessage(string message)

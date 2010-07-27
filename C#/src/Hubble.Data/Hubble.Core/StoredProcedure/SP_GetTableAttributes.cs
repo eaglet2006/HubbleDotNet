@@ -102,6 +102,9 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Attribute", "IndexThread");
             OutputValue("Value", dbProvider.Table.IndexThread.ToString());
 
+            NewRow();
+            OutputValue("Attribute", "Debug");
+            OutputValue("Value", dbProvider.Table.Debug.ToString());
         }
 
         #endregion

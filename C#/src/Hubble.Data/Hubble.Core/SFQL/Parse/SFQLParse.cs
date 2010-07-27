@@ -650,16 +650,38 @@ namespace Hubble.Core.SFQL.Parse
             return false;
         }
 
+        private List<IGroupBy> GetGroupBy(TSFQLSentence sentence, Data.DBProvider dbProvider)
+        {
+            List<IGroupBy> groupByList = new List<IGroupBy>();
+
+            foreach (TSFQLAttribute attribute in sentence.Attributes)
+            {
+                if (attribute.Name.Equals("GroupBy", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (attribute.Parameters.Count > 1)
+                    {
+                        if (attribute.Parameters[0].Equals("Count", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            groupByList.Add(new ParseGroupByCount(attribute, dbProvider));
+                        }
+                    }
+                }
+            }
+
+            return groupByList;
+        }
+
         unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
-
             QueryResult qResult = new QueryResult();
 
             if (dbProvider == null)
             {
                 throw new DataException(string.Format("Table: {0} does not exist!", select.SelectFroms[0].Name));
             }
+
+            List<IGroupBy> groupByList = GetGroupBy(select.Sentence, dbProvider);
 
             long lastModifyTicks = dbProvider.LastModifyTicks;
 
@@ -717,7 +739,7 @@ namespace Hubble.Core.SFQL.Parse
             bool noQueryCache = true;
             Cache.QueryCacheDocuments qDocs = null;
 
-            if (dbProvider.QueryCacheEnabled)
+            if (dbProvider.QueryCacheEnabled && groupByList.Count <= 0)
             {
                 queryCache = dbProvider.QueryCache;
             }
@@ -875,6 +897,12 @@ namespace Hubble.Core.SFQL.Parse
 
             qResult.DataSet = ds;
 
+            foreach (IGroupBy groupBy in groupByList)
+            {
+                qResult.AddDataTable(groupBy.GroupBy(result, dbProvider.Table.GroupByLimit));
+            }
+
+
             qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",
                 dbProvider.DocumentCount));
             return qResult;
@@ -885,6 +913,8 @@ namespace Hubble.Core.SFQL.Parse
         {
             SyntaxAnalysis.Select.Select select = sentence.SyntaxEntity as
                 SyntaxAnalysis.Select.Select;
+
+            select.Sentence = sentence;
 
             if (sentence.Attributes.Count > 0)
             {
@@ -924,15 +954,16 @@ namespace Hubble.Core.SFQL.Parse
             {
                 SyntaxAnalysis.Select.Select select = ((object[])para)[0] as SyntaxAnalysis.Select.Select;
                 Service.ConnectionInformation connInfo = ((object[])para)[1] as Service.ConnectionInformation;
-
+                
                 SyntaxAnalysis.Select.Select qSelect = new Hubble.Core.SFQL.SyntaxAnalysis.Select.Select();
-
+                
                 //qSelect.Begin = select.Begin;
                 qSelect.Begin = 0;
                 qSelect.End = select.End;
                 qSelect.Where = select.Where;
                 qSelect.OrderBys = select.OrderBys;
                 qSelect.SelectFroms = select.SelectFroms;
+                qSelect.Sentence = select.Sentence;
 
                 SyntaxAnalysis.Select.SelectField selectField = new SyntaxAnalysis.Select.SelectField();
                 selectField.Name = "DocId";
@@ -1132,7 +1163,7 @@ namespace Hubble.Core.SFQL.Parse
             //Start multi thread to get the order by fields and docids from each tables
             foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
             {
-                object[] para = new object[2];
+                object[] para = new object[3];
                 para[0] = select;
                 para[1] = Service.CurrentConnection.ConnectionInfo;
                 mCalc.Add(para);
@@ -1385,10 +1416,15 @@ namespace Hubble.Core.SFQL.Parse
 
                 foreach (System.Data.DataTable table in tables)
                 {
-                    table.TableName = "Table" + tableNum.ToString();
-                    tableNum++;
-                    result.DataSet.Tables.Add(table);
+                    result.AddDataTable(table);
                 }
+
+                //foreach (System.Data.DataTable table in tables)
+                //{
+                //    table.TableName = "Table" + tableNum.ToString();
+                //    tableNum++;
+                //    result.DataSet.Tables.Add(table);
+                //}
 
                 foreach (string message in queryResult.PrintMessages)
                 {
