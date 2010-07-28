@@ -61,6 +61,7 @@ namespace Hubble.Core.SFQL.Parse
         int _Top = 0;
         DBProvider _DBProvider;
         List<Field> _GroupByFields;
+        string _GroupByFieldsString;
 
         /// <summary>
         /// Get key for the values of group by feilds
@@ -222,7 +223,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            table.TableName = "GroupByCount";
+            table.TableName = "GroupByCount_" + _GroupByFieldsString;
             table.MinimumCapacity = groupByDict.Count;
 
             return table;
@@ -240,7 +241,7 @@ namespace Hubble.Core.SFQL.Parse
         /// </example>
         internal ParseGroupByCount(TSFQLAttribute attribute, DBProvider dbProvider)
         {
-            if (attribute.Parameters.Count != 4)
+            if (attribute.Parameters.Count < 3)
             {
                 throw new ParseException("Invalid parameter count");
             }
@@ -256,7 +257,9 @@ namespace Hubble.Core.SFQL.Parse
 
             int fieldsDataLength = 0;
 
-            foreach (string fieldName in attribute.Parameters[2].Split(new char[] { ',' }))
+            _GroupByFieldsString = attribute.Parameters[2];
+
+            foreach (string fieldName in _GroupByFieldsString.Split(new char[] { ',' }))
             {
                 Field field = dbProvider.GetField(fieldName.Trim());
 
@@ -313,7 +316,12 @@ namespace Hubble.Core.SFQL.Parse
                 throw new ParseException("It need at least one group by field");
             }
 
-            _Top = int.Parse(attribute.Parameters[3]);
+            _Top = int.MaxValue;
+
+            if (attribute.Parameters.Count > 3)
+            {
+                _Top = int.Parse(attribute.Parameters[3]);
+            }
 
         }
 

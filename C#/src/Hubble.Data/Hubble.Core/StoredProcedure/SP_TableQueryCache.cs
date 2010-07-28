@@ -63,7 +63,7 @@ namespace Hubble.Core.StoredProcedure
 
         #region IStoredProc Members
 
-        public string Name
+        override public string Name
         {
             get
             {

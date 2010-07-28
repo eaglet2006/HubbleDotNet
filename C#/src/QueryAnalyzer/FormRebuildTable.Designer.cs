@@ -52,6 +52,11 @@
             this.label2 = new System.Windows.Forms.Label();
             this.buttonStop = new System.Windows.Forms.Button();
             this.labelOptimizeProgress = new System.Windows.Forms.Label();
+            this.labelIndexDuration = new System.Windows.Forms.Label();
+            this.labelReadDuration = new System.Windows.Forms.Label();
+            this.labelTotalDuration = new System.Windows.Forms.Label();
+            this.labelTotalSqlLength = new System.Windows.Forms.Label();
+            this.labelIndexSpeed = new System.Windows.Forms.Label();
             this.groupBoxSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepRows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownSleepSeconds)).BeginInit();
@@ -158,7 +163,7 @@
             this.groupBoxSetting.Controls.Add(this.label2);
             this.groupBoxSetting.Location = new System.Drawing.Point(36, 147);
             this.groupBoxSetting.Name = "groupBoxSetting";
-            this.groupBoxSetting.Size = new System.Drawing.Size(390, 207);
+            this.groupBoxSetting.Size = new System.Drawing.Size(417, 207);
             this.groupBoxSetting.TabIndex = 16;
             this.groupBoxSetting.TabStop = false;
             this.groupBoxSetting.Text = "Rebuild Settings";
@@ -324,11 +329,61 @@
             this.labelOptimizeProgress.TabIndex = 18;
             this.labelOptimizeProgress.Text = "Optimize Progress";
             // 
+            // labelIndexDuration
+            // 
+            this.labelIndexDuration.AutoSize = true;
+            this.labelIndexDuration.Location = new System.Drawing.Point(296, 31);
+            this.labelIndexDuration.Name = "labelIndexDuration";
+            this.labelIndexDuration.Size = new System.Drawing.Size(77, 13);
+            this.labelIndexDuration.TabIndex = 19;
+            this.labelIndexDuration.Text = "Index duration:";
+            // 
+            // labelReadDuration
+            // 
+            this.labelReadDuration.AutoSize = true;
+            this.labelReadDuration.Location = new System.Drawing.Point(296, 55);
+            this.labelReadDuration.Name = "labelReadDuration";
+            this.labelReadDuration.Size = new System.Drawing.Size(77, 13);
+            this.labelReadDuration.TabIndex = 20;
+            this.labelReadDuration.Text = "Read duration:";
+            // 
+            // labelTotalDuration
+            // 
+            this.labelTotalDuration.AutoSize = true;
+            this.labelTotalDuration.Location = new System.Drawing.Point(296, 79);
+            this.labelTotalDuration.Name = "labelTotalDuration";
+            this.labelTotalDuration.Size = new System.Drawing.Size(75, 13);
+            this.labelTotalDuration.TabIndex = 21;
+            this.labelTotalDuration.Text = "Total duration:";
+            // 
+            // labelTotalSqlLength
+            // 
+            this.labelTotalSqlLength.AutoSize = true;
+            this.labelTotalSqlLength.Location = new System.Drawing.Point(296, 103);
+            this.labelTotalSqlLength.Name = "labelTotalSqlLength";
+            this.labelTotalSqlLength.Size = new System.Drawing.Size(82, 13);
+            this.labelTotalSqlLength.TabIndex = 22;
+            this.labelTotalSqlLength.Text = "Total sql length:";
+            // 
+            // labelIndexSpeed
+            // 
+            this.labelIndexSpeed.AutoSize = true;
+            this.labelIndexSpeed.Location = new System.Drawing.Point(296, 127);
+            this.labelIndexSpeed.Name = "labelIndexSpeed";
+            this.labelIndexSpeed.Size = new System.Drawing.Size(68, 13);
+            this.labelIndexSpeed.TabIndex = 23;
+            this.labelIndexSpeed.Text = "Index speed:";
+            // 
             // FormRebuildTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(439, 395);
+            this.ClientSize = new System.Drawing.Size(465, 395);
+            this.Controls.Add(this.labelIndexSpeed);
+            this.Controls.Add(this.labelTotalSqlLength);
+            this.Controls.Add(this.labelTotalDuration);
+            this.Controls.Add(this.labelReadDuration);
+            this.Controls.Add(this.labelIndexDuration);
             this.Controls.Add(this.labelOptimizeProgress);
             this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.groupBoxSetting);
@@ -383,5 +438,10 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.NumericUpDown numericUpDownSleepSeconds;
         private System.Windows.Forms.Label labelOptimizeProgress;
+        private System.Windows.Forms.Label labelIndexDuration;
+        private System.Windows.Forms.Label labelReadDuration;
+        private System.Windows.Forms.Label labelTotalDuration;
+        private System.Windows.Forms.Label labelTotalSqlLength;
+        private System.Windows.Forms.Label labelIndexSpeed;
     }
 }

@@ -600,7 +600,7 @@ namespace Hubble.Core.SFQL.Parse
         {
             List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
             ds = Data.Document.ToDataSet(selectFields, docResult);
-            ds.Tables[0].TableName = select.SelectFroms[0].Name;
+            ds.Tables[0].TableName = "Select_" + select.SelectFroms[0].Alias;
 
             for (int i = 0; i < select.SelectFields.Count; i++)
             {
@@ -671,6 +671,42 @@ namespace Hubble.Core.SFQL.Parse
             return groupByList;
         }
 
+        private bool CheckDataCacheTicksForUnionSelect(List<SyntaxAnalysis.Select.Select> selects, long datacacheTicks, 
+            out long lastModifyTicks, out long totalDocumentCounts)
+        {
+            lastModifyTicks = 0;
+            totalDocumentCounts = 0;
+
+            bool result = true;
+
+            foreach (SyntaxAnalysis.Select.Select select in selects)
+            {
+                DBProvider dbProvider = DBProvider.GetDBProvider(select.SelectFroms[0].Name);
+
+                if (dbProvider != null)
+                {
+                    totalDocumentCounts += dbProvider.DocumentCount;
+
+                    if (dbProvider.LastModifyTicks > lastModifyTicks)
+                    {
+                        lastModifyTicks = dbProvider.LastModifyTicks;
+                    }
+
+                    if (dbProvider.LastModifyTicks > datacacheTicks)
+                    {
+                        result = false;
+                    }
+                }
+                else
+                {
+                    throw new ParseException(string.Format("table:{0} does not in current database",
+                        select.SelectFroms[0].Name));
+                }
+            }
+
+            return result;
+        }
+
         unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
@@ -690,7 +726,6 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (connInfo.CurrentCommandContent.NeedDataCache)
                 {
-
                     if (dbProvider != null)
                     {
                         long datacacheTicks = connInfo.CurrentCommandContent.DataCache.GetTicks(
@@ -703,6 +738,7 @@ namespace Hubble.Core.SFQL.Parse
                         {
                             System.Data.DataTable table = new System.Data.DataTable();
                             table.MinimumCapacity = int.MaxValue;
+                            table.TableName = "Select_" + select.SelectFroms[0].Alias;
                             qResult.DataSet.Tables.Add(table);
                             qResult.AddPrintMessage(string.Format("TotalDocuments:{0}", 
                                 dbProvider.DocumentCount));
@@ -1148,9 +1184,62 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private QueryResult ExcuteUnionSelect()
+        private string GetUnionSelectTableName()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("UnionSelect");
+
+            foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
+            {
+                sb.AppendFormat("_{0}", select.SelectFroms[0].Name);
+            }
+
+            return sb.ToString();
+        }
+
+        private QueryResult ExcuteUnionSelect(Service.ConnectionInformation connInfo)
         {
             CheckUnionSelectSqlStatement(); //Check sql statement.
+
+            string unionSelectTableName = GetUnionSelectTableName();
+            string tableTicksReturn = null;
+
+            //Process data cache
+            if (connInfo.CurrentCommandContent != null)
+            {
+                if (connInfo.CurrentCommandContent.NeedDataCache)
+                {
+                    long datacacheTicks = connInfo.CurrentCommandContent.DataCache.GetTicks(
+                            unionSelectTableName);
+
+                    long lastModifyTicks;
+                    long totalDocumentCounts;
+
+                    if (CheckDataCacheTicksForUnionSelect(_UnionSelects, datacacheTicks, out lastModifyTicks,
+                        out totalDocumentCounts))
+                    {
+                        QueryResult qResult = new QueryResult();
+                        
+                        tableTicksReturn = string.Format(@"<TableTicks>{0}={1};</TableTicks>",
+                            unionSelectTableName, lastModifyTicks);
+
+                        qResult.AddPrintMessage(tableTicksReturn);
+
+                        System.Data.DataTable tbl = new System.Data.DataTable();
+                        tbl.MinimumCapacity = int.MaxValue;
+                        tbl.TableName = unionSelectTableName;
+                        qResult.DataSet.Tables.Add(tbl);
+                        qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",
+                            totalDocumentCounts));
+                        return qResult;
+
+                    }
+
+                    tableTicksReturn = string.Format(@"<TableTicks>{0}={1};</TableTicks>",
+                        unionSelectTableName, lastModifyTicks);
+
+                }
+            }
 
             _UnionQueryResult = new List<QueryResult>();
 
@@ -1300,6 +1389,7 @@ namespace Hubble.Core.SFQL.Parse
 
             System.Data.DataSet ds = new System.Data.DataSet();
             table.MinimumCapacity = count;
+
             ds.Tables.Add(table);
 
             //Get final result 
@@ -1361,10 +1451,23 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             finalTable.MinimumCapacity = count;
+            finalTable.TableName = unionSelectTableName;
+
+
+
             ds = new System.Data.DataSet();
             ds.Tables.Add(finalTable);
             ds.Tables.Add(statisticTable);
-            return new QueryResult(ds);
+
+            QueryResult qr = new QueryResult(ds);
+
+            if (tableTicksReturn != null)
+            {
+                qr.AddPrintMessage(tableTicksReturn);
+            }
+
+            return qr;
+
         }
 
         private QueryResult ExecuteTSFQLSentence(TSFQLSentence sentence)
@@ -1550,7 +1653,7 @@ namespace Hubble.Core.SFQL.Parse
             //Union select
             if (_UnionSelect)
             {
-                QueryResult queryResult = ExcuteUnionSelect();
+                QueryResult queryResult = ExcuteUnionSelect(Service.CurrentConnection.ConnectionInfo);
 
                 AppendQueryResult(queryResult, ref tableNum, ref result);
             }

@@ -157,6 +157,23 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "groupbylimit":
+                    {
+                        int count;
+
+                        if (int.TryParse(value, out count))
+                        {
+                            dbProvider.Table.GroupByLimit = count;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} GroupByLimit to {1} sucessful!",
+                                tableName, dbProvider.Table.GroupByLimit));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be number");
+                        }
+                    }
+                    break;
                 case "indexthread":
                     {
                         int indexthread;
@@ -183,7 +200,7 @@ namespace Hubble.Core.StoredProcedure
 
         #region IStoredProc Members
 
-        public string Name
+        override public string Name
         {
             get
             {

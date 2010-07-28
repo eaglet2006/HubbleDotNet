@@ -25,7 +25,7 @@ namespace Hubble.Core.StoredProcedure
     {
         #region IStoredProc Members
 
-        public string Name
+        override public string Name
         {
             get
             {
@@ -77,6 +77,10 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "MaxReturnCount");
             OutputValue("Value", dbProvider.MaxReturnCount.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "GroupByLimit");
+            OutputValue("Value", dbProvider.Table.GroupByLimit.ToString());
 
             NewRow();
             OutputValue("Attribute", "InitImmediatelyAfterStartup");

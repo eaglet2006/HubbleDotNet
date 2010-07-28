@@ -300,6 +300,61 @@ namespace Hubble.SQLClient
             return sb.ToString();
         }
 
+        private bool IsSelectOrSpTalbe(System.Data.DataTable table)
+        {
+            if (table.TableName.IndexOf("Select_", 0, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return true;
+            }
+            else if (table.TableName.IndexOf("StoreProc_", 0, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Merge data cache and table to the result
+        /// </summary>
+        /// <param name="qrDataCache">data cache</param>
+        /// <param name="table">table from server</param>
+        /// <param name="result">add the merge table to result</param>
+        private void MergeDataCache(QueryResult qrDataCache, System.Data.DataTable table, QueryResult result)
+        {
+            int i = 0;
+            bool find = false;
+
+            for (; i < qrDataCache.DataSet.Tables.Count; i++)
+            {
+                if (qrDataCache.DataSet.Tables[i].TableName.Equals(table.TableName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    find = true;
+                    break;
+                }
+            }
+
+            if (find)
+            {
+                System.Data.DataTable[] tables = new System.Data.DataTable[qrDataCache.DataSet.Tables.Count];
+                qrDataCache.DataSet.Tables.CopyTo(tables, 0);
+
+                do
+                {
+                    qrDataCache.DataSet.Tables.Remove(tables[i]);
+                    result.AddDataTable(tables[i]);
+
+                    if (++i >= tables.Length)
+                    {
+                        break;
+                    }
+                }
+                while (!IsSelectOrSpTalbe(tables[i]));
+            }
+        }
+
         private System.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
         {
             if (!_SqlConnection.Connected)
@@ -341,8 +396,12 @@ namespace Hubble.SQLClient
                 {
                     if (orginalSql.Contains(";"))
                     {
-                        //if multi select, disable data cache
-                        needCache = false;
+                        //if multi select and not unionselect, disable data cache
+
+                        if (orginalSql.Trim().IndexOf("[UnionSelect]", 0, StringComparison.CurrentCultureIgnoreCase) != 0)
+                        {
+                            needCache = false;
+                        }
                     }
                 }
             }
@@ -403,9 +462,12 @@ namespace Hubble.SQLClient
                             if (qResult != null)
                             {
                                 noChangedTables++;
-                                table = qResult.DataSet.Tables[i];
-                                qResult.DataSet.Tables.Remove(table);
-                                qr.AddDataTable(table);
+
+                                table = sourceTables[i];
+                                MergeDataCache(qResult, table, qr);
+                                //table = qResult.DataSet.Tables[i];
+                                //qResult.DataSet.Tables.Remove(table);
+                                //qr.AddDataTable(table);
                             }
                             else
                             {

@@ -41,25 +41,17 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
+            this.label23 = new System.Windows.Forms.Label();
             this.numericUpDownIndexThread = new System.Windows.Forms.NumericUpDown();
             this.label24 = new System.Windows.Forms.Label();
             this.comboBoxInitImmediatelyAfterStartup = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
-            this.label21 = new System.Windows.Forms.Label();
-            this.label20 = new System.Windows.Forms.Label();
-            this.numericUpDownQueryCacheTimeout = new System.Windows.Forms.NumericUpDown();
-            this.label18 = new System.Windows.Forms.Label();
-            this.comboBoxQueryCacheEnabled = new System.Windows.Forms.ComboBox();
-            this.label19 = new System.Windows.Forms.Label();
             this.buttonInfoCancel = new System.Windows.Forms.Button();
             this.buttonSet = new System.Windows.Forms.Button();
-            this.numericUpDownCleanupQueryCacheFileInDays = new System.Windows.Forms.NumericUpDown();
             this.numericUpDownMaxReturnCount = new System.Windows.Forms.NumericUpDown();
             this.numericUpDownLastDocId = new System.Windows.Forms.NumericUpDown();
-            this.label17 = new System.Windows.Forms.Label();
             this.comboBoxIndexOnly = new System.Windows.Forms.ComboBox();
-            this.comboBoxStoreQueryCacheInFile = new System.Windows.Forms.ComboBox();
-            this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.textBoxDBAdapter = new System.Windows.Forms.TextBox();
@@ -71,17 +63,28 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.comboBox1 = new System.Windows.Forms.ComboBox();
-            this.label23 = new System.Windows.Forms.Label();
+            this.label16 = new System.Windows.Forms.Label();
+            this.comboBoxStoreQueryCacheInFile = new System.Windows.Forms.ComboBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.numericUpDownCleanupQueryCacheFileInDays = new System.Windows.Forms.NumericUpDown();
+            this.label19 = new System.Windows.Forms.Label();
+            this.comboBoxQueryCacheEnabled = new System.Windows.Forms.ComboBox();
+            this.label18 = new System.Windows.Forms.Label();
+            this.numericUpDownQueryCacheTimeout = new System.Windows.Forms.NumericUpDown();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.numericUpDownGroupByLimit = new System.Windows.Forms.NumericUpDown();
+            this.label25 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
             this.tabPageAttributes.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownGroupByLimit)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -206,6 +209,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.numericUpDownGroupByLimit);
+            this.tabPageAttributes.Controls.Add(this.label25);
             this.tabPageAttributes.Controls.Add(this.comboBox1);
             this.tabPageAttributes.Controls.Add(this.label23);
             this.tabPageAttributes.Controls.Add(this.numericUpDownIndexThread);
@@ -246,9 +251,31 @@
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
             // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBox1.Location = new System.Drawing.Point(514, 54);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(96, 21);
+            this.comboBox1.TabIndex = 35;
+            this.comboBox1.Tag = "Debug";
+            this.comboBox1.Text = "False";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(348, 57);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(132, 13);
+            this.label23.TabIndex = 34;
+            this.label23.Text = "Record Debug Information";
+            // 
             // numericUpDownIndexThread
             // 
-            this.numericUpDownIndexThread.Location = new System.Drawing.Point(199, 455);
+            this.numericUpDownIndexThread.Location = new System.Drawing.Point(173, 335);
             this.numericUpDownIndexThread.Maximum = new decimal(new int[] {
             8,
             0,
@@ -260,7 +287,7 @@
             0,
             0});
             this.numericUpDownIndexThread.Name = "numericUpDownIndexThread";
-            this.numericUpDownIndexThread.Size = new System.Drawing.Size(96, 20);
+            this.numericUpDownIndexThread.Size = new System.Drawing.Size(121, 20);
             this.numericUpDownIndexThread.TabIndex = 33;
             this.numericUpDownIndexThread.Tag = "IndexThread";
             this.numericUpDownIndexThread.Value = new decimal(new int[] {
@@ -272,7 +299,7 @@
             // label24
             // 
             this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(33, 460);
+            this.label24.Location = new System.Drawing.Point(32, 340);
             this.label24.Name = "label24";
             this.label24.Size = new System.Drawing.Size(67, 13);
             this.label24.TabIndex = 32;
@@ -284,7 +311,7 @@
             this.comboBoxInitImmediatelyAfterStartup.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(174, 273);
+            this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(173, 308);
             this.comboBoxInitImmediatelyAfterStartup.Name = "comboBoxInitImmediatelyAfterStartup";
             this.comboBoxInitImmediatelyAfterStartup.Size = new System.Drawing.Size(121, 21);
             this.comboBoxInitImmediatelyAfterStartup.TabIndex = 31;
@@ -294,73 +321,11 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(33, 278);
+            this.label22.Location = new System.Drawing.Point(32, 313);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(137, 13);
             this.label22.TabIndex = 30;
             this.label22.Text = "Init immediately after startup";
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(308, 423);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(29, 13);
-            this.label21.TabIndex = 29;
-            this.label21.Text = "days";
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(308, 349);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(20, 13);
-            this.label20.TabIndex = 28;
-            this.label20.Text = "ms";
-            // 
-            // numericUpDownQueryCacheTimeout
-            // 
-            this.numericUpDownQueryCacheTimeout.Location = new System.Drawing.Point(173, 344);
-            this.numericUpDownQueryCacheTimeout.Maximum = new decimal(new int[] {
-            -469762049,
-            -590869294,
-            5421010,
-            0});
-            this.numericUpDownQueryCacheTimeout.Name = "numericUpDownQueryCacheTimeout";
-            this.numericUpDownQueryCacheTimeout.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownQueryCacheTimeout.TabIndex = 27;
-            this.numericUpDownQueryCacheTimeout.Tag = "QueryCacheTimeout";
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(32, 349);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(104, 13);
-            this.label18.TabIndex = 26;
-            this.label18.Text = "QueryCacheTimeout";
-            // 
-            // comboBoxQueryCacheEnabled
-            // 
-            this.comboBoxQueryCacheEnabled.FormattingEnabled = true;
-            this.comboBoxQueryCacheEnabled.Items.AddRange(new object[] {
-            "True",
-            "False"});
-            this.comboBoxQueryCacheEnabled.Location = new System.Drawing.Point(173, 309);
-            this.comboBoxQueryCacheEnabled.Name = "comboBoxQueryCacheEnabled";
-            this.comboBoxQueryCacheEnabled.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxQueryCacheEnabled.TabIndex = 25;
-            this.comboBoxQueryCacheEnabled.Tag = "QueryCacheEnabled";
-            this.comboBoxQueryCacheEnabled.Text = "True";
-            // 
-            // label19
-            // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(32, 314);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(105, 13);
-            this.label19.TabIndex = 24;
-            this.label19.Text = "QueryCacheEnabled";
             // 
             // buttonInfoCancel
             // 
@@ -381,19 +346,6 @@
             this.buttonSet.Text = "Set";
             this.buttonSet.UseVisualStyleBackColor = true;
             this.buttonSet.Click += new System.EventHandler(this.buttonSet_Click);
-            // 
-            // numericUpDownCleanupQueryCacheFileInDays
-            // 
-            this.numericUpDownCleanupQueryCacheFileInDays.Location = new System.Drawing.Point(198, 418);
-            this.numericUpDownCleanupQueryCacheFileInDays.Maximum = new decimal(new int[] {
-            -469762049,
-            -590869294,
-            5421010,
-            0});
-            this.numericUpDownCleanupQueryCacheFileInDays.Name = "numericUpDownCleanupQueryCacheFileInDays";
-            this.numericUpDownCleanupQueryCacheFileInDays.Size = new System.Drawing.Size(96, 20);
-            this.numericUpDownCleanupQueryCacheFileInDays.TabIndex = 21;
-            this.numericUpDownCleanupQueryCacheFileInDays.Tag = "CleanupQueryCacheFileInDays";
             // 
             // numericUpDownMaxReturnCount
             // 
@@ -432,15 +384,6 @@
             this.numericUpDownLastDocId.TabIndex = 19;
             this.numericUpDownLastDocId.Tag = "LastDocId";
             // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(32, 423);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(154, 13);
-            this.label17.TabIndex = 17;
-            this.label17.Text = "CleanupQueryCacheFileInDays";
-            // 
             // comboBoxIndexOnly
             // 
             this.comboBoxIndexOnly.Enabled = false;
@@ -454,28 +397,6 @@
             this.comboBoxIndexOnly.TabIndex = 16;
             this.comboBoxIndexOnly.Tag = "IndexOnly";
             this.comboBoxIndexOnly.Text = "True";
-            // 
-            // comboBoxStoreQueryCacheInFile
-            // 
-            this.comboBoxStoreQueryCacheInFile.FormattingEnabled = true;
-            this.comboBoxStoreQueryCacheInFile.Items.AddRange(new object[] {
-            "True",
-            "False"});
-            this.comboBoxStoreQueryCacheInFile.Location = new System.Drawing.Point(173, 381);
-            this.comboBoxStoreQueryCacheInFile.Name = "comboBoxStoreQueryCacheInFile";
-            this.comboBoxStoreQueryCacheInFile.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxStoreQueryCacheInFile.TabIndex = 15;
-            this.comboBoxStoreQueryCacheInFile.Tag = "StoreQueryCacheInFile";
-            this.comboBoxStoreQueryCacheInFile.Text = "True";
-            // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(32, 386);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(116, 13);
-            this.label16.TabIndex = 14;
-            this.label16.Text = "StoreQueryCacheInFile";
             // 
             // label15
             // 
@@ -576,27 +497,143 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // comboBox1
+            // label16
             // 
-            this.comboBox1.FormattingEnabled = true;
-            this.comboBox1.Items.AddRange(new object[] {
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(348, 274);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(116, 13);
+            this.label16.TabIndex = 14;
+            this.label16.Text = "StoreQueryCacheInFile";
+            // 
+            // comboBoxStoreQueryCacheInFile
+            // 
+            this.comboBoxStoreQueryCacheInFile.FormattingEnabled = true;
+            this.comboBoxStoreQueryCacheInFile.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBox1.Location = new System.Drawing.Point(489, 54);
-            this.comboBox1.Name = "comboBox1";
-            this.comboBox1.Size = new System.Drawing.Size(121, 21);
-            this.comboBox1.TabIndex = 35;
-            this.comboBox1.Tag = "Debug";
-            this.comboBox1.Text = "False";
+            this.comboBoxStoreQueryCacheInFile.Location = new System.Drawing.Point(514, 269);
+            this.comboBoxStoreQueryCacheInFile.Name = "comboBoxStoreQueryCacheInFile";
+            this.comboBoxStoreQueryCacheInFile.Size = new System.Drawing.Size(96, 21);
+            this.comboBoxStoreQueryCacheInFile.TabIndex = 15;
+            this.comboBoxStoreQueryCacheInFile.Tag = "StoreQueryCacheInFile";
+            this.comboBoxStoreQueryCacheInFile.Text = "True";
             // 
-            // label23
+            // label17
             // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(348, 57);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(132, 13);
-            this.label23.TabIndex = 34;
-            this.label23.Text = "Record Debug Information";
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(348, 311);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(154, 13);
+            this.label17.TabIndex = 17;
+            this.label17.Text = "CleanupQueryCacheFileInDays";
+            // 
+            // numericUpDownCleanupQueryCacheFileInDays
+            // 
+            this.numericUpDownCleanupQueryCacheFileInDays.Location = new System.Drawing.Point(514, 306);
+            this.numericUpDownCleanupQueryCacheFileInDays.Maximum = new decimal(new int[] {
+            -469762049,
+            -590869294,
+            5421010,
+            0});
+            this.numericUpDownCleanupQueryCacheFileInDays.Name = "numericUpDownCleanupQueryCacheFileInDays";
+            this.numericUpDownCleanupQueryCacheFileInDays.Size = new System.Drawing.Size(96, 20);
+            this.numericUpDownCleanupQueryCacheFileInDays.TabIndex = 21;
+            this.numericUpDownCleanupQueryCacheFileInDays.Tag = "CleanupQueryCacheFileInDays";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(348, 202);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(105, 13);
+            this.label19.TabIndex = 24;
+            this.label19.Text = "QueryCacheEnabled";
+            // 
+            // comboBoxQueryCacheEnabled
+            // 
+            this.comboBoxQueryCacheEnabled.FormattingEnabled = true;
+            this.comboBoxQueryCacheEnabled.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBoxQueryCacheEnabled.Location = new System.Drawing.Point(514, 197);
+            this.comboBoxQueryCacheEnabled.Name = "comboBoxQueryCacheEnabled";
+            this.comboBoxQueryCacheEnabled.Size = new System.Drawing.Size(96, 21);
+            this.comboBoxQueryCacheEnabled.TabIndex = 25;
+            this.comboBoxQueryCacheEnabled.Tag = "QueryCacheEnabled";
+            this.comboBoxQueryCacheEnabled.Text = "True";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(348, 237);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(104, 13);
+            this.label18.TabIndex = 26;
+            this.label18.Text = "QueryCacheTimeout";
+            // 
+            // numericUpDownQueryCacheTimeout
+            // 
+            this.numericUpDownQueryCacheTimeout.Location = new System.Drawing.Point(514, 232);
+            this.numericUpDownQueryCacheTimeout.Maximum = new decimal(new int[] {
+            -469762049,
+            -590869294,
+            5421010,
+            0});
+            this.numericUpDownQueryCacheTimeout.Name = "numericUpDownQueryCacheTimeout";
+            this.numericUpDownQueryCacheTimeout.Size = new System.Drawing.Size(95, 20);
+            this.numericUpDownQueryCacheTimeout.TabIndex = 27;
+            this.numericUpDownQueryCacheTimeout.Tag = "QueryCacheTimeout";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(624, 237);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(20, 13);
+            this.label20.TabIndex = 28;
+            this.label20.Text = "ms";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(624, 311);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(29, 13);
+            this.label21.TabIndex = 29;
+            this.label21.Text = "days";
+            // 
+            // numericUpDownGroupByLimit
+            // 
+            this.numericUpDownGroupByLimit.Location = new System.Drawing.Point(173, 272);
+            this.numericUpDownGroupByLimit.Maximum = new decimal(new int[] {
+            -469762049,
+            -590869294,
+            5421010,
+            0});
+            this.numericUpDownGroupByLimit.Minimum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.numericUpDownGroupByLimit.Name = "numericUpDownGroupByLimit";
+            this.numericUpDownGroupByLimit.Size = new System.Drawing.Size(120, 20);
+            this.numericUpDownGroupByLimit.TabIndex = 37;
+            this.numericUpDownGroupByLimit.Tag = "GroupByLimit";
+            this.numericUpDownGroupByLimit.Value = new decimal(new int[] {
+            40000,
+            0,
+            0,
+            0});
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.Location = new System.Drawing.Point(32, 276);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(69, 13);
+            this.label25.TabIndex = 36;
+            this.label25.Text = "GroupByLimit";
             // 
             // FormTableInfo
             // 
@@ -615,10 +652,11 @@
             this.tabPageAttributes.ResumeLayout(false);
             this.tabPageAttributes.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownGroupByLimit)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -649,25 +687,27 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.NumericUpDown numericUpDownLastDocId;
-        private System.Windows.Forms.Label label17;
         private System.Windows.Forms.ComboBox comboBoxIndexOnly;
-        private System.Windows.Forms.ComboBox comboBoxStoreQueryCacheInFile;
-        private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.NumericUpDown numericUpDownCleanupQueryCacheFileInDays;
         private System.Windows.Forms.NumericUpDown numericUpDownMaxReturnCount;
         private System.Windows.Forms.Button buttonSet;
         private System.Windows.Forms.Button buttonInfoCancel;
-        private System.Windows.Forms.NumericUpDown numericUpDownQueryCacheTimeout;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.ComboBox comboBoxQueryCacheEnabled;
-        private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.Label label21;
         private System.Windows.Forms.ComboBox comboBoxInitImmediatelyAfterStartup;
         private System.Windows.Forms.Label label22;
         private System.Windows.Forms.NumericUpDown numericUpDownIndexThread;
         private System.Windows.Forms.Label label24;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.NumericUpDown numericUpDownQueryCacheTimeout;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.ComboBox comboBoxQueryCacheEnabled;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.NumericUpDown numericUpDownCleanupQueryCacheFileInDays;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.ComboBox comboBoxStoreQueryCacheInFile;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.NumericUpDown numericUpDownGroupByLimit;
+        private System.Windows.Forms.Label label25;
     }
 }

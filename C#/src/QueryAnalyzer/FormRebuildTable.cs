@@ -103,6 +103,11 @@ namespace QueryAnalyzer
         string _DBTableName;
         string _DocIdReplaceField = null;
 
+        Stopwatch _IndexDuration = new Stopwatch();
+        Stopwatch _ReadDuration = new Stopwatch();
+        Stopwatch _TotalDuration = new Stopwatch();
+        double _TotalSqlLength = 0;
+
         public FormRebuildTable()
         {
             InitializeComponent();
@@ -460,12 +465,36 @@ namespace QueryAnalyzer
             }
             else
             {
+                _IndexDuration.Stop();
+                _ReadDuration.Stop();
+                _TotalDuration.Stop();
+
                 MessageBox.Show(string.Format("During {0} ms", sw.ElapsedMilliseconds), "Rebuild finished!",
     MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 Close();
             }
         }
+
+        delegate void DelegateShowDuration();
+
+        private void ShowDuration()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new DelegateShowDuration(ShowDuration));
+
+            }
+            else
+            {
+                labelIndexDuration.Text = string.Format("Index duration:{0:F1}s", _IndexDuration.Elapsed.TotalSeconds);
+                labelReadDuration.Text = string.Format("Read duration:{0:F1}s", _ReadDuration.Elapsed.TotalSeconds);
+                labelTotalDuration.Text = string.Format("Total duration:{0:F1}s" , _TotalDuration.Elapsed.TotalSeconds);
+                labelTotalSqlLength.Text = string.Format("Total data length:{0:F3}MB", _TotalSqlLength / (1024 * 1024));
+                labelIndexSpeed.Text = string.Format("Index speed:{0:F1}MB/h", _TotalSqlLength * 3600 / (1024 * 1024 * _IndexDuration.Elapsed.TotalSeconds));
+            }
+        }
+
 
         private void DoFastOptimize()
         {
@@ -575,11 +604,17 @@ namespace QueryAnalyzer
                 {
                     //DataAccess.ReConnect();
 
+                    _ReadDuration.Start();
                     string insertSql = GetInsertSql(ref from, ref remain, out count);
+                    _ReadDuration.Stop();
 
                     if (!string.IsNullOrEmpty(insertSql))
                     {
+                        _IndexDuration.Start();
                         QueryResult qResult = DataAccess.Excute(insertSql);
+                        _IndexDuration.Stop();
+
+                        _TotalSqlLength += insertSql.Length * 2; //1 char = 2 bytes
 
                         if (TooManyIndexFiles(qResult))
                         {
@@ -590,6 +625,7 @@ namespace QueryAnalyzer
 
                     totalCount += count;
                     ShowCurrentCount(totalCount);
+                    ShowDuration();
 
                     if (_SleepRows > 0 && _SleepInterval > 0 && remain > 0)
                     {
@@ -636,6 +672,12 @@ namespace QueryAnalyzer
             buttonRebuild.Enabled = false;
             System.Threading.Thread thread = new System.Threading.Thread(Rebuild);
             thread.IsBackground = true;
+            _TotalSqlLength = 0;
+            _IndexDuration.Reset();
+            _ReadDuration.Reset();
+            _TotalDuration.Reset();
+            _TotalDuration.Start();
+
             thread.Start();
         }
 

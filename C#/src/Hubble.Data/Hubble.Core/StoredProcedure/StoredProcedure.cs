@@ -22,8 +22,10 @@ using Hubble.SQLClient;
 
 namespace Hubble.Core.StoredProcedure
 {
-    public abstract class StoredProcedure
+    public abstract class StoredProcedure 
     {
+        abstract public string Name { get; }
+
         protected QueryResult _QueryResult = new QueryResult();
 
         protected void AddColumn(string columnName)
@@ -34,6 +36,8 @@ namespace Hubble.Core.StoredProcedure
             }
 
             System.Data.DataTable table = _QueryResult.DataSet.Tables[0];
+
+            table.TableName = "StoreProc_" + Name;
 
             System.Data.DataColumn col = new System.Data.DataColumn(columnName);
 
