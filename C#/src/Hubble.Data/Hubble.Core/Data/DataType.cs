@@ -117,8 +117,6 @@ namespace Hubble.Core.Data
                     }
 
                     return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.String, str.ToString());
-                case DataType.Date:
-                case DataType.SmallDateTime:
                 case DataType.TinyInt:
                     {
                         int v = buf[from];
@@ -134,6 +132,8 @@ namespace Hubble.Core.Data
                         h <<= 8;
                         return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, l | h);
                     }
+                case DataType.Date:
+                case DataType.SmallDateTime:
                 case DataType.Int:
                     {
                         return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, buf[from]);
