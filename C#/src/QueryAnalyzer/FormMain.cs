@@ -242,6 +242,16 @@ namespace QueryAnalyzer
                 for (int i = 0; i < queryResult.DataSet.Tables.Count; i++)
                 {
                     mulitGridView.GridViewList[i].DataSource = queryResult.DataSet.Tables[i];
+
+                    DataTable tbl = queryResult.DataSet.Tables[i];
+
+                    for (int j = 0; j < tbl.Columns.Count; j++)
+                    {
+                        if (tbl.Columns[j].DataType == typeof(DateTime))
+                        {
+                            mulitGridView.GridViewList[i].Columns[j].DefaultCellStyle.Format = "yyyy-MM-dd HH:mm:sss";
+                        }
+                    }
                 }
 
                 toolStripStatusLabelReport.Text = report.ToString();
