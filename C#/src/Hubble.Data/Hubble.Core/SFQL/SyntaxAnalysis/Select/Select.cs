@@ -204,5 +204,59 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
         #endregion
 
+        public override string ToString()
+        {
+            StringBuilder sql = new StringBuilder();
+
+            sql.Append("select ");
+
+            if (this.Begin >= 0)
+            {
+                sql.AppendFormat("Between {0} to {1} ", this.Begin, this.End);
+            }
+
+            for (int i = 0; i < this.SelectFields.Count; i++)
+            {
+                if (i == 0)
+                {
+                    sql.AppendFormat("'{0}' as '{1}' ", this.SelectFields[i].Name, this.SelectFields[i].Alias);
+                }
+                else
+                {
+                    sql.AppendFormat(",'{0}' as '{1}' ", this.SelectFields[i].Name, this.SelectFields[i].Alias);
+                }
+            }
+
+            sql.AppendFormat("from {0} ", this.SelectFroms[0].Name);
+
+            if (this.Where != null)
+            {
+                sql.Append("Where ");
+                sql.Append(this.Where.ToString());
+            }
+
+            return sql.ToString();
+        }
+
+        public Select Clone()
+        {
+            Select select = new Select();
+            select.Begin = this.Begin;
+            select.End = this.End;
+            select.SelectFields = this.SelectFields;
+            select.SelectFroms = new List<SelectFrom>();
+
+            foreach (SelectFrom from in this.SelectFroms)
+            {
+                select.SelectFroms.Add(from.Clone());
+            }
+
+            select.OrderBys = this.OrderBys;
+            select.Where = this.Where;
+            select.Sentence = this.Sentence;
+
+            return select;
+
+        }
     }
 }

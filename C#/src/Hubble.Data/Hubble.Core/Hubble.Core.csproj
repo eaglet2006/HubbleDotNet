@@ -55,12 +55,26 @@
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'HubblePro|AnyCPU' ">
+    <OutputPath>..\..\..\..\..\HubblePro\Bin\Release\</OutputPath>
+    <DefineConstants>TRACE;HubblePro</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BigTable\BigTable.cs" />
+    <Compile Include="BigTable\BigTableParse.cs" />
+    <Compile Include="BigTable\IBigTableParse.cs" />
     <Compile Include="Cache\CacheManager.cs" />
     <Compile Include="Cache\IManagedCache.cs" />
     <Compile Include="Cache\QueryCache.cs" />
@@ -150,6 +164,8 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_DetachTable.cs" />
+    <Compile Include="StoredProcedure\SP_AttachTable.cs" />
     <Compile Include="StoredProcedure\SP_GetTableMergeRate.cs" />
     <Compile Include="StoredProcedure\SP_GetTableSchema.cs" />
     <Compile Include="StoredProcedure\IHelper.cs" />
@@ -208,7 +224,7 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
-      <Name>Hubble.Framework</Name>
+      <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
     </ProjectReference>
     <ProjectReference Include="..\Hubble.SQLClient\Hubble.SQLClient.csproj">
       <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>

@@ -149,7 +149,15 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
         #endregion
 
+        public SelectFrom Clone()
+        {
+            SelectFrom selectFrom = new SelectFrom();
+            selectFrom.Name = this.Name;
+            selectFrom.Alias = this.Alias;
+            return selectFrom;
+        }
     }
+
 }
 
 

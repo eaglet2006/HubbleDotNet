@@ -717,6 +717,14 @@ namespace Hubble.Core.SFQL.Parse
                 throw new DataException(string.Format("Table: {0} does not exist!", select.SelectFroms[0].Name));
             }
 
+            if (dbProvider.IsBigTable)
+            {
+                BigTable.IBigTableParse bigTableParse = (BigTable.IBigTableParse)Hubble.Framework.Reflection.Instance.CreateInstance(DBProvider.BigTableParseType);
+                bigTableParse.SFQLParse = this;
+
+                return bigTableParse.Parse(select, dbProvider, connInfo);
+            }
+
             List<IGroupBy> groupByList = GetGroupBy(select.Sentence, dbProvider);
 
             long lastModifyTicks = dbProvider.LastModifyTicks;
@@ -1197,12 +1205,18 @@ namespace Hubble.Core.SFQL.Parse
             return sb.ToString();
         }
 
-        private QueryResult ExcuteUnionSelect(Service.ConnectionInformation connInfo)
+        public List<QueryResult> UnionSelectDistribute(Service.ConnectionInformation connInfo,
+            List<SyntaxAnalysis.Select.Select> unionSelects, out string unionSelectTableName,
+            out string tableTicksReturn, out QueryResult datacacheResult)
         {
+            _UnionSelects = unionSelects;
+
             CheckUnionSelectSqlStatement(); //Check sql statement.
 
-            string unionSelectTableName = GetUnionSelectTableName();
-            string tableTicksReturn = null;
+            unionSelectTableName = GetUnionSelectTableName();
+            tableTicksReturn = null;
+
+            datacacheResult = null;
 
             //Process data cache
             if (connInfo.CurrentCommandContent != null)
@@ -1219,7 +1233,7 @@ namespace Hubble.Core.SFQL.Parse
                         out totalDocumentCounts))
                     {
                         QueryResult qResult = new QueryResult();
-                        
+
                         tableTicksReturn = string.Format(@"<TableTicks>{0}={1};</TableTicks>",
                             unionSelectTableName, lastModifyTicks);
 
@@ -1231,7 +1245,8 @@ namespace Hubble.Core.SFQL.Parse
                         qResult.DataSet.Tables.Add(tbl);
                         qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",
                             totalDocumentCounts));
-                        return qResult;
+                        datacacheResult = qResult;
+                        return null;
 
                     }
 
@@ -1245,9 +1260,6 @@ namespace Hubble.Core.SFQL.Parse
 
             Hubble.Framework.Threading.MultiThreadCalculate mCalc =
                 new Hubble.Framework.Threading.MultiThreadCalculate(ProcUnionSelectQuery);
-            
-            int begin = _UnionSelects[0].Begin;
-            int end = _UnionSelects[0].End;
 
             //Start multi thread to get the order by fields and docids from each tables
             foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
@@ -1264,6 +1276,23 @@ namespace Hubble.Core.SFQL.Parse
             {
                 throw new Data.DataException("Union query fail! Please check the error log file");
             }
+
+            //Get the result of combining.
+            return _UnionQueryResult;
+        }
+
+        internal QueryResult ExcuteUnionSelect(string unionSelectTableName, string tableTicksReturn, 
+            List<QueryResult> unionQueryResult, Service.ConnectionInformation connInfo)
+        {
+            _UnionQueryResult = unionQueryResult;
+
+            if (_UnionQueryResult.Count == 0)
+            {
+                throw new Data.DataException("Union query fail! Please check the error log file");
+            }
+
+            int begin = _UnionSelects[0].Begin;
+            int end = _UnionSelects[0].End;
 
             //Get the result of combining.
             System.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
@@ -1354,13 +1383,13 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             System.Data.DataRow[] ResultsRowArray;
-            
+
             //Sort by order by fields
             if (_UnionSelects[0].OrderBys.Count > 0)
             {
                 StringBuilder sortString = new StringBuilder();
 
-                foreach(SyntaxAnalysis.Select.OrderBy orderBy in _UnionSelects[0].OrderBys)
+                foreach (SyntaxAnalysis.Select.OrderBy orderBy in _UnionSelects[0].OrderBys)
                 {
                     sortString.AppendFormat("{0} ", orderBy.ToString());
                 }
@@ -1407,7 +1436,7 @@ namespace Hubble.Core.SFQL.Parse
 
                     break;
                 }
-                
+
                 System.Data.DataRow row = table.Rows[i];
 
                 SyntaxAnalysis.Select.Select select = _UnionSelects[0];
@@ -1416,11 +1445,11 @@ namespace Hubble.Core.SFQL.Parse
                 Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[1];
                 result[0] = new Hubble.Core.Query.DocumentResultForSort(int.Parse(row["DocId"].ToString()),
                     long.Parse(row["Score"].ToString()));
-                
+
                 string tableName = row["TableName"].ToString();
                 Data.DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
 
-                GetSelectFields(GetUnionSelectByTableName(_UnionSelects, tableName), 
+                GetSelectFields(GetUnionSelectByTableName(_UnionSelects, tableName),
                     dbProvider, out selectFields, out allFieldsCount);
 
                 System.Data.DataSet dataset;
@@ -1430,7 +1459,7 @@ namespace Hubble.Core.SFQL.Parse
                 if (finalTable == null)
                 {
                     finalTable = dataset.Tables[0].Clone();
-                                    
+
                     System.Data.DataColumn col = new System.Data.DataColumn();
                     col.ColumnName = "TableName";
                     finalTable.Columns.Add(col);
@@ -1468,6 +1497,24 @@ namespace Hubble.Core.SFQL.Parse
 
             return qr;
 
+
+        }
+
+        private QueryResult ExcuteUnionSelect(Service.ConnectionInformation connInfo)
+        {
+            string unionSelectTableName;
+            string tableTicksReturn = null;
+            QueryResult datacacheQuery = null;
+
+            _UnionQueryResult = UnionSelectDistribute(connInfo, _UnionSelects, out unionSelectTableName, 
+                out tableTicksReturn, out datacacheQuery);
+
+            if (datacacheQuery != null)
+            {
+                return datacacheQuery;
+            }
+
+            return ExcuteUnionSelect(unionSelectTableName, tableTicksReturn, _UnionQueryResult, connInfo);
         }
 
         private QueryResult ExecuteTSFQLSentence(TSFQLSentence sentence)

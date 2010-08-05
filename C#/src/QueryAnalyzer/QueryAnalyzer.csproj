@@ -51,6 +51,16 @@
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'HubblePro|AnyCPU' ">
+    <OutputPath>..\..\..\..\HubblePro\Bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml.Linq">
@@ -79,6 +89,12 @@
     <Compile Include="CreateTable\BeforeDatabaseAttributes.cs" />
     <Compile Include="CreateTable\IAfter.cs" />
     <Compile Include="CreateTable\IBefore.cs" />
+    <Compile Include="FormAttachTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAttachTable.Designer.cs">
+      <DependentUpon>FormAttachTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormCreateTable.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -166,6 +182,9 @@
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormAttachTable.resx">
+      <DependentUpon>FormAttachTable.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormCreateTable.resx">
       <DependentUpon>FormCreateTable.cs</DependentUpon>

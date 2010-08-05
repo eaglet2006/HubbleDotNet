@@ -65,6 +65,10 @@ namespace Hubble.Core.Data
 
         int _IndexThread = 1;
 
+        bool _IsBigTable = false;
+
+        private BigTable.BigTable _BigTable = new Hubble.Core.BigTable.BigTable();
+
         #endregion
 
         #region Public properties
@@ -359,6 +363,40 @@ namespace Hubble.Core.Data
                 _IndexThread = value;
             } 
         }
+
+        /// <summary>
+        /// Is it big table
+        /// </summary>
+        public bool IsBigTable
+        {
+            get
+            {
+                return _IsBigTable;
+            }
+
+            set
+            {
+                _IsBigTable = value;
+            }
+
+        }
+
+        /// <summary>
+        /// Configuration of bigtable
+        /// </summary>
+        public BigTable.BigTable BigTable
+        {
+            get
+            {
+                return _BigTable;
+            }
+
+            set
+            {
+                _BigTable = value;
+            }
+        }
+
 
         private static void TableCheck(Table table)
         {

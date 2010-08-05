@@ -756,5 +756,40 @@ namespace QueryAnalyzer
             }
         }
 
+        private void attachTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string databaseName = treeViewData.SelectedNode.Text;
+            toolStripComboBoxDatabases.Text = databaseName;
+
+            FormAttachTable frmAttachTable = new FormAttachTable();
+
+            if (frmAttachTable.ShowDialog() == DialogResult.OK)
+            {
+                refreshToolStripMenuItem_Click(sender, e);
+            }
+
+        }
+
+        private void detachTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string tableName = treeViewData.SelectedNode.Text;
+
+                if (MessageBox.Show(string.Format("Are you sure you want to detach table:{0}",
+                    tableName), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                    DialogResult.Yes)
+                {
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DetachTable {0}", tableName);
+                    ShowTree();
+                }
+
+            }
+            catch (Exception e1)
+            {
+                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }
