@@ -83,6 +83,7 @@
     <Compile Include="Data\DataType.cs" />
     <Compile Include="Data\DBAccess.cs" />
     <Compile Include="Data\DBProvider.cs" />
+    <Compile Include="Data\DBProviderStatic.cs" />
     <Compile Include="Data\DeleteProvider.cs" />
     <Compile Include="Data\InsertProtect.cs" />
     <Compile Include="Data\OptimizationOption.cs" />
