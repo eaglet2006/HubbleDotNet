@@ -156,6 +156,12 @@
     <Compile Include="FormTableInfo.Designer.cs">
       <DependentUpon>FormTableInfo.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormTableSynchronize.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTableSynchronize.Designer.cs">
+      <DependentUpon>FormTableSynchronize.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTroubleshooter.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -224,6 +230,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormTableInfo.resx">
       <DependentUpon>FormTableInfo.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormTableSynchronize.resx">
+      <DependentUpon>FormTableSynchronize.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTroubleshooter.resx">

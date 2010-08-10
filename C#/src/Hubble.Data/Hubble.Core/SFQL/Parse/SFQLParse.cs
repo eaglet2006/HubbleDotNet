@@ -158,6 +158,12 @@ namespace Hubble.Core.SFQL.Parse
                 throw new DataException(string.Format("Table: {0} does not exist!", update.TableName));
             }
 
+            if (dBProvider.Table.TableSynchronization)
+            {
+                throw new DataException(string.Format("Table: {0} is setting to synchronize with database now. Can't do update by sql.!", update.TableName));
+            }
+
+
             List<Data.FieldValue> fieldValues = new List<Hubble.Core.Data.FieldValue>();
 
             foreach (SyntaxAnalysis.Update.UpdateField field in update.Fields)
@@ -202,6 +208,12 @@ namespace Hubble.Core.SFQL.Parse
                 throw new DataException(string.Format("Table: {0} does not exist!", delete.TableName));
             }
 
+            if (dBProvider.Table.TableSynchronization)
+            {
+                throw new DataException(string.Format("Table: {0} is setting to synchronize with database now. Can't do delete by sql.!", delete.TableName));
+            }
+
+
             dBProvider.Delete(result);
 
             QueryResult qresult = new QueryResult();
@@ -225,6 +237,12 @@ namespace Hubble.Core.SFQL.Parse
             {
                 throw new DataException(string.Format("Table: {0} does not exist!", tableName));
             }
+
+            if (dBProvider.Table.TableSynchronization)
+            {
+                throw new DataException(string.Format("Table: {0} is setting to synchronize with database now. Can't do insert by sql.!", tableName));
+            }
+
 
             if (insert.Fields.Count == 0)
             {

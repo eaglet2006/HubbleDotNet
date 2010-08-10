@@ -191,7 +191,23 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "tablesynchronization":
+                    {
+                        bool tablesynchronization;
 
+                        if (bool.TryParse(value, out tablesynchronization))
+                        {
+                            dbProvider.Table.TableSynchronization = tablesynchronization;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} TableSynchronization to {1} sucessful!",
+                                tableName, dbProvider.Table.TableSynchronization));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");
             }

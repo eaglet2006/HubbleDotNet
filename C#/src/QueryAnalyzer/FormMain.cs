@@ -791,5 +791,15 @@ namespace QueryAnalyzer
             }
         }
 
+        private void synchronizeTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string tableName = treeViewData.SelectedNode.Text;
+            FormTableSynchronize frmTableSynchronize = new FormTableSynchronize();
+            frmTableSynchronize.TableName = tableName;
+            frmTableSynchronize.DataAccess = GlobalSetting.DataAccess;
+
+            frmTableSynchronize.Show();
+        }
+
     }
 }

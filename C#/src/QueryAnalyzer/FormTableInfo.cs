@@ -102,9 +102,21 @@ namespace QueryAnalyzer
                         ctrl.Ctrl.Text = row["Value"].ToString();
                         ctrl.OriginalValue = ctrl.Ctrl.Text;
                     }
-
-                    
                 }
+            }
+
+            if (comboBoxIndexOnly.Text.Trim().Equals("True", StringComparison.CurrentCultureIgnoreCase))
+            {
+                comboBoxTableSynchronization.Enabled = true;
+            }
+            else
+            {
+                comboBoxTableSynchronization.Enabled = false;
+            }
+
+            if (textBoxDocId.Text != "")
+            {
+                comboBoxTableSynchronization.Enabled = false;
             }
         }
 

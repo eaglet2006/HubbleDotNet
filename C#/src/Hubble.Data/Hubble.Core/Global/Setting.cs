@@ -367,7 +367,7 @@ namespace Hubble.Core.Global
             try
             {
                 _Mutex = new System.Threading.Mutex(false, md5FileName);
-                if (!_Mutex.WaitOne(1000))
+                if (!_Mutex.WaitOne(1000, false))
                 {
                     throw new ReEntryException("Can't entry database on same path!");
                 }

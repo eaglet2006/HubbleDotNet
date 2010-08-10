@@ -65,6 +65,10 @@ namespace Hubble.Core.Data
 
         int _IndexThread = 1;
 
+        bool _TableSynchronization = false;
+
+        string _TriggerTableName = null;
+
         bool _IsBigTable = false;
 
         private BigTable.BigTable _BigTable = new Hubble.Core.BigTable.BigTable();
@@ -80,12 +84,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _IndexOnly;
+                lock (this)
+                {
+                    return _IndexOnly;
+                }
             }
 
             set
             {
-                _IndexOnly = value;
+                lock (this)
+                {
+                    _IndexOnly = value;
+                }
             }
         }
 
@@ -97,12 +107,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _DocIdReplaceField;
+                lock (this)
+                {
+                    return _DocIdReplaceField;
+                }
             }
 
             set
             {
-                _DocIdReplaceField = value;
+                lock (this)
+                {
+                    _DocIdReplaceField = value;
+                }
             }
         }
 
@@ -113,12 +129,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _Name;
+                lock (this)
+                {
+                    return _Name;
+                }
             }
 
             set
             {
-                _Name = value;
+                lock (this)
+                {
+                    _Name = value;
+                }
             }
         }
 
@@ -182,12 +204,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _SQLForCreate;
+                lock (this)
+                {
+                    return _SQLForCreate;
+                }
             }
 
             set
             {
-                _SQLForCreate = value;
+                lock (this)
+                {
+                    _SQLForCreate = value;
+                }
             }
         }
 
@@ -195,12 +223,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _Debug;
+                lock (this)
+                {
+                    return _Debug;
+                }
             }
 
             set
             {
-                _Debug = value;
+                lock (this)
+                {
+                    _Debug = value;
+                }
             }
 
         }
@@ -232,18 +266,24 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _MaxReturnCount;
+                lock (this)
+                {
+                    return _MaxReturnCount;
+                }
             }
 
             set
             {
-                if (value <= 0)
+                lock (this)
                 {
-                    _MaxReturnCount = 2 * 1024 * 1024;
-                }
-                else
-                {
-                    _MaxReturnCount = value;
+                    if (value <= 0)
+                    {
+                        _MaxReturnCount = 2 * 1024 * 1024;
+                    }
+                    else
+                    {
+                        _MaxReturnCount = value;
+                    }
                 }
             }
         }
@@ -256,18 +296,24 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _GroupByLimit;
+                lock (this)
+                {
+                    return _GroupByLimit;
+                }
             }
 
             set
             {
-                if (value <= 0)
+                lock (this)
                 {
-                    _GroupByLimit = 40000;
-                }
-                else
-                {
-                    _GroupByLimit = value;
+                    if (value <= 0)
+                    {
+                        _GroupByLimit = 40000;
+                    }
+                    else
+                    {
+                        _GroupByLimit = value;
+                    }
                 }
             }
         }
@@ -276,12 +322,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _QueryCacheEnabled;
+                lock (this)
+                {
+                    return _QueryCacheEnabled;
+                }
             }
 
             set
             {
-                _QueryCacheEnabled = value;
+                lock (this)
+                {
+                    _QueryCacheEnabled = value;
+                }
             }
         }
 
@@ -289,12 +341,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _QueryCacheTimeout;
+                lock (this)
+                {
+                    return _QueryCacheTimeout;
+                }
             }
 
             set
             {
-                _QueryCacheTimeout = value;
+                lock (this)
+                {
+                    _QueryCacheTimeout = value;
+                }
             }
         }
 
@@ -303,12 +361,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _StoreQueryCacheInFile;
+                lock (this)
+                {
+                    return _StoreQueryCacheInFile;
+                }
             }
 
             set
             {
-                _StoreQueryCacheInFile = value;
+                lock (this)
+                {
+                    _StoreQueryCacheInFile = value;
+                }
             }
         }
 
@@ -316,18 +380,24 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _CleanupQueryCacheFileInDays;
+                lock (this)
+                {
+                    return _CleanupQueryCacheFileInDays;
+                }
             }
 
             set
             {
-                if (value < 0)
+                lock (this)
                 {
-                    _CleanupQueryCacheFileInDays = 0;
-                }
-                else
-                {
-                    _CleanupQueryCacheFileInDays = value;
+                    if (value < 0)
+                    {
+                        _CleanupQueryCacheFileInDays = 0;
+                    }
+                    else
+                    {
+                        _CleanupQueryCacheFileInDays = value;
+                    }
                 }
             }
         }
@@ -339,12 +409,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _InitImmediatelyAfterStartup;
+                lock (this)
+                {
+                    return _InitImmediatelyAfterStartup;
+                }
             }
 
             set
             {
-                _InitImmediatelyAfterStartup = value;
+                lock (this)
+                {
+                    _InitImmediatelyAfterStartup = value;
+                }
             } 
         }
 
@@ -355,13 +431,69 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _IndexThread;
+                lock (this)
+                {
+                    return _IndexThread;
+                }
             }
 
             set
             {
-                _IndexThread = value;
+                lock (this)
+                {
+                    _IndexThread = value;
+                }
             } 
+        }
+
+        /// <summary>
+        /// Table synchronization.
+        /// If set it to true, it will be 
+        /// synchronized from database and
+        /// can't be used insert, update or delete.
+        /// Only indexonly mode can be available.
+        /// </summary>
+        public bool TableSynchronization
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _TableSynchronization;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _TableSynchronization = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Trigger table in database.
+        /// Available when DocIdReplaceField != null
+        /// </summary>
+        public string TriggerTableName
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _TriggerTableName;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _TriggerTableName = value;
+                }
+            }
+
         }
 
         /// <summary>
@@ -371,12 +503,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _IsBigTable;
+                lock (this)
+                {
+                    return _IsBigTable;
+                }
             }
 
             set
             {
-                _IsBigTable = value;
+                lock (this)
+                {
+                    _IsBigTable = value;
+                }
             }
 
         }
@@ -388,12 +526,18 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _BigTable;
+                lock (this)
+                {
+                    return _BigTable;
+                }
             }
 
             set
             {
-                _BigTable = value;
+                lock (this)
+                {
+                    _BigTable = value;
+                }
             }
         }
 

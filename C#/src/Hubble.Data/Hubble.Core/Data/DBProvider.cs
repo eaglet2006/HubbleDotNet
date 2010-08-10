@@ -90,6 +90,7 @@ namespace Hubble.Core.Data
 
         private object _InsertLock = new object();
 
+        Service.TableSynchronize _TableSync;
 
         internal Hubble.Framework.Threading.Lock MergeLock = new Hubble.Framework.Threading.Lock();
 
@@ -198,6 +199,19 @@ namespace Hubble.Core.Data
                 {
                     return _LastDocId;
                 }
+            }
+        }
+
+        internal double TableSynchronizeProgress
+        {
+            get
+            {
+                if (_TableSync == null)
+                {
+                    return -1;
+                }
+
+                return _TableSync.Progress;
             }
         }
 
@@ -1110,6 +1124,9 @@ namespace Hubble.Core.Data
 
                 _Inited = true;
                 InsertProtect.Remove(_Directory);
+
+                _TableSync = new Hubble.Core.Service.TableSynchronize(this);
+
                 return null;
             }
             catch (Exception e)
@@ -2215,6 +2232,22 @@ namespace Hubble.Core.Data
             }
         }
 
+        public void SynchronizeWithDatabase(int step, OptimizationOption option)
+        {
+            if (_TableSync != null)
+            {
+                _TableSync.Synchronize(step, option);
+            }
+        }
+
+        public void StopSynchronize()
+        {
+            if (_TableSync != null)
+            {
+                _TableSync.Stop();
+            }
+        }
+
         private void Collect()
         {
             Collect(int.MinValue);
@@ -2304,6 +2337,11 @@ namespace Hubble.Core.Data
             lock (_ExitLock)
             {
                 _NeedExit = true;
+            }
+
+            if (_TableSync != null)
+            {
+                _TableSync.Close();
             }
 
             foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)

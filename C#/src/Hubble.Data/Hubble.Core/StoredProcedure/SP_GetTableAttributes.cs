@@ -109,6 +109,10 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "Debug");
             OutputValue("Value", dbProvider.Table.Debug.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "TableSynchronization");
+            OutputValue("Value", dbProvider.Table.TableSynchronization.ToString());
         }
 
         #endregion

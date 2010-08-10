@@ -31,6 +31,8 @@ namespace Hubble.Framework.IO
         }
 
         static object _LockObj = new object();
+        static object _LockErrorObj = new object();
+        static object _LockAppObj = new object();
 
         static LogFile<T> _LogFile = null;
 
@@ -101,7 +103,15 @@ namespace Hubble.Framework.IO
                 }
             }
 
-            _LogFile.WriteLog(LogType.Error, message);
+            lock (_LockErrorObj)
+            {
+                _LogFile.WriteLog(LogType.Error, message);
+            }
+        }
+
+        public static void WriteAppLog(string message)
+        {
+            WriteAppLog(message, true);
         }
 
         public static void WriteAppLog(string message, bool enabled)
@@ -119,7 +129,10 @@ namespace Hubble.Framework.IO
                 }
             }
 
-            _LogFile.WriteLog(LogType.AppLog, message);
+            lock (_LockAppObj)
+            {
+                _LogFile.WriteLog(LogType.AppLog, message);
+            }
         }
     }
 }
