@@ -662,6 +662,15 @@ namespace QueryAnalyzer
 
         private void buttonRebuild_Click(object sender, EventArgs e)
         {
+            if (_DocIdReplaceField != null)
+            {
+                if (_LastDocId > 0)
+                {
+                    MessageBox.Show("You should use synchronize table function to synchronize with database or check RebuildWholeTable to rebuild all records.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
             labelOptimizeProgress.Visible = false;
 
             _SleepInterval = (int)numericUpDownSleepSeconds.Value;

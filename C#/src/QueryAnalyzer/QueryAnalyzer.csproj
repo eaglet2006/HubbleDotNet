@@ -191,6 +191,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormAttachTable.resx">
       <DependentUpon>FormAttachTable.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormCreateTable.resx">
       <DependentUpon>FormCreateTable.cs</DependentUpon>

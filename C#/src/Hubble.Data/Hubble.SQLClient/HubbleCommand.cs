@@ -22,8 +22,21 @@ using System.Text;
 namespace Hubble.SQLClient
 {
     public class HubbleCommand : System.Data.Common.DbCommand, ICloneable
-
     {
+        class DbParameterForSort : IComparer<System.Data.Common.DbParameter>
+        {
+
+            #region IComparer<DbParameter> Members
+
+            public int Compare(System.Data.Common.DbParameter x, System.Data.Common.DbParameter y)
+            {
+                return y.ParameterName.CompareTo(x.ParameterName);
+            }
+
+            #endregion
+        }
+
+
         private HubbleConnection _SqlConnection;
 
         private string _Sql;
@@ -91,89 +104,98 @@ namespace Hubble.SQLClient
 
         private static string BuildSqlWithSqlParameter(string sql, System.Data.Common.DbParameterCollection paras)
         {
-            object[] objParas = new object[paras.Count]; 
+            System.Data.Common.DbParameter[] arrParas = new System.Data.Common.DbParameter[paras.Count];
 
             for (int i = 0; i < paras.Count; i++)
             {
-                sql = sql.Replace(paras[i].ParameterName, "{" + i.ToString() + "}");
+                arrParas[i] = paras[i];
+            }
 
-                switch (paras[i].DbType)
+            Array.Sort(arrParas, new DbParameterForSort());
+
+            object[] objParas = new object[arrParas.Length]; 
+
+            for (int i = 0; i < arrParas.Length; i++)
+            {
+                sql = sql.Replace(arrParas[i].ParameterName, "{" + i.ToString() + "}");
+
+                switch (arrParas[i].DbType)
                 {
                     case System.Data.DbType.AnsiString:
                     case System.Data.DbType.AnsiStringFixedLength:
                     case System.Data.DbType.String:
                     case System.Data.DbType.StringFixedLength:
                     case System.Data.DbType.Xml:
-                        objParas[i] = paras[i].Value as string;
+                        objParas[i] = arrParas[i].Value as string;
                         break;
 
                     case System.Data.DbType.Boolean:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = paras[i].Value.ToString();
+                            objParas[i] = arrParas[i].Value.ToString();
                         }
                         break;
 
                     case System.Data.DbType.Date:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = ((DateTime)paras[i].Value).ToString("yyyy-MM-dd");
+                            objParas[i] = ((DateTime)arrParas[i].Value).ToString("yyyy-MM-dd");
                         }
                         break;
 
                     case System.Data.DbType.DateTime:
                     case System.Data.DbType.DateTime2:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = ((DateTime)paras[i].Value).ToString("yyyy-MM-dd HH:mm:ss");
+                            objParas[i] = ((DateTime)arrParas[i].Value).ToString("yyyy-MM-dd HH:mm:ss");
                         }
                         break;
                     case System.Data.DbType.Time:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = ((DateTime)paras[i].Value).ToString("HH:mm:ss");
+                            objParas[i] = ((DateTime)arrParas[i].Value).ToString("HH:mm:ss");
                         }
                         break;
                     case System.Data.DbType.Byte:
                     case System.Data.DbType.UInt16:
                     case System.Data.DbType.UInt32:
                     case System.Data.DbType.UInt64:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = ulong.Parse(paras[i].Value.ToString());
+                            objParas[i] = ulong.Parse(arrParas[i].Value.ToString());
                         }
                         break;
 
                     case System.Data.DbType.Decimal:
                     case System.Data.DbType.Double:
                     case System.Data.DbType.Single:
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = double.Parse(paras[i].Value.ToString());
+                            objParas[i] = double.Parse(arrParas[i].Value.ToString());
                         }
                         break;
 
@@ -182,18 +204,18 @@ namespace Hubble.SQLClient
                     case System.Data.DbType.Int64:
                     case System.Data.DbType.SByte:
 
-                        if (paras[i].Value == null)
+                        if (arrParas[i].Value == null)
                         {
                             objParas[i] = null;
                         }
                         else
                         {
-                            objParas[i] = long.Parse(paras[i].Value.ToString());
+                            objParas[i] = long.Parse(arrParas[i].Value.ToString());
                         }
                         break;
 
                     default:
-                        throw new System.Data.DataException(string.Format("Invalid parameter DataType: {0}", paras[i].DbType));
+                        throw new System.Data.DataException(string.Format("Invalid parameter DataType: {0}", arrParas[i].DbType));
                 }
             }
 

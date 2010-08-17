@@ -162,6 +162,8 @@ namespace Hubble.Core.Service
 
         private void DoSynchronizeCanUpdate()
         {
+            SynchronizeCanUpdate syncCanUpdate = new SynchronizeCanUpdate(this, _DBProvider, _Step, _OptimizeOption);
+            syncCanUpdate.Do();
         }
 
         private void DoSynchronize()
@@ -183,7 +185,9 @@ namespace Hubble.Core.Service
             }
             catch (Exception e)
             {
+                Global.Report.WriteErrorLog("Table Synchronize fail", e);
                 SetException(e);
+                SyncThread = null;
             }
         }
 

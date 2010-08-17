@@ -214,6 +214,19 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        public void Truncate(string tableName)
+        {
+            Debug.Assert(Table != null);
+
+            string sql = string.Format("truncate table {0}",
+                tableName);
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql);
+            }
+        }
 
         public void Create()
         {

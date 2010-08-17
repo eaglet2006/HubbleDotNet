@@ -208,6 +208,16 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+
+                case "triggertablename":
+                    {
+                        dbProvider.Table.TriggerTableName = value;
+
+                        dbProvider.SaveTable();
+                        OutputMessage(string.Format("Set table {0} TriggerTableName to {1} sucessful!",
+                            tableName, dbProvider.Table.TriggerTableName));
+                    }
+                    break;
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");
             }

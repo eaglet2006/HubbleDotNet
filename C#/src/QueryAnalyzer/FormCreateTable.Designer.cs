@@ -264,9 +264,9 @@
             this.radioButtonAll.AutoSize = true;
             this.radioButtonAll.Location = new System.Drawing.Point(21, 61);
             this.radioButtonAll.Name = "radioButtonAll";
-            this.radioButtonAll.Size = new System.Drawing.Size(140, 17);
+            this.radioButtonAll.Size = new System.Drawing.Size(74, 17);
             this.radioButtonAll.TabIndex = 1;
-            this.radioButtonAll.Text = "Append, Delete, Update";
+            this.radioButtonAll.Text = "Updatable";
             this.radioButtonAll.UseVisualStyleBackColor = true;
             // 
             // radioButtonAppendOnly

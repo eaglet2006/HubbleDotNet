@@ -35,7 +35,8 @@ namespace Hubble.Core.Index
 
         WordDocumentsList _ListForReader = new WordDocumentsList();
         long _WordCountSum;
-        int _RelDocCount;
+        int _Count; //Count of docs that Reader will read.
+        int _RelDocCount; //Rel doc count of this word. It is large then or equal with _Count.
 
         Data.DBProvider _DBProvider;
 
@@ -82,6 +83,8 @@ namespace Hubble.Core.Index
             }
         }
 
+
+
         /// <summary>
         /// Total number of documents
         /// </summary>
@@ -91,7 +94,7 @@ namespace Hubble.Core.Index
             {
                 lock (this)
                 {
-                    return _RelDocCount;
+                    return _Count;
                 }
             }
         }
@@ -164,12 +167,13 @@ namespace Hubble.Core.Index
             _TotalDocs = totalDocs;
             _WordCountSum = _ListForReader.WordCountSum;
             _RelDocCount = _ListForReader.RelDocCount;
+            _Count = _ListForReader.RelDocCount;
 
             //UpdateDocScoreList();
         }
 
         public WordIndexReader(string word, WordStepDocIndex wordStepDocIndex, int totalDocs,
-            Data.DBProvider dbProvider, IndexFileProxy indexProxy)
+            Data.DBProvider dbProvider, IndexFileProxy indexProxy, int maxReturnCount)
         {
             _Word = word;
             _IndexReader = new IndexReader(wordStepDocIndex, indexProxy);
@@ -179,6 +183,16 @@ namespace Hubble.Core.Index
             _TotalDocs = totalDocs;
             _WordCountSum = wordStepDocIndex.WordCountSum;
             _RelDocCount = wordStepDocIndex.RelDocCount;
+
+            if (maxReturnCount < 0)
+            {
+                _Count = _RelDocCount;
+            }
+            else
+            {
+                _Count = Math.Min(maxReturnCount, _RelDocCount);
+            }
+
 
             //UpdateDocScoreList();
         }

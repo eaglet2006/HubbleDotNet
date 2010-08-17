@@ -121,6 +121,7 @@
     <Compile Include="Data\Document.cs" />
     <Compile Include="Service\CommandContent.cs" />
     <Compile Include="Service\ConnectionInformation.cs" />
+    <Compile Include="Service\SynchronizeCanUpdate.cs" />
     <Compile Include="Service\CurrentConnection.cs" />
     <Compile Include="Service\HubbleTask.cs" />
     <Compile Include="Service\SynchronizeAppendOnly.cs" />

@@ -400,6 +400,20 @@ namespace OracleDBAdapter
             }
         }
 
+        public void Truncate(string tableName)
+        {
+            Debug.Assert(Table != null);
+
+            string sql = string.Format("truncate table {0}",
+                tableName);
+
+            using (OracleDataProvider sqlData = new OracleDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql);
+            }
+        }
+
         private string ReplaceTextValue(string text)
         {
             return Hubble.Framework.Text.Regx.Replace(text, @"\r|\n", "", true);

@@ -635,23 +635,58 @@ namespace Hubble.Core.Data
                 }
             }
 
-            //Load from external reference 
-            //Load IQuery external reference
-            foreach (IQueryConfig iquery in Setting.Config.IQuerys)
-            {
-                iquery.Load(_QueryTable);
-            }
+   
+                //Load from external reference 
+                //Load IQuery external reference
+                foreach (IQueryConfig iquery in Setting.Config.IQuerys)
+                {
+                    try
+                    {
+                        if (iquery != null)
+                        {
+                            iquery.Load(_QueryTable);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Global.Report.WriteErrorLog(string.Format("Load IQuery fail. IQuery asm file:{0}", iquery.AssemblyFile),
+                            e);
+                    }
+
+                }
 
             //Load IAnalyzer external reference
             foreach (IAnalyzerConfig ianalyzer in Setting.Config.IAnalyzers)
             {
-                ianalyzer.Load(_AnalyzerTable);
+                try
+                {
+                    if (ianalyzer != null)
+                    {
+                        ianalyzer.Load(_AnalyzerTable);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Load IAnalyzer fail. IAnalyzer asm file:{0}", ianalyzer.AssemblyFile),
+                        e);
+                }
             }
 
             //Load IDBAdapter external reference
             foreach (IDBAdapterConfig idbadapter in Setting.Config.IDBAdapters)
             {
-                idbadapter.Load(_DBAdapterTable);
+                try
+                {
+                    if (idbadapter != null)
+                    {
+                        idbadapter.Load(_DBAdapterTable);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Load IDBAdapter fail. IDBAdapter asm file:{0}", idbadapter.AssemblyFile),
+                        e);
+                }
             }
 
             //List<string> removeDirs = new List<string>();

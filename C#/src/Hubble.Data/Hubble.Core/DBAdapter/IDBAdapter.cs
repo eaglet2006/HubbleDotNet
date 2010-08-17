@@ -35,6 +35,8 @@ namespace Hubble.Core.DBAdapter
 
         void Truncate();
 
+        void Truncate(string tableName);
+
         void Insert(IList<Data.Document> docs);
 
         void Delete(IList<int> docIds);

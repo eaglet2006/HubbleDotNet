@@ -1119,7 +1119,7 @@ namespace Hubble.Core.SFQL.Parse
                                         {
                                             int docid = int.Parse(expression.Right[0].Text);
 
-                                            if (_DBProvider.GetDocIdReplaceFieldValue(docid) != int.MaxValue &&
+                                            if (_DBProvider.GetDocIdReplaceFieldValue(docid) != long.MaxValue &&
                                                 !_DBProvider.DelProvider.DocIdDeleted(docid))
                                             {
                                                 Query.DocumentResultForSort[] dresult = new Hubble.Core.Query.DocumentResultForSort[1];

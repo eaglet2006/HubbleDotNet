@@ -17,6 +17,11 @@ namespace Hubble.SQLClient
 
         public SqlParameter Add(SqlParameter value)
         {
+            if (IndexOf(value) >= 0)
+            {
+                throw new System.Data.DataException(string.Format("Reduplicate parameter Name: {0}", value.ParameterName));
+            }
+
             Add((object)value);
             return value;
         }
@@ -26,7 +31,7 @@ namespace Hubble.SQLClient
             return Add(new SqlParameter(parameterName, value));
         }
         public SqlParameter AddWithValue(string parameterName, object value)
-        { // 79027 
+        {
             return Add(new SqlParameter(parameterName, value));
         }
 

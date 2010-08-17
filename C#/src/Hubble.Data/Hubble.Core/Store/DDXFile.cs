@@ -539,8 +539,16 @@ namespace Hubble.Core.Store
                 return false;
             }
 
-            _CurrentPositionInUnitBlock = UnicodeString.Encode(_TempMem, _UnitBlock, 
-                _CurrentPositionInUnitBlock, word, _PreWord, position, length);
+            try
+            {
+                _CurrentPositionInUnitBlock = UnicodeString.Encode(_TempMem, _UnitBlock,
+                    _CurrentPositionInUnitBlock, word, _PreWord, position, length);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog("Unicode string encode error", e);
+                return false;
+            }
 
             if (_CurrentPositionInUnitBlock < 0)
             {

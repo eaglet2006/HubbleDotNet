@@ -332,7 +332,7 @@ namespace Hubble.Core.Global
         {
             string fullName = System.IO.Path.GetFullPath(fileName);
 
-            System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 =
                 new System.Security.Cryptography.MD5CryptoServiceProvider();
 
             byte[] buf = new byte[fullName.Length * 2];
@@ -344,7 +344,7 @@ namespace Hubble.Core.Global
                 buf[2 * i + 1] = (byte)(c / 256);
             }
 
-            buf = _MD5.ComputeHash(buf);
+            buf = md5.ComputeHash(buf);
 
             StringBuilder sb = new StringBuilder();
 

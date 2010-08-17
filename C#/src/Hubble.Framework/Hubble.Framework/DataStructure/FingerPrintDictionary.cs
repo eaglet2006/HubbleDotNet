@@ -121,9 +121,6 @@ namespace Hubble.Framework.DataStructure
     {
         private Dictionary<Bit16Int, T> _Dict;
 
-        System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
-            new System.Security.Cryptography.MD5CryptoServiceProvider();
-
         public Bit16Int MD5(string key)
         {
             byte[] b = new byte[key.Length * 2];
@@ -138,9 +135,10 @@ namespace Hubble.Framework.DataStructure
                 b[2 * i + 1] = (byte)(c / 256);
             }
 
-            b = _MD5.ComputeHash(b);
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 =
+                        new System.Security.Cryptography.MD5CryptoServiceProvider();
 
-
+            b = md5.ComputeHash(b);
 
             return new Bit16Int(b, key.Length, sum);
         }

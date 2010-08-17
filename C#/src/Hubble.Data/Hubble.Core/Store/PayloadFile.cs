@@ -58,7 +58,7 @@ namespace Hubble.Core.Store
 
         public void Build(List<Data.Field> fields)
         {
-            System.Security.Cryptography.MD5CryptoServiceProvider _MD5 =
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 =
                 new System.Security.Cryptography.MD5CryptoServiceProvider();
 
             StringBuilder str = new StringBuilder();
@@ -83,7 +83,7 @@ namespace Hubble.Core.Store
                 b[2 * i + 1] = (byte)(c / 256);
             }
 
-            _FieldsMD5 = _MD5.ComputeHash(b);
+            _FieldsMD5 = md5.ComputeHash(b);
             _Version = Hubble.Framework.Reflection.Assembly.GetVersionValue(
                 Hubble.Framework.Reflection.Assembly.GetCallingAssemblyVersion());
         }

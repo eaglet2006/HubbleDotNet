@@ -44,23 +44,7 @@ namespace Hubble.Core.Query
             public int QueryCount; //How many time is this word in query string.
             public int FirstPosition; //First position in query string.
 
-            private int _CurIndex;
-
             private Index.WordIndexReader _WordIndex;
-
-            public int CurIndex
-            {
-                get
-                {
-                    return _CurIndex;
-                }
-
-                set
-                {
-                    _CurIndex = value;
-                }
-            }
-
 
             public Index.WordIndexReader WordIndex
             {
@@ -87,40 +71,19 @@ namespace Hubble.Core.Query
                     WordRank = 1;
                 }
 
-
-                if (wordIndex.Count <= 0)
-                {
-                    _CurIndex = -1;
-                }
-                else
-                {
-                    _CurIndex = 0;
-                }
-
                 _WordIndex = wordIndex;
 
                 Norm_d_t = (int)Math.Sqrt(_WordIndex.WordCount);
-                Idf_t = (int)Math.Log10((double)totalDocuments / (double)_WordIndex.Count + 1) + 1;
+                Idf_t = (int)Math.Log10((double)totalDocuments / (double)_WordIndex.RelDocCount + 1) + 1;
                 CurDocIdIndex = 0;
                 WordIndexesLength = _WordIndex.Count;
             }
 
-            public void IncCurIndex()
-            {
-                CurIndex++;
-
-                if (CurIndex >= _WordIndex.Count)
-                {
-                    CurIndex = -1;
-                }
-            }
-
-  
             #region IComparable<WordIndexForQuery> Members
 
             public int CompareTo(WordIndexForQuery other)
             {
-                return this.WordIndexesLength.CompareTo(other.WordIndexesLength);
+                return this.RelTotalCount.CompareTo(other.RelTotalCount);
             }
 
             #endregion
@@ -829,6 +792,11 @@ namespace Hubble.Core.Query
 
                     docList = wifq.WordIndex.GetNext();
                     j++;
+
+                    if (j > wifq.WordIndex.Count)
+                    {
+                        break;
+                    }
                 }
             }
 

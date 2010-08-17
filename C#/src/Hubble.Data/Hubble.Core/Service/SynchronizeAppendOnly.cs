@@ -40,6 +40,11 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
+                if (field.IndexType == Field.Index.None)
+                {
+                    continue;
+                }
+
                 sb.AppendFormat(", [{0}] ", field.Name);
             }
 
@@ -56,6 +61,11 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
+                if (field.IndexType == Field.Index.None)
+                {
+                    continue;
+                }
+
                 sb.AppendFormat(", {0} ", Oracle8iAdapter.GetFieldName(field.Name));
             }
 
@@ -92,7 +102,7 @@ namespace Hubble.Core.Service
 
         }
 
-        private Document GetOneRowSql(System.Data.DataRow row)
+        private Document GetOneRowDocument(System.Data.DataRow row)
         {
             Document document = new Document();
 
@@ -145,7 +155,7 @@ namespace Hubble.Core.Service
 
             foreach (System.Data.DataRow row in ds.Tables[0].Rows)
             {
-                result.Add(GetOneRowSql(row));
+                result.Add(GetOneRowDocument(row));
                 from = long.Parse(row["DocId"].ToString()) + 1;
             }
 
@@ -220,7 +230,7 @@ namespace Hubble.Core.Service
             DBAdapter.IDBAdapter dbAdapter = (DBAdapter.IDBAdapter)Hubble.Framework.Reflection.Instance.CreateInstance(
                 Data.DBProvider.GetDBAdapter(_DBProvider.Table.DBAdapterTypeName));
 
-            string sql = string.Format("select count(*) from {0} where docid > {1}",
+            string sql = string.Format("select count(*) from {0} where docid >= {1}",
                 _DBProvider.Table.DBTableName, from);
 
             dbAdapter.Table = _DBProvider.Table;
@@ -269,23 +279,33 @@ namespace Hubble.Core.Service
 
                 List<Document> documents = GetDocumentsForInsert(dbAdapter, ref from);
 
-                insertCount += documents.Count;
-
-                _DBProvider.Insert(documents);
-
-                double progress = (double)insertCount * 80 / (double)count;
-
-                if (progress > 80)
+                if (documents.Count == 0)
                 {
-                    progress = 80;
+                    Global.Report.WriteAppLog(string.Format("Exit before finish when synchronized {0}. Some records deleted during synchronization. insertCount={1} count={2}",
+                        _DBProvider.Table.Name, insertCount, count));
+                    _TableSync.SetProgress(90);
+                    break;
                 }
-
-                _TableSync.SetProgress(10 + progress );
-
-                if (_DBProvider.TooManyIndexFiles)
+                else
                 {
-                    DoOptimize(OptimizationOption.Speedy, false);
-                    DoOptimize(OptimizationOption.Speedy, false);
+                    insertCount += documents.Count;
+
+                    _DBProvider.Insert(documents);
+
+                    double progress = (double)insertCount * 80 / (double)count;
+
+                    if (progress > 80)
+                    {
+                        progress = 80;
+                    }
+
+                    _TableSync.SetProgress(10 + progress);
+
+                    if (_DBProvider.TooManyIndexFiles)
+                    {
+                        DoOptimize(OptimizationOption.Speedy, false);
+                        DoOptimize(OptimizationOption.Speedy, false);
+                    }
                 }
             }
 

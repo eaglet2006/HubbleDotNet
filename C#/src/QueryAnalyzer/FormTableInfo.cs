@@ -114,9 +114,13 @@ namespace QueryAnalyzer
                 comboBoxTableSynchronization.Enabled = false;
             }
 
-            if (textBoxDocId.Text != "")
+            if (textBoxDocId.Text != "" && comboBoxTableSynchronization.Text.Equals("True", StringComparison.CurrentCultureIgnoreCase))
             {
-                comboBoxTableSynchronization.Enabled = false;
+                textBoxTriggerTableName.Enabled = true;
+            }
+            else
+            {
+                textBoxTriggerTableName.Enabled = false;
             }
         }
 
@@ -135,8 +139,20 @@ namespace QueryAnalyzer
                     value = ctrl.Ctrl.Text;
                 }
 
-                if (ctrl.OriginalValue != value)
+                if (ctrl.OriginalValue != value && ctrl.Ctrl.Enabled)
                 {
+                    if (ctrl.Ctrl == comboBoxTableSynchronization)
+                    {
+                        if (ctrl.OriginalValue.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            if (textBoxDocId.Text != "" && numericUpDownLastDocId.Value != 0)
+                            {
+                                MessageBox.Show("Can't change Table Synchronization to False when the index is not empty.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                break;
+                            }
+                        }
+                    }
+                
                     DataAccess.Excute("exec SP_SetTableAttribute {0}, {1}, {2}",
                         TableName, ctrl.Ctrl.Tag.ToString(), ctrl.Ctrl.Text);
                 }
@@ -200,8 +216,29 @@ namespace QueryAnalyzer
 
         private void buttonSet_Click(object sender, EventArgs e)
         {
+            if (textBoxTriggerTableName.Enabled)
+            {
+                if (textBoxTriggerTableName.Text.Trim() == "")
+                {
+                    MessageBox.Show("Trigger Table Name can't be empty", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
             SetTableAttributes();
             Close();
+        }
+
+        private void comboBoxTableSynchronization_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (textBoxDocId.Text != "" && comboBoxTableSynchronization.Text.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxTriggerTableName.Enabled = true;
+            }
+            else
+            {
+                textBoxTriggerTableName.Enabled = false;
+            }
         }
 
 

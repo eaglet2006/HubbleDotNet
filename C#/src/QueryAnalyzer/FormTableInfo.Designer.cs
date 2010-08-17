@@ -41,6 +41,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.comboBoxTableSynchronization = new System.Windows.Forms.ComboBox();
+            this.label26 = new System.Windows.Forms.Label();
             this.numericUpDownGroupByLimit = new System.Windows.Forms.NumericUpDown();
             this.label25 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
@@ -75,8 +77,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.label26 = new System.Windows.Forms.Label();
-            this.comboBoxTableSynchronization = new System.Windows.Forms.ComboBox();
+            this.label27 = new System.Windows.Forms.Label();
+            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -211,6 +213,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.textBoxTriggerTableName);
+            this.tabPageAttributes.Controls.Add(this.label27);
             this.tabPageAttributes.Controls.Add(this.comboBoxTableSynchronization);
             this.tabPageAttributes.Controls.Add(this.label26);
             this.tabPageAttributes.Controls.Add(this.numericUpDownGroupByLimit);
@@ -254,6 +258,29 @@
             this.tabPageAttributes.TabIndex = 1;
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
+            // 
+            // comboBoxTableSynchronization
+            // 
+            this.comboBoxTableSynchronization.FormattingEnabled = true;
+            this.comboBoxTableSynchronization.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBoxTableSynchronization.Location = new System.Drawing.Point(513, 341);
+            this.comboBoxTableSynchronization.Name = "comboBoxTableSynchronization";
+            this.comboBoxTableSynchronization.Size = new System.Drawing.Size(96, 21);
+            this.comboBoxTableSynchronization.TabIndex = 39;
+            this.comboBoxTableSynchronization.Tag = "TableSynchronization";
+            this.comboBoxTableSynchronization.Text = "True";
+            this.comboBoxTableSynchronization.SelectedIndexChanged += new System.EventHandler(this.comboBoxTableSynchronization_SelectedIndexChanged);
+            // 
+            // label26
+            // 
+            this.label26.AutoSize = true;
+            this.label26.Location = new System.Drawing.Point(351, 344);
+            this.label26.Name = "label26";
+            this.label26.Size = new System.Drawing.Size(109, 13);
+            this.label26.TabIndex = 38;
+            this.label26.Text = "TableSynchronization";
             // 
             // numericUpDownGroupByLimit
             // 
@@ -639,27 +666,22 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // label26
+            // label27
             // 
-            this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(351, 344);
-            this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(109, 13);
-            this.label26.TabIndex = 38;
-            this.label26.Text = "TableSynchronization";
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(351, 381);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(95, 13);
+            this.label27.TabIndex = 40;
+            this.label27.Text = "TriggerTableName";
             // 
-            // comboBoxTableSynchronization
+            // textBoxTriggerTableName
             // 
-            this.comboBoxTableSynchronization.FormattingEnabled = true;
-            this.comboBoxTableSynchronization.Items.AddRange(new object[] {
-            "True",
-            "False"});
-            this.comboBoxTableSynchronization.Location = new System.Drawing.Point(513, 341);
-            this.comboBoxTableSynchronization.Name = "comboBoxTableSynchronization";
-            this.comboBoxTableSynchronization.Size = new System.Drawing.Size(96, 21);
-            this.comboBoxTableSynchronization.TabIndex = 39;
-            this.comboBoxTableSynchronization.Tag = "TableSynchronization";
-            this.comboBoxTableSynchronization.Text = "True";
+            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
+            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
+            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
+            this.textBoxTriggerTableName.TabIndex = 41;
+            this.textBoxTriggerTableName.Tag = "TriggerTableName";
             // 
             // FormTableInfo
             // 
@@ -737,5 +759,7 @@
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.ComboBox comboBoxTableSynchronization;
         private System.Windows.Forms.Label label26;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.TextBox textBoxTriggerTableName;
     }
 }

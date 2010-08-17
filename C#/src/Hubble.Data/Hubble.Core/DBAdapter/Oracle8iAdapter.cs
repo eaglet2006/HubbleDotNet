@@ -363,6 +363,20 @@ namespace Hubble.Core.DBAdapter
             }
         }
 
+        public void Truncate(string tableName)
+        {
+            Debug.Assert(Table != null);
+
+            string sql = string.Format("truncate table {0}",
+                tableName);
+
+            using (OLEDataProvider sqlData = new OLEDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql);
+            }
+        }
+
         public void Insert(IList<Document> docs)
         {
             StringBuilder insertString = new StringBuilder();

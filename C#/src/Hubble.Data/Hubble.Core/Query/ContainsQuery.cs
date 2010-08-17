@@ -1406,8 +1406,6 @@ namespace Hubble.Core.Query
 
                 List<WordIndexForQuery> wordIndexList = new List<WordIndexForQuery>(value.Count);
 
-                bool someWordNoRecords = false;
-
                 for(int i =0; i < value.Count; i++)
                 {
                     Hubble.Core.Entity.WordInfo wordInfo = value[i];
@@ -1433,28 +1431,9 @@ namespace Hubble.Core.Query
 
                         if (wordIndex == null)
                         {
-                            someWordNoRecords = true;
-
-                            for (int j = 0; j < value.Count; j++)
-                            {
-                                if (i == j)
-                                {
-                                    continue;
-                                }
-
-                                if (wordInfo.Position == value[j].Position)
-                                {
-                                    someWordNoRecords = false;
-                                    break;
-                                }
-                            }
-
-                            if (someWordNoRecords)
-                            {
-                                break;
-                            }
-
-                            continue;
+                            //No result
+                            wordIndex = new Hubble.Core.Index.WordIndexReader(wordInfo.Word,
+                                new Hubble.Core.Store.WordDocumentsList(), 0, _DBProvider);
                         }
 
                         wifq = new WordIndexForQuery(wordIndex,
@@ -1474,24 +1453,17 @@ namespace Hubble.Core.Query
                     //wordIndexList[wordIndexList.Count - 1].Rank += wordInfo.Rank;
                 }
 
-                if (!someWordNoRecords)
+                _Norm_Ranks = 0;
+                foreach (WordIndexForQuery wq in wordIndexList)
                 {
-                    _Norm_Ranks = 0;
-                    foreach (WordIndexForQuery wq in wordIndexList)
-                    {
-                        _Norm_Ranks += wq.WordRank * wq.WordRank;
-                    }
-
-                    _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
-
-                    _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
-                    wordIndexList.CopyTo(_WordIndexes, 0);
-                    wordIndexList = null;
+                    _Norm_Ranks += wq.WordRank * wq.WordRank;
                 }
-                else
-                {
-                    _WordIndexes = new WordIndexForQuery[0];
-                }
+
+                _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
+
+                _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
+                wordIndexList.CopyTo(_WordIndexes, 0);
+                wordIndexList = null;
 
                 performanceReport.Stop();
             }
@@ -1551,45 +1523,64 @@ namespace Hubble.Core.Query
             List<List<WordIndexForQuery>> groups = new List<List<WordIndexForQuery>>();
 
             int lastPosition = -1;
+            int lastLength = 0;
 
             foreach(WordIndexForQuery wifq in _WordIndexes)
             {
-                if (lastPosition != wifq.FirstPosition)
+                bool addNew = true;
+
+                int i = 0;
+
+                foreach (List<WordIndexForQuery> wifqList in groups)
                 {
-                    groups.Add(new List<WordIndexForQuery>());
-                    lastPosition = wifq.FirstPosition;
+                    WordIndexForQuery wifq1 = wifqList[wifqList.Count - 1];
+
+                    if (wifq.FirstPosition >= wifq1.FirstPosition + wifq1.WordIndex.Word.Length)
+                    {
+                        if (i == 0)
+                        {
+                            for(int j = 1; j < groups.Count; j++)
+                            {
+                                WordIndexForQuery wifq2 = groups[j][groups[j].Count - 1];
+                                if (wifq1.FirstPosition >= wifq2.FirstPosition + wifq2.WordIndex.Word.Length)
+                                {
+                                    groups[j].Add(wifq1);
+                                }
+                            }
+                        }
+
+                        wifqList.Add(wifq);
+                        addNew = false;
+                        break;
+                    }
+
+                    i++;
                 }
 
-                groups[groups.Count - 1].Add(wifq);
+                if (addNew)
+                {
+                    groups.Add(new List<WordIndexForQuery>());
+                    groups[groups.Count - 1].Add(wifq);
+                }
+            }
+
+            if (groups.Count > 0)
+            {
+                WordIndexForQuery wifq1 = groups[0][groups[0].Count-1];
+
+                for (int j = 1; j < groups.Count; j++)
+                {
+                    WordIndexForQuery wifq2 = groups[j][groups[j].Count - 1];
+                    if (wifq1.FirstPosition >= wifq2.FirstPosition + wifq2.WordIndex.Word.Length)
+                    {
+                        groups[j].Add(wifq1);
+                    }
+                }
             }
 
             foreach (List<WordIndexForQuery> group in groups)
             {
-                if (group.Count > deep)
-                {
-                    deep = group.Count;
-                }
-            }
-
-            for (int i = 0; i < deep; i++)
-            {
-                WordIndexForQuery[] wordIndexes = new WordIndexForQuery[groups.Count];
-
-                for (int j = 0; j < groups.Count; j++)
-                {
-                    List<WordIndexForQuery> group = groups[j];
-
-                    if (group.Count <= i)
-                    {
-                        wordIndexes[j] = group[group.Count - 1];
-                    }
-                    else
-                    {
-                        wordIndexes[j] = group[i];
-                    }
-                }
-
-                result.Add(wordIndexes);
+                result.Add(group.ToArray());
             }
 
             return result;
@@ -1611,12 +1602,23 @@ namespace Hubble.Core.Query
 
             for (int i = 1; i < partList.Count; i++)
             {
+                bool someWordNoResult = false;
+
                 foreach (WordIndexForQuery w in partList[i])
                 {
+                    if (w.WordIndex.WordCount == 0)
+                    {
+                        someWordNoResult = true;
+                        break;
+                    }
+
                     w.WordIndex.Reset();
                 }
 
-                result.OrMerge(result, PartSearch(partList[i]));
+                if (!someWordNoResult)
+                {
+                    result.OrMerge(result, PartSearch(partList[i]));
+                }
             }
 
             //Get min document id

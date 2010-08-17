@@ -822,6 +822,24 @@ namespace Hubble.Core.Data
                     return;
                 }
 
+                try
+                {
+                    //If Updated mode
+                    //Truncate 
+                    if (_Table.IndexOnly && _Table.DocIdReplaceField != null && _Table.TableSynchronization)
+                    {
+                        if (!string.IsNullOrEmpty(_Table.TriggerTableName))
+                        {
+                            this.DBAdapter.Truncate(_Table.TriggerTableName);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Truncate trigger table: {0} fail", _Table.TriggerTableName),
+                        e);
+                }
+
                 foreach (Field field in _Table.Fields)
                 {
                     if (field.IndexType == Field.Index.Tokenized)
@@ -1198,7 +1216,7 @@ namespace Hubble.Core.Data
             if (payloadData == null)
             {
                 //Global.Report.WriteErrorLog(string.Format("GetDocIdReplaceFieldValue fail, DocId={0} does not exist!", docId));
-                return int.MaxValue;
+                return long.MaxValue;
             }
 
             switch (_DocIdReplaceField.DataType)

@@ -756,18 +756,19 @@ namespace Hubble.Core.Store
 
             int relDocCount = (int)wordCountSum;
 
-            if (maxReturnCount >= 0)
-            {
-                if (wordCountSum > maxReturnCount)
-                {
-                    relDocCount = maxReturnCount;
-                }
-            }
+            //if (maxReturnCount >= 0)
+            //{
+            //    if (wordCountSum > maxReturnCount)
+            //    {
+            //        relDocCount = maxReturnCount;
+            //    }
+            //}
 
             WordStepDocIndex wordStepDocIndex = new WordStepDocIndex(indexFileInfoList,
                 wordCountSum, relDocCount, simple);
 
-            return new WordIndexReader(word, wordStepDocIndex, totalDocs, dbProvider, _IndexFileProxy);
+            return new WordIndexReader(word, wordStepDocIndex, totalDocs, 
+                dbProvider, _IndexFileProxy, maxReturnCount);
 
         }
 

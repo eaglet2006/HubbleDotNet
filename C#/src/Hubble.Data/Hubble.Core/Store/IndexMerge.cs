@@ -167,12 +167,14 @@ namespace Hubble.Core.Store
                                 long position = indexFS.Position;
                                 Entity.DocumentPositionList.Merge(mergeStreamList, indexFS);
 
-                                headFS.Add(wpl.Word, position, indexFS.Position - position);
-                                //IndexWriter.WriteHeadFile(headFS, wpl.Word, position, indexFS.Position - position);
+                                if (headFS.Add(wpl.Word, position, indexFS.Position - position))
+                                {
+                                    //IndexWriter.WriteHeadFile(headFS, wpl.Word, position, indexFS.Position - position);
 
-                                mergeAck.MergeFilePositionList.Add(new IndexFileProxy.MergeAck.MergeFilePosition(
-                                    new IndexFile.FilePosition(mergeInfos.MergedSerial, position, (int)(indexFS.Position - position)),
-                                    wpl.Word));
+                                    mergeAck.MergeFilePositionList.Add(new IndexFileProxy.MergeAck.MergeFilePosition(
+                                        new IndexFile.FilePosition(mergeInfos.MergedSerial, position, (int)(indexFS.Position - position)),
+                                        wpl.Word));
+                                }
                             }
                         }
 
