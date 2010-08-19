@@ -47,6 +47,21 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private bool _NeedGroupBy;
+
+        public bool NeedGroupBy
+        {
+            get
+            {
+                return _NeedGroupBy;
+            }
+
+            set
+            {
+                _NeedGroupBy = value;
+            }
+        }
+
 
         private string _OrderBy;
 
@@ -256,6 +271,8 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
+                query.End = this.End;
+                query.NeedGroupBy = this.NeedGroupBy;
                 query.FieldRank = fieldRank;
                 query.CanLoadPartOfDocs = OrderByScore;
                 query.NoAndExpression = expressionTree.AndChild == null;
@@ -959,6 +976,40 @@ namespace Hubble.Core.SFQL.Parse
                 dest = or;
             }
 
+            if (this.NeedGroupBy)
+            {
+                //Merge group by collection
+
+                if (src.GroupByCollection.Count > 0 || dest.GroupByCollection.Count > 0)
+                {
+                    //Init group by collection
+
+                    if (src.GroupByCollection.Count <= 0)
+                    {
+                        foreach (int docid in src.Keys)
+                        {
+                            src.AddToGroupByCollection(docid);
+                        }
+                    }
+
+                    if (dest.GroupByCollection.Count <= 0)
+                    {
+                        foreach (int docid in dest.Keys)
+                        {
+                            dest.AddToGroupByCollection(docid);
+                        }
+                    }
+
+                    foreach (int docid in src.GroupByCollection)
+                    {
+                        if (!dest.GroupByContains(docid))
+                        {
+                            dest.AddToGroupByCollection(docid);
+                        }
+                    }
+                }
+            }
+
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in src.Values)
             {
                 Query.DocumentResult* dr;
@@ -1083,14 +1134,14 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree)
+        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out ICollection<int> groupByCollection)
         {
             int relTotalCount;
-            return Parse(expressionTree, out relTotalCount);
+            return Parse(expressionTree, out relTotalCount, out groupByCollection);
         }
 
         unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, 
-            out int relTotalCount)
+            out int relTotalCount, out ICollection<int> groupByCollection)
         {
             Core.SFQL.Parse.DocumentResultWhereDictionary dict;
 
@@ -1125,11 +1176,13 @@ namespace Hubble.Core.SFQL.Parse
                                                 Query.DocumentResultForSort[] dresult = new Hubble.Core.Query.DocumentResultForSort[1];
                                                 dresult[0] = new Hubble.Core.Query.DocumentResultForSort(docid);
                                                 relTotalCount = 1;
+                                                groupByCollection = null;
                                                 return dresult;
                                             }
                                             else
                                             {
                                                 relTotalCount = 0;
+                                                groupByCollection = null;
                                                 return new Query.DocumentResultForSort[0];
                                             }
                                         }
@@ -1160,6 +1213,8 @@ namespace Hubble.Core.SFQL.Parse
             {
                 result[i++] = new Hubble.Core.Query.DocumentResultForSort(drp.pDocumentResult);
             }
+
+            groupByCollection = dict.GroupByCollection;
 
             return result;
         }

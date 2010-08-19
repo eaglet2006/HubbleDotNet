@@ -37,6 +37,12 @@ namespace Hubble.Core.StoredProcedure
                 throw new Data.DataException(string.Format("Can't find field name : {0}", Parameters[2]));
             }
 
+            if (field.AnalyzerName == null)
+            {
+                throw new Data.DataException(string.Format("Field: {0} in {1} is not tokenized", Parameters[2],
+                    dbProvider.Table.Name));
+            }
+
             Analysis.IAnalyzer analyzer = Data.DBProvider.GetAnalyzer(field.AnalyzerName);
 
             if (analyzer == null)

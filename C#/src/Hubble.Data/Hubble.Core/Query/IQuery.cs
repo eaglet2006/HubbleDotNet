@@ -33,6 +33,13 @@ namespace Hubble.Core.Query
 
         DBProvider DBProvider { get; set; }
 
+        /// <summary>
+        /// Between begin to end
+        /// </summary>
+        int End { get; set; }
+
+        bool NeedGroupBy { get; set; }
+
         int FieldRank { get; set; }
 
         IList<Entity.WordInfo> QueryWords { get; set; }

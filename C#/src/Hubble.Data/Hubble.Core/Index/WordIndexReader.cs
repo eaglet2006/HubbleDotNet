@@ -199,16 +199,29 @@ namespace Hubble.Core.Index
 
         public void Reset()
         {
-            _IndexReader.Reset();
+            if (_IndexReader != null)
+            {
+                _IndexReader.Reset();
+            }
         }
 
         public DocumentPositionList Get(int docid)
         {
+            if (_IndexReader == null)
+            {
+                return new DocumentPositionList(-1);
+            }
+
             return _IndexReader.Get(docid);
         }
 
         public DocumentPositionList GetNext()
         {
+            if (_IndexReader == null)
+            {
+                return new DocumentPositionList(-1);
+            }
+
             return _IndexReader.GetNext();
         }
 

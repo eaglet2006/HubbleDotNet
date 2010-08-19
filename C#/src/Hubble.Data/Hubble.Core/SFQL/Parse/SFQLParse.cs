@@ -142,13 +142,15 @@ namespace Hubble.Core.SFQL.Parse
             parseWhere.End = update.End;
             Query.DocumentResultForSort[] result;
 
+            ICollection<int> groupByCollection;
+
             if (update.Where == null)
             {
-                result = parseWhere.Parse(null);
+                result = parseWhere.Parse(null, out groupByCollection);
             }
             else
             {
-                result = parseWhere.Parse(update.Where.ExpressionTree);
+                result = parseWhere.Parse(update.Where.ExpressionTree, out groupByCollection);
             }
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(update.TableName);
@@ -192,13 +194,15 @@ namespace Hubble.Core.SFQL.Parse
             parseWhere.End = delete.End;
             Query.DocumentResultForSort[] result;
 
+            ICollection<int> groupByCollection;
+
             if (delete.Where == null)
             {
-                result = parseWhere.Parse(null);
+                result = parseWhere.Parse(null, out groupByCollection);
             }
             else
             {
-                result = parseWhere.Parse(delete.Where.ExpressionTree);
+                result = parseWhere.Parse(delete.Where.ExpressionTree, out groupByCollection);
             }
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(delete.TableName);
@@ -725,6 +729,34 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
+        unsafe private Hubble.Core.Query.DocumentResultForSort[] GetGroupByResult(DBProvider dbProvider, ICollection<int> groupByCollection)
+        {
+            int len = Math.Min(dbProvider.Table.GroupByLimit, groupByCollection.Count);
+            Hubble.Core.Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[len];
+
+            int i = 0;
+
+            foreach (int docid in groupByCollection)
+            {
+                int* payload = dbProvider.GetPayloadData(docid);
+
+                if (payload != null)
+                {
+                    result[i] = new Hubble.Core.Query.DocumentResultForSort(
+                        docid, 0, payload);
+                    i++;
+                }
+
+                if (i >= len)
+                {
+                    break;
+                }
+            }
+
+            return result;
+
+        }
+
         unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
@@ -793,6 +825,8 @@ namespace Hubble.Core.SFQL.Parse
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
+            parseWhere.NeedGroupBy = groupByList.Count > 0;
+
             Query.DocumentResultForSort[] result;
 
             //Query cache
@@ -835,17 +869,19 @@ namespace Hubble.Core.SFQL.Parse
 
             int relTotalCount = 0;
 
+            ICollection<int> groupByCollection = null;
+
             //Get document result
             if (noQueryCache)
             {
                 if (select.Where == null)
                 {
-                    result = parseWhere.Parse(null, out relTotalCount);
+                    result = parseWhere.Parse(null, out relTotalCount, out groupByCollection);
                     //relTotalCount = result.Length;
                 }
                 else
                 {
-                    result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount);
+                    result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount, out groupByCollection);
                 }
 
                 //Sort
@@ -969,9 +1005,19 @@ namespace Hubble.Core.SFQL.Parse
 
             qResult.DataSet = ds;
 
+            Hubble.Core.Query.DocumentResultForSort[] groupByResult = result;
+
+            if (groupByCollection != null)
+            {
+                if (groupByCollection.Count > 0)
+                {
+                    groupByResult = GetGroupByResult(dbProvider, groupByCollection);
+                }
+            }
+
             foreach (IGroupBy groupBy in groupByList)
             {
-                qResult.AddDataTable(groupBy.GroupBy(result, dbProvider.Table.GroupByLimit));
+                qResult.AddDataTable(groupBy.GroupBy(groupByResult, dbProvider.Table.GroupByLimit));
             }
 
 

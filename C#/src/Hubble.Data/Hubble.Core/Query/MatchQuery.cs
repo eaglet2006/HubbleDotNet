@@ -1135,6 +1135,34 @@ namespace Hubble.Core.Query
             }
         }
 
+        private int _End = -1;
+
+        public int End
+        {
+            get
+            {
+                return _End;
+            }
+            set
+            {
+                _End = value;
+            }
+        }
+
+        private bool _NeedGroupBy;
+
+        public bool NeedGroupBy
+        {
+            get
+            {
+                return _NeedGroupBy;
+            }
+            set
+            {
+                _NeedGroupBy = value;
+            }
+        }
+
         public Hubble.Core.Index.InvertedIndex InvertedIndex
         {
             get
@@ -1356,5 +1384,6 @@ namespace Hubble.Core.Query
         }
 
         #endregion
+
     }
 }

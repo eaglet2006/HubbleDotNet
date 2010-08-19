@@ -41,7 +41,6 @@ namespace Hubble.Core.SFQL.Parse
         int _UnitIndex;
         Query.DocumentResult* _Cur;
 
-
         public bool Not = false;
 
         public bool ZeroResult = false;
@@ -68,6 +67,15 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private Dictionary<int, int> _GroupByDict = new Dictionary<int, int>();
+
+        public ICollection<int> GroupByCollection
+        {
+            get
+            {
+                return _GroupByDict.Keys;
+            }
+        }
 
         unsafe public DocumentResultWhereDictionary()
             :this(DefaultSize)
@@ -95,6 +103,21 @@ namespace Hubble.Core.SFQL.Parse
             catch
             {
             }
+        }
+
+        public bool GroupByContains(int docId)
+        {
+            return _GroupByDict.ContainsKey(docId);
+        }
+
+        public void AddToGroupByCollection(int docId)
+        {
+            _GroupByDict.Add(docId, docId);
+        }
+
+        public void RemoveFromGroupByCollection(int docId)
+        {
+            _GroupByDict.Remove(docId);
         }
 
         unsafe public void Add(int docId, Query.DocumentResult value)
