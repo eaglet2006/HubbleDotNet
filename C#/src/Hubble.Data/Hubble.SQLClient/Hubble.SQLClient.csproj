@@ -81,6 +81,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="HubbleParameterCollection.cs" />
+    <Compile Include="TableSynchronization.cs" />
     <Compile Include="TableTicks.cs" />
   </ItemGroup>
   <ItemGroup>

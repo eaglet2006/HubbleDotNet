@@ -14,7 +14,8 @@ namespace QueryAnalyzer
     public partial class FormTableSynchronize : Form
     {
         internal DbAccess DataAccess { get; set; }
-        
+
+        TableSynchronization _TableSync;
         string _TableName;
 
         System.Threading.Thread _Thread = null;
@@ -85,10 +86,8 @@ namespace QueryAnalyzer
             {
                 try
                 {
-                    QueryResult qResult = DataAccess.Excute("exec SP_GetTableSyncProgress {0}", TableName);
+                    progress = _TableSync.GetProgress();
 
-                    progress = double.Parse(qResult.DataSet.Tables[0].Rows[0][0].ToString());
-                    
                     ShowOptimizeProgress(progress);
 
                     System.Threading.Thread.Sleep(1000);
@@ -109,17 +108,18 @@ namespace QueryAnalyzer
         {
             try
             {
-                int option = 1;
+                TableSynchronization.OptimizeOption option = TableSynchronization.OptimizeOption.Minimum;
 
                 if (comboBoxOptimizeOption.Text.Equals("Middle"))
                 {
-                    option = 2;
+                    option = TableSynchronization.OptimizeOption.Middle;
                 }
 
                 int step = (int)numericUpDownStep.Value;
 
-                DataAccess.Excute("exec SP_SynchronizeTable {0}, {1}, {2}", TableName,
-                    step, option);
+                _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option);
+
+                _TableSync.Synchronize();
 
                 _Thread = new System.Threading.Thread(ShowProgress);
                 _Thread.IsBackground = true;
@@ -138,7 +138,7 @@ namespace QueryAnalyzer
         {
             try
             {
-                DataAccess.Excute("exec SP_StopSynchronizeTable {0}", TableName);
+                _TableSync.Stop();
                 return true;
             }
             catch (Exception ex)

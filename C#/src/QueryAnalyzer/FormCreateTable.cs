@@ -115,6 +115,7 @@ namespace QueryAnalyzer
                 tableField.Left = panelHead.Left;
                 tableField.Visible = true;
                 currentTop += tableField.Height;
+                tableField.IsNull = true;
                 panelFields.Controls.Add(tableField);
             }
         }

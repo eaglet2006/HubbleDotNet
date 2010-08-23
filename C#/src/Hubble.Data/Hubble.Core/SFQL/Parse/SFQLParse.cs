@@ -1463,9 +1463,20 @@ namespace Hubble.Core.SFQL.Parse
             {
                 StringBuilder sortString = new StringBuilder();
 
+                int i = 0;
+
                 foreach (SyntaxAnalysis.Select.OrderBy orderBy in _UnionSelects[0].OrderBys)
                 {
-                    sortString.AppendFormat("{0} ", orderBy.ToString());
+                    if (i == 0)
+                    {
+                        sortString.AppendFormat("{0} ", orderBy.ToString());
+                    }
+                    else
+                    {
+                        sortString.AppendFormat(",{0} ", orderBy.ToString());
+                    }
+
+                    i++;
                 }
 
                 ResultsRowArray = table.Select("", sortString.ToString());

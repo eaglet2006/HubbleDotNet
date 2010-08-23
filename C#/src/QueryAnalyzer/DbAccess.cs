@@ -35,6 +35,14 @@ namespace QueryAnalyzer
 
         private string _DatabaseName = "Master";
 
+        public HubbleConnection Conn
+        {
+            get
+            {
+                return _Conn;
+            }
+        }
+
         public string DatabaseName
         {
             get
