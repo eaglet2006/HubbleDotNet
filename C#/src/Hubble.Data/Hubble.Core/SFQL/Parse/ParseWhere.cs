@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Data;
 
+using Hubble.Core.Entity;
+
 namespace Hubble.Core.SFQL.Parse
 {
     class ParseWhere
@@ -29,6 +31,7 @@ namespace Hubble.Core.SFQL.Parse
             Word = 0,
             Boost = 1,
             Position = 2,
+            Flag = 3,
         }
 
         string _TableName;
@@ -128,6 +131,7 @@ namespace Hubble.Core.SFQL.Parse
                 string w = word;
                 int boost = 1;
                 int position = -1;
+                int flag = 0;
                 int begin = 0;
 
                 for (int i = 0; i < word.Length; i++)
@@ -153,6 +157,15 @@ namespace Hubble.Core.SFQL.Parse
 
                             break;
                         case QueryStringState.Position:
+                            if (word[i] == '^')
+                            {
+                                state = QueryStringState.Flag;
+                                position = int.Parse(word.Substring(begin, i - begin));
+                                begin = i + 1;
+                            }
+                            break;
+
+                        case QueryStringState.Flag:
                             break;
                     }
                 }
@@ -168,6 +181,9 @@ namespace Hubble.Core.SFQL.Parse
                     case QueryStringState.Position:
                         position = int.Parse(word.Substring(begin, word.Length - begin));
                         break;
+                    case QueryStringState.Flag:
+                        flag = int.Parse(word.Substring(begin, word.Length - begin));
+                        break;
                 }
 
                 if (boost < 0 || boost > 65535)
@@ -180,7 +196,7 @@ namespace Hubble.Core.SFQL.Parse
                     position = lastPosition;
                 }
 
-                result.Add(new Hubble.Core.Entity.WordInfo(w, position, boost));
+                result.Add(new Hubble.Core.Entity.WordInfo(w, position, boost, (WordInfo.Flag)flag));
 
                 lastPosition = position + w.Length;
             }

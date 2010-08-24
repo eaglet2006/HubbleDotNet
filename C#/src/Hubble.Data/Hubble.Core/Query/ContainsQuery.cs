@@ -21,6 +21,7 @@ using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
+using Hubble.Core.Entity;
 
 namespace Hubble.Core.Query
 {
@@ -76,6 +77,7 @@ namespace Hubble.Core.Query
             public int WordRank;
             public int FieldRank;
             public int RelTotalCount;
+            public WordInfo.Flag Flags;
 
             public int QueryCount; //How many time is this word in query string.
             public int FirstPosition; //First position in query string.
@@ -107,11 +109,12 @@ namespace Hubble.Core.Query
             }
 
             public WordIndexForQuery(Index.WordIndexReader wordIndex,
-                int totalDocuments, int wordRank, int fieldRank)
+                int totalDocuments, int wordRank, int fieldRank, WordInfo.Flag flags)
             {
                 FieldRank = fieldRank;
                 WordRank = wordRank;
                 RelTotalCount = wordIndex.RelDocCount;
+                this.Flags = flags;
 
                 if (FieldRank <= 0)
                 {
@@ -183,10 +186,41 @@ namespace Hubble.Core.Query
 
         #endregion
 
+        /// <summary>
+        /// if first word's flag is or,
+        /// adjust the result of sort.
+        /// </summary>
+        /// <param name="wordIndexes">result of sort</param>
+        private void AdjustSort(WordIndexForQuery[] wordIndexes)
+        {
+            if (wordIndexes.Length > 0)
+            {
+                if ((wordIndexes[0].Flags & WordInfo.Flag.Or) != 0)
+                {
+                    for (int i = 1; i < wordIndexes.Length; i++)
+                    {
+                        if ((wordIndexes[i].Flags & WordInfo.Flag.Or) == 0)
+                        {
+                            WordIndexForQuery temp = wordIndexes[i];
+                            wordIndexes[i] = wordIndexes[0];
+                            wordIndexes[0] = temp;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    return;
+                }
+            }
+        }
+
         unsafe private void CalculateWithPosition(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
             ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
             Array.Sort(wordIndexes);
+
+            AdjustSort(wordIndexes);
 
             MinResultCount = _DBProvider.Table.GroupByLimit;
 
@@ -311,7 +345,15 @@ namespace Hubble.Core.Query
 
                         if (docListArr[curWord].DocumentId < 0)
                         {
-                            break;
+                            if ((wordIndexes[curWord].Flags & WordInfo.Flag.Or) != 0)
+                            {
+                                curWord++;
+                                continue;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
 
                         curWord++;
@@ -444,6 +486,8 @@ namespace Hubble.Core.Query
         {
             Array.Sort(wordIndexes);
 
+            AdjustSort(wordIndexes);
+
             MinResultCount = _DBProvider.Table.GroupByLimit;
 
             //Get max word doc list count
@@ -560,7 +604,15 @@ namespace Hubble.Core.Query
                         
                         if (docListArr[curWord].DocumentId < 0)
                         {
-                            break;
+                            if ((wordIndexes[curWord].Flags & WordInfo.Flag.Or) != 0)
+                            {
+                                curWord++;
+                                continue;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
 
                         curWord++;
@@ -1465,7 +1517,7 @@ namespace Hubble.Core.Query
                         }
 
                         wifq = new WordIndexForQuery(wordIndex,
-                            InvertedIndex.DocumentCount, wordInfo.Rank, this.FieldRank);
+                            InvertedIndex.DocumentCount, wordInfo.Rank, this.FieldRank, wordInfo.Flags);
                         wifq.QueryCount = 1;
                         wifq.FirstPosition = wordInfo.Position;
                         wordIndexList.Add(wifq);

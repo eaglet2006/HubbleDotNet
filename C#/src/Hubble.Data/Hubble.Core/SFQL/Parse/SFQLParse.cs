@@ -672,7 +672,8 @@ namespace Hubble.Core.SFQL.Parse
             return false;
         }
 
-        private List<IGroupBy> GetGroupBy(TSFQLSentence sentence, Data.DBProvider dbProvider)
+        private List<IGroupBy> GetGroupBy(TSFQLSentence sentence, Data.DBProvider dbProvider,
+            SyntaxAnalysis.ExpressionTree expressionTree)
         {
             List<IGroupBy> groupByList = new List<IGroupBy>();
 
@@ -684,7 +685,7 @@ namespace Hubble.Core.SFQL.Parse
                     {
                         if (attribute.Parameters[0].Equals("Count", StringComparison.CurrentCultureIgnoreCase))
                         {
-                            groupByList.Add(new ParseGroupByCount(attribute, dbProvider));
+                            groupByList.Add(new ParseGroupByCount(attribute, dbProvider, expressionTree));
                         }
                     }
                 }
@@ -775,7 +776,8 @@ namespace Hubble.Core.SFQL.Parse
                 return bigTableParse.Parse(select, dbProvider, connInfo);
             }
 
-            List<IGroupBy> groupByList = GetGroupBy(select.Sentence, dbProvider);
+            List<IGroupBy> groupByList = GetGroupBy(select.Sentence, dbProvider,
+                select.Where == null ? null : select.Where.ExpressionTree);
 
             long lastModifyTicks = dbProvider.LastModifyTicks;
 
@@ -964,7 +966,13 @@ namespace Hubble.Core.SFQL.Parse
                     {
                         if (result.Length <= sortLen)
                         {
-                            all = true;
+                            if (select.Where != null)
+                            {
+                                if (select.Where.ExpressionTree.NeedTokenize)
+                                {
+                                    all = true;
+                                }
+                            }
                         }
 
                         count = Math.Min(result.Length, sortLen);

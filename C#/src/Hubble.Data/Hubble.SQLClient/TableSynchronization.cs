@@ -42,11 +42,20 @@ namespace Hubble.SQLClient
         /// <summary>
         /// Do synchronize
         /// </summary>
-        public void Synchronize()
+        public bool Synchronize()
         {
-            HubbleCommand cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}", _Conn,
-                _TableName, _Step, (int)_Option);
-            cmd.ExecuteNonQuery();
+            if (GetProgress() >= 100)
+            {
+                HubbleCommand cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}", _Conn,
+                    _TableName, _Step, (int)_Option);
+
+                cmd.ExecuteNonQuery();
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>

@@ -62,6 +62,7 @@ namespace Hubble.Core.SFQL.Parse
         DBProvider _DBProvider;
         List<Field> _GroupByFields;
         string _GroupByFieldsString;
+        SyntaxAnalysis.ExpressionTree _ExpressionTree;
 
         /// <summary>
         /// Get key for the values of group by feilds
@@ -127,7 +128,7 @@ namespace Hubble.Core.SFQL.Parse
 
         private object GetFieldValue(Field field, ref int preDataLength, ulong key)
         {
-            key >>= preDataLength;
+            key >>= preDataLength * 8;
 
             switch (field.DataType)
             {
@@ -206,14 +207,14 @@ namespace Hubble.Core.SFQL.Parse
                 System.Data.DataRow row = table.NewRow();
 
                 int preDataLength = 0;
-                int col = 0;
+                int col = _GroupByFields.Count - 1;
 
-                for(; col < _GroupByFields.Count; col++)
+                for(; col >= 0; col--)
                 {
                     row[col] = GetFieldValue(_GroupByFields[col], ref preDataLength, gbp.Key);
                 }
 
-                row[col] = gbp.Count;
+                row[_GroupByFields.Count] = gbp.Count;
 
                 table.Rows.Add(row);
 
@@ -239,7 +240,8 @@ namespace Hubble.Core.SFQL.Parse
         /// equivalent sql:
         /// select top 10 count(*) as count from table group by type1, type2 order by count desc
         /// </example>
-        internal ParseGroupByCount(TSFQLAttribute attribute, DBProvider dbProvider)
+        internal ParseGroupByCount(TSFQLAttribute attribute, DBProvider dbProvider,
+            SyntaxAnalysis.ExpressionTree expressionTree)
         {
             if (attribute.Parameters.Count < 3)
             {
@@ -254,6 +256,8 @@ namespace Hubble.Core.SFQL.Parse
             _DBProvider = dbProvider;
 
             _GroupByFields = new List<Field>();
+
+            _ExpressionTree = expressionTree;
 
             int fieldsDataLength = 0;
 
@@ -325,6 +329,74 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private System.Data.DataTable GroupByFromDatabase()
+        {
+            string whereSql;
+
+            if (_ExpressionTree == null)
+            {
+                whereSql = "";
+            }
+            else
+            {
+                whereSql = "where " + _ExpressionTree.SqlText;
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            string fields = "";
+            int i = 0;
+
+            foreach(Field field in _GroupByFields)
+            {
+                if (i++ == 0)
+                {
+                    fields += field.Name;
+                }
+                else
+                {
+                    fields += "," + field.Name;
+                }
+            }
+
+            string sql = string.Format("select {0} , count(*) as Count from {1} {2} group by {0} order by count desc",
+                fields, _DBProvider.Table.DBTableName, whereSql);
+
+            System.Data.DataTable src = _DBProvider.DBAdapter.QuerySql(sql).Tables[0];
+            System.Data.DataTable table = src.Clone();
+
+            table.MinimumCapacity = src.Rows.Count;
+            int top = _Top;
+
+            if (top < 0)
+            {
+                top = int.MaxValue;
+            }
+
+            i = 0;
+            while (top > 0 && i < src.Rows.Count)
+            {
+                System.Data.DataRow row = table.NewRow();
+
+                for (int j = 0; j < table.Columns.Count; j++)
+                {
+                    row[j] = src.Rows[i][j];
+                }
+
+                table.Rows.Add(row);
+
+                i++;
+                top--;
+            }
+
+            table.TableName = "GroupByCount_" + _GroupByFieldsString;
+            
+
+            return table;
+
+
+        }
+
         /// <summary>
         /// Do Group By
         /// </summary>
@@ -332,6 +404,16 @@ namespace Hubble.Core.SFQL.Parse
         /// <param name="limit">limit count to group by. only group by limit number of records</param>
         public System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit)
         {
+            if (_ExpressionTree == null)
+            {
+                return GroupByFromDatabase();
+            }
+
+            if (!_ExpressionTree.NeedTokenize)
+            {
+                return GroupByFromDatabase();
+            }
+
             limit = Math.Min(result.Length, limit);
             Dictionary<ulong, int>  groupByDict = new Dictionary<ulong, int>(limit);
 

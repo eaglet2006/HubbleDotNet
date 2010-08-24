@@ -23,19 +23,34 @@ namespace Hubble.Core.Entity
 {
     public struct WordInfo : IComparable<WordInfo>
     {
+        [Flags]
+        public enum Flag
+        {
+            None = 0,
+            Or = 0x00000001,
+        }
+
         public string Word;
         public int Position;
         public int Rank;
+        public Flag Flags;
 
-        public WordInfo(string word, int position) : this(word, position, 0)
+        public WordInfo(string word, int position) 
+            : this(word, position, 0, Flag.None)
         {
         }
 
         public WordInfo(string word, int position, int rank)
+            : this(word, position, rank, Flag.None)
+        {
+        }
+
+        public WordInfo(string word, int position, int rank, Flag flags)
         {
             Word = word;
             Position = position;
             Rank = rank <= 0 ? 1 : rank;
+            Flags = flags;
         }
 
         public void SetWord(string word)
