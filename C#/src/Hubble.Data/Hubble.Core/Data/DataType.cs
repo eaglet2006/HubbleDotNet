@@ -501,7 +501,16 @@ namespace Hubble.Core.Data
                     {
                         ret = new int[1];
                         int temp;
-                        if (!int.TryParse(value, out temp))
+
+                        if (value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            temp = 1;
+                        }
+                        else if (value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            temp = 0;
+                        }
+                        else if (!int.TryParse(value, out temp))
                         {
                             temp = (int)double.Parse(value);
                         }

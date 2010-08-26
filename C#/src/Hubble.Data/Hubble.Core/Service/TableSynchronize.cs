@@ -77,7 +77,10 @@ namespace Hubble.Core.Service
             {
                 if (Exception != null)
                 {
-                    throw Exception;
+                    Exception e = this.Exception;
+                    SetException(null);
+
+                    throw e;
                 }
 
                 lock (_ProgressLock)
@@ -185,6 +188,7 @@ namespace Hubble.Core.Service
             }
             catch (Exception e)
             {
+                SetProgress(100);
                 Global.Report.WriteErrorLog("Table Synchronize fail", e);
                 SetException(e);
                 SyncThread = null;

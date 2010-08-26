@@ -2022,8 +2022,8 @@ namespace Hubble.Core.Data
                                     }
                                 }
 
-                                Insert(docResult);
                                 Delete(doDocs);
+                                Insert(docResult);
                                 doDocs.Clear();
                             }
                         }
@@ -2044,8 +2044,8 @@ namespace Hubble.Core.Data
                                 }
                             }
 
-                            Insert(docResult);
                             Delete(doDocs);
+                            Insert(docResult);
                         }
 
 
