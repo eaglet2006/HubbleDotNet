@@ -39,6 +39,7 @@ namespace QueryAnalyzer
 
         bool _Finished = false;
         bool _Stop = false;
+        bool _NeedDisableSynchronizeFirst = false;
 
         string _TableName;
         string _DBAdapterName;
@@ -587,6 +588,11 @@ namespace QueryAnalyzer
                     DataAccess.Excute("exec SP_TruncateTable {0}", TableName);
                 }
 
+                if (_NeedDisableSynchronizeFirst)
+                {
+                    DataAccess.Excute("exec SP_SetTableAttribute {0}, 'tablesynchronization', 'false'", TableName);
+                }
+
                 Stopwatch sw = new Stopwatch();
                 sw.Reset();
                 sw.Start();
@@ -651,6 +657,10 @@ namespace QueryAnalyzer
                     DataAccess.Excute("exec SP_TableIndexOnly {0}, {1}",
                         TableName, _IndexOnly.ToString());
 
+                    if (_NeedDisableSynchronizeFirst)
+                    {
+                        DataAccess.Excute("exec SP_SetTableAttribute {0}, 'tablesynchronization', 'true'", TableName);
+                    }
                 }
                 catch
                 {
@@ -662,12 +672,21 @@ namespace QueryAnalyzer
 
         private void buttonRebuild_Click(object sender, EventArgs e)
         {
+            _NeedDisableSynchronizeFirst = false;
+
             if (_DocIdReplaceField != null)
             {
                 if (_LastDocId > 0)
                 {
-                    MessageBox.Show("You should use synchronize table function to synchronize with database or check RebuildWholeTable to rebuild all records.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    if (!checkBoxRebuildWholeTable.Checked)
+                    {
+                        MessageBox.Show("You should use synchronize table function to synchronize with database or check RebuildWholeTable to rebuild all records.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    else
+                    {
+                        _NeedDisableSynchronizeFirst = true;
+                    }
                 }
             }
 
