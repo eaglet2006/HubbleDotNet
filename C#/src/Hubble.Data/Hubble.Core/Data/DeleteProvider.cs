@@ -156,6 +156,8 @@ namespace Hubble.Core.Data
                     return 0;
                 }
 
+                bool hasGroupByRecords = docIdResult.GroupByCollection.Count > 0;
+
                 if (_DeleteTbl.Count < docIdResult.Count)
                 {
                     foreach (int docid in _DeleteTbl.Keys)
@@ -164,6 +166,14 @@ namespace Hubble.Core.Data
                         {
                             deleteCount++;
                             docIdResult.Remove(docid);
+                        }
+
+                        if (hasGroupByRecords)
+                        {
+                            if (docIdResult.GroupByContains(docid))
+                            {
+                                docIdResult.RemoveFromGroupByCollection(docid);
+                            }
                         }
                     }
                 }
@@ -181,8 +191,15 @@ namespace Hubble.Core.Data
 
                     foreach (int docid in deleDocIdList)
                     {
-                        deleteCount++;
-                        docIdResult.Remove(docid);
+                        if (docIdResult.Remove(docid))
+                        {
+                            deleteCount++;
+                        }
+
+                        if (hasGroupByRecords)
+                        {
+                            docIdResult.RemoveFromGroupByCollection(docid);
+                        }
                     }
 
                     deleDocIdList = null;

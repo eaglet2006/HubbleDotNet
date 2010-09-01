@@ -169,6 +169,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             {
                 case SyntaxType.LIKE:
                 case SyntaxType.MATCH:
+                case SyntaxType.MATCH1:
+                case SyntaxType.MATCH2:
+                case SyntaxType.MATCH3:
                 case SyntaxType.CONTAINS:
                 case SyntaxType.CONTAINS1:
                 case SyntaxType.CONTAINS2:

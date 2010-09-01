@@ -224,8 +224,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s2.AddNextState((int)SyntaxType.NOT, s2.Id); //for not match, not like eg.
 
             s2.AddNextState((int)SyntaxType.NotEqual, (int)SyntaxType.LargethanEqual, s3.Id);
-            s2.AddNextState(new int[] { (int)SyntaxType.LIKE, (int)SyntaxType.MATCH, (int)SyntaxType.CONTAINS,
-                (int)SyntaxType.CONTAINS1, (int)SyntaxType.CONTAINS2, (int)SyntaxType.CONTAINS3} , s3.Id);
+            s2.AddNextState(new int[] { (int)SyntaxType.LIKE, 
+                (int)SyntaxType.MATCH, (int)SyntaxType.MATCH1, (int)SyntaxType.MATCH2, (int)SyntaxType.MATCH3, 
+                (int)SyntaxType.CONTAINS, (int)SyntaxType.CONTAINS1, (int)SyntaxType.CONTAINS2, (int)SyntaxType.CONTAINS3} , s3.Id);
 
             s3.AddNextState(new int[] { (int)SyntaxType.Identifer, 
                 (int)SyntaxType.Numeric, (int)SyntaxType.String }, s4.Id);

@@ -819,7 +819,10 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (select.OrderBys[0].Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    orderByScore = true;
+                    if (select.OrderBys[0].Order.Equals("Desc", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        orderByScore = true;
+                    }
                 }
             }
 

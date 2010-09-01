@@ -115,9 +115,9 @@ namespace Hubble.Core.SFQL.Parse
             _GroupByDict.Add(docId, docId);
         }
 
-        public void RemoveFromGroupByCollection(int docId)
+        public bool RemoveFromGroupByCollection(int docId)
         {
-            _GroupByDict.Remove(docId);
+            return _GroupByDict.Remove(docId);
         }
 
         unsafe public void Add(int docId, Query.DocumentResult value)
