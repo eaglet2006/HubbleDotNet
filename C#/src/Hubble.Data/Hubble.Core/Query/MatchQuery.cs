@@ -665,9 +665,13 @@ namespace Hubble.Core.Query
 
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
+            bool groupbyScanAll = false;
+
             //Match for group by
             if (this.NeedGroupBy)
             {
+                groupbyScanAll = true;
+
                 for (int i = 0; i < wordIndexes.Length; i++)
                 {
                     WordIndexForQuery wifq = wordIndexes[i];
@@ -675,6 +679,7 @@ namespace Hubble.Core.Query
 
                     if (docIdRank.GroupByCollection.Count >= _DBProvider.Table.GroupByLimit)
                     {
+                        groupbyScanAll = false;
                         break;
                     }
 
@@ -690,6 +695,8 @@ namespace Hubble.Core.Query
 
                     wifq.WordIndex.Reset();
                 }
+
+
             }
 
             //Merge
@@ -807,6 +814,8 @@ namespace Hubble.Core.Query
                 }
             }
 
+            double hitRate = 0;
+
             if (indexInTop < wordIndexes.Length - 1)
             {
                 int[] docidlist = new int[docIdRank.Count];
@@ -821,6 +830,8 @@ namespace Hubble.Core.Query
                 Array.Sort(docidlist);
 
                 int wordIndexesLen = wordIndexes.Length;
+                
+                int lastWordHitCount = 0;
 
                 foreach (int firstDocId in docidlist)
                 {
@@ -837,6 +848,11 @@ namespace Hubble.Core.Query
 
                             if (curDocId >= 0)
                             {
+                                if (curWord == wordIndexesLen - 1)
+                                {
+                                    lastWordHitCount++;
+                                }
+
                                 WordIndexForQuery wifq = wordIndexes[curWord];
 
                                 long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
@@ -908,6 +924,11 @@ namespace Hubble.Core.Query
                         } //While
                     }
                 }
+
+                if (docidlist.Length > 0)
+                {
+                    hitRate = (double)lastWordHitCount / (double)docidlist.Length;
+                }
             }
 
             performanceReport.Stop();
@@ -917,6 +938,18 @@ namespace Hubble.Core.Query
             if (indexInTop < wordIndexes.Length - 1)
             {
                 documentSum += wordIndexes[wordIndexes.Length - 1].RelTotalCount;
+
+                if (hitRate > 0)
+                {
+                    int predictCount = 0;
+
+                    for (int i = indexInTop + 1; i < wordIndexes.Length - 1; i++)
+                    {
+                        predictCount += (int)(wordIndexes[i].RelTotalCount * (1 - hitRate));
+                    }
+
+                    documentSum += predictCount;
+                }
             }
 
             if (documentSum > _TotalDocuments)
@@ -930,6 +963,15 @@ namespace Hubble.Core.Query
             int deleteCount = delProvider.Filter(docIdRank);
 
             docIdRank.RelTotalCount -= deleteCount;
+
+            if (groupbyScanAll)
+            {
+                docIdRank.RelTotalCount = docIdRank.GroupByCollection.Count;
+            }
+            else if (docIdRank.GroupByCollection.Count > docIdRank.RelTotalCount)
+            {
+                docIdRank.RelTotalCount = docIdRank.GroupByCollection.Count;
+            }
         }
 
 
