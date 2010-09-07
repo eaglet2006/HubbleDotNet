@@ -71,7 +71,7 @@ namespace Hubble.Core.Query
         {
             public int CurDocIdIndex;
             public int WordIndexesLength;
-            public int Norm_d_t;
+            public int Sum_d_t;
             public int Idf_t;
             public int WordRank;
             public int FieldRank;
@@ -135,7 +135,7 @@ namespace Hubble.Core.Query
 
                 _WordIndex = wordIndex;
 
-                Norm_d_t = (int)Math.Sqrt(_WordIndex.WordCount);
+                Sum_d_t = (int)Math.Sqrt(_WordIndex.WordCount);
                 Idf_t = (int)Math.Log10((double)totalDocuments / (double)_WordIndex.Count + 1) + 1;
                 CurDocIdIndex = 0;
                 WordIndexesLength = _WordIndex.Count;
@@ -174,8 +174,6 @@ namespace Hubble.Core.Query
 
         AppendList<Entity.WordInfo> _QueryWords = new AppendList<Hubble.Core.Entity.WordInfo>();
         WordIndexForQuery[] _WordIndexes;
-
-        long _Norm_Ranks = 0; //sqrt(sum_t(rank)^2))
 
         #endregion
 
@@ -242,7 +240,7 @@ namespace Hubble.Core.Query
                         }
                     }
 
-                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
 
                     if (score < 0)
                     {
@@ -328,7 +326,7 @@ namespace Hubble.Core.Query
                             Entity.DocumentPositionList docList = docListArr[i];
 
 
-                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
 
                             if (score < 0)
                             {
@@ -500,7 +498,7 @@ namespace Hubble.Core.Query
                         }
                     }
 
-                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                    long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
 
                     if (score < 0)
                     {
@@ -573,7 +571,7 @@ namespace Hubble.Core.Query
                             WordIndexForQuery wifq = wordIndexes[i];
                             Entity.DocumentPositionList docList = docListArr[i];
 
-                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Norm_d_t * (long)docList.TotalWordsInThisDocument);
+                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)docList.Count * (long)1000000 / ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
 
                             if (score < 0)
                             {
@@ -965,14 +963,6 @@ namespace Hubble.Core.Query
                 
                 _TotalDocuments = InvertedIndex.DocumentCount; 
 
-                _Norm_Ranks = 0;
-                foreach (WordIndexForQuery wq in wordIndexList)
-                {
-                    _Norm_Ranks += wq.WordRank * wq.WordRank;
-                }
-
-                _Norm_Ranks = (long)Math.Sqrt(_Norm_Ranks);
-
                 _WordIndexes = new WordIndexForQuery[wordIndexList.Count];
                 wordIndexList.CopyTo(_WordIndexes, 0);
 
@@ -1148,19 +1138,6 @@ namespace Hubble.Core.Query
                     result.OrMerge(result, PartSearch(partList[i]));
                 }
             }
-
-            //Get min document id
-            //for (int i = 0; i < _WordIndexList.Count; i++)
-            //{
-            //    if (this.Not)
-            //    {
-            //        _WordIndexList[i].Calculate(null, ref result, _Norm_Ranks);
-            //    }
-            //    else
-            //    {
-            //        _WordIndexList[i].Calculate(this.UpDict, ref result, _Norm_Ranks);
-            //    }
-            //}
 
             if (this.Not)
             {
