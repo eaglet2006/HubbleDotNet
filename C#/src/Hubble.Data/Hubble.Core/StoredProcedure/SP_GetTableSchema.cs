@@ -36,6 +36,8 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
 
+                    result.DataSet.Tables[0].Constraints.Clear();
+
                     foreach (System.Data.DataColumn col in invaildColList)
                     {
                         Global.Report.WriteErrorLog(string.Format("Invalid data type = {0} in column:{1}",
