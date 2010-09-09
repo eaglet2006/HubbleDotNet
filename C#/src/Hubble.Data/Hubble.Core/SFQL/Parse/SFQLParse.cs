@@ -1031,7 +1031,6 @@ namespace Hubble.Core.SFQL.Parse
                 qResult.AddDataTable(groupBy.GroupBy(groupByResult, dbProvider.Table.GroupByLimit));
             }
 
-
             qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",
                 dbProvider.DocumentCount));
             return qResult;

@@ -69,9 +69,17 @@ namespace Hubble.Core.SFQL.Parse
         /// </summary>
         /// <param name="docid"></param>
         /// <returns></returns>
-        unsafe private ulong GetKey(int docid)
+        unsafe private ulong GetKey(ref Query.DocumentResultForSort result)
         {
-            int* payloadData = _DBProvider.GetPayloadData(docid);
+            int* payloadData = result.PayloadData;
+            int docid = result.DocId;
+
+            if (payloadData == null)
+            {
+                payloadData = _DBProvider.GetPayloadData(docid);
+                result.PayloadData = payloadData;
+            }
+
             ulong key = 0;
 
             if (payloadData == null)
@@ -402,7 +410,7 @@ namespace Hubble.Core.SFQL.Parse
         /// </summary>
         /// <param name="result">result of the query</param>
         /// <param name="limit">limit count to group by. only group by limit number of records</param>
-        public System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit)
+        unsafe public System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit)
         {
             if (_ExpressionTree == null)
             {
@@ -419,7 +427,7 @@ namespace Hubble.Core.SFQL.Parse
 
             for (int i = 0; i < limit; i++)
             {
-                ulong key = GetKey(result[i].DocId);
+                ulong key = GetKey(ref result[i]);
 
                 int count;
 

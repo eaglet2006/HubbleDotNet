@@ -670,31 +670,39 @@ namespace Hubble.Core.Query
             {
                 groupbyScanAll = true;
 
+                int groupbyContainsCount = 0;
+                int groupbyLimit = _DBProvider.Table.GroupByLimit;
+
                 for (int i = 0; i < wordIndexes.Length; i++)
                 {
                     WordIndexForQuery wifq = wordIndexes[i];
                     Entity.DocumentPositionList docList = wifq.WordIndex.GetNext();
-
-                    if (docIdRank.GroupByCollection.Count >= _DBProvider.Table.GroupByLimit)
-                    {
-                        groupbyScanAll = false;
-                        break;
-                    }
 
                     while (docList.DocumentId >= 0)
                     {
                         if (!docIdRank.GroupByContains(docList.DocumentId))
                         {
                             docIdRank.AddToGroupByCollection(docList.DocumentId);
+                            
+                            groupbyContainsCount++;
+
+                            if (groupbyContainsCount >= groupbyLimit)
+                            {
+                                groupbyScanAll = false;
+                                break;
+                            }
                         }
 
                         docList = wifq.WordIndex.GetNext();
                     }
 
                     wifq.WordIndex.Reset();
+
+                    if (!groupbyScanAll)
+                    {
+                        break;
+                    }
                 }
-
-
             }
 
             //Merge
@@ -1638,6 +1646,7 @@ namespace Hubble.Core.Query
                     {
                         CalculateWithPosition(null, ref result, _WordIndexes);
                     }
+
                 }
             }
             else
