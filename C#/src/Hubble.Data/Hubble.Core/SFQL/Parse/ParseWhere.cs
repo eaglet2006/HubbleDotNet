@@ -105,7 +105,22 @@ namespace Hubble.Core.SFQL.Parse
 
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResults from DB");
 
-            Core.SFQL.Parse.DocumentResultWhereDictionary result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, _OrderBy);
+            string orderBy = _OrderBy;
+
+            if (_OrderBy != null)
+            {
+                if (_OrderBy.ToLower().Contains("score"))
+                {
+                    orderBy = null;
+                }
+                else if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null && 
+                    _OrderBy.ToLower().Contains("docid"))
+                {
+                    orderBy = null;
+                }
+            }
+
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, orderBy);
 
             performanceReport.Stop();
             return result;
@@ -1095,7 +1110,19 @@ namespace Hubble.Core.SFQL.Parse
 
             if (!expressionTree.Expression.NeedTokenize)
             {
-                return GetResultFromDatabase(expressionTree);
+                if (expressionTree.OrChild != null)
+                {
+                    if (expressionTree.OrChild.OrChildCalculated)
+                    {
+                        expressionTree.OrChild = null;
+                    }
+                }
+
+                andDict = GetResultFromDatabase(expressionTree);
+
+                return MergeDict(andDict, orDict);
+
+
             }
             else
             {
@@ -1211,7 +1238,8 @@ namespace Hubble.Core.SFQL.Parse
 
                 }
 
-                dict = GetResultFromDatabase(expressionTree);
+                //dict = GetResultFromDatabase(expressionTree);
+                dict = InnerParse(expressionTree);
             }
             else
             {
