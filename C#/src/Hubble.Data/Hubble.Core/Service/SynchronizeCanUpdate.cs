@@ -68,6 +68,11 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
+                if (field.Name.Equals(_DBProvider.Table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    continue;
+                }
+
                 sb.AppendFormat(", {0} ", Oracle8iAdapter.GetFieldName(field.Name));
             }
 
@@ -82,7 +87,6 @@ namespace Hubble.Core.Service
 
             sb.AppendFormat("select {0} from {1} where {4} > {2} and rownum <= {3} order by {4} ",
                 fields, _DBProvider.Table.DBTableName, from, _Step, Oracle8iAdapter.GetFieldName(_DBProvider.Table.DocIdReplaceField));
-
 
             return sb.ToString();
         }
