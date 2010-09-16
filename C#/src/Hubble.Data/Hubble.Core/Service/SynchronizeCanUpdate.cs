@@ -408,12 +408,12 @@ namespace Hubble.Core.Service
 
                 if (from == long.MaxValue)
                 {
-                    sql = string.Format("insert into {0} values(-1, 'Insert', '')",
+                    sql = string.Format("insert into {0} (id, Opr, Fields) values(-1, 'Insert', '')",
                         _DBProvider.Table.TriggerTableName);
                 }
                 else
                 {
-                    sql = string.Format("insert into {0} values({1}, 'Insert', '')",
+                    sql = string.Format("insert into {0} (id, Opr, Fields) values({1}, 'Insert', '')",
                         _DBProvider.Table.TriggerTableName, from);
                 }
                 dbAdapter.ExcuteSql(sql);
