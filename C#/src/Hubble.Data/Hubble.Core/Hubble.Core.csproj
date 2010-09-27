@@ -120,6 +120,7 @@
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />
+    <Compile Include="Right\UserRight.cs" />
     <Compile Include="Service\CommandContent.cs" />
     <Compile Include="Service\ConnectionInformation.cs" />
     <Compile Include="Service\SynchronizeCanUpdate.cs" />
