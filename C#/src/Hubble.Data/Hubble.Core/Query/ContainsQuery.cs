@@ -670,6 +670,15 @@ namespace Hubble.Core.Query
                         for (int i = 0; i < wordIndexesLen; i++)
                         {
                             WordIndexForQuery wifq = wordIndexes[i];
+
+                            if (wifq.WordIndex.Count == 0)
+                            {
+                                //a^5000^0 b^5000^2^1
+                                //if has a and hasn't b but b can be or
+                                //2010-09-30 eaglet
+                                continue;
+                            }
+
                             Entity.DocumentPositionList docList = docListArr[i];
 
 
