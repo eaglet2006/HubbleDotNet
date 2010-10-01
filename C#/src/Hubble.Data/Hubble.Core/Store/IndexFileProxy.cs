@@ -1639,9 +1639,13 @@ MergeAckLoop:
             //base.Close(millisecondsTimeout);
 
             //_WordFilePositionTable.Clear();
-            _IndexFile.Close();
-            _IndexFile = null;
-            GC.Collect();
+
+            if (_IndexFile != null)
+            {
+                _IndexFile.Close();
+                _IndexFile = null;
+                GC.Collect();
+            }
         }
 
         public string GetDDXFileName(int serialNo)
