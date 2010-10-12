@@ -101,6 +101,7 @@
     <Compile Include="Global\ReEntryException.cs" />
     <Compile Include="Global\Report.cs" />
     <Compile Include="Global\Setting.cs" />
+    <Compile Include="Global\UserRightProvider.cs" />
     <Compile Include="Index\DocumentPositionAlloc.cs" />
     <Compile Include="Index\InvertedIndex.cs" />
     <Compile Include="Index\MultiThreadIndex.cs" />
@@ -121,6 +122,7 @@
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />
     <Compile Include="Right\UserRight.cs" />
+    <Compile Include="Right\UserRightException.cs" />
     <Compile Include="Service\CommandContent.cs" />
     <Compile Include="Service\ConnectionInformation.cs" />
     <Compile Include="Service\SynchronizeCanUpdate.cs" />
@@ -170,6 +172,8 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_UserList.cs" />
+    <Compile Include="StoredProcedure\SP_CreateUser.cs" />
     <Compile Include="StoredProcedure\SP_StopSynchronizeTable.cs" />
     <Compile Include="StoredProcedure\SP_GetTableSyncProgress.cs" />
     <Compile Include="StoredProcedure\SP_SynchronizeTable.cs" />

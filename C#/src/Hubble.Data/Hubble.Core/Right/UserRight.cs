@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Hubble.Core.Right
 {
-    public struct DatabaseRight
+    [Serializable]
+    public class DatabaseRight
     {
         public string DatabaseName;
         public RightItem Right;
@@ -16,6 +17,7 @@ namespace Hubble.Core.Right
         }
     }
 
+    [Serializable]
     public class UserRight
     {
         public string UserName;

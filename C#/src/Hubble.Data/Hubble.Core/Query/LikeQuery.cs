@@ -172,6 +172,8 @@ namespace Hubble.Core.Query
         private int _TotalDocuments;
         string _LikeString = null;
 
+        bool _QueryThroughDB = false;
+
         AppendList<Entity.WordInfo> _QueryWords = new AppendList<Hubble.Core.Entity.WordInfo>();
         WordIndexForQuery[] _WordIndexes;
 
@@ -854,6 +856,20 @@ namespace Hubble.Core.Query
             }
         }
 
+        private string _OrderBy = null;
+
+        public string OrderBy
+        {
+            get
+            {
+                return _OrderBy;
+            }
+            set
+            {
+                _OrderBy = value;
+            }
+        }
+
         private bool _NeedGroupBy;
 
         public bool NeedGroupBy
@@ -905,6 +921,19 @@ namespace Hubble.Core.Query
                 }
 
                 _LikeString = value[0].Word;
+
+                if (_LikeString.Contains("%") || !_LikeString.Contains("*"))
+                {
+                    _QueryThroughDB = true;
+                    return;
+                }
+
+                if (!_LikeString.StartsWith("*") || !_LikeString.EndsWith("*"))
+                {
+                    throw new ParseException("like statement must be start and end with *. such as like '*xxx*'!");
+                }
+
+                _LikeString = _LikeString.Replace("*", "%");
                 string likeString = _LikeString;
 
                 Data.Field field = _DBProvider.GetField(InvertedIndex.FieldName);
@@ -1107,6 +1136,41 @@ namespace Hubble.Core.Query
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
+
+            if (_QueryThroughDB)
+            {
+                string orderBy = OrderBy;
+
+                if (orderBy != null)
+                {
+                    if (orderBy.ToLower().Contains("score"))
+                    {
+                        orderBy = null;
+                    }
+                    else if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null &&
+                        orderBy.ToLower().Contains("docid"))
+                    {
+                        orderBy = null;
+                    }
+                }
+
+                if (!NoAndExpression)
+                {
+                    if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null)
+                    {
+                        orderBy = _DBProvider.Table.DocIdReplaceField;
+                    }
+                    else
+                    {
+                        orderBy = "docid";
+                    }
+
+                    End = -1;
+                }
+
+                return _DBProvider.DBAdapter.GetDocumentResults(End, 
+                    string.Format("{0} like '{1}'", _FieldName, _LikeString), orderBy);
+            }
 
             List<WordIndexForQuery[]> partList = GetAllPartOfWordIndexes();
 

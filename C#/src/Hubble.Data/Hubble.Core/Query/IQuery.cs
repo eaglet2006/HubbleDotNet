@@ -38,6 +38,8 @@ namespace Hubble.Core.Query
         /// </summary>
         int End { get; set; }
 
+        string OrderBy { get; set; }
+
         bool NeedGroupBy { get; set; }
 
         int FieldRank { get; set; }

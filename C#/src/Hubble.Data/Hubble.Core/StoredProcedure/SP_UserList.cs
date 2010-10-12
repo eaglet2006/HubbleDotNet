@@ -15,26 +15,49 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Core.Data;
 
-namespace Hubble.Core.Right
+namespace Hubble.Core.StoredProcedure
 {
-    [Flags]
-    [Serializable]
-    public enum RightItem
+    class SP_UserList : StoredProcedure, IStoredProc, IHelper
     {
-        ManageUser    = 0x00000001,
-        ManageDB      = 0x00000002,
-        WriteDatabase = 0x00000004,
-        ExcuteStoreProcedure = 0x00000008,
-        Optimize      = 0x00000010,
-        CreateTable   = 0x00000020,
-        DropTable     = 0x00000040,
-        Select        = 0x00000080,
-        Update        = 0x00000100,
-        Delete        = 0x00000200,
+        #region IStoredProc Members
+
+        override public string Name
+        {
+            get
+            {
+                return "SP_UserList";
+            }
+        }
+
+        public void Run()
+        {
+            AddColumn("UserName");
+
+            foreach (string userName in Global.UserRightProvider.UserList)
+            {
+                NewRow();
+                OutputValue("UserName", userName);
+            }
+
+        }
+
+        #endregion
+
+        #region IHelper Members
+
+        public string Help
+        {
+            get 
+            {
+                return "List all user accounts";
+            }
+        }
+
+        #endregion
     }
 }

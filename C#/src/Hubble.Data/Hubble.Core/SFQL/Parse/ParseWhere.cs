@@ -305,7 +305,9 @@ namespace Hubble.Core.SFQL.Parse
                 query.End = this.End;
                 query.NeedGroupBy = this.NeedGroupBy;
                 query.FieldRank = fieldRank;
+                query.FieldName = fieldName;
                 query.CanLoadPartOfDocs = OrderByScore;
+                query.OrderBy = _OrderBy;
                 query.NoAndExpression = expressionTree.AndChild == null;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);

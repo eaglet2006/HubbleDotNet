@@ -57,6 +57,16 @@ namespace Hubble.Core.Global
             }
         }
 
+        [System.Xml.Serialization.XmlIgnore]
+        static public string UserRigthFilePath
+        {
+            get
+            {
+                return Path.AppendDivision(SettingPath, '\\') + "right.db";
+            }
+        }
+
+
         static internal Setting Config
         {
             get

@@ -538,6 +538,16 @@ namespace Hubble.Core.Data
                             Encoding.UTF8, new System.IO.MemoryStream());
 
 
+            //Load user right from right.db
+            try
+            {
+                Global.UserRightProvider.Load(Global.Setting.UserRigthFilePath);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog("Load user right db fail!", e);
+            }
+
             //Build QueryTable
 
             System.Reflection.Assembly asm = System.Reflection.Assembly.GetExecutingAssembly();

@@ -15,26 +15,21 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Hubble.Core.Right
 {
-    [Flags]
-    [Serializable]
-    public enum RightItem
+    public class UserRightException : Exception
     {
-        ManageUser    = 0x00000001,
-        ManageDB      = 0x00000002,
-        WriteDatabase = 0x00000004,
-        ExcuteStoreProcedure = 0x00000008,
-        Optimize      = 0x00000010,
-        CreateTable   = 0x00000020,
-        DropTable     = 0x00000040,
-        Select        = 0x00000080,
-        Update        = 0x00000100,
-        Delete        = 0x00000200,
+        public UserRightException()
+        {
+        }
+
+        public UserRightException(string message)
+            : base(message)
+        {
+        }
     }
 }

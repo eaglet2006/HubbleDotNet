@@ -1523,6 +1523,20 @@ namespace Hubble.Core.Query
             }
         }
 
+        private string _OrderBy = null;
+
+        public string OrderBy
+        {
+            get
+            {
+                return _OrderBy;
+            }
+            set
+            {
+                _OrderBy = value;
+            }
+        }
+
         private bool _NeedGroupBy;
 
         public bool NeedGroupBy
