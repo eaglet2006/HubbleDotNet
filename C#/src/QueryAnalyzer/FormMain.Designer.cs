@@ -68,6 +68,7 @@
             this.troubleshooterToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.optimizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synchronizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dropTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.truncateTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detachTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -86,7 +87,8 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialogSql = new System.Windows.Forms.SaveFileDialog();
-            this.synchronizeTableToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.userManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -393,7 +395,7 @@
             this.truncateTableToolStripMenuItem,
             this.detachTableToolStripMenuItem});
             this.contextMenuStripTable.Name = "contextMenuStripTree";
-            this.contextMenuStripTable.Size = new System.Drawing.Size(162, 236);
+            this.contextMenuStripTable.Size = new System.Drawing.Size(162, 214);
             // 
             // tableInfoToolStripMenuItem
             // 
@@ -441,6 +443,13 @@
             this.optimizeTableToolStripMenuItem.Text = "Optimize";
             this.optimizeTableToolStripMenuItem.Click += new System.EventHandler(this.optimizeTableToolStripMenuItem_Click);
             // 
+            // synchronizeTableToolStripMenuItem
+            // 
+            this.synchronizeTableToolStripMenuItem.Name = "synchronizeTableToolStripMenuItem";
+            this.synchronizeTableToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.synchronizeTableToolStripMenuItem.Text = "Synchronize Table";
+            this.synchronizeTableToolStripMenuItem.Click += new System.EventHandler(this.synchronizeTableToolStripMenuItem_Click);
+            // 
             // dropTableToolStripMenuItem
             // 
             this.dropTableToolStripMenuItem.Name = "dropTableToolStripMenuItem";
@@ -481,30 +490,32 @@
             // contextMenuStripServer
             // 
             this.contextMenuStripServer.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.userManagementToolStripMenuItem,
+            this.toolStripMenuItem5,
             this.createDatabaseToolStripMenuItem,
             this.refreshToolStripMenuItem1,
             this.troubleshooterToolStripMenuItem1});
             this.contextMenuStripServer.Name = "contextMenuStripServer";
-            this.contextMenuStripServer.Size = new System.Drawing.Size(154, 70);
+            this.contextMenuStripServer.Size = new System.Drawing.Size(162, 120);
             // 
             // createDatabaseToolStripMenuItem
             // 
             this.createDatabaseToolStripMenuItem.Name = "createDatabaseToolStripMenuItem";
-            this.createDatabaseToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.createDatabaseToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.createDatabaseToolStripMenuItem.Text = "CreateDatabase";
             this.createDatabaseToolStripMenuItem.Click += new System.EventHandler(this.createDatabaseToolStripMenuItem_Click);
             // 
             // refreshToolStripMenuItem1
             // 
             this.refreshToolStripMenuItem1.Name = "refreshToolStripMenuItem1";
-            this.refreshToolStripMenuItem1.Size = new System.Drawing.Size(153, 22);
+            this.refreshToolStripMenuItem1.Size = new System.Drawing.Size(161, 22);
             this.refreshToolStripMenuItem1.Text = "Refresh";
             this.refreshToolStripMenuItem1.Click += new System.EventHandler(this.refreshToolStripMenuItem_Click);
             // 
             // troubleshooterToolStripMenuItem1
             // 
             this.troubleshooterToolStripMenuItem1.Name = "troubleshooterToolStripMenuItem1";
-            this.troubleshooterToolStripMenuItem1.Size = new System.Drawing.Size(153, 22);
+            this.troubleshooterToolStripMenuItem1.Size = new System.Drawing.Size(161, 22);
             this.troubleshooterToolStripMenuItem1.Text = "Troubleshooter";
             this.troubleshooterToolStripMenuItem1.Click += new System.EventHandler(this.troubleshooterToolStripMenuItem_Click);
             // 
@@ -572,12 +583,17 @@
             // 
             this.saveFileDialogSql.Filter = "SQL|*.sql";
             // 
-            // synchronizeTableToolStripMenuItem
+            // userManagementToolStripMenuItem
             // 
-            this.synchronizeTableToolStripMenuItem.Name = "synchronizeTableToolStripMenuItem";
-            this.synchronizeTableToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.synchronizeTableToolStripMenuItem.Text = "Synchronize Table";
-            this.synchronizeTableToolStripMenuItem.Click += new System.EventHandler(this.synchronizeTableToolStripMenuItem_Click);
+            this.userManagementToolStripMenuItem.Name = "userManagementToolStripMenuItem";
+            this.userManagementToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.userManagementToolStripMenuItem.Text = "User management";
+            this.userManagementToolStripMenuItem.Click += new System.EventHandler(this.userManagementToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(158, 6);
             // 
             // FormMain
             // 
@@ -675,6 +691,8 @@
         private System.Windows.Forms.ToolStripMenuItem attachTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detachTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchronizeTableToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem userManagementToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
     }
 }
 

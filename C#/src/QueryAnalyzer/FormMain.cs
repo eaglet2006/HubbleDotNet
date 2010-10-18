@@ -801,5 +801,11 @@ namespace QueryAnalyzer
             frmTableSynchronize.Show();
         }
 
+        private void userManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FormUserManage frmUserManage = new FormUserManage();
+            frmUserManage.ShowDialog();
+        }
+
     }
 }

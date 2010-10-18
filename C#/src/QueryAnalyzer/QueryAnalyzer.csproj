@@ -89,6 +89,12 @@
     <Compile Include="CreateTable\BeforeDatabaseAttributes.cs" />
     <Compile Include="CreateTable\IAfter.cs" />
     <Compile Include="CreateTable\IBefore.cs" />
+    <Compile Include="FormAddUser.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAddUser.Designer.cs">
+      <DependentUpon>FormAddUser.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormAttachTable.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -168,6 +174,12 @@
     <Compile Include="FormTroubleshooter.Designer.cs">
       <DependentUpon>FormTroubleshooter.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormUserManage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormUserManage.Designer.cs">
+      <DependentUpon>FormUserManage.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormWaiting.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -188,6 +200,9 @@
     <EmbeddedResource Include="AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormAddUser.resx">
+      <DependentUpon>FormAddUser.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormAttachTable.resx">
       <DependentUpon>FormAttachTable.cs</DependentUpon>
@@ -239,6 +254,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormTroubleshooter.resx">
       <DependentUpon>FormTroubleshooter.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormUserManage.resx">
+      <DependentUpon>FormUserManage.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormWaiting.resx">
