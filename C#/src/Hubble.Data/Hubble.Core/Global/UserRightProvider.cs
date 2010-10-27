@@ -169,6 +169,42 @@ namespace Hubble.Core.Global
 
         }
 
+        internal static List<DatabaseRight> GetUserRights(string userName)
+        {
+            lock (_LockObj)
+            {
+                if (_UserRightDict == null)
+                {
+                    throw new UserRightException("HubbleDotNet is on no authorization mode.");
+                }
+
+                string key = userName.ToLower().Trim();
+                UserRight userRight;
+
+                if (!_UserRightDict.TryGetValue(key, out userRight))
+                {
+                    throw new UserRightException(string.Format("user name:{0} does not exist!", userName));
+                }
+
+                List<DatabaseRight> result = new List<DatabaseRight>();
+
+                if (userRight.ServerRangeRight != null)
+                {
+                    result.Add(new DatabaseRight(userRight.ServerRangeRight.DatabaseName,
+                        userRight.ServerRangeRight.Right));
+                }
+
+                foreach (DatabaseRight dbRight in userRight.DatabaseRights)
+                {
+                    result.Add(new DatabaseRight(dbRight.DatabaseName,
+                        dbRight.Right));
+                }
+
+                return result;
+            }
+
+        }
+
         internal static void UpdateDBRight(string databaseName, string userName, RightItem right)
         {
             lock (_LockObj)
@@ -349,8 +385,10 @@ namespace Hubble.Core.Global
             {
                 if (_UserRightList != null)
                 {
-                    Hubble.Framework.Serialization.BinSerialization.SerializeBinary(_UserRightList,
-                        new System.IO.FileStream(_FileName, System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite));
+                    using (System.IO.FileStream fs = new System.IO.FileStream(_FileName, System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite))
+                    {
+                        Hubble.Framework.Serialization.BinSerialization.SerializeBinary(_UserRightList, fs);
+                    }
                 }
             }
         }

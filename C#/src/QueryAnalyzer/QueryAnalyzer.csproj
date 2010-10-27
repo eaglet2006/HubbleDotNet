@@ -89,6 +89,7 @@
     <Compile Include="CreateTable\BeforeDatabaseAttributes.cs" />
     <Compile Include="CreateTable\IAfter.cs" />
     <Compile Include="CreateTable\IBefore.cs" />
+    <Compile Include="DatabaseRight.cs" />
     <Compile Include="FormAddUser.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -100,6 +101,12 @@
     </Compile>
     <Compile Include="FormAttachTable.Designer.cs">
       <DependentUpon>FormAttachTable.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormChooseDatabase.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormChooseDatabase.Designer.cs">
+      <DependentUpon>FormChooseDatabase.cs</DependentUpon>
     </Compile>
     <Compile Include="FormCreateTable.cs">
       <SubType>Form</SubType>
@@ -203,9 +210,14 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormAddUser.resx">
       <DependentUpon>FormAddUser.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormAttachTable.resx">
       <DependentUpon>FormAttachTable.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormChooseDatabase.resx">
+      <DependentUpon>FormChooseDatabase.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormCreateTable.resx">

@@ -807,5 +807,10 @@ namespace QueryAnalyzer
             frmUserManage.ShowDialog();
         }
 
+        private void userManagementToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            userManagementToolStripMenuItem_Click(sender, e);
+        }
+
     }
 }

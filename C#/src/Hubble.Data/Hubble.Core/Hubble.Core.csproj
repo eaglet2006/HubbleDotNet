@@ -172,6 +172,10 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_RemoveUser.cs" />
+    <Compile Include="StoredProcedure\SP_RemoveUserRight.cs" />
+    <Compile Include="StoredProcedure\SP_SetUserRight.cs" />
+    <Compile Include="StoredProcedure\SP_GetUserRights.cs" />
     <Compile Include="StoredProcedure\SP_UserList.cs" />
     <Compile Include="StoredProcedure\SP_CreateUser.cs" />
     <Compile Include="StoredProcedure\SP_StopSynchronizeTable.cs" />

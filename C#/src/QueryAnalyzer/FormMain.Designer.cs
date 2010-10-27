@@ -75,6 +75,8 @@
             this.imageListTreeView = new System.Windows.Forms.ImageList(this.components);
             this.openFileDialogSql = new System.Windows.Forms.OpenFileDialog();
             this.contextMenuStripServer = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.userManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
             this.createDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refreshToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.troubleshooterToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -87,8 +89,8 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialogSql = new System.Windows.Forms.SaveFileDialog();
-            this.userManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
+            this.userAccountToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.userManagementToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -109,6 +111,7 @@
             this.fileToolStripMenuItem,
             this.queryToolStripMenuItem,
             this.testToolStripMenuItem,
+            this.userAccountToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -130,26 +133,26 @@
             // openOToolStripMenuItem
             // 
             this.openOToolStripMenuItem.Name = "openOToolStripMenuItem";
-            this.openOToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.openOToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openOToolStripMenuItem.Text = "Open(&O)";
             this.openOToolStripMenuItem.Click += new System.EventHandler(this.openOToolStripMenuItem_Click);
             // 
             // saveSToolStripMenuItem
             // 
             this.saveSToolStripMenuItem.Name = "saveSToolStripMenuItem";
-            this.saveSToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.saveSToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveSToolStripMenuItem.Text = "Save(&S)";
             this.saveSToolStripMenuItem.Click += new System.EventHandler(this.saveSToolStripMenuItem_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(127, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // batchInsertToolStripMenuItem
             // 
             this.batchInsertToolStripMenuItem.Name = "batchInsertToolStripMenuItem";
-            this.batchInsertToolStripMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.batchInsertToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.batchInsertToolStripMenuItem.Text = "BatchInsert";
             this.batchInsertToolStripMenuItem.Click += new System.EventHandler(this.batchInsertToolStripMenuItem_Click);
             // 
@@ -496,7 +499,19 @@
             this.refreshToolStripMenuItem1,
             this.troubleshooterToolStripMenuItem1});
             this.contextMenuStripServer.Name = "contextMenuStripServer";
-            this.contextMenuStripServer.Size = new System.Drawing.Size(162, 120);
+            this.contextMenuStripServer.Size = new System.Drawing.Size(162, 98);
+            // 
+            // userManagementToolStripMenuItem
+            // 
+            this.userManagementToolStripMenuItem.Name = "userManagementToolStripMenuItem";
+            this.userManagementToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.userManagementToolStripMenuItem.Text = "User management";
+            this.userManagementToolStripMenuItem.Click += new System.EventHandler(this.userManagementToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem5
+            // 
+            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+            this.toolStripMenuItem5.Size = new System.Drawing.Size(158, 6);
             // 
             // createDatabaseToolStripMenuItem
             // 
@@ -583,17 +598,20 @@
             // 
             this.saveFileDialogSql.Filter = "SQL|*.sql";
             // 
-            // userManagementToolStripMenuItem
+            // userAccountToolStripMenuItem
             // 
-            this.userManagementToolStripMenuItem.Name = "userManagementToolStripMenuItem";
-            this.userManagementToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
-            this.userManagementToolStripMenuItem.Text = "User management";
-            this.userManagementToolStripMenuItem.Click += new System.EventHandler(this.userManagementToolStripMenuItem_Click);
+            this.userAccountToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.userManagementToolStripMenuItem1});
+            this.userAccountToolStripMenuItem.Name = "userAccountToolStripMenuItem";
+            this.userAccountToolStripMenuItem.Size = new System.Drawing.Size(82, 20);
+            this.userAccountToolStripMenuItem.Text = "User account";
             // 
-            // toolStripMenuItem5
+            // userManagementToolStripMenuItem1
             // 
-            this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-            this.toolStripMenuItem5.Size = new System.Drawing.Size(158, 6);
+            this.userManagementToolStripMenuItem1.Name = "userManagementToolStripMenuItem1";
+            this.userManagementToolStripMenuItem1.Size = new System.Drawing.Size(161, 22);
+            this.userManagementToolStripMenuItem1.Text = "User management";
+            this.userManagementToolStripMenuItem1.Click += new System.EventHandler(this.userManagementToolStripMenuItem1_Click);
             // 
             // FormMain
             // 
@@ -693,6 +711,8 @@
         private System.Windows.Forms.ToolStripMenuItem synchronizeTableToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem userManagementToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
+        private System.Windows.Forms.ToolStripMenuItem userAccountToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem userManagementToolStripMenuItem1;
     }
 }
 
