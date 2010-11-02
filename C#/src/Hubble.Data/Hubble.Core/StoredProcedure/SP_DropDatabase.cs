@@ -18,6 +18,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo("", Right.RightItem.ManageSystem);
+
             if (Parameters.Count < 1)
             {
                 throw new ArgumentException("Parameter 1 is Database name.");

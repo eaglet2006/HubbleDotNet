@@ -37,6 +37,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageUser);
+
             if (Parameters.Count != 1)
             {
                 throw new ArgumentException("Parameter 1 is user name.");

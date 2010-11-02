@@ -236,6 +236,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
+
             if (Parameters.Count != 3)
             {
                 throw new StoredProcException("First parameter is table name. Second parameter is attribute name. Third is value");

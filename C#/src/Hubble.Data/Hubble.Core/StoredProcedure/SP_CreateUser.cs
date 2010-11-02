@@ -37,6 +37,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageUser);
+
             if (Parameters.Count != 3)
             {
                 throw new ArgumentException("Parameter 1 is user name. Parameter 2 is password, Parameter 3 is system user right");

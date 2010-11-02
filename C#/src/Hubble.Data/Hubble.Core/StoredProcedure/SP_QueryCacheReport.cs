@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo("", Right.RightItem.ManageSystem);
+
             string report = Cache.QueryCacheManager.Manager.GetQueryCacheReport();
 
             OutputMessage(report);

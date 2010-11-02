@@ -34,6 +34,16 @@ namespace Hubble.Core.Service
             }
         }
 
+        private string _UserName;
+
+        internal string UserName
+        {
+            get
+            {
+                return _UserName;
+            }
+        }
+
         private CommandContent _CurrentCommandContent;
 
         internal CommandContent CurrentCommandContent
@@ -76,6 +86,7 @@ namespace Hubble.Core.Service
             string password = Hubble.Framework.Security.DesEncryption.Decrypt(Global.Setting.Config.DesKey,
                 sqlConnString.Password);
 
+            Global.UserRightProvider.Verify(userId, password);
 
             if (!Global.Setting.DatabaseExists(databaseName))
             {
@@ -84,7 +95,7 @@ namespace Hubble.Core.Service
             }
 
             _DatabaseName = databaseName;
-
+            _UserName = userId;
         }
     }
 }

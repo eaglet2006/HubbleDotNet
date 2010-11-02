@@ -28,7 +28,7 @@ namespace Hubble.Core.Right
     {
         ManageUser    = 0x00000001,
         ManageDB      = 0x00000002,
-        WriteDatabase = 0x00000004,
+        ExcuteSql     = 0x00000004,
         ExcuteStoreProcedure = 0x00000008,
         Optimize      = 0x00000010,
         CreateTable   = 0x00000020,
@@ -36,5 +36,8 @@ namespace Hubble.Core.Right
         Select        = 0x00000080,
         Update        = 0x00000100,
         Delete        = 0x00000200,
+        Insert        = 0x00000400,
+        ManageSystem  = 0x00000800,
+        QuerySql      = 0x00001000,
     }
 }

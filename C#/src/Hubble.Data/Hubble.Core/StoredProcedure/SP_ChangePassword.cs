@@ -18,10 +18,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Core.Right;
+ 
 
 namespace Hubble.Core.StoredProcedure
 {
-    class SP_DetachTable : StoredProcedure, IStoredProc, IHelper
+    class SP_ChangePassword : StoredProcedure, IStoredProc, IHelper
     {
         #region IStoredProc Members
 
@@ -29,31 +31,38 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "SP_DetachTable";
+                return "SP_ChangePassword";
             }
         }
 
         public void Run()
         {
-            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
-
-            if (Parameters.Count != 1)
+            if (Parameters.Count != 2)
             {
-                throw new ArgumentException("the number of parameters must be 1. Parameter 1 is tableName");
+                throw new ArgumentException("Parameter 1 is user name. Parameter 2 is password");
             }
 
-            string tableName = Parameters[0];
+            string userName = Parameters[0].Trim();
 
-            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
-
-            if (dbProvider == null)
+            if (userName == "")
             {
-                throw new StoredProcException(string.Format("Table name {0} does not exist!", Parameters[0]));
+                throw new UserRightException("User name can't be empty!");
             }
 
-            dbProvider.Detach();
+            Service.ConnectionInformation connInfo = Service.CurrentConnection.ConnectionInfo;
+            if (connInfo != null)
+            {
+                string curUserName = connInfo.UserName;
 
-            OutputMessage(string.Format("Detach table {0} successul.", tableName));
+                if (!curUserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Global.UserRightProvider.CanDo(Right.RightItem.ManageUser);
+                }
+            }
+
+            Global.UserRightProvider.ChangePassword(userName, Parameters[1]);
+
+            OutputMessage(string.Format("Create user account: {0} successul.", userName));
         }
 
         #endregion
@@ -64,10 +73,11 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "Detach table. Parameter 1 is table name";
+                return "Add a user account. Parameter 1 is user name. Parameter 2 is password";
             }
         }
 
         #endregion
     }
 }
+

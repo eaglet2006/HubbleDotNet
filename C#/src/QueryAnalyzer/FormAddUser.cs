@@ -39,6 +39,16 @@ namespace QueryAnalyzer
             return result;
         }
 
+        public DialogResult ShowDialog(string userName)
+        {
+            textBoxUserName.Text = userName;
+            textBoxUserName.Enabled = false;
+            this.Text = "Change password";
+
+            base.ShowDialog();
+            return result;
+        }
+
         private void buttonOK_Click(object sender, EventArgs e)
         {
             if (textBoxUserName.Text.Trim() == "")

@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.Optimize);
+
             if (Parameters.Count > 2 || Parameters.Count <= 0)
             {
                 throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");

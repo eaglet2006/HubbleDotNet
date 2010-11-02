@@ -32,8 +32,18 @@ namespace QueryAnalyzer
         string _SettingPath = null;
 
         public string ServerName { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
 
         private string _DatabaseName = "Master";
+
+        public bool IsNoneAuthentication
+        {
+            get
+            {
+                return string.IsNullOrEmpty(UserName);
+            }
+        }
 
         public HubbleConnection Conn
         {
@@ -59,12 +69,19 @@ namespace QueryAnalyzer
         public void ReConnect()
         {
             Close();
-            Connect(ServerName);
+            Connect(ServerName, UserName, Password);
         }
 
         public void Connect(string serverName)
         {
+            Connect(serverName, "", "");
+        }
+
+        public void Connect(string serverName, string userName, string password)
+        {
             ServerName = serverName;
+            UserName = userName;
+            Password = password;
 
             try
             {
@@ -109,6 +126,8 @@ namespace QueryAnalyzer
             {
                 System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
                 sqlConnBuilder.DataSource = serverName;
+                sqlConnBuilder.UserID = userName;
+                sqlConnBuilder.Password = password;
                 sqlConnBuilder.InitialCatalog = DatabaseName;
                 _Conn = new HubbleConnection(sqlConnBuilder.ConnectionString);
                 _Conn.Open();
@@ -169,7 +188,7 @@ namespace QueryAnalyzer
 
             _DatabaseName = databaseName;
 
-            Connect(ServerName);
+            Connect(ServerName, UserName, Password);
         }
 
         public void Close()

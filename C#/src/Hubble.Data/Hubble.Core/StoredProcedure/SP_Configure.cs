@@ -165,6 +165,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo("", Right.RightItem.ManageSystem);
+
             if (Parameters.Count == 0)
             {
                 ShowValues();

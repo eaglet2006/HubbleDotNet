@@ -276,7 +276,15 @@ namespace Hubble.SQLClient
         public override void Open()
         {
             _TcpClient.Connect();
-            _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
+            try
+            {
+                _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
+            }
+            catch (Exception e)
+            {
+                _TcpClient.Close();
+                throw e;
+            }
 
             _Connected = true;
             _State = System.Data.ConnectionState.Open;

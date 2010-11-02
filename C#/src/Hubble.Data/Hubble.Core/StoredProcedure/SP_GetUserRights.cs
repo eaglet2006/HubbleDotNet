@@ -37,13 +37,23 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
-
             if (Parameters.Count != 1)
             {
                 throw new StoredProcException("First parameter is user name.");
             }
 
             string userName = Parameters[0].Trim();
+
+            Service.ConnectionInformation connInfo = Service.CurrentConnection.ConnectionInfo;
+            if (connInfo != null)
+            {
+                string curUserName = connInfo.UserName;
+
+                if (!curUserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Global.UserRightProvider.CanDo(Right.RightItem.ManageUser);
+                }
+            }
 
             AddColumn("Database");
             AddColumn("Right");

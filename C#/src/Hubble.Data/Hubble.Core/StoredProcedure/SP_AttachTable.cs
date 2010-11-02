@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
+
             if (Parameters.Count < 1)
             {
                 throw new ArgumentException("the number of parameters must be large then 0. Parameter 1 is directory");

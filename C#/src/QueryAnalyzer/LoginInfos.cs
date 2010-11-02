@@ -7,18 +7,26 @@ using Hubble.Framework.Serialization;
 
 namespace QueryAnalyzer
 {
+    public enum AuthenticationType
+    {
+        None = 0,
+        Hubble = 1,
+    }
+
     public class ServerInfo : IComparable<ServerInfo>
     {
         public string ServerName { get; set; }
+        public AuthenticationType AuthType { get; set; }
         public string UserName { get; set; }
-        public byte[] Password { get; set; }
+        public string Password { get; set; }
         public DateTime LastLoginTime { get; set; }
 
         public ServerInfo()
         {
+            AuthType = AuthenticationType.None;
             ServerName = "";
             UserName = "";
-            Password = null;
+            Password = "";
         }
 
         #region IComparable<ServerInfo> Members
@@ -36,8 +44,6 @@ namespace QueryAnalyzer
         [System.Xml.Serialization.XmlIgnore]
         static public LoginInfos Infos { get; set; }
 
-        private const string FileName = "LoginInfos.xml";
-
         public List<ServerInfo> ServerInfos { get; set; }
 
         public LoginInfos()
@@ -45,47 +51,57 @@ namespace QueryAnalyzer
             ServerInfos = new List<ServerInfo>();
         }
 
-        static public void Load(string path)
-        {
-            string fileName = Path.AppendDivision(path, '\\') + FileName;
-
-            if (System.IO.File.Exists(fileName))
-            {
-                try
-                {
-                    using (System.IO.FileStream fs = new System.IO.FileStream(FileName, System.IO.FileMode.Open,
-                         System.IO.FileAccess.Read))
-                    {
-                        Infos = XmlSerialization<LoginInfos>.Deserialize(fs);
-                    }
-                }
-                catch
-                {
-                    Infos = new LoginInfos();
-                }
-            }
-            else
-            {
-                Infos = new LoginInfos();
-            }
-        }
-
-
         static public void Load()
         {
-            Load(Path.ProcessDirectory);
+            Microsoft.Win32.RegistryKey key;
+
+            using (key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Hubble.net\QueryAnalyzer"))
+            {
+                if (key == null)
+                {
+                    Infos = new LoginInfos();
+                    return;
+                }
+
+                object loginInfosObj;
+
+                loginInfosObj = key.GetValue("LoginInfos", null);
+
+                if (loginInfosObj == null)
+                {
+                    Infos = new LoginInfos();
+                    return;
+                }
+
+                System.IO.MemoryStream m = new System.IO.MemoryStream((byte[])loginInfosObj);
+
+                m.Position = 0;
+
+                Infos = XmlSerialization<LoginInfos>.Deserialize(m);
+            }
         }
 
         static public void Save()
         {
             Infos.ServerInfos.Sort();
 
-            string fileName = Path.AppendDivision(Path.ProcessDirectory, '\\') + FileName;
+            Microsoft.Win32.RegistryKey key;
 
-            using (System.IO.FileStream fs = new System.IO.FileStream(fileName, System.IO.FileMode.Create,
-                 System.IO.FileAccess.ReadWrite))
+            using (key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\Hubble.net\QueryAnalyzer"))
             {
-                XmlSerialization<LoginInfos>.Serialize(Infos, Encoding.UTF8, fs);
+
+                if (key == null)
+                {
+                    throw new Exception("Create queryanzlyer registry fail!");
+                }
+
+                System.IO.MemoryStream m = new System.IO.MemoryStream();
+
+                XmlSerialization<LoginInfos>.Serialize(Infos, Encoding.UTF8, m);
+
+                m.Position = 0;
+
+                key.SetValue("LoginInfos", m.ToArray());
             }
         }
 

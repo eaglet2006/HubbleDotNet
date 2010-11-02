@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
+
             if (Parameters.Count < 1)
             {
                 throw new ArgumentException("Parameter 1 is Database name. Parameter 2 is DefaultPath, Parameter 3 is DefaultDBAdapter, Parameter 4 is DefaultConnectionString");

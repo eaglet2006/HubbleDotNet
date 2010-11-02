@@ -66,7 +66,7 @@ namespace Hubble.Core.Global
 
                 for (int i = 0; i < password.Length; i++)
                 {
-                    char c = key[i];
+                    char c = password[i];
 
                     b[2 * i] = (byte)(c % 256);
                     b[2 * i + 1] = (byte)(c / 256);
@@ -82,6 +82,38 @@ namespace Hubble.Core.Global
                 Save();
             }
         }
+
+        internal static void ChangePassword(string userName, string password)
+        {
+            lock (_LockObj)
+            {
+                UserRight userRight;
+                string key = userName.ToLower().Trim();
+
+                if (!_UserRightDict.TryGetValue(key, out userRight))
+                {
+                    throw new UserRightException("Invalid username");
+                }
+
+                System.Security.Cryptography.MD5CryptoServiceProvider md5 =
+                    new System.Security.Cryptography.MD5CryptoServiceProvider();
+
+                byte[] b = new byte[password.Length * 2];
+
+                for (int i = 0; i < password.Length; i++)
+                {
+                    char c = password[i];
+
+                    b[2 * i] = (byte)(c % 256);
+                    b[2 * i + 1] = (byte)(c / 256);
+                }
+
+                userRight.PasswordHash = md5.ComputeHash(b);
+
+                Save();
+            }
+        }
+
 
         internal static List<string> UserList
         {
@@ -129,11 +161,19 @@ namespace Hubble.Core.Global
             }
         }
 
-        internal void Verify(string userName, string password)
+        internal static void Verify(string userName, string password)
         {
-            if (_UserRightDict == null)
+            lock (_LockObj)
             {
-                return;
+                if (_UserRightDict == null)
+                {
+                    return;
+                }
+
+                if (_UserRightDict.Count == 0)
+                {
+                    return;
+                }
             }
 
             UserRight userRight;
@@ -148,7 +188,7 @@ namespace Hubble.Core.Global
 
             for (int i = 0; i < password.Length; i++)
             {
-                char c = key[i];
+                char c = password[i];
 
                 b[2 * i] = (byte)(c % 256);
                 b[2 * i + 1] = (byte)(c / 256);
@@ -161,9 +201,17 @@ namespace Hubble.Core.Global
             
             lock (_LockObj)
             {
-                if (!b.Equals(userRight.PasswordHash))
+                if (b.Length != userRight.PasswordHash.Length)
                 {
                     throw new UserRightException("Invalid password");
+                }
+
+                for (int i = 0; i < b.Length; i++)
+                {
+                    if (b[i] != userRight.PasswordHash[i])
+                    {
+                        throw new UserRightException("Invalid password");
+                    }
                 }
             }
 
@@ -308,13 +356,46 @@ namespace Hubble.Core.Global
             }
         }
 
-        internal static bool CanDo(string databaseName, string userName, RightItem right)
+        internal static void CanDo(RightItem right)
+        {
+            Service.ConnectionInformation connInfo = Service.CurrentConnection.ConnectionInfo;
+            if (connInfo == null)
+            {
+                return;
+            }
+
+            string userName = connInfo.UserName;
+
+            string databaseName = connInfo.DatabaseName;
+
+            CanDo(databaseName, userName, right);
+        }
+
+        internal static void CanDo(string databaseName, RightItem right)
+        {
+            Service.ConnectionInformation connInfo = Service.CurrentConnection.ConnectionInfo;
+            if (connInfo == null)
+            {
+                return;
+            }
+
+            string userName = connInfo.UserName;
+
+            CanDo(databaseName, userName, right);
+        }
+
+        internal static void CanDo(string databaseName, string userName, RightItem right)
         {
             lock (_LockObj)
             {
                 if (_UserRightDict == null)
                 {
-                    return true;
+                    return;
+                }
+
+                if (_UserRightDict.Count == 0)
+                {
+                    return;
                 }
 
                 string key = userName.ToLower().Trim();
@@ -329,7 +410,7 @@ namespace Hubble.Core.Global
                 {
                     if ((right & userRight.ServerRangeRight.Right) != 0)
                     {
-                        return true;
+                        return;
                     }
                 }
 
@@ -337,11 +418,21 @@ namespace Hubble.Core.Global
                 {
                     if (dbRight.DatabaseName.Equals(databaseName, StringComparison.CurrentCultureIgnoreCase))
                     {
-                        return (right & dbRight.Right) != 0;
+                        if ((right & dbRight.Right) == 0)
+                        {
+                            throw new UserRightException(string.Format("Current user hasn't {0} right for this operation",
+                                right));
+                        }
+                        else
+                        {
+                            return;
+                        }
                     }
                 }
 
-                return false;
+                throw new UserRightException(string.Format("Current user hasn't {0} right for this operation",
+                    right));
+
             }
         }
 

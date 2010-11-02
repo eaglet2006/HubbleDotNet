@@ -54,6 +54,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo("", Right.RightItem.ManageSystem);
+
             if (Parameters.Count != 2)
             {
                 throw new StoredProcException("Parameter number must be 2. Parameter 1 is refer name and parameter 2 is assembly file path!");

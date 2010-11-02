@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
+
             if (Parameters.Count != 3)
             {
                 throw new ArgumentException("Parameter 1 is Database name. Parameter 2 is Attribute name, Parameter 3 is Attribute value");

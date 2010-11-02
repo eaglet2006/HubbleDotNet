@@ -44,6 +44,11 @@ namespace Hubble.Framework.Security
             return EncryptString.GetString(mStream.ToArray());
         }
 
+        public static String Decrypt(byte[] key, String text)
+        {
+            return Decrypt(key, EncryptString.GetBytes(text));
+        }
+
         public static String Decrypt(string key, String text)
         {
             return Decrypt(EncryptString.GetBytes(key), EncryptString.GetBytes(text));

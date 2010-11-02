@@ -35,6 +35,8 @@ namespace Hubble.Core.StoredProcedure
 
         private void AddExternalReference(string refName, string assemblyFile)
         {
+            Global.UserRightProvider.CanDo(Right.RightItem.ManageDB);
+
             refName = refName.ToLower().Trim();
 
             if (!System.IO.File.Exists(assemblyFile))
@@ -87,6 +89,8 @@ namespace Hubble.Core.StoredProcedure
 
         public void Run()
         {
+            Global.UserRightProvider.CanDo("", Right.RightItem.ManageSystem);
+
             if (Parameters.Count != 2)
             {
                 throw new StoredProcException("Parameter number must be 2. Parameter 1 is refer name and parameter 2 is assembly file path!");

@@ -25,6 +25,7 @@ using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
 
 using Hubble.SQLClient;
+using Hubble.Core.Right;
 
 namespace Hubble.Core.SFQL.Parse
 {
@@ -1620,18 +1621,24 @@ namespace Hubble.Core.SFQL.Parse
             switch (sentence.SentenceType)
             {
                 case SentenceType.SELECT:
+                    Global.UserRightProvider.CanDo(RightItem.Select);
                     return ExcuteSelect(sentence);
                 case SentenceType.DELETE:
+                    Global.UserRightProvider.CanDo(RightItem.Delete);
                     return ExcuteDelete(sentence);
                 case SentenceType.UPDATE:
+                    Global.UserRightProvider.CanDo(RightItem.Update);
                     return ExcuteUpdate(sentence);
                 case SentenceType.INSERT:
+                    Global.UserRightProvider.CanDo(RightItem.Insert);
                     _NeedCollect = true;
                     ExcuteInsert(sentence);
                     break;
                 case SentenceType.EXEC:
+                    Global.UserRightProvider.CanDo(RightItem.ExcuteStoreProcedure);
                     return ExcuteExec(sentence);
                 case SentenceType.CREATETABLE:
+                    Global.UserRightProvider.CanDo(RightItem.CreateTable);
                     return CreateTable(sentence);
             }
 

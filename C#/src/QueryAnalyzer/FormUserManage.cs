@@ -28,6 +28,12 @@ namespace QueryAnalyzer
                     GlobalSetting.DataAccess.Excute("exec SP_CreateUser {0}, {1}, 2147483647",
                         frmAddUser.UserName, frmAddUser.Password);
 
+                    if (listBoxUsers.Items.Count == 0)
+                    {
+                        MessageBox.Show("User account initiated, you should restart QueryAnalyzer", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        Environment.Exit(0);
+                    }
+
                     RefreshUserList();
 
                     listBoxUsers.SelectedItem = frmAddUser.UserName;
@@ -54,18 +60,25 @@ namespace QueryAnalyzer
             }
 
             if (MessageBox.Show(string.Format("Are you show you want to remove user:{0}",
-                listBoxUsers.SelectedItem), "Question", MessageBoxButtons.OK, MessageBoxIcon.Question) == DialogResult.OK)
+                listBoxUsers.SelectedItem), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 try
                 {
+                    string userName = (string)listBoxUsers.SelectedItem;
                     GlobalSetting.DataAccess.Excute("exec SP_RemoveUser {0}",
-                        listBoxUsers.SelectedItem);
+                        userName);
 
                     RefreshUserList();
 
                     if (listBoxUsers.Items.Count > 0)
                     {
                         listBoxUsers.SelectedIndex = 0;
+                    }
+
+                    if (GlobalSetting.DataAccess.UserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        MessageBox.Show("Delete current user itself, you should restart QueryAnalyzer", "Prompt", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        Environment.Exit(0);
                     }
                 }
                 catch (Exception ex)
@@ -76,15 +89,10 @@ namespace QueryAnalyzer
                 }
 
             }
-
-
         }
-        
-
 
         private void FormUserManage_FormClosed(object sender, FormClosedEventArgs e)
         {
-
         }
 
         private List<DatabaseRight> GetDatabaseRightFromGUI()
@@ -381,8 +389,8 @@ namespace QueryAnalyzer
                 string databaseName = ((DatabaseRight)listBoxDatabase.SelectedItem).DatabaseName;
 
                 if (MessageBox.Show(string.Format("Are you sure to delete the right of database: {0}",
-                    databaseName), "Question", MessageBoxButtons.OK, MessageBoxIcon.Question) ==
-                    DialogResult.OK)
+                    databaseName), "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                    DialogResult.Yes)
                 {
                     listBoxDatabase.Items.Remove(listBoxDatabase.SelectedItem);
 
@@ -414,6 +422,36 @@ namespace QueryAnalyzer
                         listBoxDatabase_SelectedIndexChanged(sender, e);
                     }
                 }
+            }
+        }
+
+        private void changePasswordToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listBoxUsers.SelectedItem == null)
+            {
+                return;
+            }
+
+            string userName = listBoxUsers.SelectedItem.ToString();
+            FormAddUser frmAddUser = new FormAddUser();
+            if (frmAddUser.ShowDialog(userName) == DialogResult.OK)
+            {
+                try
+                {
+                    GlobalSetting.DataAccess.Excute("exec SP_ChangePassword {0}, {1}",
+                        userName, frmAddUser.Password);
+                    if (GlobalSetting.DataAccess.UserName.Equals(userName, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        GlobalSetting.DataAccess.Password = frmAddUser.Password;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message,
+                        "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
             }
         }
 

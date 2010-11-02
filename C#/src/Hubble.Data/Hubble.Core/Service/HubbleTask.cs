@@ -75,6 +75,7 @@ namespace Hubble.Core.Service
                 case SQLClient.ConnectEvent.Connect : //Connecting 
                     CurrentConnection currentConnection = new CurrentConnection(
                         new ConnectionInformation(args.InMessage as string));
+
                     break;
 
                 case ConnectEvent.ExcuteSql: //excute sql
