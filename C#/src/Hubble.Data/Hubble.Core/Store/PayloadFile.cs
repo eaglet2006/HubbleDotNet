@@ -385,7 +385,7 @@ namespace Hubble.Core.Store
 
                 PayloadFileHead fileHead = (PayloadFileHead)obj;
 
-                if (fileHead.Version[1] < 8 || (fileHead.Version[1] == 8 && fileHead.Version[2] == 0 && fileHead.Version[3] < 4))
+                if ((fileHead.Version[0] <= 0 && fileHead.Version[1] < 8) || (fileHead.Version[0] <= 0 && fileHead.Version[1] == 8 && fileHead.Version[2] == 0 && fileHead.Version[3] < 4))
                 {
                     throw new Data.DataException("Index file version is less then V0.8.0.4, you have to rebuild the index");
                 }
