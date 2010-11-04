@@ -865,6 +865,14 @@ namespace Hubble.Core.Store
                                     serial = _IndexFile.IndexFileList[i - 1].Serial + 1;
                                 }
                             }
+
+                            if (serial > 0)
+                            {
+                                if (end - begin < MaxIndexFilesNeedMerge - 1)
+                                {
+                                    return false;
+                                }
+                            }
                         }
                         break;
                     case OptimizationOption.Middle:
@@ -1554,7 +1562,7 @@ MergeAckLoop:
                         _IndexFile.FieldName), true);
                 }
 
-                return _IndexFile.IndexFileList.Count > MaxIndexFilesNeedMerge + MinIndexFilesNeedMerge;
+                return _IndexFile.IndexFileList.Count > MaxIndexFilesNeedMerge + 2 * MinIndexFilesNeedMerge;
             }
             finally
             {

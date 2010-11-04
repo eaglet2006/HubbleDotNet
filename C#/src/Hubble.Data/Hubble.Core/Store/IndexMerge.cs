@@ -87,6 +87,9 @@ namespace Hubble.Core.Store
                     return false;
                 }
 
+                //Console.WriteLine(string.Format("Begin={0} End={1} Serial={2}",
+                //    mergeInfos.BeginSerial, mergeInfos.EndSerial, mergeInfos.MergedSerial));
+
                 IndexFileProxy.MergeAck mergeAck = new IndexFileProxy.MergeAck(mergeInfos.BeginSerial,
                     mergeInfos.EndSerial, mergeInfos.MergeHeadFileName, mergeInfos.MergeIndexFileName,
                     mergeInfos.MergedSerial);
