@@ -237,19 +237,27 @@ namespace Hubble.Core.Service
         {
             long serial = -1;
             int count;
+
+            System.Data.DataSet totalCountDS = dbAdapter.QuerySql(
+                string.Format("select count(*) from {0} where Opr = 'Update'",
+                _DBProvider.Table.TriggerTableName));
+
+            int totalCount = int.Parse(totalCountDS.Tables[0].Rows[0][0].ToString());
+            int doCount = 0;
             do
             {
                 string sql = GetTriggleSql(serial, 5000, "Update");
                 System.Data.DataSet ds = dbAdapter.QuerySql(sql);
                 count = ds.Tables[0].Rows.Count;
-                int cur = 0;
 
                 if (count > 0)
                 {
+                    doCount += count;
+
+                    List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList = new List<SFQL.Parse.SFQLParse.UpdateEntity>();
+
                     foreach (System.Data.DataRow row in ds.Tables[0].Rows)
                     {
-                        _TableSync.SetProgress(70 + 20 * (double)cur++/ (double)count);
-
                         long id = long.Parse(row["id"].ToString());
 
                         int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
@@ -300,12 +308,18 @@ namespace Hubble.Core.Service
                                 List<Query.DocumentResultForSort> docs = new List<Hubble.Core.Query.DocumentResultForSort>();
                                 docs.Add(doc);
 
-                                _DBProvider.Update(fieldValues, docs);
+                                updateEntityList.Add(new Hubble.Core.SFQL.Parse.SFQLParse.UpdateEntity(
+                                    fieldValues, docs.ToArray()));
+                                //_DBProvider.Update(fieldValues, docs);
                             }
                         }
 
                         serial = long.Parse(row["Serial"].ToString());
                     }
+
+                    _DBProvider.Update(updateEntityList);
+
+                    _TableSync.SetProgress(70 + 20 * (double)doCount / (double)totalCount);
 
                     string deleteSql = string.Format("delete from {0} where Serial <= {1} and Opr = 'Update'",
                         _DBProvider.Table.TriggerTableName, serial);

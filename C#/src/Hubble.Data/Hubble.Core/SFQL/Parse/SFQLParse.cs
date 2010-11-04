@@ -31,10 +31,25 @@ namespace Hubble.Core.SFQL.Parse
 {
     public class SFQLParse
     {
+        internal class UpdateEntity
+        {
+            internal List<FieldValue> FieldValues;
+            internal Query.DocumentResultForSort[] Docs;
+
+            internal UpdateEntity (List<FieldValue> fieldValues, Query.DocumentResultForSort[] docs)
+            {
+                FieldValues = fieldValues;
+                Docs = docs;
+            }
+        }
+
         List<TSFQLSentence> _SFQLSentenceList;
         TSFQLSentence _SFQLSentence;
         private bool _NeedCollect = false;
         private Dictionary<string, List<Document>> _InsertTables = new Dictionary<string, List<Document>>();
+
+        private bool _NeedCollectUpdate = false;
+        private Dictionary<string, List<UpdateEntity>> _UpdateTables = new Dictionary<string, List<UpdateEntity>>();
 
         private bool _UnionSelect = false;
         private List<SyntaxAnalysis.Select.Select> _UnionSelects = new List<Hubble.Core.SFQL.SyntaxAnalysis.Select.Select>();
@@ -132,7 +147,7 @@ namespace Hubble.Core.SFQL.Parse
 
 
 
-        private QueryResult ExcuteUpdate(TSFQLSentence sentence)
+        private void ExcuteUpdate(TSFQLSentence sentence)
         {
             SyntaxAnalysis.Update.Update update = sentence.SyntaxEntity as
                 SyntaxAnalysis.Update.Update;
@@ -174,13 +189,24 @@ namespace Hubble.Core.SFQL.Parse
                 fieldValues.Add(new Hubble.Core.Data.FieldValue(field.Name, field.Value)); 
             }
 
-            dBProvider.Update(fieldValues, result);
+            List<UpdateEntity> updateEntityList;
+            string tableName = update.TableName.Trim().ToLower();
 
-            QueryResult qresult = new QueryResult();
+            if (!_UpdateTables.TryGetValue(tableName, out updateEntityList))
+            {
+                updateEntityList = new List<UpdateEntity>();
+                _UpdateTables.Add(tableName, updateEntityList);
+            }
 
-            qresult.AddPrintMessage(string.Format("({0} Row(s) affected)", result.Length));
+            updateEntityList.Add(new UpdateEntity(fieldValues, result));
 
-            return qresult;
+            //dBProvider.Update(fieldValues, result);
+
+            //QueryResult qresult = new QueryResult();
+
+            //qresult.AddPrintMessage(string.Format("({0} Row(s) affected)", result.Length));
+
+            //return qresult;
 
         }
 
@@ -1628,7 +1654,9 @@ namespace Hubble.Core.SFQL.Parse
                     return ExcuteDelete(sentence);
                 case SentenceType.UPDATE:
                     Global.UserRightProvider.CanDo(RightItem.Update);
-                    return ExcuteUpdate(sentence);
+                    _NeedCollectUpdate = true;
+                    ExcuteUpdate(sentence);
+                    break;
                 case SentenceType.INSERT:
                     Global.UserRightProvider.CanDo(RightItem.Insert);
                     _NeedCollect = true;
@@ -1710,9 +1738,60 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private bool SameUpdateFields(UpdateEntity entity1, UpdateEntity entity2)
+        {
+            if (entity1.FieldValues.Count != entity2.FieldValues.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < entity1.FieldValues.Count; i++)
+            {
+                if (entity1.FieldValues[i].FieldName != entity2.FieldValues[i].FieldName)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private int CollectUpdate(string tableName, List<UpdateEntity> updateEntityList)
+        {
+            int affectedCount = 0;
+
+            DBProvider dbProvider = DBProvider.GetDBProvider(tableName);
+            dbProvider.Update(updateEntityList);
+
+            foreach (UpdateEntity updateEntity in updateEntityList)
+            {
+                affectedCount += updateEntity.Docs.Length;
+            }
+
+            return affectedCount;
+        }
+
+        private void CollectUpdate(QueryResult result)
+        {
+            _NeedCollectUpdate = false;
+            int affectedCount = 0;
+
+            foreach (string tableName in _UpdateTables.Keys)
+            {
+                List<UpdateEntity> updateEntityList = _UpdateTables[tableName];
+
+                affectedCount += CollectUpdate(tableName, updateEntityList);
+
+            }
+
+            result.AddPrintMessage(string.Format("({0} Row(s) updated)", affectedCount));
+
+        }
+
         public QueryResult Query(string sql)
         {
             _NeedCollect = false;
+            _NeedCollectUpdate = false;
             _InsertTables.Clear();
 
             _SFQLSentenceList = new List<TSFQLSentence>();
@@ -1794,9 +1873,13 @@ namespace Hubble.Core.SFQL.Parse
 
                 result.AddPrintMessage(string.Format("({0} Row(s) affected)", affectedCount));
 
+            }
 
+            //Update collect
 
-
+            if (_NeedCollectUpdate)
+            {
+                CollectUpdate(result);
             }
 
             //Union select
