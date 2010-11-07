@@ -233,34 +233,120 @@ namespace Hubble.Core.Service
             } while (count > 0);
         }
 
+        private void BatchAddToUpdate(System.Data.DataTable table,
+            List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList)
+        {
+            foreach(System.Data.DataRow row in table.Rows)
+            {
+                long id = long.Parse(row[0].ToString());
+
+                int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
+
+                //Get field values
+                List<FieldValue> fieldValues = new List<FieldValue>();
+
+                System.Data.DataRow vRow = row;
+
+                for(int i = 1; i < table.Columns.Count; i++)
+                {
+                    string field = table.Columns[i].ColumnName;
+
+                    if (string.IsNullOrEmpty(field))
+                    {
+                        continue;
+                    }
+
+                    FieldValue fv = new FieldValue(field, vRow[field].ToString());
+
+                    fieldValues.Add(fv);
+                }
+
+                Query.DocumentResultForSort doc = new Hubble.Core.Query.DocumentResultForSort(docid);
+                List<Query.DocumentResultForSort> docs = new List<Hubble.Core.Query.DocumentResultForSort>();
+                docs.Add(doc);
+
+                updateEntityList.Add(new Hubble.Core.SFQL.Parse.SFQLParse.UpdateEntity(
+                    fieldValues, docs.ToArray()));
+                //_DBProvider.Update(fieldValues, docs);
+            }
+
+        }
+
+        private string BuildSelectSql(string sql, List<long> docs)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("(");
+
+            for(int i = 0; i < docs.Count; i++)
+            {
+                if (i == 0)
+                {
+                    sb.AppendFormat("{0}", docs[i]);
+                }
+                else
+                {
+                    sb.AppendFormat(",{0}", docs[i]);
+                }
+            }
+
+            sb.Append(")");
+
+            return sql + sb.ToString();
+        }
+
         private void SychronizeForUpdate(IDBAdapter dbAdapter)
         {
             long serial = -1;
             int count;
 
+
             System.Data.DataSet totalCountDS = dbAdapter.QuerySql(
                 string.Format("select count(*) from {0} where Opr = 'Update'",
                 _DBProvider.Table.TriggerTableName));
 
+
             int totalCount = int.Parse(totalCountDS.Tables[0].Rows[0][0].ToString());
+           
+            if (_DBProvider.Table.Debug)
+            {
+                Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, update total count = {0}",
+                    totalCount));
+            }
+
+            
             int doCount = 0;
+
             do
             {
-                string sql = GetTriggleSql(serial, 5000, "Update");
+                string sql = GetTriggleSql(serial, 2500, "Update");
                 System.Data.DataSet ds = dbAdapter.QuerySql(sql);
+
                 count = ds.Tables[0].Rows.Count;
 
                 if (count > 0)
                 {
+                    if (_DBProvider.Table.Debug)
+                    {
+                        Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, update count = {0}",
+                            count));
+                    }
+
                     doCount += count;
 
                     List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList = new List<SFQL.Parse.SFQLParse.UpdateEntity>();
+
+                    string lastSql = null;
+                    List<long> ids = new List<long>();
 
                     foreach (System.Data.DataRow row in ds.Tables[0].Rows)
                     {
                         long id = long.Parse(row["id"].ToString());
 
                         int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
+
+
+                        serial = long.Parse(row["Serial"].ToString());
 
                         if (docid >= 0)
                         {
@@ -280,41 +366,57 @@ namespace Hubble.Core.Service
                                 fieldsSQL = fields.Substring(0, fields.Length - 1);
                             }
 
-                            sb.AppendFormat("{0} from {1} where {2} = {3}",
-                                fieldsSQL, _DBProvider.Table.DBTableName, _DBProvider.DocIdReplaceField, 
-                                id);
+                            sb.AppendFormat("{0}, {1} from {2} where {0} in ", _DBProvider.DocIdReplaceField,
+                                fieldsSQL, _DBProvider.Table.DBTableName);
 
-                            System.Data.DataSet vDs = dbAdapter.QuerySql(sb.ToString());
-
-                            if (vDs.Tables[0].Rows.Count == 1)
+                            if (lastSql == null)
                             {
-                                //Get field values
-
-                                System.Data.DataRow vRow = vDs.Tables[0].Rows[0];
-
-                                foreach (string field in fieldsSQL.Split(new char[] { ',' }))
-                                {
-                                    if (string.IsNullOrEmpty(field))
-                                    {
-                                        continue;
-                                    }
-
-                                    FieldValue fv = new FieldValue(field, vRow[field].ToString());
-
-                                    fieldValues.Add(fv);
-                                }
-
-                                Query.DocumentResultForSort doc = new Hubble.Core.Query.DocumentResultForSort(docid);
-                                List<Query.DocumentResultForSort> docs = new List<Hubble.Core.Query.DocumentResultForSort>();
-                                docs.Add(doc);
-
-                                updateEntityList.Add(new Hubble.Core.SFQL.Parse.SFQLParse.UpdateEntity(
-                                    fieldValues, docs.ToArray()));
-                                //_DBProvider.Update(fieldValues, docs);
+                                ids.Add(id);
+                                lastSql = sb.ToString();
+                                continue;
                             }
+                            else
+                            {
+                                if (lastSql == sb.ToString())
+                                {
+                                    ids.Add(id);
+                                    continue;
+                                }
+                            }
+
+                            if (_DBProvider.Table.Debug)
+                            {
+                                Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}",
+                                    ids.Count));
+                            }
+
+                            System.Data.DataSet vDs = dbAdapter.QuerySql(BuildSelectSql(lastSql, ids));
+
+                            lastSql = sb.ToString();
+                            ids.Clear();
+                            ids.Add(id);
+
+                            BatchAddToUpdate(vDs.Tables[0], updateEntityList);
                         }
 
-                        serial = long.Parse(row["Serial"].ToString());
+                    }
+
+                    if (lastSql != null)
+                    {
+                        if (_DBProvider.Table.Debug)
+                        {
+                            Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}",
+                                ids.Count));
+                        }
+
+                        System.Data.DataSet vDs = dbAdapter.QuerySql(BuildSelectSql(lastSql, ids));
+
+                        if (_DBProvider.Table.Debug)
+                        {
+                            Global.Report.WriteAppLog("SynchronizeForUpdate,finish getting update details");
+                        }
+
+                        BatchAddToUpdate(vDs.Tables[0], updateEntityList);
                     }
 
                     _DBProvider.Update(updateEntityList);

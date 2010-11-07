@@ -1922,17 +1922,38 @@ namespace Hubble.Core.Data
 
                 UpdatePayloadFileProvider updatePayloadFileProvider = new UpdatePayloadFileProvider();
 
+                if (Table.Debug)
+                {
+                    Global.Report.WriteAppLog("begin batch update");
+                }
+
                 foreach (SFQL.Parse.SFQLParse.UpdateEntity updateEntity in updateEntityList)
                 {
                     Update(updateEntity.FieldValues, updateEntity.Docs, updatePayloadFileProvider);
+                }
+
+                if (Table.Debug)
+                {
+                    Global.Report.WriteAppLog("End batch update");
                 }
 
                 if (updatePayloadFileProvider.UpdateIds.Count > 0)
                 {
                     updatePayloadFileProvider.Sort();
 
+                    if (Table.Debug)
+                    {
+                        Global.Report.WriteAppLog(string.Format("Begin batch update, update count={0}",
+                            updatePayloadFileProvider.UpdateIds.Count));
+                    }
+
                     _PayloadFile.Update(updatePayloadFileProvider.UpdateIds,
                         updatePayloadFileProvider.UpdatePayloads, _DocPayload);
+
+                    if (Table.Debug)
+                    {
+                        Global.Report.WriteAppLog("End batch update");
+                    }
 
                     Collect();
                     SetLastModifyTicks(DateTime.Now);
