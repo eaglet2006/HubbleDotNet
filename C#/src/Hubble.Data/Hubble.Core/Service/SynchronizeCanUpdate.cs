@@ -612,6 +612,12 @@ namespace Hubble.Core.Service
 
             int insertCount = 0;
 
+            if (_DBProvider.Table.Debug)
+            {
+                Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert count = {0}",
+                    count));
+            } 
+
             while (insertCount < count)
             {
                 if (_TableSync.Stopping)
@@ -621,6 +627,12 @@ namespace Hubble.Core.Service
                     return;
                 }
 
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate GetDocumentsForInsert, from = {0}",
+                        from));
+                } 
+                
                 List<Document> documents = GetDocumentsForInsert(dbAdapter, ref from);
 
                 if (documents.Count == 0)
@@ -632,6 +644,12 @@ namespace Hubble.Core.Service
                 }
 
                 insertCount += documents.Count;
+
+                if (_DBProvider.Table.Debug)
+                {
+                    Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert to DBProvider, count = {0}",
+                        documents.Count));
+                } 
 
                 _DBProvider.Insert(documents);
 

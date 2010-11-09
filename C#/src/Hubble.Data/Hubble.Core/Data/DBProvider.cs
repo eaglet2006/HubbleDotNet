@@ -1765,6 +1765,68 @@ namespace Hubble.Core.Data
                         _DBAdapter.Insert(docs);
                     }
 
+                    //Check Value of DocIdReplaceField is Uniqued
+                    if (Table.DocIdReplaceField != null)
+                    {
+                        int DocIdReplaceFieldIndex = -1;
+
+                        for(int i = 0 ; i < docs[0].FieldValues.Count; i++)
+                        {
+                             if (docs[0].FieldValues[i].FieldName.Equals(Table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                             {
+                                 DocIdReplaceFieldIndex = i;
+                             }
+                        }
+
+                        if (DocIdReplaceFieldIndex < 0)
+                        {
+                            throw new DataException(string.Format("Insert statement must include field:{0}.",
+                                Table.DocIdReplaceField));
+                        }
+
+                        List<Document> _IgnoreDocs = new List<Document>();
+
+                        foreach (Document doc in docs)
+                        {
+                            FieldValue fValue = doc.FieldValues[DocIdReplaceFieldIndex];
+
+                            long id = long.Parse(fValue.Value.ToString());
+                            if (GetDocIdFromDocIdReplaceFieldValue(id) != int.MinValue)
+                            {
+                                if (Table.IgnoreReduplicateDocIdReplaceFieldAtInsert)
+                                {
+                                    _IgnoreDocs.Add(doc);
+                                }
+                                else
+                                {
+                                    throw new DataException(string.Format("Insert reduplicate id:{0} into table {1}.",
+                                        id, _Table.Name));
+                                }
+                            }
+                        }
+
+                        if (_IgnoreDocs.Count > 0)
+                        {
+                            FieldValue fValue = _IgnoreDocs[0].FieldValues[DocIdReplaceFieldIndex];
+                            long fstId = long.Parse(fValue.Value.ToString());
+                            fValue = _IgnoreDocs[_IgnoreDocs.Count - 1].FieldValues[DocIdReplaceFieldIndex];
+                            long lstId = long.Parse(fValue.Value.ToString());
+
+                            Global.Report.WriteErrorLog(string.Format("Insert reduplicate id to table:{0} at field:{1}, id from {2} to {3} count={4}",
+                                _Table.Name, Table.DocIdReplaceField, fstId, lstId, _IgnoreDocs.Count));
+
+                            foreach (Document doc in _IgnoreDocs)
+                            {
+                                docs.Remove(doc);
+                            }
+                        }
+                    }
+
+                    if (docs.Count <= 0)
+                    {
+                        return;
+                    }
+
                     //Index payload
                     foreach (Document doc in docs)
                     {

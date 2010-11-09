@@ -53,6 +53,8 @@ namespace Hubble.Core.Data
 
         private string _DocIdReplaceField = null;
 
+        private bool _IgnoreReduplicateDocIdReplaceFieldAtInsert = true;
+
         bool _QueryCacheEnabled = true;
 
         int _QueryCacheTimeout = 0; //In seconds
@@ -118,6 +120,29 @@ namespace Hubble.Core.Data
                 lock (this)
                 {
                     _DocIdReplaceField = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// if set to true. It will ignore the reduplicate id value when insert.
+        /// if set to false. It will raise a exception when insert reduplicate id value.
+        /// </summary>
+        public bool IgnoreReduplicateDocIdReplaceFieldAtInsert
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _IgnoreReduplicateDocIdReplaceFieldAtInsert;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _IgnoreReduplicateDocIdReplaceFieldAtInsert = value;
                 }
             }
         }
