@@ -173,6 +173,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_ResetCache.cs" />
     <Compile Include="StoredProcedure\SP_ChangePassword.cs" />
     <Compile Include="StoredProcedure\SP_RemoveUser.cs" />
     <Compile Include="StoredProcedure\SP_RemoveUserRight.cs" />

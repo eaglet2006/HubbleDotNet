@@ -204,6 +204,9 @@ namespace QueryAnalyzer
 
                 QueryResult queryResult;
 
+                GlobalSetting.DataAccess.ResetDataCacheAfterTimeout =
+                    resetDataCacheAfterTimeoutToolStripMenuItem.Checked;
+
                 if (dataCacheToolStripMenuItem.Checked)
                 {
                     queryResult = GlobalSetting.DataAccess.Excute(sql, 0);

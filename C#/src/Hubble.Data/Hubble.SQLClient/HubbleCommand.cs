@@ -102,6 +102,22 @@ namespace Hubble.SQLClient
             }
         }
 
+        private bool _ResetDataCacheAfterTimeout = false;
+
+        public bool ResetDataCacheAfterTimeout
+        {
+            get
+            {
+                return _ResetDataCacheAfterTimeout;
+            }
+
+            set
+            {
+                _ResetDataCacheAfterTimeout = value;
+            }
+        }
+
+
         private static string BuildSqlWithSqlParameter(string sql, System.Data.Common.DbParameterCollection paras)
         {
             System.Data.Common.DbParameter[] arrParas = new System.Data.Common.DbParameter[paras.Count];
@@ -432,6 +448,11 @@ namespace Hubble.SQLClient
 
             if (needCache)
             {
+                if (ResetDataCacheAfterTimeout)
+                {
+                    tableTicks = "";
+                }
+
                 if (tableTicks == "")
                 {
                     sql = "exec SP_InnerDataCache;";

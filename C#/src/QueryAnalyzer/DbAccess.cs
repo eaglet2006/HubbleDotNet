@@ -66,6 +66,22 @@ namespace QueryAnalyzer
             }
         }
 
+
+        private bool _ResetDataCacheAfterTimeout = false;
+
+        public bool ResetDataCacheAfterTimeout
+        {
+            get
+            {
+                return _ResetDataCacheAfterTimeout;
+            }
+
+            set
+            {
+                _ResetDataCacheAfterTimeout = value;
+            }
+        }
+
         public void ReConnect()
         {
             Close();
@@ -172,6 +188,7 @@ namespace QueryAnalyzer
             else
             {
                 HubbleCommand cmd = new HubbleCommand(sql, _Conn, parameters);
+                cmd.ResetDataCacheAfterTimeout = this.ResetDataCacheAfterTimeout;
                 cmd.Query(cacheTimeout);
                 return cmd.Result;
             }
