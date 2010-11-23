@@ -73,6 +73,14 @@ namespace Hubble.Framework.Net
                 return _InnerStackTrace;
             }
         }
+        
+        new public string StackTrace
+        {
+            get
+            {
+                return _InnerStackTrace;
+            }
+        }
 
         public ServerException()
         {

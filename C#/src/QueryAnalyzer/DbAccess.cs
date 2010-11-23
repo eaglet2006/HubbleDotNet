@@ -146,6 +146,7 @@ namespace QueryAnalyzer
                 sqlConnBuilder.Password = password;
                 sqlConnBuilder.InitialCatalog = DatabaseName;
                 _Conn = new HubbleConnection(sqlConnBuilder.ConnectionString);
+                _Conn.TryConnectTimeout = 0;
                 _Conn.Open();
             }
         }

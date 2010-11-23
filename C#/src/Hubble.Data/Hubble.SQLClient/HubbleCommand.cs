@@ -397,6 +397,24 @@ namespace Hubble.SQLClient
         {
             if (!_SqlConnection.Connected)
             {
+                if (_SqlConnection.ServerBusy)
+                {
+                    DateTime expireTime;
+                    int hitCount;
+                    string tableTicks1;
+
+                    _QueryResult = DataCacheMgr.Get(_SqlConnection,
+                        orginalSql, out expireTime, out hitCount, out tableTicks1);
+                    if (_QueryResult != null)
+                    {
+                        return _QueryResult.DataSet;
+                    }
+                    else
+                    {
+                        _SqlConnection.CommandReportNoCache = true;
+                    }
+                }
+
                 try
                 {
                     _SqlConnection.Open();

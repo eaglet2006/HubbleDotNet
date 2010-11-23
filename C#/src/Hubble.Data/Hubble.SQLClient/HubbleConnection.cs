@@ -143,6 +143,52 @@ namespace Hubble.SQLClient
             }
         }
 
+        private int _TryConnectTimeout = 0;
+
+        /// <summary>
+        /// in milliseconds.
+        /// When TryConnectTimeout > 0, if connect time large then this setting
+        /// try to find data cache of the sql, if on data cache, connect again else
+        /// return the data of cache.
+        /// </summary>
+        public int TryConnectTimeout
+        {
+            get
+            {
+                return _TryConnectTimeout;
+            }
+
+            set
+            {
+                _TryConnectTimeout = value;
+            }
+        }
+
+        private bool _ServerBusy = false;
+
+        internal bool ServerBusy
+        {
+            get
+            {
+                return _ServerBusy;
+            }
+        }
+
+        private bool _CommandReportNoCache = false;
+
+        internal bool CommandReportNoCache
+        {
+            get
+            {
+                return _CommandReportNoCache;
+            }
+
+            set
+            {
+                _CommandReportNoCache = true;
+            }
+        }
+
         #region Private methods
 
         private Hubble.Framework.Serialization.IMySerialization RequireCustomSerialization(Int16 evt, object data)
@@ -275,15 +321,52 @@ namespace Hubble.SQLClient
 
         public override void Open()
         {
-            _TcpClient.Connect();
-            try
+            int elapseConnectTime = 0;
+            Random rand = new Random();
+            _ServerBusy = false;
+
+            while (elapseConnectTime < this.ConnectionTimeout * 1000)
             {
-                _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
+                _TcpClient.Connect();
+
+                try
+                {
+                    _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
+                    break;
+                }
+                catch (Exception e)
+                {
+                    if (e.Message.Trim() == "Too many connects on server")
+                    {
+                        _TcpClient.Close();
+                        _Connected = false;
+                        ConnectionString = ConnectionString;
+
+                        int sleepMillisecond = rand.Next(200, 800);
+                        System.Threading.Thread.Sleep(sleepMillisecond);
+
+                        if (!CommandReportNoCache && TryConnectTimeout > 0)
+                        {
+                            if (elapseConnectTime > TryConnectTimeout)
+                            {
+                                _ServerBusy = true;
+                                return;
+                            }
+                        }
+
+                        elapseConnectTime += sleepMillisecond;
+                        continue;
+                    }
+
+                    _TcpClient.Close();
+
+                    throw e;
+                }
             }
-            catch (Exception e)
+
+            if (elapseConnectTime > this.ConnectionTimeout * 1000)
             {
-                _TcpClient.Close();
-                throw e;
+                throw new System.Data.DataException("Connect timeout.The hubbledotnet server is too busy right now.");
             }
 
             _Connected = true;

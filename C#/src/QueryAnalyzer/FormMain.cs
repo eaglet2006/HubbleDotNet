@@ -274,7 +274,7 @@ namespace QueryAnalyzer
             }
             catch (Hubble.Framework.Net.ServerException e1)
             {
-                ShowErrorMessage(e1.Message + "\r\n" + e1.InnerStackTrace);
+                ShowErrorMessage(e1.Message + "\r\n" + e1.StackTrace);
             }
             catch (Exception e1)
             {

@@ -124,10 +124,49 @@ namespace Hubble.Core.Service
             }
         }
 
+
+        static private int _TooManyConnectionsErrorTimes = 0;
+        static private object _TooManyConnectionsErrorTimesLock = new object();
+        static private int TooManyConnectionsErrorTimes
+        {
+            get
+            {
+                lock (_TooManyConnectionsErrorTimesLock)
+                {
+                    return _TooManyConnectionsErrorTimes;
+                }
+            }
+
+            set
+            {
+                lock (_TooManyConnectionsErrorTimesLock)
+                {
+                    _TooManyConnectionsErrorTimes = value;
+                }
+            }
+        }
+
         private void MessageReceiveErrorEventHandler(object sender, MessageReceiveErrorEventArgs args)
         {
             try
             {
+                if (args.InnerException.Message != null)
+                {
+                    if (args.InnerException.Message.Trim() == "Too many connects on server")
+                    {
+                        if (TooManyConnectionsErrorTimes++ != 0)
+                        {
+                            if (TooManyConnectionsErrorTimes > 1000)
+                            {
+                                TooManyConnectionsErrorTimes = 0;
+                            }
+
+                            return;
+                        }
+                    }
+                }
+
+
                 string errorMsg = string.Format("Error = {0} StackTrace = {1}", 
                     args.InnerException.Message, args.InnerException.StackTrace);
                 Console.WriteLine(errorMsg);
