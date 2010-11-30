@@ -50,6 +50,8 @@ namespace Hubble.SQLClient
 
         private int _TcpPort = 7523;
 
+        private int _ConnectionTimeout = 300;
+
         private System.Data.ConnectionState _State = System.Data.ConnectionState.Closed;
 
         private byte[] _DesKey = null;
@@ -139,7 +141,7 @@ namespace Hubble.SQLClient
         {
             get
             {
-                return _TcpClient.SendTimeout / 1000;
+                return _ConnectionTimeout;
             }
         }
 
@@ -234,6 +236,7 @@ namespace Hubble.SQLClient
         /// <param name="timeout"></param>
         internal void SetConnectionTimeout(int timeout)
         {
+            _ConnectionTimeout = timeout;
             _TcpClient.SendTimeout = timeout * 1000;
             _TcpClient.ReceiveTimeout = timeout * 1000;
         }
@@ -314,7 +317,15 @@ namespace Hubble.SQLClient
                 _TcpClient.RequireCustomSerialization = RequireCustomSerialization;
 
                 _ConnectionString = connectionString;
-                SetConnectionTimeout(300);
+
+                if (connectionString.IndexOf("Connection Timeout", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                {
+                    SetConnectionTimeout(_SqlConnBuilder.ConnectTimeout);
+                }
+                else
+                {
+                    SetConnectionTimeout(300);
+                }
                 //ConnectionTimeout = 300;
             }
         }

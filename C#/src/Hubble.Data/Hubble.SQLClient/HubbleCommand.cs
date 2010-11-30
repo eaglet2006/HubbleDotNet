@@ -419,9 +419,10 @@ namespace Hubble.SQLClient
                 {
                     _SqlConnection.Open();
                 }
-                catch
+                catch(Exception e)
                 {
-                    throw new System.Data.DataException("Sql Connection does not connect!");
+                    throw new System.Data.DataException(string.Format("Sql Connection does not connect!, errMsg:{0}",
+                        e.Message));
                 }
             }
 

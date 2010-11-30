@@ -65,8 +65,26 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-
         private string _OrderBy;
+
+        private Dictionary<int, int> _NotInDict = null;
+
+        /// <summary>
+        /// Key is docid
+        /// Value is 0
+        /// </summary>
+        internal Dictionary<int, int> NotInDict
+        {
+            get
+            {
+                return _NotInDict;
+            }
+
+            set
+            {
+                _NotInDict = value;
+            }
+        }
 
 
         public ParseWhere(string tableName, DBProvider dbProvider, bool orderbyScore, string orderBy)
@@ -92,6 +110,11 @@ namespace Hubble.Core.SFQL.Parse
         private Core.SFQL.Parse.DocumentResultWhereDictionary GetResultFromDatabase(
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
+            if (NotInDict != null)
+            {
+                throw new ParseException("Can't do NotIn for sql without fulltext conditions currently.");
+            }
+
             string whereSql;
 
             if (expressionTree == null)
@@ -346,6 +369,8 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     query.CanLoadPartOfDocs = false;
                 }
+
+                query.NotInDict = NotInDict;
 
                 query.DBProvider = _DBProvider;
                 query.TabIndex = _DBProvider.GetField(fieldName).TabIndex;

@@ -57,6 +57,12 @@ namespace Hubble.Core.Query
         Core.SFQL.Parse.DocumentResultWhereDictionary UpDict { get; set; }
 
         /// <summary>
+        /// Not in dictionary.
+        /// For Attribute(NotIn)
+        /// </summary>
+        Dictionary<int, int> NotInDict { get; set; }
+
+        /// <summary>
         /// If this query need output not match result set it to true.
         /// </summary>
         bool Not { get; set; }

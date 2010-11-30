@@ -24,22 +24,22 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.SFQL.Parse
 {
-    class ParseGroupByCount : IGroupBy
+    class ParseDistinct : IDistinct
     {
-        struct GroupByPair : IComparable<GroupByPair>
+        struct DistinctPair : IComparable<DistinctPair>
         {
             internal ulong Key;
             internal int Count;
 
-            internal GroupByPair(ulong key, int count)
+            internal DistinctPair(ulong key, int count)
             {
                 this.Key = key;
                 this.Count = count;
             }
 
-            #region IComparable<GroupByPair> Members
+            #region IComparable<DistinctByPair> Members
 
-            public int CompareTo(GroupByPair other)
+            public int CompareTo(DistinctPair other)
             {
                 if (other.Count > this.Count)
                 {
@@ -58,10 +58,9 @@ namespace Hubble.Core.SFQL.Parse
             #endregion
         }
 
-        int _Top = 0;
         DBProvider _DBProvider;
-        List<Field> _GroupByFields;
-        string _GroupByFieldsString;
+        List<Field> _DistinctFields;
+        string _DistinctFieldsString;
         SyntaxAnalysis.ExpressionTree _ExpressionTree;
 
         /// <summary>
@@ -88,7 +87,7 @@ namespace Hubble.Core.SFQL.Parse
                     docid));
             }
 
-            foreach (Field field in _GroupByFields)
+            foreach (Field field in _DistinctFields)
             {
                 switch (field.DataType)
                 {
@@ -185,93 +184,35 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        unsafe private System.Data.DataTable GetTable(Dictionary<ulong, int> groupByDict)
-        {
-            GroupByPair[] groupByPair = new GroupByPair[groupByDict.Count];
-
-            int i = 0;
-
-            foreach(ulong key in groupByDict.Keys)
-            {
-                groupByPair[i++] = new GroupByPair(key, groupByDict[key]);
-            }
-
-            Array.Sort(groupByPair);
-
-            System.Data.DataTable table = new System.Data.DataTable();
-
-            foreach (Field field in _GroupByFields)
-            {
-                System.Data.DataColumn col = new System.Data.DataColumn(field.Name,
-                    DataTypeConvert.GetClrType(field.DataType));
-
-                table.Columns.Add(col);
-            }
-
-            table.Columns.Add(new System.Data.DataColumn("Count", typeof(int)));
-
-            foreach (GroupByPair gbp in groupByPair)
-            {
-                System.Data.DataRow row = table.NewRow();
-
-                int preDataLength = 0;
-                int col = _GroupByFields.Count - 1;
-
-                for(; col >= 0; col--)
-                {
-                    row[col] = GetFieldValue(_GroupByFields[col], ref preDataLength, gbp.Key);
-                }
-
-                row[_GroupByFields.Count] = gbp.Count;
-
-                table.Rows.Add(row);
-
-                if (table.Rows.Count >= _Top)
-                {
-                    break;
-                }
-            }
-
-            table.TableName = "GroupByCount_" + _GroupByFieldsString;
-            table.MinimumCapacity = groupByDict.Count;
-
-            return table;
-        }
-
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="attribute">GroupBy Attribute</param>
+        /// <param name="attribute">DistinctBy Attribute</param>
         /// <param name="dbProvider"></param>
         /// <example> 
-        /// [GroupBy("Count", "*", "type1, type2", 10)]
+        /// [DistinctBy("type1, type2")]
         /// equivalent sql:
         /// select top 10 count(*) as count from table group by type1, type2 order by count desc
         /// </example>
-        internal ParseGroupByCount(TSFQLAttribute attribute, DBProvider dbProvider,
+        internal ParseDistinct(TSFQLAttribute attribute, DBProvider dbProvider,
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            if (attribute.Parameters.Count < 3)
+            if (attribute.Parameters.Count < 1)
             {
                 throw new ParseException("Invalid parameter count");
             }
 
-            if (!attribute.Parameters[0].Equals("count", StringComparison.CurrentCultureIgnoreCase))
-            {
-                throw new ParseException("first parameter must be count");
-            }
-
             _DBProvider = dbProvider;
 
-            _GroupByFields = new List<Field>();
+            _DistinctFields = new List<Field>();
 
             _ExpressionTree = expressionTree;
 
             int fieldsDataLength = 0;
 
-            _GroupByFieldsString = attribute.Parameters[2];
+            _DistinctFieldsString = attribute.Parameters[0];
 
-            foreach (string fieldName in _GroupByFieldsString.Split(new char[] { ',' }))
+            foreach (string fieldName in _DistinctFieldsString.Split(new char[] { ',' }))
             {
                 Field field = dbProvider.GetField(fieldName.Trim());
 
@@ -305,12 +246,12 @@ namespace Hubble.Core.SFQL.Parse
                         break;
 
                     default:
-                        throw new ParseException(string.Format("field:{0}'s data type is not integer or time data type", 
+                        throw new ParseException(string.Format("field:{0}'s data type is not integer or time data type",
                             field.Name));
                 }
 
 
-                _GroupByFields.Add(field);
+                _DistinctFields.Add(field);
             }
 
             if (fieldsDataLength > 8)
@@ -318,125 +259,45 @@ namespace Hubble.Core.SFQL.Parse
                 throw new ParseException("Sum of the data length of all group by fields can't be large then 8.");
             }
 
-            if (_GroupByFields.Count <= 0)
+            if (_DistinctFields.Count <= 0)
             {
                 throw new ParseException("It need at least one group by field");
             }
-
-            _Top = int.MaxValue;
-
-            if (attribute.Parameters.Count > 3)
-            {
-                _Top = int.Parse(attribute.Parameters[3]);
-            }
-
         }
 
-        private System.Data.DataTable GroupByFromDatabase()
+
+        #region IDistinct Members
+
+        public Hubble.Core.Query.DocumentResultForSort[] Distinct(
+            Hubble.Core.Query.DocumentResultForSort[] result, out System.Data.DataTable table)
         {
-            string whereSql;
+            Dictionary<ulong, int> distinctByDict = new Dictionary<ulong, int>();
 
-            if (_ExpressionTree == null)
-            {
-                whereSql = "";
-            }
-            else
-            {
-                whereSql = "where " + _ExpressionTree.SqlText;
-            }
+            table = null;
+            List<Hubble.Core.Query.DocumentResultForSort> distinctResult =
+                new List<Hubble.Core.Query.DocumentResultForSort>();
 
-            StringBuilder sb = new StringBuilder();
-
-            string fields = "";
-            int i = 0;
-
-            foreach(Field field in _GroupByFields)
-            {
-                if (i++ == 0)
-                {
-                    fields += field.Name;
-                }
-                else
-                {
-                    fields += "," + field.Name;
-                }
-            }
-
-            string sql = string.Format("select {0} , count(*) as Count from {1} {2} group by {0} order by count desc",
-                fields, _DBProvider.Table.DBTableName, whereSql);
-
-            System.Data.DataTable src = _DBProvider.DBAdapter.QuerySql(sql).Tables[0];
-            System.Data.DataTable table = src.Clone();
-
-            table.MinimumCapacity = src.Rows.Count;
-            int top = _Top;
-
-            if (top < 0)
-            {
-                top = int.MaxValue;
-            }
-
-            i = 0;
-            while (top > 0 && i < src.Rows.Count)
-            {
-                System.Data.DataRow row = table.NewRow();
-
-                for (int j = 0; j < table.Columns.Count; j++)
-                {
-                    row[j] = src.Rows[i][j];
-                }
-
-                table.Rows.Add(row);
-
-                i++;
-                top--;
-            }
-
-            table.TableName = "GroupByCount_" + _GroupByFieldsString;
-            
-
-            return table;
-
-
-        }
-
-        /// <summary>
-        /// Do Group By
-        /// </summary>
-        /// <param name="result">result of the query</param>
-        /// <param name="limit">limit count to group by. only group by limit number of records</param>
-        unsafe public System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit)
-        {
-            if (_ExpressionTree == null)
-            {
-                return GroupByFromDatabase();
-            }
-
-            if (!_ExpressionTree.NeedTokenize)
-            {
-                return GroupByFromDatabase();
-            }
-
-            limit = Math.Min(result.Length, limit);
-            Dictionary<ulong, int>  groupByDict = new Dictionary<ulong, int>(limit);
-
-            for (int i = 0; i < limit; i++)
+            for (int i = 0; i < result.Length; i++)
             {
                 ulong key = GetKey(ref result[i]);
 
                 int count;
 
-                if (groupByDict.TryGetValue(key, out count))
+                if (distinctByDict.TryGetValue(key, out count))
                 {
-                    groupByDict[key] = count + 1;
+                    distinctByDict[key] = count + 1;
                 }
                 else
                 {
-                    groupByDict.Add(key, 1);
+                    distinctByDict.Add(key, 1);
+                    distinctResult.Add(result[i]);
                 }
             }
 
-            return GetTable(groupByDict);
+            return distinctResult.ToArray();
+
         }
+
+        #endregion
     }
 }

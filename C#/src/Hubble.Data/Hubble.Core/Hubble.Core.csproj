@@ -68,7 +68,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -134,10 +136,13 @@
     <Compile Include="Service\TaskInformation.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
+    <Compile Include="SFQL\Parse\ParseDistinct.cs" />
     <Compile Include="SFQL\Parse\DocumentResultWhereDictionary.cs" />
+    <Compile Include="SFQL\Parse\IDistinct.cs" />
     <Compile Include="SFQL\Parse\IGroupBy.cs" />
     <Compile Include="SFQL\Parse\ParseException.cs" />
     <Compile Include="SFQL\Parse\ParseGroupByCount.cs" />
+    <Compile Include="SFQL\Parse\ParseNotIn.cs" />
     <Compile Include="SFQL\Parse\ParseOptimize.cs" />
     <Compile Include="SFQL\Parse\ParseWhere.cs" />
     <Compile Include="SFQL\Parse\QueryResultSort.cs" />

@@ -1234,6 +1234,25 @@ namespace Hubble.Core.Query
             }
         }
 
+        private Dictionary<int, int> _NotInDict = null;
+
+        /// <summary>
+        /// Key is docid
+        /// Value is 0
+        /// </summary>
+        public Dictionary<int, int> NotInDict
+        {
+            get
+            {
+                return _NotInDict;
+            }
+
+            set
+            {
+                _NotInDict = value;
+            }
+        }
+
         bool _Not = false;
 
         public bool Not

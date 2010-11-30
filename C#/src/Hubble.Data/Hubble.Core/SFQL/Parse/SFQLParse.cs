@@ -52,6 +52,9 @@ namespace Hubble.Core.SFQL.Parse
         private Dictionary<string, List<UpdateEntity>> _UpdateTables = new Dictionary<string, List<UpdateEntity>>();
 
         private bool _UnionSelect = false;
+        private bool _Union = false;
+        private TSFQLAttribute _UnionAttribute = null;
+
         private List<SyntaxAnalysis.Select.Select> _UnionSelects = new List<Hubble.Core.SFQL.SyntaxAnalysis.Select.Select>();
 
         private void InputLexicalToken(Lexical.Token token)
@@ -581,6 +584,23 @@ namespace Hubble.Core.SFQL.Parse
         private string GetWhereSql(SyntaxAnalysis.Select.Select select)
         {
             StringBuilder sb = new StringBuilder();
+            
+            if (select.Sentence != null)
+            {
+                foreach (TSFQLAttribute attribute in select.Sentence.Attributes)
+                {
+                    if (attribute.Name.Equals("Distinct", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        sb.Append(attribute.ToString());
+                    }
+                    else if (attribute.Name.Equals("NotIn", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        sb.Append(attribute.ToString());
+                    }
+
+                    sb.AppendLine();
+                }
+            }
 
             if (select.Where != null)
             {
@@ -699,6 +719,21 @@ namespace Hubble.Core.SFQL.Parse
             return false;
         }
 
+        private IDistinct GetDistinct(TSFQLSentence sentence, Data.DBProvider dbProvider,
+            SyntaxAnalysis.ExpressionTree expressionTree)
+        {
+            foreach (TSFQLAttribute attribute in sentence.Attributes)
+            {
+                if (attribute.Name.Equals("Distinct", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return new ParseDistinct(attribute, dbProvider, expressionTree);
+                }
+            }
+
+            return null;
+        }
+
+
         private List<IGroupBy> GetGroupBy(TSFQLSentence sentence, Data.DBProvider dbProvider,
             SyntaxAnalysis.ExpressionTree expressionTree)
         {
@@ -785,6 +820,17 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private Cache.QueryCache GetQueryCache(Data.DBProvider dbProvider,
+            List<IGroupBy> groupByList, IDistinct distinct)
+        {
+            if (dbProvider.QueryCacheEnabled && groupByList.Count <= 0)
+            {
+                return dbProvider.QueryCache;
+            }
+
+            return null;
+        }
+
         unsafe private QueryResult ExcuteSelect(SyntaxAnalysis.Select.Select select, 
             Data.DBProvider dbProvider, string tableName, Service.ConnectionInformation connInfo)
         {
@@ -805,6 +851,18 @@ namespace Hubble.Core.SFQL.Parse
 
             List<IGroupBy> groupByList = GetGroupBy(select.Sentence, dbProvider,
                 select.Where == null ? null : select.Where.ExpressionTree);
+
+            IDistinct distinct = GetDistinct(select.Sentence, dbProvider,
+                select.Where == null ? null : select.Where.ExpressionTree);
+            ParseNotIn notIn = new ParseNotIn(select.Sentence);
+
+            if (distinct != null)
+            {
+                if (groupByList.Count > 0)
+                {
+                    throw new ParseException("Group by and Distinct can't be in one sql statement");
+                }
+            }
 
             long lastModifyTicks = dbProvider.LastModifyTicks;
 
@@ -857,7 +915,16 @@ namespace Hubble.Core.SFQL.Parse
 
             parseWhere.Begin = select.Begin;
             parseWhere.End = select.End;
-            parseWhere.NeedGroupBy = groupByList.Count > 0;
+
+            if (parseWhere.Begin < 0)
+            {
+                //Means only return count
+                parseWhere.Begin = 0;
+                parseWhere.End = 0;
+            }
+
+            parseWhere.NeedGroupBy = groupByList.Count > 0 || distinct != null;
+            parseWhere.NotInDict = notIn.NotInDict;
 
             Query.DocumentResultForSort[] result;
 
@@ -867,10 +934,8 @@ namespace Hubble.Core.SFQL.Parse
             bool noQueryCache = true;
             Cache.QueryCacheDocuments qDocs = null;
 
-            if (dbProvider.QueryCacheEnabled && groupByList.Count <= 0)
-            {
-                queryCache = dbProvider.QueryCache;
-            }
+            //Get QueryCache instance
+            queryCache = GetQueryCache(dbProvider, groupByList, distinct);
 
             if (queryCache != null)
             {
@@ -979,7 +1044,18 @@ namespace Hubble.Core.SFQL.Parse
 
                     //qSort.Sort(result);
 
-                    qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
+                    if (distinct == null)
+                    {
+                        qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
+                    }
+                    else
+                    {
+                        //Do distinct
+                        qSort.Sort(result);
+                        System.Data.DataTable distinctTable;
+                        result = distinct.Distinct(result, out distinctTable);
+                        relTotalCount = result.Length;
+                    }
                 }
 
                 if (queryCache != null)
@@ -1023,13 +1099,19 @@ namespace Hubble.Core.SFQL.Parse
                 result = qDocs.Documents;
             }
 
-
             List<Data.Field> selectFields;
             int allFieldsCount;
 
             GetSelectFields(select, dbProvider, out selectFields, out allFieldsCount);
 
             System.Data.DataSet ds;
+
+            if (select.Begin < 0)
+            {
+                //Only return count
+                result = new Hubble.Core.Query.DocumentResultForSort[0];
+            }
+
             GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out ds);
 
             if (noQueryCache)
@@ -1073,13 +1155,18 @@ namespace Hubble.Core.SFQL.Parse
 
             if (sentence.Attributes.Count > 0)
             {
-                if (sentence.Attributes.Contains(new TSFQLAttribute("UnionSelect")))
+                if (sentence.Attributes[0].Equals(new TSFQLAttribute("UnionSelect")))
                 {
                     _UnionSelect = true;
                 }
+                else if (sentence.Attributes[0].Equals(new TSFQLAttribute("Union")))
+                {
+                    _Union = true;
+                    _UnionAttribute = sentence.Attributes[0];
+                }
             }
 
-            if (_UnionSelect)
+            if (_UnionSelect || _Union)
             {
                 _UnionSelects.Add(select);
                 return null;
@@ -1223,6 +1310,11 @@ namespace Hubble.Core.SFQL.Parse
 
         private void CheckUnionSelectSqlStatement()
         {
+            CheckUnionSelectSqlStatement(true);
+        }
+
+        private void CheckUnionSelectSqlStatement(bool checkOrderBy)
+        {
             if (_UnionSelects.Count <= 1)
             {
                 throw new ParseException("UnionSelect need at least two select statements!");
@@ -1285,21 +1377,23 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
-                if (_FirstSelectOrderBy.Count != select.OrderBys.Count)
+                if (checkOrderBy)
                 {
-                    throw new ParseException("All select statement must have some count of order by fields!");
-                }
-
-                for (int j = 0; j < select.OrderBys.Count; j++)
-                {
-                    SyntaxAnalysis.Select.OrderBy orderBy = select.OrderBys[j];
-
-                    if (!orderBy.Name.Equals(_FirstSelectOrderBy[j], StringComparison.CurrentCultureIgnoreCase))
+                    if (_FirstSelectOrderBy.Count != select.OrderBys.Count)
                     {
-                        throw new ParseException("All select statement must have some order of orderby fields!");
+                        throw new ParseException("All select statement must have some count of order by fields!");
+                    }
+
+                    for (int j = 0; j < select.OrderBys.Count; j++)
+                    {
+                        SyntaxAnalysis.Select.OrderBy orderBy = select.OrderBys[j];
+
+                        if (!orderBy.Name.Equals(_FirstSelectOrderBy[j], StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            throw new ParseException("All select statement must have some order of orderby fields!");
+                        }
                     }
                 }
-
             }
         }
 
@@ -1622,6 +1716,78 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private QueryResult ExcuteUnion(Service.ConnectionInformation connInfo)
+        {
+            if (_UnionAttribute.Parameters.Count != 2)
+            {
+                throw new ParseException("Union Attribute must have two parameters. First one is begin row, last one is end row");
+            }
+
+            int begin = int.Parse(_UnionAttribute.Parameters[0]);
+            int end = int.Parse(_UnionAttribute.Parameters[1]);
+
+            if (begin < 0 || begin > end)
+            {
+                throw new ParseException("Invalid Union attribute parameter");
+            }
+
+            int outputCount = end - begin + 1;
+
+            CheckUnionSelectSqlStatement(false);
+
+            List<QueryResult> results = new List<QueryResult>();
+
+            foreach (SyntaxAnalysis.Select.Select select in _UnionSelects)
+            {
+                select.Begin = begin;
+                select.End = end;
+                
+
+                string tableName = select.SelectFroms[0].Name;
+
+                Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
+
+                QueryResult qResult = ExcuteSelect(select, dbProvider, tableName, Service.CurrentConnection.ConnectionInfo);
+
+                results.Add(qResult);
+
+                if ((qResult.DataSet.Tables[0].Rows.Count == outputCount) || begin == -1)
+                {
+                    begin = -1;
+                    end = 0;
+                }
+                else
+                {
+                    begin = 0;
+                    outputCount -= qResult.DataSet.Tables[0].Rows.Count;
+                    end = outputCount - 1;
+                }
+            }
+
+            QueryResult result = results[0];
+
+            for (int i = 1; i < results.Count; i++)
+            {
+                System.Data.DataTable table = result.DataSet.Tables[0];
+
+                foreach (System.Data.DataRow srcRow in results[i].DataSet.Tables[0].Rows)
+                {
+                    System.Data.DataRow row = table.NewRow();
+
+                    for (int j = 0; j < table.Columns.Count; j++)
+                    {
+                        row[j] = srcRow[j];
+                    }
+
+                    table.Rows.Add(row);
+                }
+
+                result.DataSet.Tables[0].MinimumCapacity += results[i].DataSet.Tables[0].MinimumCapacity;
+            }
+
+            return result;
+        }
+
         private QueryResult ExcuteUnionSelect(Service.ConnectionInformation connInfo)
         {
             string unionSelectTableName;
@@ -1887,6 +2053,11 @@ namespace Hubble.Core.SFQL.Parse
             {
                 QueryResult queryResult = ExcuteUnionSelect(Service.CurrentConnection.ConnectionInfo);
 
+                AppendQueryResult(queryResult, ref tableNum, ref result);
+            }
+            else if (_Union)
+            {
+                QueryResult queryResult = ExcuteUnion(Service.CurrentConnection.ConnectionInfo);
                 AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 

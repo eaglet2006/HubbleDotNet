@@ -114,6 +114,7 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
             s0.AddNextState((int)SyntaxType.LSquareBracket, s1.Id);
 
             s1.AddNextState((int)SyntaxType.Identifer, s2.Id);
+            s1.AddNextState((int)SyntaxType.BEGIN_KEYWORD, (int)SyntaxType.END_KEYWORD, s2.Id);
             s2.AddNextState((int)SyntaxType.RSquareBracket, squit.Id);
             s2.AddNextState((int)SyntaxType.LBracket, s3.Id);
             s3.AddNextState(new int[]{(int)SyntaxType.String, (int)SyntaxType.Numeric}, s4.Id);
@@ -169,6 +170,40 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
         public override int GetHashCode()
         {
             return this.Name.ToLower().GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("[");
+            sb.Append(Name);
+
+            if (Parameters.Count > 0)
+            {
+                sb.Append("(");
+                int i = 0;
+
+                foreach (string parameter in Parameters)
+                {
+                    if (i == 0)
+                    {
+                        sb.Append("'");
+                    }
+                    else
+                    {
+                        sb.Append(",'");
+                    }
+
+                    sb.Append(parameter.Replace("'", "''"));
+                    sb.Append("'");
+                    i++;
+                }
+
+                sb.Append(")");
+            }
+            sb.Append("]");
+
+            return sb.ToString();
         }
     }
 }
