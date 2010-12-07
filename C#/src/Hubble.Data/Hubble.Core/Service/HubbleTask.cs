@@ -34,7 +34,30 @@ namespace Hubble.Core.Service
 
         static bool  _Closing = false;
 
-        static object _LockObj = new object();  
+        static object _LockObj = new object();
+
+        static long _SqlId = 0;
+        static object _SqlIdSync = new object();
+
+        static long SqlId
+        {
+            get
+            {
+                lock (_SqlIdSync)
+                {
+                    return _SqlId;
+                }
+            }
+
+            set
+            {
+                lock (_SqlIdSync)
+                {
+                    _SqlId = value;
+                }
+            }
+        }
+
 
         private void ConnectEstablishEventHandler(object sender, ConnectEstablishEventArgs args)
         {
@@ -88,11 +111,25 @@ namespace Hubble.Core.Service
                     CurrentConnection.ConnectionInfo.StartCommand();
 
                     System.Diagnostics.Stopwatch sw = null;
+                    TimeSpan ts = default(TimeSpan);
+                    long sqlid = 0;
+
 
                     if (Global.Setting.Config.SqlTrace)
                     {
+                        ts = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+
                         sw = new System.Diagnostics.Stopwatch();
+                        sqlid = _SqlId++;
+
+                        string sql = (args.InMessage as string);
+                        int len = Math.Min(255, sql.Length);
+
+                        Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}", 
+                            sqlid, sql.Substring(0, len)));
+
                         sw.Start();
+
                     }
 
                     args.ReturnMsg = Excute(args.InMessage as string);
@@ -106,11 +143,10 @@ namespace Hubble.Core.Service
                         {
                             sw.Stop();
 
-                            string sql = (args.InMessage as string);
-                            int len = Math.Min(255, sql.Length);
-
-                            Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, sql={1}",
-                                sw.ElapsedMilliseconds, sql.Substring(0, len)));
+                            TimeSpan ts1 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+                            
+                            Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
+                                sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
                         }
                     }
                     else
