@@ -27,6 +27,11 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Note", "Initialize all the tables after startup");
 
             NewRow();
+            OutputValue("Name", "SqlTrace");
+            OutputValue("Value", Global.Setting.Config.SqlTrace.ToString());
+            OutputValue("Note", "Enable SqlTrace");
+
+            NewRow();
             OutputValue("Name", "LogDirectory");
             OutputValue("Value", Global.Setting.Config.Directories.LogDirectory);
             OutputValue("Note", "Dicrectory of log file in server");
@@ -60,6 +65,11 @@ namespace Hubble.Core.StoredProcedure
                     OutputValue("Note", "Initialize all the tables after startup");
                     break;
 
+                case "sqltrace":
+                    OutputValue("Name", "SqlTrace");
+                    OutputValue("Value", Global.Setting.Config.SqlTrace);
+                    OutputValue("Note", "Enable SqlTrace");
+                    break;
 
                 case "logdirectory":
                     OutputValue("Name", "LogDirectory");
@@ -123,6 +133,18 @@ namespace Hubble.Core.StoredProcedure
                     oldValue = Global.Setting.Config.InitTablesStartup.ToString();
 
                     Global.Setting.Config.InitTablesStartup = bool.Parse(value);
+
+                    Global.Setting.Save();
+
+                    OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
+                        name, oldValue, value));
+                    break;
+
+                case "sqltrace":
+
+                    oldValue = Global.Setting.Config.SqlTrace.ToString();
+
+                    Global.Setting.Config.SqlTrace = bool.Parse(value);
 
                     Global.Setting.Save();
 

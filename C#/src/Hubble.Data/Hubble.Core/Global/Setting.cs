@@ -556,12 +556,42 @@ namespace Hubble.Core.Global
         {
             get
             {
-                return _InitTablesStartup;
+                lock (_LockObj)
+                {
+                    return _InitTablesStartup;
+                }
             }
 
             set
             {
-                _InitTablesStartup = value;
+                lock (_LockObj)
+                {
+                    _InitTablesStartup = value;
+                }
+            }
+        }
+
+        bool _SqlTrace = false;
+
+        /// <summary>
+        /// Enable sql trace
+        /// </summary>
+        public bool SqlTrace
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _SqlTrace;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _SqlTrace = value;
+                }
             }
         }
 

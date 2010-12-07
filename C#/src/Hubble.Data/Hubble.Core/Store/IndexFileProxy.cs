@@ -625,23 +625,11 @@ namespace Hubble.Core.Store
 
                 try
                 {
-                    if (_DBProvider.Table.Debug)
-                    {
-                        Global.Report.WriteAppLog(string.Format("CanClose of field:{0} Locked.",
-                            _IndexFile.FieldName), true);
-                    }
-
                     return _CanClose;
                 }
                 finally
                 {
                     HBMonitor.Exit(_LockObj);
-
-                    if (_DBProvider.Table.Debug)
-                    {
-                        Global.Report.WriteAppLog(string.Format("CanClose of field:{0} Unlocked.",
-                            _IndexFile.FieldName), true);
-                    }
                 }
 
             }
@@ -1327,23 +1315,11 @@ namespace Hubble.Core.Store
 
             try
             {
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetMergeInfos of field:{0} Locked.",
-                        _IndexFile.FieldName), true);
-                }
-
                 return (MergeInfos)ProcessGetFilePositionList((int)Event.GetFilePositionList, MessageQueue.MessageFlag.None, option);
             }
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetMergeInfos of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
             }
 
 
@@ -1365,21 +1341,9 @@ MergeAckLoop:
                 throw new TimeoutException();
             }
 
-            if (_DBProvider.Table.Debug)
-            {
-                Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Locked.",
-                    _IndexFile.FieldName), true);
-            }
-
             if (!this.CanMerge) //if can't merge now, waitting for CanMerge
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
 
                 System.Threading.Thread.Sleep(10);
                 goto MergeAckLoop;
@@ -1393,12 +1357,6 @@ MergeAckLoop:
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("DoMergeAck of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
             }
 
             //SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
@@ -1450,23 +1408,11 @@ MergeAckLoop:
 
             try
             {
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetIndexBuf of field:{0} Locked.",
-                        _IndexFile.FieldName), true);
-                }
-
                 return _IndexFile.GetIndexBuf(serial, position, length);
             }
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetIndexBuf of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
             }
         }
 
@@ -1495,12 +1441,6 @@ MergeAckLoop:
 
             try
             {
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetWordIndex of field:{0} Locked.",
-                        _IndexFile.FieldName), true);
-                }
-
                 WordFilePositionList pList = GetFilePositionListByWord(getInfo.Word);
 
                 if (pList == null)
@@ -1522,12 +1462,6 @@ MergeAckLoop:
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("GetWordIndex of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
             }
 
             //return SSendMessage((int)Event.Get, getInfo, 30 * 1000) as
@@ -1556,24 +1490,11 @@ MergeAckLoop:
 
             try
             {
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("TooManyIndexFiles of field:{0} Locked.",
-                        _IndexFile.FieldName), true);
-                }
-
                 return _IndexFile.IndexFileList.Count > MaxIndexFilesNeedMerge + 2 * MinIndexFilesNeedMerge;
             }
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("TooManyIndexFiles of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
-
             }
 
         }
@@ -1591,12 +1512,6 @@ MergeAckLoop:
 
             try
             {
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("Collect of field:{0} Locked.",
-                        _IndexFile.FieldName), true);
-                }
-
                 _IndexFile.Collect();
 
                 //PatchWordFilePositionTable(_IndexFile.WordFilePositionList);
@@ -1605,13 +1520,6 @@ MergeAckLoop:
             finally
             {
                 HBMonitor.Exit(_LockObj);
-
-                if (_DBProvider.Table.Debug)
-                {
-                    Global.Report.WriteAppLog(string.Format("Collect of field:{0} Unlocked.",
-                        _IndexFile.FieldName), true);
-                }
-
             }
 
             //ASendMessage((int)Event.Collect, null);

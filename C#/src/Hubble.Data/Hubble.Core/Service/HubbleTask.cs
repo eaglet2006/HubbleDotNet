@@ -76,10 +76,24 @@ namespace Hubble.Core.Service
                     CurrentConnection currentConnection = new CurrentConnection(
                         new ConnectionInformation(args.InMessage as string));
 
+                    if (Global.Setting.Config.SqlTrace)
+                    {
+                        Global.Report.WriteAppLog(string.Format("Connected, remain:{0}",
+                            _Server.ConnectionRemain));
+                    }
+
                     break;
 
                 case ConnectEvent.ExcuteSql: //excute sql
                     CurrentConnection.ConnectionInfo.StartCommand();
+
+                    System.Diagnostics.Stopwatch sw = null;
+
+                    if (Global.Setting.Config.SqlTrace)
+                    {
+                        sw = new System.Diagnostics.Stopwatch();
+                        sw.Start();
+                    }
 
                     args.ReturnMsg = Excute(args.InMessage as string);
 
@@ -87,6 +101,24 @@ namespace Hubble.Core.Service
                     {
                         args.CustomSerializtion = new Hubble.SQLClient.QueryResultSerialization(
                             args.ReturnMsg as QueryResult);
+
+                        if (Global.Setting.Config.SqlTrace && sw != null)
+                        {
+                            sw.Stop();
+
+                            string sql = (args.InMessage as string);
+                            int len = Math.Min(255, sql.Length);
+
+                            Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, sql={1}",
+                                sw.ElapsedMilliseconds, sql.Substring(0, len)));
+                        }
+                    }
+                    else
+                    {
+                        if (Global.Setting.Config.SqlTrace && sw != null)
+                        {
+                            sw.Stop();
+                        }
                     }
 
                     break;

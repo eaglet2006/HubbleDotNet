@@ -290,6 +290,9 @@ namespace Hubble.Core.Service
                 {
                     insertCount += documents.Count;
 
+                    Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert to DBProvider, count = {0} table={1}",
+                        documents.Count, _DBProvider.TableName));
+
                     _DBProvider.Insert(documents);
 
                     double progress = (double)insertCount * 80 / (double)count;

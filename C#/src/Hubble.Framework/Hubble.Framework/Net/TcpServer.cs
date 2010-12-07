@@ -123,6 +123,20 @@ namespace Hubble.Framework.Net
             }
         }
 
+        /// <summary>
+        /// How many connections remain
+        /// </summary>
+        public int ConnectionRemain
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _IdleThreadQueue.Count;
+                }
+            }
+        }
+
         #endregion
 
         #region Delegates
