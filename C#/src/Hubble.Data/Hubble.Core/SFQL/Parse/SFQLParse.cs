@@ -695,6 +695,17 @@ namespace Hubble.Core.SFQL.Parse
                 return false;
             }
 
+            bool withScoreOrDocId = false;
+
+            foreach (SFQL.SyntaxAnalysis.Select.OrderBy orderBy in select.OrderBys)
+            {
+                if (orderBy.Name.Equals("score", StringComparison.CurrentCultureIgnoreCase) ||
+                    orderBy.Name.Equals("docid", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    withScoreOrDocId = true;
+                }
+            }
+
             foreach (SFQL.SyntaxAnalysis.Select.OrderBy orderBy in select.OrderBys)
             {
                 if (orderBy.Name.Equals("score", StringComparison.CurrentCultureIgnoreCase) ||
@@ -707,11 +718,21 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (field == null)
                 {
+                    if (withScoreOrDocId)
+                    {
+                        throw new ParseException("Can't order by none index fields with score or docid");
+                    }
+
                     return true;
                 }
 
                 if (field.IndexType != Field.Index.Untokenized)
                 {
+                    if (withScoreOrDocId)
+                    {
+                        throw new ParseException("Can't order by none index fields with score or docid");
+                    }
+
                     return true;
                 }
             }
