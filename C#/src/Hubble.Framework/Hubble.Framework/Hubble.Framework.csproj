@@ -115,6 +115,15 @@
     <Compile Include="Serialization\IMySerialization.cs" />
     <Compile Include="Serialization\MySerialization.cs" />
     <Compile Include="Serialization\XmlSerialization.cs" />
+    <Compile Include="TaskManage\AvailableTime.cs" />
+    <Compile Include="TaskManage\DayFrequency.cs" />
+    <Compile Include="TaskManage\Enum.cs" />
+    <Compile Include="TaskManage\EveryDay.cs" />
+    <Compile Include="TaskManage\EveryMonth.cs" />
+    <Compile Include="TaskManage\EveryWeek.cs" />
+    <Compile Include="TaskManage\Frequency.cs" />
+    <Compile Include="TaskManage\Schema.cs" />
+    <Compile Include="TaskManage\SchemaInfo.cs" />
     <Compile Include="Text\Regex.cs" />
     <Compile Include="Text\UnicodeString.cs" />
     <Compile Include="Threading\HBMonitor.cs" />

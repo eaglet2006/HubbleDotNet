@@ -65,6 +65,10 @@ namespace Hubble.Core.StoredProcedure
 
             switch (option)
             {
+                case 0:
+                    optimizeOption = Hubble.Core.Data.OptimizationOption.Idle;
+                    break;
+
                 case 1:
                     optimizeOption = Hubble.Core.Data.OptimizationOption.Minimum;
                     break;

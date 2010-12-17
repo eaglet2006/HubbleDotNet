@@ -14,6 +14,7 @@ namespace Hubble.SQLClient
         /// </summary>
         public enum OptimizeOption
         {
+            None = 0, //Don't do optimize
             Minimum = 1, //Only one .idx file of each field
             Middle = 2, //two .idx files of each field
         }

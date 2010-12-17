@@ -306,14 +306,35 @@ namespace Hubble.Core.Service
 
                     if (_DBProvider.TooManyIndexFiles)
                     {
+                        Global.Report.WriteAppLog(string.Format("Begin optimize:type={0}, table={1}",
+                            OptimizationOption.Speedy, _DBProvider.TableName));
+
                         DoOptimize(OptimizationOption.Speedy, false);
                         DoOptimize(OptimizationOption.Speedy, false);
+
+                        Global.Report.WriteAppLog(string.Format("Finish optimize:type={0}, table={1}",
+                            OptimizationOption.Speedy, _DBProvider.TableName));
                     }
                 }
             }
 
-            DoOptimize(_OptimizeOption, true);
-            DoOptimize(_OptimizeOption, true);
+            if (_OptimizeOption != OptimizationOption.Idle)
+            {
+                Global.Report.WriteAppLog(string.Format("Begin optimize1:type={0}, table={1}",
+                    _OptimizeOption, _DBProvider.TableName));
+
+
+                DoOptimize(_OptimizeOption, true);
+
+                Global.Report.WriteAppLog(string.Format("Begin optimize2:type={0}, table={1}",
+                    _OptimizeOption, _DBProvider.TableName));
+
+                DoOptimize(_OptimizeOption, true);
+            }
+
+            Global.Report.WriteAppLog(string.Format("Finish Synchronize optimize:type={0}, table={1}",
+                _OptimizeOption, _DBProvider.TableName));
+
         }
 
     }
