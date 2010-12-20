@@ -39,6 +39,8 @@ namespace Hubble.Core.Service
         static long _SqlId = 0;
         static object _SqlIdSync = new object();
 
+        static ThreadMonitor _ThreadMonitor = new ThreadMonitor();
+
         static long SqlId
         {
             get
@@ -80,6 +82,24 @@ namespace Hubble.Core.Service
             }
             catch
             {
+            }
+        }
+
+        static void OnThreadMonitorEvent(object sender, ThreadMonitor.ThreadMonitorEvent args)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendLine(DateTime.Now.ToLongTimeString());
+            sb.AppendLine("Execute more then 30s");
+            sb.AppendLine("SQL:" + args.Name);
+            sb.AppendLine("Thread Status:" + args.Status.ToString());
+            sb.AppendLine("Thread Stack:" + args.StackTrace);
+
+            Global.Report.WriteErrorLog(sb.ToString());
+
+            if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
+            {
+                args.Thread.Abort();
             }
         }
 
@@ -125,8 +145,14 @@ namespace Hubble.Core.Service
                         string sql = (args.InMessage as string);
                         int len = Math.Min(255, sql.Length);
 
+                        sql = sql.Substring(0, len);
                         Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}", 
-                            sqlid, sql.Substring(0, len)));
+                            sqlid, sql));
+
+                        _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
+                            System.Threading.Thread.CurrentThread, string.Format("sqlid={0} sql={1}",
+                            sqlid, sql), 30000, 20000,
+                            ThreadMonitor.MonitorFlag.MonitorHang));
 
                         sw.Start();
 
@@ -144,7 +170,8 @@ namespace Hubble.Core.Service
                             sw.Stop();
 
                             TimeSpan ts1 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-                            
+
+                            _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
                             Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
                                 sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
                         }
@@ -257,6 +284,11 @@ namespace Hubble.Core.Service
 
         private void Init(string path)
         {
+            _ThreadMonitor.ThradMonitorEventHandler +=
+                new EventHandler<ThreadMonitor.ThreadMonitorEvent>(OnThreadMonitorEvent); //Init thread monitor
+
+            _ThreadMonitor.Start();
+
             string settingPath;
 
             string settingFile = Hubble.Framework.IO.Path.AppendDivision(path, '\\') +
