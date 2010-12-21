@@ -85,6 +85,12 @@ namespace Hubble.Core.Service
             }
         }
 
+        static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs e)
+        {
+            Global.Report.WriteErrorLog(e.ExceptionObject.ToString());
+            Environment.Exit(0);
+        }
+
         static void OnThreadMonitorEvent(object sender, ThreadMonitor.ThreadMonitorEvent args)
         {
             StringBuilder sb = new StringBuilder();
@@ -305,6 +311,11 @@ namespace Hubble.Core.Service
 
         private void Init(string path)
         {
+            AppDomain.CurrentDomain.UnhandledException +=
+                         new UnhandledExceptionEventHandler(UnhandledExceptionEventHandler);
+
+
+
             _ThreadMonitor.ThradMonitorEventHandler +=
                 new EventHandler<ThreadMonitor.ThreadMonitorEvent>(OnThreadMonitorEvent); //Init thread monitor
 

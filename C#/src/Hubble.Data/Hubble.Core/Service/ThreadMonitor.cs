@@ -419,102 +419,109 @@ namespace Hubble.Core.Service
 
             while (true)
             {
-                _ActionTCBList.Clear();
-
-                lock (_RegisterLock)
+                try
                 {
-                    foreach (TCB tcb in _TCBTable.Values)
+                    _ActionTCBList.Clear();
+
+                    lock (_RegisterLock)
                     {
-                        if (tcb.Para.Flag != MonitorFlag.None)
+                        foreach (TCB tcb in _TCBTable.Values)
                         {
-                            _ActionTCBList.Add(tcb);
-                        }
-                    }
-                }
-
-                foreach (TCB tcb in _ActionTCBList)
-                {
-                    ThreadStatus status = tcb.Status;
-
-                    //Monitor Hang
-                    if ((tcb.Para.Flag & MonitorFlag.MonitorHang) != 0 &&
-                        (status & ThreadStatus.Hang) == 0)
-                    {
-                        TimeSpan s = DateTime.Now - tcb.LastHeartbeat;
-
-                        if (s.TotalMilliseconds > tcb.Para.HangTimeout)
-                        {
-                            status |= ThreadStatus.Hang;
-                            tcb.Status = status;
-
-                            Thread t = tcb.Para.Thread;
-                            string name = tcb.Para.Name;
-
-                            string stacktrace = GetThreadStackTrace(t);
-
-                            OnThreadMonitorEvent(new ThreadMonitorEvent(t, name, 
-                                status, stacktrace));
-                        }
-                    }
-
-                    //Monitor dead cycle
-                    if ((tcb.Para.Flag & MonitorFlag.MonitorDeadCycle) != 0 &&
-                        (status & ThreadStatus.DeadCycle) == 0)
-                    {
-                        TimeSpan s = DateTime.Now - tcb.LastGotCpu;
-
-                        switch (tcb.Para.Thread.ThreadState)
-                        {
-                            case System.Threading.ThreadState.Running:
-                            case System.Threading.ThreadState.Background:
-                                tcb.HitTimes++;
-                                break;
-
-                            default:
-                                tcb.HitTimes = 0;
-                                break;
-                        }
-
-                        if (s.TotalMilliseconds > tcb.Para.DeadCycleTimeout)
-                        {
-                            double lastTrheadTime = tcb.LastTotalProcessorTime;
-
-                            double totalMilliseconds = GetTotalProcessorTime();
-
-                            if ((totalMilliseconds - lastTrheadTime) > (s.TotalMilliseconds * 9 / 10))
+                            if (tcb.Para.Flag != MonitorFlag.None)
                             {
-                                if (tcb.HitTimes > (int)s.TotalSeconds ||
-                                    _DeadCycleTimes > tcb.Para.DeadCycleTimeout / 1000)
+                                _ActionTCBList.Add(tcb);
+                            }
+                        }
+                    }
+
+                    foreach (TCB tcb in _ActionTCBList)
+                    {
+                        ThreadStatus status = tcb.Status;
+
+                        //Monitor Hang
+                        if ((tcb.Para.Flag & MonitorFlag.MonitorHang) != 0 &&
+                            (status & ThreadStatus.Hang) == 0)
+                        {
+                            TimeSpan s = DateTime.Now - tcb.LastHeartbeat;
+
+                            if (s.TotalMilliseconds > tcb.Para.HangTimeout)
+                            {
+                                status |= ThreadStatus.Hang;
+                                tcb.Status = status;
+
+                                Thread t = tcb.Para.Thread;
+                                string name = tcb.Para.Name;
+
+                                string stacktrace = GetThreadStackTrace(t);
+
+                                OnThreadMonitorEvent(new ThreadMonitorEvent(t, name,
+                                    status, stacktrace));
+                            }
+                        }
+
+                        //Monitor dead cycle
+                        if ((tcb.Para.Flag & MonitorFlag.MonitorDeadCycle) != 0 &&
+                            (status & ThreadStatus.DeadCycle) == 0)
+                        {
+                            TimeSpan s = DateTime.Now - tcb.LastGotCpu;
+
+                            switch (tcb.Para.Thread.ThreadState)
+                            {
+                                case System.Threading.ThreadState.Running:
+                                case System.Threading.ThreadState.Background:
+                                    tcb.HitTimes++;
+                                    break;
+
+                                default:
+                                    tcb.HitTimes = 0;
+                                    break;
+                            }
+
+                            if (s.TotalMilliseconds > tcb.Para.DeadCycleTimeout)
+                            {
+                                double lastTrheadTime = tcb.LastTotalProcessorTime;
+
+                                double totalMilliseconds = GetTotalProcessorTime();
+
+                                if ((totalMilliseconds - lastTrheadTime) > (s.TotalMilliseconds * 9 / 10))
                                 {
-                                    status |= ThreadStatus.DeadCycle;
-                                    tcb.Status = status;
+                                    if (tcb.HitTimes > (int)s.TotalSeconds ||
+                                        _DeadCycleTimes > tcb.Para.DeadCycleTimeout / 1000)
+                                    {
+                                        status |= ThreadStatus.DeadCycle;
+                                        tcb.Status = status;
 
-                                    Thread t = tcb.Para.Thread;
-                                    string name = tcb.Para.Name;
+                                        Thread t = tcb.Para.Thread;
+                                        string name = tcb.Para.Name;
 
-                                    string stacktrace = GetThreadStackTrace(t);
+                                        string stacktrace = GetThreadStackTrace(t);
 
-                                    OnThreadMonitorEvent(new ThreadMonitorEvent(t, name,
-                                        status, stacktrace));
+                                        OnThreadMonitorEvent(new ThreadMonitorEvent(t, name,
+                                            status, stacktrace));
+                                    }
+                                    else
+                                    {
+                                        tcb.Status &= ~ThreadStatus.DeadCycle;
+                                        _DeadCycleTimes++;
+                                    }
                                 }
                                 else
                                 {
+                                    _DeadCycleTimes = 0;
                                     tcb.Status &= ~ThreadStatus.DeadCycle;
-                                    _DeadCycleTimes++;
                                 }
-                            }
-                            else
-                            {
-                                _DeadCycleTimes = 0;
-                                tcb.Status &= ~ThreadStatus.DeadCycle;
-                            }
 
-                            tcb.LastTotalProcessorTime = totalMilliseconds;
-                            tcb.LastGotCpu = DateTime.Now;
+                                tcb.LastTotalProcessorTime = totalMilliseconds;
+                                tcb.LastGotCpu = DateTime.Now;
+                            }
                         }
+
                     }
                 }
-
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog("Thread Monitor Fail.", e);
+                }
                 Thread.Sleep(1000);
             }
         }
