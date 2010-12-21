@@ -388,7 +388,8 @@ namespace Hubble.Core.Data
             {
                 lock (this)
                 {
-                    return _StoreQueryCacheInFile;
+                    return false; //There are some problem of this function. Disable it untill I fix it. eaglet 2010-12-21
+                    //return _StoreQueryCacheInFile;
                 }
             }
 

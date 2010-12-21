@@ -43,6 +43,19 @@ namespace Hubble.SQLClient
             }
         }
 
+        public static double Ratio
+        {
+            get
+            {
+                return _Mgr.Ratio;
+            }
+
+            set
+            {
+                _Mgr.Ratio = value;
+            }
+        }
+
         static internal void OnConnect(HubbleConnection conn)
         {
             lock (_LockObj)

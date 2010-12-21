@@ -145,6 +145,32 @@ namespace Hubble.SQLClient
             }
         }
 
+        public static long MaxDataCacheMemorySize
+        {
+            get
+            {
+                return DataCacheMgr.MaxMemorySize;
+            }
+
+            set
+            {
+                DataCacheMgr.MaxMemorySize = value;
+            }
+        }
+
+        public static double DataCacheRatio
+        {
+            get
+            {
+                return DataCacheMgr.Ratio;
+            }
+
+            set
+            {
+                DataCacheMgr.Ratio = value;
+            }
+        }
+
         private int _TryConnectTimeout = 0;
 
         /// <summary>

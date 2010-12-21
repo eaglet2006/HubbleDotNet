@@ -34,11 +34,11 @@ namespace Hubble.Framework.DataStructure
 
         private int _Interval = 30000; //In ms
 
-        private long _MaxMemorySize = 64 * 1024;
+        private long _MaxMemorySize = 64 * 1024 * 1024; //Default is 64M
 
         private List<IManagedCache> _ManagedCacheList = new List<IManagedCache>();
 
-        private double _Ratio = 0.75; //Clean up ratio
+        private double _Ratio = 0.5; //Clean up ratio
 
         private long _TotalMemoryNotCollect = 0;
 
@@ -289,7 +289,7 @@ namespace Hubble.Framework.DataStructure
         }
 
         public CacheManage()
-            : this(30 * 1000, 64 * 1024)
+            : this(30 * 1000, 64 * 1024 * 1024)
         {
 
         }
