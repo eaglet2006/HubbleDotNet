@@ -90,16 +90,28 @@ namespace Hubble.Core.Service
             StringBuilder sb = new StringBuilder();
 
             sb.AppendLine(DateTime.Now.ToLongTimeString());
-            sb.AppendLine("Execute more then 30s");
+            if (Global.Setting.Config.SqlTrace)
+            {
+                sb.AppendLine("Execute more then 30s");
+            }
+            else
+            {
+                sb.AppendLine("Execute more then 60s");
+            }
+
             sb.AppendLine("SQL:" + args.Name);
             sb.AppendLine("Thread Status:" + args.Status.ToString());
             sb.AppendLine("Thread Stack:" + args.StackTrace);
 
             Global.Report.WriteErrorLog(sb.ToString());
 
-            if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
+            if (Global.Setting.Config.SqlTrace)
             {
-                args.Thread.Abort();
+                if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                {
+                    _ThreadMonitor.UnRegister(args.Thread);
+                    args.Thread.Abort();
+                }
             }
         }
 
@@ -134,6 +146,10 @@ namespace Hubble.Core.Service
                     TimeSpan ts = default(TimeSpan);
                     long sqlid = 0;
 
+                    string sql = (args.InMessage as string);
+                    int len = Math.Min(255, sql.Length);
+
+                    sql = sql.Substring(0, len);
 
                     if (Global.Setting.Config.SqlTrace)
                     {
@@ -142,11 +158,7 @@ namespace Hubble.Core.Service
                         sw = new System.Diagnostics.Stopwatch();
                         sqlid = _SqlId++;
 
-                        string sql = (args.InMessage as string);
-                        int len = Math.Min(255, sql.Length);
-
-                        sql = sql.Substring(0, len);
-                        Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}", 
+                        Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}",
                             sqlid, sql));
 
                         _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
@@ -156,6 +168,13 @@ namespace Hubble.Core.Service
 
                         sw.Start();
 
+                    }
+                    else
+                    {
+                        _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
+                            System.Threading.Thread.CurrentThread, string.Format("time={0} sql={1}",
+                            DateTime.Now.ToString("yyyy-MM-HH dd:mm:ss"), sql), 60000, 20000,
+                            ThreadMonitor.MonitorFlag.MonitorHang));
                     }
 
                     args.ReturnMsg = Excute(args.InMessage as string);
@@ -171,10 +190,12 @@ namespace Hubble.Core.Service
 
                             TimeSpan ts1 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
 
-                            _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
                             Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
                                 sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
                         }
+
+                        _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
+
                     }
                     else
                     {
