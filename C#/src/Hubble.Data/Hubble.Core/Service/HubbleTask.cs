@@ -183,7 +183,19 @@ namespace Hubble.Core.Service
                             ThreadMonitor.MonitorFlag.MonitorHang));
                     }
 
-                    args.ReturnMsg = Excute(args.InMessage as string);
+                    try
+                    {
+                        args.ReturnMsg = Excute(args.InMessage as string);
+                    }
+                    finally
+                    {
+                        if (Global.Setting.Config.SqlTrace && sw != null)
+                        {
+                            sw.Stop();
+                        }
+
+                        _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
+                    }
 
                     if (args.ReturnMsg is QueryResult)
                     {
@@ -199,9 +211,6 @@ namespace Hubble.Core.Service
                             Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
                                 sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
                         }
-
-                        _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
-
                     }
                     else
                     {

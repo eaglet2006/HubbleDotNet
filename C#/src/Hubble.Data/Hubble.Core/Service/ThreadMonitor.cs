@@ -522,7 +522,8 @@ namespace Hubble.Core.Service
                 {
                     Global.Report.WriteErrorLog("Thread Monitor Fail.", e);
                 }
-                Thread.Sleep(1000);
+
+                Thread.Sleep(10000);
             }
         }
 
