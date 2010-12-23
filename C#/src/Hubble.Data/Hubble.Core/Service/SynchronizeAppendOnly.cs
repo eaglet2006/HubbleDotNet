@@ -135,7 +135,14 @@ namespace Hubble.Core.Service
                 }
                 else
                 {
-                    value = row[field.Name].ToString();
+                    if (row[field.Name] is DateTime)
+                    {
+                        value = ((DateTime)row[field.Name]).ToString("yyyy-MM-dd HH:mm:ss.fff");
+                    }
+                    else
+                    {
+                        value = row[field.Name].ToString();
+                    }
                 }
 
                 document.Add(field.Name, value, field.DataType, field.DataLength, false);

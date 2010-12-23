@@ -179,7 +179,7 @@ namespace Hubble.Core.Service
                     {
                         _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
                             System.Threading.Thread.CurrentThread, string.Format("time={0} sql={1}",
-                            DateTime.Now.ToString("yyyy-MM-HH dd:mm:ss"), sql), 60000, 20000,
+                            DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), sql), 60000, 20000,
                             ThreadMonitor.MonitorFlag.MonitorHang));
                     }
 
