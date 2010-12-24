@@ -77,6 +77,8 @@
             this.buttonSave = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.checkBox25 = new System.Windows.Forms.CheckBox();
+            this.checkBox26 = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStripUser.SuspendLayout();
             this.tabPageSystem.SuspendLayout();
@@ -105,27 +107,27 @@
             this.deleteUserToolStripMenuItem,
             this.changePasswordToolStripMenuItem});
             this.userToolStripMenuItem.Name = "userToolStripMenuItem";
-            this.userToolStripMenuItem.Size = new System.Drawing.Size(41, 20);
+            this.userToolStripMenuItem.Size = new System.Drawing.Size(42, 20);
             this.userToolStripMenuItem.Text = "User";
             // 
             // addUserToolStripMenuItem
             // 
             this.addUserToolStripMenuItem.Name = "addUserToolStripMenuItem";
-            this.addUserToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.addUserToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.addUserToolStripMenuItem.Text = "Add user";
             this.addUserToolStripMenuItem.Click += new System.EventHandler(this.addUserToolStripMenuItem_Click);
             // 
             // deleteUserToolStripMenuItem
             // 
             this.deleteUserToolStripMenuItem.Name = "deleteUserToolStripMenuItem";
-            this.deleteUserToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.deleteUserToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.deleteUserToolStripMenuItem.Text = "Delete user";
             this.deleteUserToolStripMenuItem.Click += new System.EventHandler(this.deleteUserToolStripMenuItem_Click);
             // 
             // changePasswordToolStripMenuItem
             // 
             this.changePasswordToolStripMenuItem.Name = "changePasswordToolStripMenuItem";
-            this.changePasswordToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.changePasswordToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.changePasswordToolStripMenuItem.Text = "Change Password";
             this.changePasswordToolStripMenuItem.Click += new System.EventHandler(this.changePasswordToolStripMenuItem_Click);
             // 
@@ -147,24 +149,24 @@
             this.toolStripMenuItem1,
             this.deleteToolStripMenuItem});
             this.contextMenuStripUser.Name = "contextMenuStripUser";
-            this.contextMenuStripUser.Size = new System.Drawing.Size(161, 54);
+            this.contextMenuStripUser.Size = new System.Drawing.Size(169, 54);
             // 
             // changePasswordToolStripMenuItem1
             // 
             this.changePasswordToolStripMenuItem1.Name = "changePasswordToolStripMenuItem1";
-            this.changePasswordToolStripMenuItem1.Size = new System.Drawing.Size(160, 22);
+            this.changePasswordToolStripMenuItem1.Size = new System.Drawing.Size(168, 22);
             this.changePasswordToolStripMenuItem1.Text = "Change password";
             this.changePasswordToolStripMenuItem1.Click += new System.EventHandler(this.changePasswordToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(157, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(165, 6);
             // 
             // deleteToolStripMenuItem
             // 
             this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteUserToolStripMenuItem_Click);
             // 
@@ -181,6 +183,7 @@
             // 
             // groupBoxSystemRight
             // 
+            this.groupBoxSystemRight.Controls.Add(this.checkBox25);
             this.groupBoxSystemRight.Controls.Add(this.checkBox22);
             this.groupBoxSystemRight.Controls.Add(this.checkBox21);
             this.groupBoxSystemRight.Controls.Add(this.checkBox19);
@@ -225,7 +228,7 @@
             // checkBox19
             // 
             this.checkBox19.AutoSize = true;
-            this.checkBox19.Location = new System.Drawing.Point(156, 219);
+            this.checkBox19.Location = new System.Drawing.Point(155, 248);
             this.checkBox19.Name = "checkBox19";
             this.checkBox19.Size = new System.Drawing.Size(52, 17);
             this.checkBox19.TabIndex = 9;
@@ -236,7 +239,7 @@
             // checkBox9
             // 
             this.checkBox9.AutoSize = true;
-            this.checkBox9.Location = new System.Drawing.Point(36, 219);
+            this.checkBox9.Location = new System.Drawing.Point(35, 248);
             this.checkBox9.Name = "checkBox9";
             this.checkBox9.Size = new System.Drawing.Size(57, 17);
             this.checkBox9.TabIndex = 8;
@@ -247,7 +250,7 @@
             // checkBox5
             // 
             this.checkBox5.AutoSize = true;
-            this.checkBox5.Location = new System.Drawing.Point(156, 182);
+            this.checkBox5.Location = new System.Drawing.Point(155, 211);
             this.checkBox5.Name = "checkBox5";
             this.checkBox5.Size = new System.Drawing.Size(61, 17);
             this.checkBox5.TabIndex = 7;
@@ -258,7 +261,7 @@
             // checkBox6
             // 
             this.checkBox6.AutoSize = true;
-            this.checkBox6.Location = new System.Drawing.Point(36, 182);
+            this.checkBox6.Location = new System.Drawing.Point(35, 211);
             this.checkBox6.Name = "checkBox6";
             this.checkBox6.Size = new System.Drawing.Size(56, 17);
             this.checkBox6.TabIndex = 6;
@@ -269,7 +272,7 @@
             // checkBox7
             // 
             this.checkBox7.AutoSize = true;
-            this.checkBox7.Location = new System.Drawing.Point(156, 142);
+            this.checkBox7.Location = new System.Drawing.Point(36, 142);
             this.checkBox7.Name = "checkBox7";
             this.checkBox7.Size = new System.Drawing.Size(84, 17);
             this.checkBox7.TabIndex = 5;
@@ -280,7 +283,7 @@
             // checkBox8
             // 
             this.checkBox8.AutoSize = true;
-            this.checkBox8.Location = new System.Drawing.Point(36, 142);
+            this.checkBox8.Location = new System.Drawing.Point(36, 174);
             this.checkBox8.Name = "checkBox8";
             this.checkBox8.Size = new System.Drawing.Size(66, 17);
             this.checkBox8.TabIndex = 4;
@@ -399,6 +402,7 @@
             // 
             // groupBoxDatabaseRight
             // 
+            this.groupBoxDatabaseRight.Controls.Add(this.checkBox26);
             this.groupBoxDatabaseRight.Controls.Add(this.checkBox23);
             this.groupBoxDatabaseRight.Controls.Add(this.checkBox24);
             this.groupBoxDatabaseRight.Controls.Add(this.checkBox20);
@@ -445,7 +449,7 @@
             // checkBox20
             // 
             this.checkBox20.AutoSize = true;
-            this.checkBox20.Location = new System.Drawing.Point(157, 220);
+            this.checkBox20.Location = new System.Drawing.Point(157, 244);
             this.checkBox20.Name = "checkBox20";
             this.checkBox20.Size = new System.Drawing.Size(52, 17);
             this.checkBox20.TabIndex = 10;
@@ -457,7 +461,7 @@
             // checkBox10
             // 
             this.checkBox10.AutoSize = true;
-            this.checkBox10.Location = new System.Drawing.Point(30, 220);
+            this.checkBox10.Location = new System.Drawing.Point(30, 244);
             this.checkBox10.Name = "checkBox10";
             this.checkBox10.Size = new System.Drawing.Size(57, 17);
             this.checkBox10.TabIndex = 8;
@@ -469,7 +473,7 @@
             // checkBox11
             // 
             this.checkBox11.AutoSize = true;
-            this.checkBox11.Location = new System.Drawing.Point(157, 183);
+            this.checkBox11.Location = new System.Drawing.Point(157, 207);
             this.checkBox11.Name = "checkBox11";
             this.checkBox11.Size = new System.Drawing.Size(61, 17);
             this.checkBox11.TabIndex = 7;
@@ -481,7 +485,7 @@
             // checkBox12
             // 
             this.checkBox12.AutoSize = true;
-            this.checkBox12.Location = new System.Drawing.Point(30, 183);
+            this.checkBox12.Location = new System.Drawing.Point(30, 207);
             this.checkBox12.Name = "checkBox12";
             this.checkBox12.Size = new System.Drawing.Size(56, 17);
             this.checkBox12.TabIndex = 6;
@@ -493,7 +497,7 @@
             // checkBox13
             // 
             this.checkBox13.AutoSize = true;
-            this.checkBox13.Location = new System.Drawing.Point(157, 143);
+            this.checkBox13.Location = new System.Drawing.Point(30, 137);
             this.checkBox13.Name = "checkBox13";
             this.checkBox13.Size = new System.Drawing.Size(84, 17);
             this.checkBox13.TabIndex = 5;
@@ -505,7 +509,7 @@
             // checkBox14
             // 
             this.checkBox14.AutoSize = true;
-            this.checkBox14.Location = new System.Drawing.Point(30, 143);
+            this.checkBox14.Location = new System.Drawing.Point(30, 171);
             this.checkBox14.Name = "checkBox14";
             this.checkBox14.Size = new System.Drawing.Size(66, 17);
             this.checkBox14.TabIndex = 4;
@@ -610,6 +614,28 @@
             this.panel1.Size = new System.Drawing.Size(190, 542);
             this.panel1.TabIndex = 3;
             // 
+            // checkBox25
+            // 
+            this.checkBox25.AutoSize = true;
+            this.checkBox25.Location = new System.Drawing.Point(155, 142);
+            this.checkBox25.Name = "checkBox25";
+            this.checkBox25.Size = new System.Drawing.Size(79, 17);
+            this.checkBox25.TabIndex = 12;
+            this.checkBox25.Tag = "0x00000040";
+            this.checkBox25.Text = "Drop Table";
+            this.checkBox25.UseVisualStyleBackColor = true;
+            // 
+            // checkBox26
+            // 
+            this.checkBox26.AutoSize = true;
+            this.checkBox26.Location = new System.Drawing.Point(157, 137);
+            this.checkBox26.Name = "checkBox26";
+            this.checkBox26.Size = new System.Drawing.Size(79, 17);
+            this.checkBox26.TabIndex = 14;
+            this.checkBox26.Tag = "0x00000040";
+            this.checkBox26.Text = "Drop Table";
+            this.checkBox26.UseVisualStyleBackColor = true;
+            // 
             // FormUserManage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -692,6 +718,8 @@
         private System.Windows.Forms.CheckBox checkBox18;
         private System.Windows.Forms.CheckBox checkBox23;
         private System.Windows.Forms.CheckBox checkBox24;
+        private System.Windows.Forms.CheckBox checkBox25;
+        private System.Windows.Forms.CheckBox checkBox26;
 
     }
 }

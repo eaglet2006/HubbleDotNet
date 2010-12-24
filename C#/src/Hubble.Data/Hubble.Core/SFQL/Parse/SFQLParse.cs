@@ -34,13 +34,23 @@ namespace Hubble.Core.SFQL.Parse
         internal class UpdateEntity
         {
             internal List<FieldValue> FieldValues;
+            internal List<List<FieldValue>> DocValues;
             internal Query.DocumentResultForSort[] Docs;
 
             internal UpdateEntity (List<FieldValue> fieldValues, Query.DocumentResultForSort[] docs)
             {
                 FieldValues = fieldValues;
                 Docs = docs;
+                DocValues = null;
             }
+
+            internal UpdateEntity(List<FieldValue> fieldValues, List<List<FieldValue>> docValues, Query.DocumentResultForSort[] docs)
+            {
+                FieldValues = fieldValues;
+                Docs = docs;
+                DocValues = docValues;
+            }
+
         }
 
         List<TSFQLSentence> _SFQLSentenceList;
@@ -202,6 +212,14 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             updateEntityList.Add(new UpdateEntity(fieldValues, result));
+
+            if (dBProvider.DocIdReplaceField != null)
+            {
+                for (int i = 0; i < result.Length; i++)
+                {
+                    result[i].Score = dBProvider.GetDocIdReplaceFieldValue(result[i].DocId); //use score to store id casually.
+                }
+            }
 
             //dBProvider.Update(fieldValues, result);
 

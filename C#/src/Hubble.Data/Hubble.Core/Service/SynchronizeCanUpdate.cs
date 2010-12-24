@@ -243,6 +243,9 @@ namespace Hubble.Core.Service
         private void BatchAddToUpdate(System.Data.DataTable table,
             List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList)
         {
+            List<List<FieldValue>> docValues = new List<List<FieldValue>>();
+            List<Query.DocumentResultForSort> docs = new List<Hubble.Core.Query.DocumentResultForSort>();
+
             foreach(System.Data.DataRow row in table.Rows)
             {
                 long id = long.Parse(row[0].ToString());
@@ -265,28 +268,43 @@ namespace Hubble.Core.Service
 
                     FieldValue fv;
 
-                    if (vRow[field] is DateTime)
+                    if (vRow[field] == DBNull.Value)
                     {
-                        fv = new FieldValue(field, ((DateTime)vRow[field]).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                        fv = new FieldValue(field, null);
                     }
                     else
                     {
-                        fv = new FieldValue(field, vRow[field].ToString());
+                        if (vRow[field] is DateTime)
+                        {
+                            fv = new FieldValue(field, ((DateTime)vRow[field]).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                        }
+                        else
+                        {
+                            fv = new FieldValue(field, vRow[field].ToString());
+                        }
                     }
-                    
 
                     fieldValues.Add(fv);
                 }
 
+                docValues.Add(fieldValues);
                 Query.DocumentResultForSort doc = new Hubble.Core.Query.DocumentResultForSort(docid);
-                List<Query.DocumentResultForSort> docs = new List<Hubble.Core.Query.DocumentResultForSort>();
+                doc.Score = id; //use score store id casually.
+
                 docs.Add(doc);
 
-                updateEntityList.Add(new Hubble.Core.SFQL.Parse.SFQLParse.UpdateEntity(
-                    fieldValues, docs.ToArray()));
                 //_DBProvider.Update(fieldValues, docs);
             }
 
+            if (docValues.Count > 0)
+            {
+                updateEntityList.Add(new Hubble.Core.SFQL.Parse.SFQLParse.UpdateEntity(
+                    docValues[0], docValues, docs.ToArray()));
+            }
+            else
+            {
+                return;
+            }
         }
 
         private string BuildSelectSql(string sql, List<long> docs)

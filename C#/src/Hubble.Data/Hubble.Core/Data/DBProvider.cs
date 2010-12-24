@@ -1991,7 +1991,14 @@ namespace Hubble.Core.Data
 
                 foreach (SFQL.Parse.SFQLParse.UpdateEntity updateEntity in updateEntityList)
                 {
-                    Update(updateEntity.FieldValues, updateEntity.Docs, updatePayloadFileProvider);
+                    if (updateEntity.DocValues == null)
+                    {
+                        Update(updateEntity.FieldValues, updateEntity.Docs, updatePayloadFileProvider);
+                    }
+                    else
+                    {
+                        Update(updateEntity.FieldValues, updateEntity.DocValues, updateEntity.Docs, updatePayloadFileProvider);
+                    }
                 }
 
                 if (Table.Debug)
@@ -2037,6 +2044,285 @@ namespace Hubble.Core.Data
             }
         }
 
+        struct FieldInfoUpdate
+        {
+            internal Field Field;
+            internal int Index; // index of the fields for update
+
+            internal FieldInfoUpdate(Field field, int index)
+            {
+                this.Field = field;
+                this.Index = index;
+            }
+        }
+
+        /// <summary>
+        /// Update 
+        /// </summary>
+        /// <param name="fieldValues">fields for update</param>
+        /// <param name="docValues">new values of doc</param>
+        /// <param name="docs">docs</param>
+        /// <param name="updatePayloadProvider">provider for update payload</param>
+        unsafe private void Update(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues,
+            IList<Query.DocumentResultForSort> docs, UpdatePayloadFileProvider updatePayloadProvider)
+        {
+
+            Debug.Assert(fieldValues != null && docs != null && docValues != null);
+
+            if (docValues.Count != docs.Count)
+            {
+                throw new DataException(string.Format("DocValues.Count = {0} <> docs.Count = {1}", 
+                    docValues.Count, docs.Count));
+            }
+
+            lock (_InsertLock)
+            {
+
+                if (fieldValues.Count <= 0)
+                {
+                    return;
+                }
+
+                bool needDel = false;
+
+                Document doc = new Document();
+
+                List<PayloadSegment> payloadSegment = new List<PayloadSegment>();
+                List<FieldInfoUpdate> untokenizedFields = new List<FieldInfoUpdate>();
+
+                for(int index = 0; index < fieldValues.Count; index++)
+                {
+                    FieldValue fv = fieldValues[index];
+                    string fieldNameKey = fv.FieldName.ToLower().Trim();
+                    if (fieldNameKey == "docid")
+                    {
+                        throw new DataException("DocId field is fixed field, can't update it manually!");
+                    }
+
+                    Field field;
+
+                    if (!_FieldIndex.TryGetValue(fieldNameKey, out field))
+                    {
+                        throw new DataException(string.Format("Invalid column name '{0}'", fv.FieldName));
+                    }
+
+                    if (field.IndexType == Field.Index.Tokenized)
+                    {
+                        needDel = true;
+                    }
+
+                    fv.Type = field.DataType;
+
+                    if (field.Store)
+                    {
+                        doc.FieldValues.Add(fv);
+                    }
+
+                    if (field.IndexType == Field.Index.Untokenized)
+                    {
+                        untokenizedFields.Add(new FieldInfoUpdate(field, index));
+                    }
+                }
+
+                if (docs.Count <= 0)
+                {
+                    return;
+                }
+
+                if (needDel)
+                {
+                    if (IndexOnly && DocIdReplaceField == null)
+                    {
+                        throw new DataException("Can not update fulltext field when the table is index only.");
+                    }
+
+                    Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
+
+                    foreach (FieldValue fv in fieldValues)
+                    {
+                        fieldNameValue.Add(fv.FieldName.ToLower().Trim(), fv.Value);
+                    }
+
+                    List<Field> selectFields = new List<Field>();
+
+                    foreach (Field field in _FieldIndex.Values)
+                    {
+                        selectFields.Add(field);
+                    }
+
+                    List<Query.DocumentResultForSort> doDocs = new List<Query.DocumentResultForSort>();
+
+                    int i = 0;
+
+                    for(int index = 0; index < docs.Count; index++)
+                    {
+                        Query.DocumentResultForSort dResult = docs[index];
+                        //int docId = dResult.DocId;
+
+                        if (_DocIdReplaceField != null)
+                        {
+                            dResult.DocId = GetDocIdFromDocIdReplaceFieldValue(dResult.Score);
+                        }
+
+                        doDocs.Add(dResult);
+
+                        if (++i % 500 == 0)
+                        {
+                            List<Document> docResult = Query(selectFields, doDocs);
+
+                            foreach (Document updatedoc in docResult)
+                            {
+                                foreach (FieldValue fv in updatedoc.FieldValues)
+                                {
+                                    string value;
+                                    if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                    {
+                                        fv.Value = value;
+                                    }
+                                }
+                            }
+
+                            Delete(doDocs);
+                            Insert(docResult);
+                            doDocs.Clear();
+                        }
+                    }
+
+                    if (doDocs.Count > 0)
+                    {
+                        List<Document> docResult = Query(selectFields, doDocs);
+
+                        foreach (Document updatedoc in docResult)
+                        {
+                            foreach (FieldValue fv in updatedoc.FieldValues)
+                            {
+                                string value;
+                                if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                {
+                                    fv.Value = value;
+                                }
+                            }
+                        }
+
+                        Delete(doDocs);
+                        Insert(docResult);
+                    }
+
+
+                }
+                else
+                {
+                    if (!IndexOnly)
+                    {
+                        _DBAdapter.Update(doc, docs);
+                    }
+
+                    List<int> updateIds = new List<int>();
+                    List<Payload> updatePayloads = new List<Payload>();
+
+                    for (int index = 0; index < docs.Count; index++)
+                    {
+                        Query.DocumentResultForSort docResult = docs[index];
+
+                        int docId = docResult.DocId;
+
+                        if (_DocIdReplaceField != null)
+                        {
+                            docId = GetDocIdFromDocIdReplaceFieldValue(docResult.Score);
+                        }
+
+                        int* payLoadData;
+                        int payLoadFileIndex;
+                        lock (this)
+                        {
+                            int payLoadLength;
+                            if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
+                            {
+                                foreach(FieldInfoUpdate fieldUpdate in untokenizedFields)
+                                {
+                                    Field field = fieldUpdate.Field;
+                                    FieldValue fv = docValues[index][fieldUpdate.Index];
+
+                                    fv.Type = field.DataType;
+
+                                    if (fv.Value == null)
+                                    {
+                                        if (!field.CanNull)
+                                        {
+                                            throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
+                                                field.Name, _Table.Name));
+                                        }
+
+                                        if (field.DefaultValue != null)
+                                        {
+                                            fv.Value = field.DefaultValue;
+                                        }
+                                        else
+                                        {
+                                            if (field.IndexType != Field.Index.None)
+                                            {
+                                                throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
+                                                    field.Name, _Table.Name));
+                                            }
+                                        }
+                                    }
+
+
+                                    int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, field.SubTabIndex, fv.Value);
+                                    PayloadSegment ps = new PayloadSegment(field.TabIndex, field.SubTabIndex, field.DataType, data);
+
+                                    if (ps.SubTabIndex >= 0)
+                                    {
+                                        if (ps.DataType == DataType.TinyInt)
+                                        {
+                                            ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
+                                            payLoadData[ps.TabIndex] |= ps.Data[0];
+                                        }
+                                        else if (ps.DataType == DataType.SmallInt)
+                                        {
+                                            *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
+                                            payLoadData[ps.TabIndex] |= ps.Data[0];
+                                        }
+                                        else
+                                        {
+                                            throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        for (int i = 0; i < ps.Data.Length; i++)
+                                        {
+                                            payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                        }
+                                    }
+                                    //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
+                                }
+
+                                updateIds.Add(docId);
+                                updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
+                            }
+                        }
+
+                        //if (updateIds.Count >= 1000)
+                        //{
+                        //    _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
+                        //    updateIds.Clear();
+                        //    updatePayloads.Clear();
+                        //}
+                    }
+
+                    if (updateIds.Count > 0)
+                    {
+                        updatePayloadProvider.Add(updateIds, updatePayloads);
+                        //_PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
+                    }
+                }
+            }
+        }
+
+
+
         unsafe private void Update(IList<FieldValue> fieldValues, 
             IList<Query.DocumentResultForSort> docs, UpdatePayloadFileProvider updatePayloadProvider)
         {
@@ -2079,6 +2365,28 @@ namespace Hubble.Core.Data
 
                     fv.Type = field.DataType;
 
+                    if (fv.Value == null)
+                    {
+                        if (!field.CanNull)
+                        {
+                            throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
+                                field.Name, _Table.Name));
+                        }
+
+                        if (field.DefaultValue != null)
+                        {
+                            fv.Value = field.DefaultValue;
+                        }
+                        else
+                        {
+                            if (field.IndexType != Field.Index.None)
+                            {
+                                throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
+                                    field.Name, _Table.Name));
+                            }
+                        }
+                    }
+
                     if (field.Store)
                     {
                         doc.FieldValues.Add(fv);
@@ -2120,9 +2428,15 @@ namespace Hubble.Core.Data
                     List<Query.DocumentResultForSort> doDocs = new List<Query.DocumentResultForSort>();
 
                     int i = 0;
-                    foreach (Query.DocumentResultForSort dResult in docs)
+                    for(int index = 0; index < docs.Count; index++)
                     {
+                        Query.DocumentResultForSort dResult = docs[index];
                         //int docId = dResult.DocId;
+
+                        if (_DocIdReplaceField != null)
+                        {
+                            dResult.DocId = GetDocIdFromDocIdReplaceFieldValue(dResult.Score);
+                        }
 
                         doDocs.Add(dResult);
 
@@ -2183,6 +2497,12 @@ namespace Hubble.Core.Data
                     foreach (Query.DocumentResultForSort docResult in docs)
                     {
                         int docId = docResult.DocId;
+
+                        if (_DocIdReplaceField != null)
+                        {
+                            docId = GetDocIdFromDocIdReplaceFieldValue(docResult.Score);
+                        }
+
                         int* payLoadData;
                         int payLoadFileIndex;
                         lock (this)
@@ -2475,7 +2795,10 @@ namespace Hubble.Core.Data
                     iIndex.StopOptimize();
                     iIndex.StopIndexFileProxy();
                 }
+
+                iIndex.Close();
             }
+           
         }
 
         #endregion
