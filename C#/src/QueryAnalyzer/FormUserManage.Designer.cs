@@ -41,6 +41,7 @@
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabPageSystem = new System.Windows.Forms.TabPage();
             this.groupBoxSystemRight = new System.Windows.Forms.GroupBox();
+            this.checkBox25 = new System.Windows.Forms.CheckBox();
             this.checkBox22 = new System.Windows.Forms.CheckBox();
             this.checkBox21 = new System.Windows.Forms.CheckBox();
             this.checkBox19 = new System.Windows.Forms.CheckBox();
@@ -60,6 +61,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.listBoxDatabase = new System.Windows.Forms.ListBox();
             this.groupBoxDatabaseRight = new System.Windows.Forms.GroupBox();
+            this.checkBox26 = new System.Windows.Forms.CheckBox();
             this.checkBox23 = new System.Windows.Forms.CheckBox();
             this.checkBox24 = new System.Windows.Forms.CheckBox();
             this.checkBox20 = new System.Windows.Forms.CheckBox();
@@ -77,8 +79,6 @@
             this.buttonSave = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.checkBox25 = new System.Windows.Forms.CheckBox();
-            this.checkBox26 = new System.Windows.Forms.CheckBox();
             this.menuStrip1.SuspendLayout();
             this.contextMenuStripUser.SuspendLayout();
             this.tabPageSystem.SuspendLayout();
@@ -202,6 +202,17 @@
             this.groupBoxSystemRight.TabIndex = 0;
             this.groupBoxSystemRight.TabStop = false;
             this.groupBoxSystemRight.Text = "Right";
+            // 
+            // checkBox25
+            // 
+            this.checkBox25.AutoSize = true;
+            this.checkBox25.Location = new System.Drawing.Point(155, 142);
+            this.checkBox25.Name = "checkBox25";
+            this.checkBox25.Size = new System.Drawing.Size(79, 17);
+            this.checkBox25.TabIndex = 12;
+            this.checkBox25.Tag = "0x00000040";
+            this.checkBox25.Text = "Drop Table";
+            this.checkBox25.UseVisualStyleBackColor = true;
             // 
             // checkBox22
             // 
@@ -422,6 +433,17 @@
             this.groupBoxDatabaseRight.TabStop = false;
             this.groupBoxDatabaseRight.Text = "Right";
             // 
+            // checkBox26
+            // 
+            this.checkBox26.AutoSize = true;
+            this.checkBox26.Location = new System.Drawing.Point(157, 137);
+            this.checkBox26.Name = "checkBox26";
+            this.checkBox26.Size = new System.Drawing.Size(79, 17);
+            this.checkBox26.TabIndex = 14;
+            this.checkBox26.Tag = "0x00000040";
+            this.checkBox26.Text = "Drop Table";
+            this.checkBox26.UseVisualStyleBackColor = true;
+            // 
             // checkBox23
             // 
             this.checkBox23.AutoSize = true;
@@ -613,28 +635,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(190, 542);
             this.panel1.TabIndex = 3;
-            // 
-            // checkBox25
-            // 
-            this.checkBox25.AutoSize = true;
-            this.checkBox25.Location = new System.Drawing.Point(155, 142);
-            this.checkBox25.Name = "checkBox25";
-            this.checkBox25.Size = new System.Drawing.Size(79, 17);
-            this.checkBox25.TabIndex = 12;
-            this.checkBox25.Tag = "0x00000040";
-            this.checkBox25.Text = "Drop Table";
-            this.checkBox25.UseVisualStyleBackColor = true;
-            // 
-            // checkBox26
-            // 
-            this.checkBox26.AutoSize = true;
-            this.checkBox26.Location = new System.Drawing.Point(157, 137);
-            this.checkBox26.Name = "checkBox26";
-            this.checkBox26.Size = new System.Drawing.Size(79, 17);
-            this.checkBox26.TabIndex = 14;
-            this.checkBox26.Tag = "0x00000040";
-            this.checkBox26.Text = "Drop Table";
-            this.checkBox26.UseVisualStyleBackColor = true;
             // 
             // FormUserManage
             // 

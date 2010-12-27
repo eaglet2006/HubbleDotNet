@@ -103,6 +103,20 @@ namespace Hubble.Core.Data
         }
 
         #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+            return ((FieldValue)obj).FieldName.Equals(this.FieldName, StringComparison.CurrentCultureIgnoreCase) ;
+        }
+
+        public override int GetHashCode()
+        {
+            return this.FieldName.GetHashCode();
+        }
     }
 
     [Serializable]

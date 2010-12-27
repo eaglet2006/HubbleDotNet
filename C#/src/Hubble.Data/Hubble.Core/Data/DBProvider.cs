@@ -2136,11 +2136,12 @@ namespace Hubble.Core.Data
                         throw new DataException("Can not update fulltext field when the table is index only.");
                     }
 
-                    Dictionary<string, string> fieldNameValue = new Dictionary<string, string>();
+                    Dictionary<string, int> fieldNameIndex = new Dictionary<string, int>();
+                    Dictionary<int, int> docFieldValueListIndex = new Dictionary<int, int>();
 
-                    foreach (FieldValue fv in fieldValues)
+                    for (int index = 0; index < fieldValues.Count; index++)
                     {
-                        fieldNameValue.Add(fv.FieldName.ToLower().Trim(), fv.Value);
+                        fieldNameIndex.Add(fieldValues[index].FieldName.ToLower().Trim(), index);
                     }
 
                     List<Field> selectFields = new List<Field>();
@@ -2164,6 +2165,15 @@ namespace Hubble.Core.Data
                             dResult.DocId = GetDocIdFromDocIdReplaceFieldValue(dResult.Score);
                         }
 
+                        if (docFieldValueListIndex.ContainsKey(dResult.DocId))
+                        {
+                            docFieldValueListIndex[dResult.DocId] = index;
+                        }
+                        else
+                        {
+                            docFieldValueListIndex.Add(dResult.DocId, index);
+                        }
+
                         doDocs.Add(dResult);
 
                         if (++i % 500 == 0)
@@ -2174,10 +2184,14 @@ namespace Hubble.Core.Data
                             {
                                 foreach (FieldValue fv in updatedoc.FieldValues)
                                 {
-                                    string value;
-                                    if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                    int docValueIndex;
+                                    int fieldIndex;
+                                    if (fieldNameIndex.TryGetValue(fv.FieldName.ToLower().Trim(), out fieldIndex))
                                     {
-                                        fv.Value = value;
+                                        if (docFieldValueListIndex.TryGetValue(updatedoc.DocId, out docValueIndex))
+                                        {
+                                            fv.Value = docValues[docValueIndex][fieldIndex].Value;
+                                        }
                                     }
                                 }
                             }
@@ -2196,11 +2210,16 @@ namespace Hubble.Core.Data
                         {
                             foreach (FieldValue fv in updatedoc.FieldValues)
                             {
-                                string value;
-                                if (fieldNameValue.TryGetValue(fv.FieldName.ToLower().Trim(), out value))
+                                int docValueIndex;
+                                int fieldIndex;
+                                if (fieldNameIndex.TryGetValue(fv.FieldName.ToLower().Trim(), out fieldIndex))
                                 {
-                                    fv.Value = value;
+                                    if (docFieldValueListIndex.TryGetValue(updatedoc.DocId, out docValueIndex))
+                                    {
+                                        fv.Value = docValues[docValueIndex][fieldIndex].Value;
+                                    }
                                 }
+
                             }
                         }
 
