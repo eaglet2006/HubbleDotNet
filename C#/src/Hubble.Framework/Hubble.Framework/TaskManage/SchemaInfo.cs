@@ -6,7 +6,7 @@ namespace TaskManage
 {
 
     /// <summary>
-    /// 计划内容
+    ///Schema info
     /// </summary>
     [Serializable]
     public class SchemaInfo
@@ -17,7 +17,7 @@ namespace TaskManage
         private AvailableTime _AvailableTime;
 
         /// <summary>
-        /// 执行一次时间
+        /// one time
         /// </summary>
         public DateTime RunOnceTime
         {
@@ -32,8 +32,7 @@ namespace TaskManage
         }
 
         /// <summary>
-        /// 频率
-        /// 日期间隔
+        /// frequency
         /// </summary>
         public Frequency Frequency
         {
@@ -48,8 +47,7 @@ namespace TaskManage
         }
 
         /// <summary>
-        /// 每日频率
-        /// 时间间隔
+        /// Daily frequency
         /// </summary>
         public DayFrequency DayFrequency
         {
@@ -64,7 +62,7 @@ namespace TaskManage
         }
 
         /// <summary>
-        /// 持续时间
+        /// duration
         /// </summary>
         public AvailableTime RunTime
         {

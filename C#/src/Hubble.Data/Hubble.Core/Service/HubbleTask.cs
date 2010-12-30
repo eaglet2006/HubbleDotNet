@@ -349,6 +349,10 @@ namespace Hubble.Core.Service
             Environment.CurrentDirectory = settingPath;
 
             DBProvider.Init(settingPath);
+
+            //Schedule task manager init
+            ScheduleTaskMgr.ScheduleMgr.Init(Hubble.Framework.IO.Path.AppendDivision(path, '\\') + "Schedule");
+
         }
 
         private QueryResult Excute(string sql)

@@ -1423,7 +1423,7 @@ namespace Hubble.Core.Query
 
                 if (UpDict != null)
                 {
-                    result = result.AndMerge(result, UpDict);
+                    result = result.AndMergeForNot(result, UpDict);
                 }
             }
 

@@ -247,7 +247,67 @@ namespace Hubble.Core.SFQL.Parse
             return fst;
         }
 
-        public DocumentResultWhereDictionary AndMerge(DocumentResultWhereDictionary fst, DocumentResultWhereDictionary sec)
+        /// <summary>
+        /// And merge when the Not property is false both of fst and sec
+        /// </summary>
+        /// <param name="and"></param>
+        /// <param name="or"></param>
+        /// <returns></returns>
+        unsafe public Core.SFQL.Parse.DocumentResultWhereDictionary AndMergeDict(Core.SFQL.Parse.DocumentResultWhereDictionary fst, Core.SFQL.Parse.DocumentResultWhereDictionary sec)
+        {
+            if (fst == null)
+            {
+                return new Core.SFQL.Parse.DocumentResultWhereDictionary();
+            }
+
+            if (sec == null)
+            {
+                return new DocumentResultWhereDictionary();
+            }
+
+            Core.SFQL.Parse.DocumentResultWhereDictionary src;
+            Core.SFQL.Parse.DocumentResultWhereDictionary dest;
+
+            if (fst.Count > sec.Count)
+            {
+                src = sec;
+                dest = fst;
+            }
+            else
+            {
+                src = fst;
+                dest = sec;
+            }
+
+
+            Core.SFQL.Parse.DocumentResultWhereDictionary result = new DocumentResultWhereDictionary();
+            result.Not = dest.Not;
+
+            foreach (Core.SFQL.Parse.DocumentResultPoint drp in src.Values)
+            {
+                Query.DocumentResult* dr;
+                if (dest.TryGetValue(drp.pDocumentResult->DocId, out dr))
+                {
+                    dr->Score += drp.pDocumentResult->Score;
+                    if (dr->PayloadData == null && drp.pDocumentResult->PayloadData != null)
+                    {
+                        dr->PayloadData = drp.pDocumentResult->PayloadData;
+                    }
+
+                    result.Add(drp.pDocumentResult->DocId, *dr);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// And merge when the Not property is ture of fst or sec. 
+        /// </summary>
+        /// <param name="fst"></param>
+        /// <param name="sec"></param>
+        /// <returns></returns>
+        public DocumentResultWhereDictionary AndMergeForNot(DocumentResultWhereDictionary fst, DocumentResultWhereDictionary sec)
         {
             if (fst == null)
             {

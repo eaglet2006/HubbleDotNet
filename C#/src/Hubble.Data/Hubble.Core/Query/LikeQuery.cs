@@ -1136,6 +1136,7 @@ namespace Hubble.Core.Query
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
+            Core.SFQL.Parse.DocumentResultWhereDictionary result;
 
             if (_QueryThroughDB)
             {
@@ -1154,7 +1155,7 @@ namespace Hubble.Core.Query
                     }
                 }
 
-                if (!NoAndExpression)
+                if (!NoAndExpression || UpDict != null)
                 {
                     if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null)
                     {
@@ -1168,38 +1169,49 @@ namespace Hubble.Core.Query
                     End = -1;
                 }
 
-                return _DBProvider.DBAdapter.GetDocumentResults(End, 
+                result = _DBProvider.DBAdapter.GetDocumentResults(End,
                     string.Format("{0} like '{1}'", _FieldName, _LikeString), orderBy);
-            }
 
-            List<WordIndexForQuery[]> partList = GetAllPartOfWordIndexes();
-
-            if (_QueryWords.Count <= 0 || partList.Count <= 0)
-            {
-                return PartSearch(new WordIndexForQuery[0]);
-            }
-
-
-            Core.SFQL.Parse.DocumentResultWhereDictionary result = PartSearch(partList[0]);
-
-            for (int i = 1; i < partList.Count; i++)
-            {
-                bool someWordNoResult = false;
-
-                foreach (WordIndexForQuery w in partList[i])
+                if (UpDict != null)
                 {
-                    if (w.WordIndex.WordCount == 0)
+                    if (!UpDict.Not)
                     {
-                        someWordNoResult = true;
-                        break;
+                        result = result.AndMergeDict(result, UpDict);
                     }
+                }
+            }
+            else
+            {
 
-                    w.WordIndex.Reset();
+                List<WordIndexForQuery[]> partList = GetAllPartOfWordIndexes();
+
+                if (_QueryWords.Count <= 0 || partList.Count <= 0)
+                {
+                    return PartSearch(new WordIndexForQuery[0]);
                 }
 
-                if (!someWordNoResult)
+
+                result = PartSearch(partList[0]);
+
+                for (int i = 1; i < partList.Count; i++)
                 {
-                    result.OrMerge(result, PartSearch(partList[i]));
+                    bool someWordNoResult = false;
+
+                    foreach (WordIndexForQuery w in partList[i])
+                    {
+                        if (w.WordIndex.WordCount == 0)
+                        {
+                            someWordNoResult = true;
+                            break;
+                        }
+
+                        w.WordIndex.Reset();
+                    }
+
+                    if (!someWordNoResult)
+                    {
+                        result.OrMerge(result, PartSearch(partList[i]));
+                    }
                 }
             }
 
@@ -1209,11 +1221,14 @@ namespace Hubble.Core.Query
 
                 if (UpDict != null)
                 {
-                    result = result.AndMerge(result, UpDict);
+                    result = result.AndMergeForNot(result, UpDict);
                 }
             }
 
-            result = GetExternLikeDocResults(result);
+            if (!_QueryThroughDB)
+            {
+                result = GetExternLikeDocResults(result);
+            }
 
             performanceReport.Stop(); 
 
