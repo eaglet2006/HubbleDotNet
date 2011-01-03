@@ -38,6 +38,7 @@
             this.batchInsertToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataCacheToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetDataCacheAfterTimeoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceReportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.performanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,7 +92,7 @@
             this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
             this.troubleshooterToolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileDialogSql = new System.Windows.Forms.SaveFileDialog();
-            this.resetDataCacheAfterTimeoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.taskSchedulerManagementToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStrip1.SuspendLayout();
@@ -177,6 +178,13 @@
             this.dataCacheToolStripMenuItem.Text = "Data Cache";
             this.dataCacheToolStripMenuItem.CheckedChanged += new System.EventHandler(this.dataCacheToolStripMenuItem_CheckedChanged);
             // 
+            // resetDataCacheAfterTimeoutToolStripMenuItem
+            // 
+            this.resetDataCacheAfterTimeoutToolStripMenuItem.CheckOnClick = true;
+            this.resetDataCacheAfterTimeoutToolStripMenuItem.Name = "resetDataCacheAfterTimeoutToolStripMenuItem";
+            this.resetDataCacheAfterTimeoutToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
+            this.resetDataCacheAfterTimeoutToolStripMenuItem.Text = "Reset Data Cache After Timeout";
+            // 
             // performanceReportToolStripMenuItem
             // 
             this.performanceReportToolStripMenuItem.CheckOnClick = true;
@@ -203,15 +211,16 @@
             // userAccountToolStripMenuItem
             // 
             this.userAccountToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.userManagementToolStripMenuItem1});
+            this.userManagementToolStripMenuItem1,
+            this.taskSchedulerManagementToolStripMenuItem});
             this.userAccountToolStripMenuItem.Name = "userAccountToolStripMenuItem";
-            this.userAccountToolStripMenuItem.Size = new System.Drawing.Size(88, 20);
-            this.userAccountToolStripMenuItem.Text = "User account";
+            this.userAccountToolStripMenuItem.Size = new System.Drawing.Size(90, 20);
+            this.userAccountToolStripMenuItem.Text = "Management";
             // 
             // userManagementToolStripMenuItem1
             // 
             this.userManagementToolStripMenuItem1.Name = "userManagementToolStripMenuItem1";
-            this.userManagementToolStripMenuItem1.Size = new System.Drawing.Size(171, 22);
+            this.userManagementToolStripMenuItem1.Size = new System.Drawing.Size(226, 22);
             this.userManagementToolStripMenuItem1.Text = "User management";
             this.userManagementToolStripMenuItem1.Click += new System.EventHandler(this.userManagementToolStripMenuItem1_Click);
             // 
@@ -615,12 +624,12 @@
             // 
             this.saveFileDialogSql.Filter = "SQL|*.sql";
             // 
-            // resetDataCacheAfterTimeoutToolStripMenuItem
+            // taskSchedulerManagementToolStripMenuItem
             // 
-            this.resetDataCacheAfterTimeoutToolStripMenuItem.CheckOnClick = true;
-            this.resetDataCacheAfterTimeoutToolStripMenuItem.Name = "resetDataCacheAfterTimeoutToolStripMenuItem";
-            this.resetDataCacheAfterTimeoutToolStripMenuItem.Size = new System.Drawing.Size(242, 22);
-            this.resetDataCacheAfterTimeoutToolStripMenuItem.Text = "Reset Data Cache After Timeout";
+            this.taskSchedulerManagementToolStripMenuItem.Name = "taskSchedulerManagementToolStripMenuItem";
+            this.taskSchedulerManagementToolStripMenuItem.Size = new System.Drawing.Size(226, 22);
+            this.taskSchedulerManagementToolStripMenuItem.Text = "Task scheduler management";
+            this.taskSchedulerManagementToolStripMenuItem.Click += new System.EventHandler(this.taskSchedulerManagementToolStripMenuItem_Click);
             // 
             // FormMain
             // 
@@ -723,6 +732,7 @@
         private System.Windows.Forms.ToolStripMenuItem userAccountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem userManagementToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem resetDataCacheAfterTimeoutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem taskSchedulerManagementToolStripMenuItem;
     }
 }
 

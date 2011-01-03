@@ -21,6 +21,8 @@ namespace TaskManage
 
         private string _Sql;
 
+        private string _Description;
+
         /// <summary>
         /// schedule No.
         /// </summary>
@@ -156,6 +158,29 @@ namespace TaskManage
             }
         }
 
+        /// <summary>
+        /// Description of this schema
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                if (_Description == null)
+                {
+                    return "";
+                }
+                else
+                {
+                    return _Description;
+                }
+            }
+
+            set
+            {
+                _Description = value;
+            }
+        }
+
         public Schema()
         {
             _Type = SchemaType.RunOnce;
@@ -163,7 +188,7 @@ namespace TaskManage
 
         public DateTime NextTime(DateTime curTime)
         {
-            DateTime defaultTime = new DateTime(1900, 1, 1);
+            DateTime defaultTime = DateTime.MaxValue;
             DateTime nextTime;
             DateTime datePart;      //NextTime date
             TimeSpan timePart;      //NextTime time
@@ -889,6 +914,24 @@ namespace TaskManage
             tempDate = new DateTime(tempDate.Year, tempDate.Month, 1);
             int MaxDay = tempDate.AddDays((double)(-1)).Day;
             return MaxDay;
+        }
+
+        public string ConvertToString()
+        {
+            System.IO.Stream stream = Hubble.Framework.Serialization.XmlSerialization<Schema>.Serialize(this);
+            string xmlStr;
+            stream.Position = 0;
+            Hubble.Framework.IO.Stream.ReadStreamToString(stream, out xmlStr, Encoding.UTF8);
+            return xmlStr;
+        }
+
+        static public Schema ConvertFromString(string xmlStr)
+        {
+            System.IO.MemoryStream ms = new System.IO.MemoryStream(
+                Encoding.UTF8.GetBytes(xmlStr));
+            ms.Position = 0;
+
+            return Hubble.Framework.Serialization.XmlSerialization<TaskManage.Schema>.Deserialize(ms);
         }
 
     }

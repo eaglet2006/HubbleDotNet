@@ -96,6 +96,7 @@
             this.label20 = new System.Windows.Forms.Label();
             this.textBoxSql = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
+            this.buttonTest = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.panelEveryMonth.SuspendLayout();
@@ -115,7 +116,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(53, 14);
+            this.label1.Location = new System.Drawing.Point(14, 14);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(47, 13);
             this.label1.TabIndex = 0;
@@ -124,7 +125,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(51, 120);
+            this.label2.Location = new System.Drawing.Point(12, 120);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(43, 13);
             this.label2.TabIndex = 1;
@@ -132,10 +133,10 @@
             // 
             // txtSchemaName
             // 
-            this.txtSchemaName.Location = new System.Drawing.Point(157, 11);
+            this.txtSchemaName.Location = new System.Drawing.Point(118, 11);
             this.txtSchemaName.Name = "txtSchemaName";
             this.txtSchemaName.Size = new System.Drawing.Size(84, 20);
-            this.txtSchemaName.TabIndex = 2;
+            this.txtSchemaName.TabIndex = 0;
             // 
             // cobSchemaType
             // 
@@ -143,18 +144,19 @@
             this.cobSchemaType.Items.AddRange(new object[] {
             "One time only",
             "Repeating"});
-            this.cobSchemaType.Location = new System.Drawing.Point(155, 117);
+            this.cobSchemaType.Location = new System.Drawing.Point(116, 117);
             this.cobSchemaType.Name = "cobSchemaType";
             this.cobSchemaType.Size = new System.Drawing.Size(398, 21);
-            this.cobSchemaType.TabIndex = 3;
+            this.cobSchemaType.TabIndex = 5;
             this.cobSchemaType.SelectedIndexChanged += new System.EventHandler(this.cobSchemaType_SelectedIndexChanged);
+            this.cobSchemaType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cobFrequencyType_KeyPress);
             // 
             // cbState
             // 
             this.cbState.AutoSize = true;
             this.cbState.Checked = true;
             this.cbState.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbState.Location = new System.Drawing.Point(576, 120);
+            this.cbState.Location = new System.Drawing.Point(537, 120);
             this.cbState.Name = "cbState";
             this.cbState.Size = new System.Drawing.Size(65, 17);
             this.cbState.TabIndex = 4;
@@ -167,7 +169,7 @@
             this.groupBox1.Controls.Add(this.dtRunOnceDate);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Location = new System.Drawing.Point(12, 155);
+            this.groupBox1.Location = new System.Drawing.Point(12, 144);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(706, 61);
             this.groupBox1.TabIndex = 5;
@@ -181,7 +183,7 @@
             this.dtRunOnceTime.Name = "dtRunOnceTime";
             this.dtRunOnceTime.ShowUpDown = true;
             this.dtRunOnceTime.Size = new System.Drawing.Size(80, 20);
-            this.dtRunOnceTime.TabIndex = 3;
+            this.dtRunOnceTime.TabIndex = 8;
             // 
             // dtRunOnceDate
             // 
@@ -189,7 +191,7 @@
             this.dtRunOnceDate.Location = new System.Drawing.Point(143, 26);
             this.dtRunOnceDate.Name = "dtRunOnceDate";
             this.dtRunOnceDate.Size = new System.Drawing.Size(120, 20);
-            this.dtRunOnceDate.TabIndex = 2;
+            this.dtRunOnceDate.TabIndex = 7;
             // 
             // label4
             // 
@@ -216,7 +218,7 @@
             this.groupBox2.Controls.Add(this.panelEveryDay);
             this.groupBox2.Controls.Add(this.cobFrequencyType);
             this.groupBox2.Controls.Add(this.label8);
-            this.groupBox2.Location = new System.Drawing.Point(12, 222);
+            this.groupBox2.Location = new System.Drawing.Point(12, 211);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(706, 154);
             this.groupBox2.TabIndex = 6;
@@ -252,7 +254,7 @@
             0});
             this.numEveryMonthRunInterval2.Name = "numEveryMonthRunInterval2";
             this.numEveryMonthRunInterval2.Size = new System.Drawing.Size(70, 20);
-            this.numEveryMonthRunInterval2.TabIndex = 11;
+            this.numEveryMonthRunInterval2.TabIndex = 15;
             this.numEveryMonthRunInterval2.Value = new decimal(new int[] {
             1,
             0,
@@ -292,7 +294,8 @@
             this.cobDaysOfWeek.Location = new System.Drawing.Point(139, 37);
             this.cobDaysOfWeek.Name = "cobDaysOfWeek";
             this.cobDaysOfWeek.Size = new System.Drawing.Size(70, 21);
-            this.cobDaysOfWeek.TabIndex = 7;
+            this.cobDaysOfWeek.TabIndex = 14;
+            this.cobDaysOfWeek.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cobFrequencyType_KeyPress);
             // 
             // cobWhichWeek
             // 
@@ -306,7 +309,8 @@
             this.cobWhichWeek.Location = new System.Drawing.Point(63, 37);
             this.cobWhichWeek.Name = "cobWhichWeek";
             this.cobWhichWeek.Size = new System.Drawing.Size(70, 21);
-            this.cobWhichWeek.TabIndex = 6;
+            this.cobWhichWeek.TabIndex = 13;
+            this.cobWhichWeek.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cobFrequencyType_KeyPress);
             // 
             // label10
             // 
@@ -327,7 +331,7 @@
             0});
             this.numEveryMonthRunInterval1.Name = "numEveryMonthRunInterval1";
             this.numEveryMonthRunInterval1.Size = new System.Drawing.Size(70, 20);
-            this.numEveryMonthRunInterval1.TabIndex = 4;
+            this.numEveryMonthRunInterval1.TabIndex = 12;
             this.numEveryMonthRunInterval1.Value = new decimal(new int[] {
             1,
             0,
@@ -358,7 +362,7 @@
             0});
             this.numWhichDay.Name = "numWhichDay";
             this.numWhichDay.Size = new System.Drawing.Size(70, 20);
-            this.numWhichDay.TabIndex = 2;
+            this.numWhichDay.TabIndex = 11;
             this.numWhichDay.Value = new decimal(new int[] {
             1,
             0,
@@ -413,7 +417,7 @@
             this.cbSunday.Location = new System.Drawing.Point(482, 70);
             this.cbSunday.Name = "cbSunday";
             this.cbSunday.Size = new System.Drawing.Size(45, 17);
-            this.cbSunday.TabIndex = 9;
+            this.cbSunday.TabIndex = 18;
             this.cbSunday.Text = "Sun";
             this.cbSunday.UseVisualStyleBackColor = true;
             // 
@@ -423,7 +427,7 @@
             this.cbThursday.Location = new System.Drawing.Point(241, 70);
             this.cbThursday.Name = "cbThursday";
             this.cbThursday.Size = new System.Drawing.Size(45, 17);
-            this.cbThursday.TabIndex = 8;
+            this.cbThursday.TabIndex = 17;
             this.cbThursday.Text = "Thu";
             this.cbThursday.UseVisualStyleBackColor = true;
             // 
@@ -433,7 +437,7 @@
             this.cbTuesday.Location = new System.Drawing.Point(105, 70);
             this.cbTuesday.Name = "cbTuesday";
             this.cbTuesday.Size = new System.Drawing.Size(45, 17);
-            this.cbTuesday.TabIndex = 7;
+            this.cbTuesday.TabIndex = 16;
             this.cbTuesday.Text = "Tue";
             this.cbTuesday.UseVisualStyleBackColor = true;
             // 
@@ -567,8 +571,9 @@
             this.cobFrequencyType.Location = new System.Drawing.Point(142, 22);
             this.cobFrequencyType.Name = "cobFrequencyType";
             this.cobFrequencyType.Size = new System.Drawing.Size(120, 21);
-            this.cobFrequencyType.TabIndex = 1;
+            this.cobFrequencyType.TabIndex = 9;
             this.cobFrequencyType.SelectedIndexChanged += new System.EventHandler(this.cobFrequencyType_SelectedIndexChanged);
+            this.cobFrequencyType.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cobFrequencyType_KeyPress);
             // 
             // label8
             // 
@@ -590,37 +595,37 @@
             this.groupBox3.Controls.Add(this.dtDayFrequencyRunOnceTime);
             this.groupBox3.Controls.Add(this.rdoRunOnce);
             this.groupBox3.Controls.Add(this.rdoRunInterval);
-            this.groupBox3.Location = new System.Drawing.Point(12, 382);
+            this.groupBox3.Location = new System.Drawing.Point(12, 371);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(706, 113);
+            this.groupBox3.Size = new System.Drawing.Size(706, 77);
             this.groupBox3.TabIndex = 7;
             this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Frequency in day";
+            this.groupBox3.Text = "Frequency daily";
             // 
             // dtEndTime
             // 
             this.dtEndTime.Format = System.Windows.Forms.DateTimePickerFormat.Time;
-            this.dtEndTime.Location = new System.Drawing.Point(453, 80);
+            this.dtEndTime.Location = new System.Drawing.Point(584, 50);
             this.dtEndTime.Name = "dtEndTime";
             this.dtEndTime.ShowUpDown = true;
             this.dtEndTime.Size = new System.Drawing.Size(80, 20);
-            this.dtEndTime.TabIndex = 8;
+            this.dtEndTime.TabIndex = 23;
             this.dtEndTime.Value = new System.DateTime(2006, 12, 19, 23, 59, 59, 0);
             // 
             // dtStartTime
             // 
             this.dtStartTime.Format = System.Windows.Forms.DateTimePickerFormat.Time;
-            this.dtStartTime.Location = new System.Drawing.Point(453, 47);
+            this.dtStartTime.Location = new System.Drawing.Point(420, 50);
             this.dtStartTime.Name = "dtStartTime";
             this.dtStartTime.ShowUpDown = true;
             this.dtStartTime.Size = new System.Drawing.Size(80, 20);
-            this.dtStartTime.TabIndex = 7;
+            this.dtStartTime.TabIndex = 22;
             this.dtStartTime.Value = new System.DateTime(2006, 12, 19, 0, 0, 0, 0);
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(382, 85);
+            this.label7.Location = new System.Drawing.Point(549, 54);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(29, 13);
             this.label7.TabIndex = 6;
@@ -650,7 +655,7 @@
             0});
             this.numRunInterval.Name = "numRunInterval";
             this.numRunInterval.Size = new System.Drawing.Size(80, 20);
-            this.numRunInterval.TabIndex = 4;
+            this.numRunInterval.TabIndex = 20;
             this.numRunInterval.Value = new decimal(new int[] {
             1,
             0,
@@ -666,8 +671,9 @@
             this.cobIntervalUnit.Location = new System.Drawing.Point(231, 50);
             this.cobIntervalUnit.Name = "cobIntervalUnit";
             this.cobIntervalUnit.Size = new System.Drawing.Size(80, 21);
-            this.cobIntervalUnit.TabIndex = 3;
+            this.cobIntervalUnit.TabIndex = 21;
             this.cobIntervalUnit.SelectedIndexChanged += new System.EventHandler(this.cobIntervalUnit_SelectedIndexChanged);
+            this.cobIntervalUnit.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cobFrequencyType_KeyPress);
             // 
             // dtDayFrequencyRunOnceTime
             // 
@@ -676,7 +682,7 @@
             this.dtDayFrequencyRunOnceTime.Name = "dtDayFrequencyRunOnceTime";
             this.dtDayFrequencyRunOnceTime.ShowUpDown = true;
             this.dtDayFrequencyRunOnceTime.Size = new System.Drawing.Size(80, 20);
-            this.dtDayFrequencyRunOnceTime.TabIndex = 2;
+            this.dtDayFrequencyRunOnceTime.TabIndex = 19;
             // 
             // rdoRunOnce
             // 
@@ -685,7 +691,7 @@
             this.rdoRunOnce.Location = new System.Drawing.Point(38, 22);
             this.rdoRunOnce.Name = "rdoRunOnce";
             this.rdoRunOnce.Size = new System.Drawing.Size(79, 17);
-            this.rdoRunOnce.TabIndex = 0;
+            this.rdoRunOnce.TabIndex = 19;
             this.rdoRunOnce.TabStop = true;
             this.rdoRunOnce.Text = "Execute at:";
             this.rdoRunOnce.UseVisualStyleBackColor = true;
@@ -697,7 +703,7 @@
             this.rdoRunInterval.Location = new System.Drawing.Point(38, 52);
             this.rdoRunInterval.Name = "rdoRunInterval";
             this.rdoRunInterval.Size = new System.Drawing.Size(101, 17);
-            this.rdoRunInterval.TabIndex = 1;
+            this.rdoRunInterval.TabIndex = 20;
             this.rdoRunInterval.Text = "Execute interval";
             this.rdoRunInterval.UseVisualStyleBackColor = true;
             this.rdoRunInterval.CheckedChanged += new System.EventHandler(this.rdoRunInterval_CheckedChanged);
@@ -709,7 +715,7 @@
             this.groupBox4.Controls.Add(this.rdoEndDate);
             this.groupBox4.Controls.Add(this.dtStartDate);
             this.groupBox4.Controls.Add(this.label5);
-            this.groupBox4.Location = new System.Drawing.Point(10, 501);
+            this.groupBox4.Location = new System.Drawing.Point(12, 454);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(708, 89);
             this.groupBox4.TabIndex = 8;
@@ -722,7 +728,7 @@
             this.dtEndDate.Location = new System.Drawing.Point(482, 25);
             this.dtEndDate.Name = "dtEndDate";
             this.dtEndDate.Size = new System.Drawing.Size(120, 20);
-            this.dtEndDate.TabIndex = 4;
+            this.dtEndDate.TabIndex = 25;
             // 
             // rdoInfinity
             // 
@@ -731,7 +737,7 @@
             this.rdoInfinity.Location = new System.Drawing.Point(386, 61);
             this.rdoInfinity.Name = "rdoInfinity";
             this.rdoInfinity.Size = new System.Drawing.Size(55, 17);
-            this.rdoInfinity.TabIndex = 3;
+            this.rdoInfinity.TabIndex = 26;
             this.rdoInfinity.TabStop = true;
             this.rdoInfinity.Text = "Infinity";
             this.rdoInfinity.UseVisualStyleBackColor = true;
@@ -742,7 +748,7 @@
             this.rdoEndDate.Location = new System.Drawing.Point(386, 27);
             this.rdoEndDate.Name = "rdoEndDate";
             this.rdoEndDate.Size = new System.Drawing.Size(73, 17);
-            this.rdoEndDate.TabIndex = 2;
+            this.rdoEndDate.TabIndex = 25;
             this.rdoEndDate.Text = "End Date:";
             this.rdoEndDate.UseVisualStyleBackColor = true;
             this.rdoEndDate.CheckedChanged += new System.EventHandler(this.rdoEndDate_CheckedChanged);
@@ -753,7 +759,7 @@
             this.dtStartDate.Location = new System.Drawing.Point(144, 25);
             this.dtStartDate.Name = "dtStartDate";
             this.dtStartDate.Size = new System.Drawing.Size(120, 20);
-            this.dtStartDate.TabIndex = 1;
+            this.dtStartDate.TabIndex = 24;
             // 
             // label5
             // 
@@ -766,7 +772,7 @@
             // 
             // btnConfirm
             // 
-            this.btnConfirm.Location = new System.Drawing.Point(470, 699);
+            this.btnConfirm.Location = new System.Drawing.Point(660, 14);
             this.btnConfirm.Name = "btnConfirm";
             this.btnConfirm.Size = new System.Drawing.Size(75, 25);
             this.btnConfirm.TabIndex = 9;
@@ -776,7 +782,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(604, 699);
+            this.btnCancel.Location = new System.Drawing.Point(660, 87);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 25);
             this.btnCancel.TabIndex = 10;
@@ -788,7 +794,7 @@
             // 
             this.groupBox5.Controls.Add(this.txtSummary);
             this.groupBox5.Controls.Add(this.label17);
-            this.groupBox5.Location = new System.Drawing.Point(10, 597);
+            this.groupBox5.Location = new System.Drawing.Point(12, 549);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(708, 83);
             this.groupBox5.TabIndex = 11;
@@ -797,12 +803,11 @@
             // 
             // txtSummary
             // 
-            this.txtSummary.Enabled = false;
             this.txtSummary.Location = new System.Drawing.Point(145, 18);
             this.txtSummary.Multiline = true;
             this.txtSummary.Name = "txtSummary";
             this.txtSummary.Size = new System.Drawing.Size(550, 58);
-            this.txtSummary.TabIndex = 1;
+            this.txtSummary.TabIndex = 27;
             // 
             // label17
             // 
@@ -815,15 +820,15 @@
             // 
             // textBoxUserName
             // 
-            this.textBoxUserName.Location = new System.Drawing.Point(157, 35);
+            this.textBoxUserName.Location = new System.Drawing.Point(118, 35);
             this.textBoxUserName.Name = "textBoxUserName";
             this.textBoxUserName.Size = new System.Drawing.Size(84, 20);
-            this.textBoxUserName.TabIndex = 13;
+            this.textBoxUserName.TabIndex = 1;
             // 
             // label18
             // 
             this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(53, 37);
+            this.label18.Location = new System.Drawing.Point(14, 37);
             this.label18.Name = "label18";
             this.label18.Size = new System.Drawing.Size(60, 13);
             this.label18.TabIndex = 12;
@@ -831,16 +836,16 @@
             // 
             // textBoxPassword
             // 
-            this.textBoxPassword.Location = new System.Drawing.Point(157, 61);
+            this.textBoxPassword.Location = new System.Drawing.Point(118, 61);
             this.textBoxPassword.Name = "textBoxPassword";
             this.textBoxPassword.PasswordChar = '*';
             this.textBoxPassword.Size = new System.Drawing.Size(84, 20);
-            this.textBoxPassword.TabIndex = 15;
+            this.textBoxPassword.TabIndex = 2;
             // 
             // label19
             // 
             this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(53, 63);
+            this.label19.Location = new System.Drawing.Point(14, 63);
             this.label19.Name = "label19";
             this.label19.Size = new System.Drawing.Size(56, 13);
             this.label19.TabIndex = 14;
@@ -848,15 +853,15 @@
             // 
             // textBoxDatabase
             // 
-            this.textBoxDatabase.Location = new System.Drawing.Point(157, 87);
+            this.textBoxDatabase.Location = new System.Drawing.Point(118, 87);
             this.textBoxDatabase.Name = "textBoxDatabase";
             this.textBoxDatabase.Size = new System.Drawing.Size(84, 20);
-            this.textBoxDatabase.TabIndex = 17;
+            this.textBoxDatabase.TabIndex = 3;
             // 
             // label20
             // 
             this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(53, 89);
+            this.label20.Location = new System.Drawing.Point(14, 89);
             this.label20.Name = "label20";
             this.label20.Size = new System.Drawing.Size(56, 13);
             this.label20.TabIndex = 16;
@@ -864,26 +869,37 @@
             // 
             // textBoxSql
             // 
-            this.textBoxSql.Location = new System.Drawing.Point(256, 30);
+            this.textBoxSql.Location = new System.Drawing.Point(217, 30);
             this.textBoxSql.Multiline = true;
             this.textBoxSql.Name = "textBoxSql";
             this.textBoxSql.Size = new System.Drawing.Size(380, 77);
-            this.textBoxSql.TabIndex = 18;
+            this.textBoxSql.TabIndex = 4;
             // 
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(253, 11);
+            this.label21.Location = new System.Drawing.Point(214, 11);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(78, 13);
             this.label21.TabIndex = 19;
             this.label21.Text = "Sql to execute:";
             // 
+            // buttonTest
+            // 
+            this.buttonTest.Location = new System.Drawing.Point(660, 53);
+            this.buttonTest.Name = "buttonTest";
+            this.buttonTest.Size = new System.Drawing.Size(75, 23);
+            this.buttonTest.TabIndex = 20;
+            this.buttonTest.Text = "Test";
+            this.buttonTest.UseVisualStyleBackColor = true;
+            this.buttonTest.Click += new System.EventHandler(this.buttonTest_Click);
+            // 
             // FrmCreateSchema
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(747, 746);
+            this.ClientSize = new System.Drawing.Size(752, 640);
+            this.Controls.Add(this.buttonTest);
             this.Controls.Add(this.label21);
             this.Controls.Add(this.textBoxSql);
             this.Controls.Add(this.textBoxDatabase);
@@ -1007,5 +1023,6 @@
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.TextBox textBoxSql;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Button buttonTest;
     }
 }

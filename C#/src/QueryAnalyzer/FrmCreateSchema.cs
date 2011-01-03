@@ -10,6 +10,8 @@ namespace TaskManage
 {
     public partial class FrmCreateSchema : Form
     {
+        DialogResult _Result = DialogResult.Cancel;
+
         private int _SchemaId = -1;
 
         public int SchemaId
@@ -24,14 +26,36 @@ namespace TaskManage
             }
         }
 
+        private Schema _Schema;
+
+        public Schema Schema
+        {
+            get
+            {
+                return _Schema;
+            }
+
+            set
+            {
+                _Schema = value;
+            }
+        }
+
         public FrmCreateSchema()
         {
             InitializeComponent();
         }
 
+        new public DialogResult ShowDialog()
+        {
+            base.ShowDialog();
+
+            return _Result;
+        }
+
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            this.Dispose();
+            Close();
         }
 
         private void btnConfirm_Click(object sender, EventArgs e)
@@ -64,6 +88,8 @@ namespace TaskManage
             schema.Password = Hubble.Framework.Security.DesEncryption.Encrypt(new byte[]{ 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, textBoxPassword.Text.Trim());
             schema.Database = textBoxDatabase.Text.Trim();
             schema.Sql = textBoxSql.Text.Trim();
+            schema.Description = txtSummary.Text;
+
             schema.Type = (cobSchemaType.SelectedIndex == 0) ? SchemaType.RunOnce : SchemaType.RunRepeat;
             schema.State = (cbState.Checked == true) ? SchemaState.Enable : SchemaState.Disable;
             
@@ -219,8 +245,8 @@ namespace TaskManage
 
             schema.SchemaInfo = schemaInfo;
 
-
-
+            _Schema = schema;
+            _Result = DialogResult.OK;
             Close();
         }
 
@@ -259,6 +285,171 @@ namespace TaskManage
 
             //Duation
             dtEndDate.Enabled = false;
+
+            if (_Schema != null)
+            {
+                try
+                {
+                    LoadSchema(_Schema);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message,
+                            "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Close();
+                }
+            }
+        }
+
+        public void LoadSchema(Schema schema)
+        {
+            txtSchemaName.Text = schema.Name.Trim();
+            textBoxUserName.Text = schema.UserName.Trim();
+            textBoxPassword.Text = Hubble.Framework.Security.DesEncryption.Decrypt(new byte[] { 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, schema.Password);
+            textBoxDatabase.Text = schema.Database.Trim();
+            textBoxSql.Text = schema.Sql.Trim();
+            txtSummary.Text = schema.Description;
+
+            txtSchemaName.Text = schema.Name;
+            cbState.Checked = (schema.State == SchemaState.Disable) ? false : true;
+            if (schema.Type == SchemaType.RunOnce)
+            {
+                cobSchemaType.SelectedIndex = 0;
+                dtRunOnceDate.Text = schema.SchemaInfo.RunOnceTime.Date.ToString();
+                dtRunOnceTime.Text = schema.SchemaInfo.RunOnceTime.TimeOfDay.ToString();
+
+            }
+            else
+            {
+                cobSchemaType.SelectedIndex = 1;
+                cobWhichWeek.SelectedIndex = 0;
+                cobDaysOfWeek.SelectedIndex = 0;
+                switch (schema.SchemaInfo.Frequency.FrequencyType)
+                {
+                    case FrequencyType.Day:
+                        cobFrequencyType.SelectedIndex = 0;
+                        numEveryDayRunInterval.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryDay.RunInterval.ToString());
+                        break;
+                    case FrequencyType.Week:
+                        cobFrequencyType.SelectedIndex = 1;
+                        numEveryWeekRunInterval.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryWeek.RunInterval.ToString());
+                        DayOfWeek[] dayOfWeek = schema.SchemaInfo.Frequency.EveryWeek.DaysOfWeek;
+                        for (int i = 0; i < dayOfWeek.Length; i++)
+                        {
+                            if (dayOfWeek[i] == DayOfWeek.Monday)
+                                cbMonday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Tuesday)
+                                cbTuesday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Wednesday)
+                                cbWednesday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Thursday)
+                                cbThursday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Friday)
+                                cbFriday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Saturday)
+                                cbSaturday.Checked = true;
+                            if (dayOfWeek[i] == DayOfWeek.Sunday)
+                                cbSunday.Checked = true;
+                        }
+                        break;
+                    case FrequencyType.Month:
+                        cobFrequencyType.SelectedIndex = 2;
+                        if (schema.SchemaInfo.Frequency.EveryMonth.Option == 1)
+                        {
+                            rdoOptionWhichDay.Checked = true;
+                            numEveryMonthRunInterval1.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryMonth.RunInterval.ToString());
+                            numWhichDay.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryMonth.WhichDay.ToString());
+                        }
+                        else
+                        {
+                            rdoOptionWhichDaysOfWeek.Checked = true;
+                            numEveryMonthRunInterval2.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryMonth.RunInterval.ToString());
+                            switch (schema.SchemaInfo.Frequency.EveryMonth.WhichWeek)
+                            {
+                                case 1:
+                                case 2:
+                                case 3:
+                                case 4:
+                                    cobWhichWeek.SelectedIndex = schema.SchemaInfo.Frequency.EveryMonth.WhichWeek - 1;
+                                    break;
+                                case 9:
+                                    cobWhichWeek.SelectedIndex = 4;
+                                    break;
+                                //default:
+                                //    cobWhichWeek.SelectedIndex = 0;
+                                //    break;
+                            }
+
+                            switch (schema.SchemaInfo.Frequency.EveryMonth.DayOfWeek)
+                            {
+                                case DaysOfWeek.Friday:
+                                case DaysOfWeek.Monday:
+                                case DaysOfWeek.Saturday:
+                                case DaysOfWeek.Sunday:
+                                case DaysOfWeek.Thursday:
+                                case DaysOfWeek.Tuesday:
+                                case DaysOfWeek.Wednesday:
+                                    cobDaysOfWeek.SelectedIndex = (int)(schema.SchemaInfo.Frequency.EveryMonth.DayOfWeek);
+                                    break;
+                                case DaysOfWeek.Day:
+                                    cobDaysOfWeek.SelectedIndex = 7;
+                                    break;
+                                //default:
+                                //    cobDaysOfWeek.SelectedIndex = 0;
+                                //break;
+                            }
+
+                        }
+                        break;
+                    default:
+                        cobFrequencyType.SelectedIndex = 0;
+                        numEveryDayRunInterval.Value = Convert.ToDecimal(schema.SchemaInfo.Frequency.EveryDay.RunInterval.ToString());
+                        break;
+                }
+
+                //Daily Frequncy 
+                if (schema.SchemaInfo.DayFrequency.Option == 1)
+                {
+                    rdoRunOnce.Checked = true;
+                    dtDayFrequencyRunOnceTime.Value = Convert.ToDateTime(schema.SchemaInfo.DayFrequency.RunOnceTime.ToString());
+                    numRunInterval.Enabled = false;
+                    cobIntervalUnit.Enabled = false;
+                    dtStartTime.Enabled = false;
+                    dtEndTime.Enabled = false;
+                }
+                else
+                {
+                    rdoRunInterval.Checked = true;
+                    switch (schema.SchemaInfo.DayFrequency.TimeUnit)
+                    {
+                        case TimeUnit.Hour:
+                            cobIntervalUnit.SelectedIndex = 0;
+                            break;
+                        case TimeUnit.Minute:
+                            cobIntervalUnit.SelectedIndex = 1;
+                            break;
+                    }
+
+                    numRunInterval.Value = Convert.ToDecimal(schema.SchemaInfo.DayFrequency.RunInterval.ToString());
+
+                    dtStartTime.Text = schema.SchemaInfo.DayFrequency.StartTime.ToString();
+                    dtEndTime.Text = schema.SchemaInfo.DayFrequency.EndTime.ToString();
+                }
+
+                //Duration
+                dtStartDate.Text = schema.SchemaInfo.RunTime.StartDate.Date.ToString();
+                dtEndDate.Text = schema.SchemaInfo.RunTime.EndDate.Date.ToString();
+
+                if (schema.SchemaInfo.RunTime.IsInfinity == false)
+                {
+                    dtEndDate.Enabled = true;
+                    rdoEndDate.Checked = true;
+                }
+                else
+                {
+                    rdoInfinity.Checked = true;
+                }
+            }
 
         }
 
@@ -391,6 +582,36 @@ namespace TaskManage
             {
                 dtEndDate.Enabled = false;
             }
+        }
+
+        private void buttonTest_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
+                sqlConnBuilder.DataSource = QueryAnalyzer.GlobalSetting.DataAccess.ServerName;
+                sqlConnBuilder.UserID = textBoxUserName.Text.Trim();
+                sqlConnBuilder.Password = textBoxPassword.Text.Trim();
+                sqlConnBuilder.InitialCatalog = textBoxDatabase.Text.Trim();
+                using (Hubble.SQLClient.HubbleConnection conn = new Hubble.SQLClient.HubbleConnection(sqlConnBuilder.ConnectionString))
+                {
+                    conn.Open();
+                    Hubble.SQLClient.HubbleCommand cmd = new Hubble.SQLClient.HubbleCommand(textBoxSql.Text, conn);
+                    cmd.ExecuteNonQuery();
+                }
+
+                MessageBox.Show("Execute sql successful.", "Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void cobFrequencyType_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = true;
         }
     }
 }

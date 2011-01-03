@@ -163,6 +163,12 @@
     <Compile Include="FormRebuildTable.Designer.cs">
       <DependentUpon>FormRebuildTable.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormTaskSchedulerList.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTaskSchedulerList.Designer.cs">
+      <DependentUpon>FormTaskSchedulerList.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormTableInfo.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -268,6 +274,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FormTableSynchronize.resx">
       <DependentUpon>FormTableSynchronize.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormTaskSchedulerList.resx">
+      <DependentUpon>FormTaskSchedulerList.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTroubleshooter.resx">

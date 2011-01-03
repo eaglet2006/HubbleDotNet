@@ -180,6 +180,10 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_GetSchema.cs" />
+    <Compile Include="StoredProcedure\SP_RemoveSchema.cs" />
+    <Compile Include="StoredProcedure\SP_AddSchema.cs" />
+    <Compile Include="StoredProcedure\SP_SchemaList.cs" />
     <Compile Include="StoredProcedure\SP_ResetCache.cs" />
     <Compile Include="StoredProcedure\SP_ChangePassword.cs" />
     <Compile Include="StoredProcedure\SP_RemoveUser.cs" />

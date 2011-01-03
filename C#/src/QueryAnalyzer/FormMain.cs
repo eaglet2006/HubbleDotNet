@@ -815,5 +815,11 @@ namespace QueryAnalyzer
             userManagementToolStripMenuItem_Click(sender, e);
         }
 
+        private void taskSchedulerManagementToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FormTaskSchedulerList frmTaskScheduler = new FormTaskSchedulerList();
+            frmTaskScheduler.ShowDialog();
+        }
+
     }
 }
