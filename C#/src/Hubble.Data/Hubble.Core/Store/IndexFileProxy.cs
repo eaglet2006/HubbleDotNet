@@ -1354,6 +1354,7 @@ MergeAckLoop:
                 goto MergeAckLoop;
             }
 
+            bool gotoMergeAckLoop = false;
 
             try
             {
@@ -1362,12 +1363,17 @@ MergeAckLoop:
                     HBMonitor.Exit(_LockObj);
 
                     System.Threading.Thread.Sleep(10);
+                    gotoMergeAckLoop = true;
+
                     goto MergeAckLoop;
                 }
             }
             finally
             {
-                HBMonitor.Exit(_LockObj);
+                if (!gotoMergeAckLoop)
+                {
+                    HBMonitor.Exit(_LockObj);
+                }
             }
 
             //SSendMessage((int)Event.MergeAck, mergeAck, 300 * 1000); //time out 5 min
