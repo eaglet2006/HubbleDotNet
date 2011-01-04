@@ -87,6 +87,7 @@ namespace Hubble.Core.Data
         int _LastDocIdForIndexOnly = 0;
 
         DBAdapter.IDBAdapter _DBAdapter;
+        DBAdapter.IDBAdapter _MirrorDBAdapter = null;
 
         private object _InsertLock = new object();
 
@@ -238,6 +239,24 @@ namespace Hubble.Core.Data
                 _DBAdapter = value;
             }
         }
+
+        /// <summary>
+        /// Database adapter for mirror table
+        /// </summary>
+        public DBAdapter.IDBAdapter MirrorDBAdapter
+        {
+            get
+            {
+                return _MirrorDBAdapter;
+            }
+
+            set
+            {
+                _MirrorDBAdapter = value;
+            }
+        }
+
+        
 
         internal Table Table
         {
@@ -453,10 +472,13 @@ namespace Hubble.Core.Data
 
         internal void SetIndexOnly(bool value)
         {
+            if (!_TableLock.Enter(Lock.Mode.Mutex, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Mutex, 30000);
-
                 if (value && !_Table.IndexOnly)
                 {
                     _LastDocId = _LastDocIdForIndexOnly;
@@ -480,9 +502,13 @@ namespace Hubble.Core.Data
 
         internal void SetStoreQueryCacheInFile(bool value)
         {
+            if (!_TableLock.Enter(Lock.Mode.Mutex, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Mutex, 30000);
                 _Table.StoreQueryCacheInFile = value;
 
                 if (value)
@@ -504,10 +530,13 @@ namespace Hubble.Core.Data
 
         internal void SetMaxReturnCount(int value)
         {
+            if (!_TableLock.Enter(Lock.Mode.Mutex, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Mutex, 30000);
-
                 _Table.MaxReturnCount = value;
             }
             finally
@@ -1024,6 +1053,13 @@ namespace Hubble.Core.Data
                             table.DBAdapterTypeName));
                     }
 
+                    if (MirrorDBAdapter != null)
+                    {
+                        MirrorDBAdapter.Table = table.GetMirrorTable();
+                        MirrorDBAdapter.DocIdReplaceField = DocIdReplaceField;
+                        MirrorDBAdapter.DBProvider = this;
+                    }
+
                     //Open delete provider
                     _DelProvider.Open(_Directory);
 
@@ -1186,6 +1222,18 @@ namespace Hubble.Core.Data
                 }
             }
 
+            if (_Table.HasMirrorTable)
+            {
+                Type dbAdapterType;
+
+                if (_DBAdapterTable.TryGetValue(_Table.MirrorDBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                {
+                    MirrorDBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
+                    MirrorDBAdapter.Table = _Table.GetMirrorTable();
+                    MirrorDBAdapter.DBProvider = this;
+                }
+            }
+
             _Inited = false;
 
             if (_Table.InitImmediatelyAfterStartup)
@@ -1204,6 +1252,12 @@ namespace Hubble.Core.Data
             return _DocPayload.GetDocIdByDocIdReplaceFieldValue(value);
         }
 
+        /// <summary>
+        /// Return id value by docid
+        /// </summary>
+        /// <param name="docId"></param>
+        /// <returns></returns>
+        /// <remarks>if docid does not exist, return long.MaxValue</remarks>
         unsafe public long GetDocIdReplaceFieldValue(int docId)
         {
             if (_DocIdReplaceField == null)
@@ -1356,9 +1410,20 @@ namespace Hubble.Core.Data
             {
                 dbFields.Add(new Field("DocId", DataType.Int));
 
-                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("DB Query");
+                Query.PerformanceReport performanceReport; 
 
-                System.Data.DataTable dt = _DBAdapter.Query(dbFields, docs, begin, end);
+                System.Data.DataTable dt;
+
+                if (Table.HasMirrorTable && MirrorDBAdapter != null)
+                {
+                    performanceReport = new Hubble.Core.Query.PerformanceReport("Get results from Mirror table");
+                    dt = MirrorDBAdapter.Query(dbFields, docs, begin, end);
+                }
+                else
+                {
+                    performanceReport = new Hubble.Core.Query.PerformanceReport("Get results from DB");
+                    dt = _DBAdapter.Query(dbFields, docs, begin, end);
+                }
 
                 performanceReport.Stop();
 
@@ -1569,6 +1634,21 @@ namespace Hubble.Core.Data
                         DBAdapter.Drop();
                         DBAdapter.Create();
                     }
+                    else
+                    {
+                        if (table.HasMirrorTable)
+                        {
+                            Type dbAdapterType;
+
+                            if (_DBAdapterTable.TryGetValue(table.MirrorDBAdapterTypeName.ToLower().Trim(), out dbAdapterType))
+                            {
+                                MirrorDBAdapter = (DBAdapter.IDBAdapter)Instance.CreateInstance(dbAdapterType);
+                                MirrorDBAdapter.Table = table.GetMirrorTable();
+                                MirrorDBAdapter.Drop();
+                                MirrorDBAdapter.CreateMirrorTable();
+                            }
+                        }
+                    }
 
                 }
                 else
@@ -1593,6 +1673,16 @@ namespace Hubble.Core.Data
                     if (!table.IndexOnly)
                     {
                         DBAdapter.Drop();
+                    }
+                    else
+                    {
+                        if (table.HasMirrorTable)
+                        {
+                            if (MirrorDBAdapter != null)
+                            {
+                                MirrorDBAdapter.Drop();
+                            }
+                        }
                     }
                     throw;
                 }
@@ -1668,15 +1758,24 @@ namespace Hubble.Core.Data
 
         public void Insert(List<Document> docs)
         {
+            Insert(docs, false);
+        }
+
+        public void Insert(List<Document> docs, bool callByUpdate)
+        {
+
+            if (docs.Count <= 0)
+            {
+                return;
+            }
+
+            if (!_TableLock.Enter(Lock.Mode.Share, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                if (docs.Count <= 0)
-                {
-                    return;
-                }
-
-                _TableLock.Enter(Lock.Mode.Share, 30000);
-
                 lock (_ExitLock)
                 {
                     if (_NeedExit)
@@ -1693,7 +1792,7 @@ namespace Hubble.Core.Data
                 lock (_InsertLock)
                 {
                     List<Field> fields = GetAllFields();
-                    
+
                     int lastDocId = _PayloadFile.LastStoredId;
 
                     //Initial docid and initial fields
@@ -1764,18 +1863,54 @@ namespace Hubble.Core.Data
                     {
                         _DBAdapter.Insert(docs);
                     }
+                    else
+                    {
+                        //Insert to mirror table
+                        if (Table.HasMirrorTable && !callByUpdate)
+                        {
+                            if (MirrorDBAdapter != null)
+                            {
+                                try
+                                {
+                                    MirrorDBAdapter.MirrorInsert(docs);
+                                }
+                                catch
+                                {
+                                    //Protect for insert repeatly doc to mirror table
+                                    //when mirror table miss-syncronized with source table
+                                    //as some problem.
+
+                                    foreach (Document doc in docs)
+                                    {
+                                        List<Document> mDocs = new List<Document>(1);
+                                        mDocs.Add(doc);
+
+                                        try
+                                        {
+                                            MirrorDBAdapter.MirrorInsert(mDocs);
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            Global.Report.WriteErrorLog(string.Format("Insert mirror table docid = {0} fail", doc.DocId),
+                                                e);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     //Check Value of DocIdReplaceField is Uniqued
                     if (Table.DocIdReplaceField != null)
                     {
                         int DocIdReplaceFieldIndex = -1;
 
-                        for(int i = 0 ; i < docs[0].FieldValues.Count; i++)
+                        for (int i = 0; i < docs[0].FieldValues.Count; i++)
                         {
-                             if (docs[0].FieldValues[i].FieldName.Equals(Table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
-                             {
-                                 DocIdReplaceFieldIndex = i;
-                             }
+                            if (docs[0].FieldValues[i].FieldName.Equals(Table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                            {
+                                DocIdReplaceFieldIndex = i;
+                            }
                         }
 
                         if (DocIdReplaceFieldIndex < 0)
@@ -1909,7 +2044,7 @@ namespace Hubble.Core.Data
                     }
 
                     BeginInsertProtect(lastDocId);
-                    
+
                     //Index full text
                     int fieldIndex = 0;
 
@@ -1949,7 +2084,7 @@ namespace Hubble.Core.Data
                     EndInsertProtect();
 
                     //Collect(lastDocId);
-                }                 
+                }
 
             }
             finally
@@ -1966,10 +2101,13 @@ namespace Hubble.Core.Data
 
         internal void Update(List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList)
         {
+            if (!_TableLock.Enter(Lock.Mode.Share, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
-
                 lock (_ExitLock)
                 {
                     if (_NeedExit)
@@ -2196,8 +2334,8 @@ namespace Hubble.Core.Data
                                 }
                             }
 
-                            Delete(doDocs);
-                            Insert(docResult);
+                            Delete(doDocs, true);
+                            Insert(docResult, true);
                             doDocs.Clear();
                         }
                     }
@@ -2223,17 +2361,15 @@ namespace Hubble.Core.Data
                             }
                         }
 
-                        Delete(doDocs);
-                        Insert(docResult);
+                        Delete(doDocs, true);
+                        Insert(docResult, true);
                     }
-
-
                 }
                 else
                 {
                     if (!IndexOnly)
                     {
-                        _DBAdapter.Update(doc, docs);
+                        throw new DataException("Can't call this function when Indexonly = false");
                     }
 
                     List<int> updateIds = new List<int>();
@@ -2338,6 +2474,12 @@ namespace Hubble.Core.Data
                     }
                 }
             }
+
+            if (Table.HasMirrorTable && MirrorDBAdapter != null)
+            {
+                MirrorDBAdapter.MirrorUpdate(fieldValues, docValues, docs);
+            }
+
         }
 
 
@@ -2475,8 +2617,8 @@ namespace Hubble.Core.Data
                                 }
                             }
 
-                            Delete(doDocs);
-                            Insert(docResult);
+                            Delete(doDocs, true);
+                            Insert(docResult, true);
                             doDocs.Clear();
                         }
                     }
@@ -2497,11 +2639,9 @@ namespace Hubble.Core.Data
                             }
                         }
 
-                        Delete(doDocs);
-                        Insert(docResult);
+                        Delete(doDocs, true);
+                        Insert(docResult, true);
                     }
-
-
                 }
                 else
                 {
@@ -2579,14 +2719,35 @@ namespace Hubble.Core.Data
                     }
                 }
             }
+
+            if (Table.HasMirrorTable && MirrorDBAdapter != null)
+            {
+                List<List<FieldValue>> docValues = new List<List<FieldValue>>();
+
+                for (int i = 0; i < docs.Count; i++)
+                {
+                    docValues.Add((List<FieldValue>)fieldValues);
+                }
+
+                MirrorDBAdapter.MirrorUpdate(fieldValues, docValues, docs);
+            }
+
         }
 
         public void Delete(IList<int> docs)
         {
+            Delete(docs, false);
+        }
+
+        public void Delete(IList<int> docs, bool callbyUpdate)
+        {
+            if (!_TableLock.Enter(Lock.Mode.Share, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
-
                 lock (_ExitLock)
                 {
                     if (_NeedExit)
@@ -2608,12 +2769,28 @@ namespace Hubble.Core.Data
                 {
                     _DBAdapter.Delete(docs);
                 }
+                else
+                {
+                    if (Table.HasMirrorTable && MirrorDBAdapter != null && !callbyUpdate)
+                    {
+                        MirrorDBAdapter.MirrorDelete(docs);
+                    }
+                }
 
-                _DelProvider.Delete(docs);
+                int delCount = _DelProvider.Delete(docs);
+
+                lock (this)
+                {
+                    foreach (InvertedIndex index in _FieldInvertedIndex.Values)
+                    {
+                        index.DocumentCount -= delCount;
+                    }
+                }
+
 
                 if (_DocIdReplaceField != null)
                 {
-                    foreach(int docId in docs)
+                    foreach (int docId in docs)
                     {
                         long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
 
@@ -2641,10 +2818,14 @@ namespace Hubble.Core.Data
 
                 _TableLock.Leave();
             }
-
         }
 
         public void Delete(IList<Query.DocumentResultForSort> docs)
+        {
+            Delete(docs, false);
+        }
+
+        public void Delete(IList<Query.DocumentResultForSort> docs, bool callbyUpdate)
         {
             if (docs.Count <= 0)
             {
@@ -2658,15 +2839,18 @@ namespace Hubble.Core.Data
                 docIds.Add(docResult.DocId);
             }
 
-            Delete(docIds);
+            Delete(docIds, callbyUpdate);
         }
 
         public void Optimize()
         {
+            if (!_TableLock.Enter(Lock.Mode.Share, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
-
                 foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
                 {
                     iIndex.Optimize();
@@ -2680,9 +2864,14 @@ namespace Hubble.Core.Data
 
         public void Optimize(OptimizationOption option)
         {
+            if (!_TableLock.Enter(Lock.Mode.Share, 30000))
+            {
+                throw new TimeoutException();
+            }
+
             try
             {
-                _TableLock.Enter(Lock.Mode.Share, 30000);
+
 
                 foreach (InvertedIndex iIndex in _FieldInvertedIndex.Values)
                 {

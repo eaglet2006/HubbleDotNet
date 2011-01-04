@@ -386,6 +386,12 @@ namespace OracleDBAdapter
             }
         }
 
+        public void CreateMirrorTable()
+        {
+            throw new NotImplementedException();
+        }
+
+
         public void Truncate()
         {
             Debug.Assert(Table != null);
@@ -561,6 +567,12 @@ namespace OracleDBAdapter
             }
         }
 
+
+        public void MirrorInsert(IList<Document> docs)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(IList<int> docIds)
         {
             StringBuilder sql = new StringBuilder();
@@ -589,6 +601,11 @@ namespace OracleDBAdapter
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql.ToString());
             }
+        }
+
+        public void MirrorDelete(IList<int> docIds)
+        {
+            throw new NotImplementedException();
         }
 
         public void Update(Document doc, IList<Hubble.Core.Query.DocumentResultForSort> docs)
@@ -691,6 +708,11 @@ namespace OracleDBAdapter
                 sqlData.Connect(Table.ConnectionString);
                 sqlData.ExcuteSql(sql.ToString());
             }
+        }
+
+        public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues, IList<Hubble.Core.Query.DocumentResultForSort> docs)
+        {
+            throw new NotImplementedException();
         }
 
         public System.Data.DataTable Query(IList<Field> selectFields, IList<Hubble.Core.Query.DocumentResultForSort> docs)
@@ -1238,5 +1260,6 @@ namespace OracleDBAdapter
         }
 
         #endregion
+
     }
 }

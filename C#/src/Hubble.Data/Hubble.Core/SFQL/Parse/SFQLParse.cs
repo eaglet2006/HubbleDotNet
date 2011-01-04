@@ -434,6 +434,51 @@ namespace Hubble.Core.SFQL.Parse
 
                         table.ConnectionString = attr.Parameters[0];
                         break;
+
+                    case "sqlforcreate":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("SQLForCreate attribute must have one parameter!");
+                        }
+
+                        table.SQLForCreate = attr.Parameters[0];
+                        break;
+
+                    case "mirrordbtablename":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("MirrorDBTableName attribute must have one parameter!");
+                        }
+
+                        table.MirrorDBTableName = attr.Parameters[0];
+
+                        break;
+                    case "mirrordbadapter":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("MirrorDBAdapter attribute must have one parameter!");
+                        }
+
+                        table.MirrorDBAdapterTypeName = attr.Parameters[0];
+                        break;
+
+                    case "mirrordbconnect":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("MirrorDBConnect attribute must have one parameter!");
+                        }
+
+                        table.MirrorConnectionString = attr.Parameters[0];
+                        break;
+
+                    case "mirrorsqlforcreate":
+                        if (attr.Parameters.Count != 1)
+                        {
+                            throw new ParseException("MirrorSQLForCreate attribute must have one parameter!");
+                        }
+
+                        table.MirrorSQLForCreate = attr.Parameters[0];
+                        break;
                 }
             }
 
@@ -589,6 +634,17 @@ namespace Hubble.Core.SFQL.Parse
             if (table.DBTableName == null)
             {
                 table.DBTableName = table.Name;
+            }
+
+            //Check mirror table
+            if (table.HasMirrorTable)
+            {
+                if (table.DBAdapterTypeName == table.MirrorDBAdapterTypeName &&
+                    table.DBTableName == table.MirrorDBTableName &&
+                    table.ConnectionString == table.MirrorConnectionString)
+                {
+                    throw new ParseException("DBTable is same as MirrorDBTable!");
+                }
             }
 
             DBProvider.CreateTable(table, directory);
@@ -1797,9 +1853,15 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
-                    begin = 0;
+                    begin -= qResult.DataSet.Tables[0].MinimumCapacity;
+
+                    if (begin < 0)
+                    {
+                        begin = 0;
+                    }
+
                     outputCount -= qResult.DataSet.Tables[0].Rows.Count;
-                    end = outputCount - 1;
+                    end = begin + outputCount - 1;
                 }
             }
 

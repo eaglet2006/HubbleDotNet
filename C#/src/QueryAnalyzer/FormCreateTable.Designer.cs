@@ -73,6 +73,7 @@
             this.buttonBack = new System.Windows.Forms.Button();
             this.buttonNext = new System.Windows.Forms.Button();
             this.buttonFinish = new System.Windows.Forms.Button();
+            this.buttonMirrorTable = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -126,7 +127,7 @@
             this.buttonTestConnectionString.Location = new System.Drawing.Point(31, 288);
             this.buttonTestConnectionString.Name = "buttonTestConnectionString";
             this.buttonTestConnectionString.Size = new System.Drawing.Size(169, 23);
-            this.buttonTestConnectionString.TabIndex = 29;
+            this.buttonTestConnectionString.TabIndex = 4;
             this.buttonTestConnectionString.Text = "Test DB Connection String";
             this.buttonTestConnectionString.UseVisualStyleBackColor = true;
             this.buttonTestConnectionString.Click += new System.EventHandler(this.buttonTestConnectionString_Click);
@@ -145,7 +146,7 @@
             this.textBoxTableName.Location = new System.Drawing.Point(181, 22);
             this.textBoxTableName.Name = "textBoxTableName";
             this.textBoxTableName.Size = new System.Drawing.Size(241, 20);
-            this.textBoxTableName.TabIndex = 27;
+            this.textBoxTableName.TabIndex = 0;
             this.textBoxTableName.TextChanged += new System.EventHandler(this.textBoxTableName_TextChanged);
             // 
             // label8
@@ -181,7 +182,7 @@
             this.textBoxConnectionString.Location = new System.Drawing.Point(181, 165);
             this.textBoxConnectionString.Name = "textBoxConnectionString";
             this.textBoxConnectionString.Size = new System.Drawing.Size(383, 20);
-            this.textBoxConnectionString.TabIndex = 23;
+            this.textBoxConnectionString.TabIndex = 3;
             // 
             // label6
             // 
@@ -198,7 +199,7 @@
             this.comboBoxDBAdapter.Location = new System.Drawing.Point(181, 113);
             this.comboBoxDBAdapter.Name = "comboBoxDBAdapter";
             this.comboBoxDBAdapter.Size = new System.Drawing.Size(241, 21);
-            this.comboBoxDBAdapter.TabIndex = 21;
+            this.comboBoxDBAdapter.TabIndex = 2;
             // 
             // label3
             // 
@@ -232,10 +233,11 @@
             this.textBoxIndexFolder.Location = new System.Drawing.Point(181, 60);
             this.textBoxIndexFolder.Name = "textBoxIndexFolder";
             this.textBoxIndexFolder.Size = new System.Drawing.Size(241, 20);
-            this.textBoxIndexFolder.TabIndex = 17;
+            this.textBoxIndexFolder.TabIndex = 1;
             // 
             // tabPage2
             // 
+            this.tabPage2.Controls.Add(this.buttonMirrorTable);
             this.tabPage2.Controls.Add(this.groupBoxIncrementalMode);
             this.tabPage2.Controls.Add(this.textBoxDBTableName);
             this.tabPage2.Controls.Add(this.labelDBTableName);
@@ -551,6 +553,17 @@
             this.buttonFinish.UseVisualStyleBackColor = true;
             this.buttonFinish.Click += new System.EventHandler(this.buttonFinish_Click);
             // 
+            // buttonMirrorTable
+            // 
+            this.buttonMirrorTable.Enabled = false;
+            this.buttonMirrorTable.Location = new System.Drawing.Point(30, 380);
+            this.buttonMirrorTable.Name = "buttonMirrorTable";
+            this.buttonMirrorTable.Size = new System.Drawing.Size(75, 23);
+            this.buttonMirrorTable.TabIndex = 35;
+            this.buttonMirrorTable.Text = "Mirror table";
+            this.buttonMirrorTable.UseVisualStyleBackColor = true;
+            this.buttonMirrorTable.Click += new System.EventHandler(this.buttonMirrorTable_Click);
+            // 
             // FormCreateTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -631,5 +644,6 @@
         private System.Windows.Forms.TextBox textBoxDocIdReplaceField;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.Button buttonFinish;
+        private System.Windows.Forms.Button buttonMirrorTable;
     }
 }

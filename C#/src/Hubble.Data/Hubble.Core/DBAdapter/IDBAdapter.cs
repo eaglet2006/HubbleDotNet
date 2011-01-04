@@ -19,6 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
+
+using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.DBAdapter
@@ -33,15 +35,24 @@ namespace Hubble.Core.DBAdapter
 
         void Create();
 
+        void CreateMirrorTable();
+
         void Truncate();
 
         void Truncate(string tableName);
 
         void Insert(IList<Data.Document> docs);
 
+        void MirrorInsert(IList<Hubble.Core.Data.Document> docs);
+
         void Delete(IList<int> docIds);
 
+        void MirrorDelete(IList<int> docIds);
+
         void Update(Data.Document doc, IList<Query.DocumentResultForSort> docs);
+
+        void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues,
+                    IList<Query.DocumentResultForSort> docs);
 
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs);
         System.Data.DataTable Query(IList<Data.Field> selectFields, IList<Query.DocumentResultForSort> docs, int begin, int end);

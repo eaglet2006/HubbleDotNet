@@ -421,12 +421,22 @@ namespace Hubble.Core.Data
                         {
                             dbProvider.DBAdapter.Drop();
                         }
+                        else
+                        {
+                            if (dbProvider.MirrorDBAdapter != null)
+                            {
+                                dbProvider.MirrorDBAdapter.Drop();
+                            }
+                        }
+                    }
+
+                    if (!dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000))
+                    {
+                        throw new TimeoutException();
                     }
 
                     try
                     {
-                        dbProvider._TableLock.Enter(Lock.Mode.Mutex, 30000);
-
                         string dir = dbProvider.Directory;
 
                         if (dir == null)
@@ -485,6 +495,13 @@ namespace Hubble.Core.Data
                     if (!indexReadOnly)
                     {
                         dbProvider.DBAdapter.Truncate();
+                    }
+                    else
+                    {
+                        if (dbProvider.MirrorDBAdapter != null)
+                        {
+                            dbProvider.MirrorDBAdapter.Truncate();
+                        }
                     }
 
                     Drop(tableName);

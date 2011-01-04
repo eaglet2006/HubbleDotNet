@@ -1058,12 +1058,15 @@ namespace Hubble.Core.Store
                 _IndexFile.GetIndexFileName(serial), indexFileInfoForMerge, begin, end, serial);
         }
 
-        private void ProcessMergeAck(int evt, MessageQueue.MessageFlag flag, object data)
+        private bool ProcessMergeAck(int evt, MessageQueue.MessageFlag flag, object data)
         {
+            if (!_DBProvider.MergeLock.Enter(Lock.Mode.Mutex, 100))
+            {
+                return false;
+            }
+
             try
             {
-                _DBProvider.MergeLock.Enter(Lock.Mode.Mutex);
-
                 MergeAck mergeAck = (MergeAck)data;
 
                 int begin = mergeAck.BeginSerial;
@@ -1207,6 +1210,8 @@ namespace Hubble.Core.Store
             {
                 _DBProvider.MergeLock.Leave();
             }
+
+            return true;
         }
 
         //private object ProcessMessage(int evt, MessageQueue.MessageFlag flag, object data)
@@ -1352,7 +1357,13 @@ MergeAckLoop:
 
             try
             {
-                ProcessMergeAck((int)Event.MergeAck, MessageQueue.MessageFlag.None, mergeAck);
+                if (!ProcessMergeAck((int)Event.MergeAck, MessageQueue.MessageFlag.None, mergeAck))
+                {
+                    HBMonitor.Exit(_LockObj);
+
+                    System.Threading.Thread.Sleep(10);
+                    goto MergeAckLoop;
+                }
             }
             finally
             {

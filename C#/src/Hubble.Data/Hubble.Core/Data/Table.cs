@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Reflection;
 using Hubble.Framework.IO;
 using Hubble.Framework.Serialization;
 
@@ -35,11 +36,21 @@ namespace Hubble.Core.Data
 
         string _DBTableName;
 
-        List<Field> _Fields = new List<Field>();
-
         string _DBAdapterTypeName = null; //eg. SqlServer2005Adapter 
 
+        string _MirrorConnectionString = null; //Connection string for mirror table
+
+        string _MirrorDBTableName; //DBTableName for mirror table
+
+        string _MirrorDBAdapterTypeName = null; //DBAdapter for mirror table. eg. SqlServer2005Adapter 
+
+        bool _UsingMirrorTableForNonFulltextQuery = false; //Using mirror table fro non-fulltext query
+
+        List<Field> _Fields = new List<Field>();
+
         string _SQLForCreate;
+
+        string _MirrorSQLForCreate;
 
         int _ForceCollectCount = 5000;
 
@@ -74,6 +85,21 @@ namespace Hubble.Core.Data
         bool _IsBigTable = false;
 
         private BigTable.BigTable _BigTable = new Hubble.Core.BigTable.BigTable();
+
+        #endregion
+
+        #region XmlIgnore Public properties
+
+        [System.Xml.Serialization.XmlIgnore]
+        public bool HasMirrorTable
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(_MirrorConnectionString) && 
+                    !string.IsNullOrEmpty(_MirrorDBAdapterTypeName) &&
+                    !string.IsNullOrEmpty(_MirrorDBTableName) && _IndexOnly;
+            }
+        }
 
         #endregion
 
@@ -201,17 +227,6 @@ namespace Hubble.Core.Data
             }
         }
 
-        /// <summary>
-        /// Fields of this table
-        /// </summary>
-        public List<Field> Fields
-        {
-            get
-            {
-                return _Fields;
-            }
-        }
-
         public string DBAdapterTypeName
         {
             get
@@ -222,6 +237,78 @@ namespace Hubble.Core.Data
             set
             {
                 _DBAdapterTypeName = value;
+            }
+        }
+
+        /// <summary>
+        /// ConnectionString of database (eg. SQLSERVER) for mirror table
+        /// </summary>
+        public string MirrorConnectionString
+        {
+            get
+            {
+                return _MirrorConnectionString;
+            }
+
+            set
+            {
+                _MirrorConnectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Table name of database (eg. SQLSERVER) for mirror table
+        /// </summary>
+        public string MirrorDBTableName
+        {
+            get
+            {
+                return _MirrorDBTableName;
+            }
+
+            set
+            {
+                _MirrorDBTableName = value;
+            }
+        }
+
+        public string MirrorDBAdapterTypeName
+        {
+            get
+            {
+                return _MirrorDBAdapterTypeName;
+            }
+
+            set
+            {
+                _MirrorDBAdapterTypeName = value;
+            }
+        }
+
+        /// <summary>
+        /// Using mirror table fro non-fulltext query
+        /// </summary>
+        public bool UsingMirrorTableForNonFulltextQuery
+        {
+            get
+            {
+                return _UsingMirrorTableForNonFulltextQuery && HasMirrorTable;
+            }
+
+            set
+            {
+                _UsingMirrorTableForNonFulltextQuery = value;
+            }
+        }
+
+        /// <summary>
+        /// Fields of this table
+        /// </summary>
+        public List<Field> Fields
+        {
+            get
+            {
+                return _Fields;
             }
         }
 
@@ -240,6 +327,28 @@ namespace Hubble.Core.Data
                 lock (this)
                 {
                     _SQLForCreate = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Execute this sql for mirror table when table created.
+        /// </summary>
+        public string MirrorSQLForCreate
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _MirrorSQLForCreate;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _MirrorSQLForCreate = value;
                 }
             }
         }
@@ -588,7 +697,29 @@ namespace Hubble.Core.Data
                 }
             }
         }
-        
+
+        public Table GetMirrorTable()
+        {
+            Table table = new Table();
+
+            foreach (PropertyInfo pi in this.GetType().GetProperties())
+            {
+                if (pi.CanWrite)
+                {
+                    object value = pi.GetValue(this, null);
+                    pi.SetValue(table, value, null);
+                }
+            }
+
+            table._Fields = this.Fields;
+
+            table.ConnectionString = this.MirrorConnectionString;
+            table.DBAdapterTypeName = this.MirrorDBAdapterTypeName;
+            table.DBTableName = this.MirrorDBTableName;
+            table.SQLForCreate = this.MirrorSQLForCreate;
+            return table;
+        }
+
 
         public void Save(string dir)
         {

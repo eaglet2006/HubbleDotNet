@@ -117,6 +117,11 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "TriggerTableName");
             OutputValue("Value", dbProvider.Table.TriggerTableName);
+
+            NewRow();
+            OutputValue("Attribute", "UsingMirrorTableForNonFulltextQuery");
+            OutputValue("Value", dbProvider.Table.UsingMirrorTableForNonFulltextQuery);
+
         }
 
         #endregion

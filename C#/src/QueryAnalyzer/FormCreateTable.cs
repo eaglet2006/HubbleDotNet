@@ -54,6 +54,82 @@ namespace QueryAnalyzer
             }
         }
 
+
+        string _MirrorConnectionString = null; //Connection string for mirror table
+
+        string _MirrorDBTableName; //DBTableName for mirror table
+
+        string _MirrorDBAdapterTypeName = null; //DBAdapter for mirror table. eg. SqlServer2005Adapter 
+
+        string _MirrorSQLForCreate;
+
+        /// <summary>
+        /// ConnectionString of database (eg. SQLSERVER) for mirror table
+        /// </summary>
+        internal string MirrorConnectionString
+        {
+            get
+            {
+                return _MirrorConnectionString;
+            }
+
+            set
+            {
+                _MirrorConnectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Table name of database (eg. SQLSERVER) for mirror table
+        /// </summary>
+        internal string MirrorDBTableName
+        {
+            get
+            {
+                return _MirrorDBTableName;
+            }
+
+            set
+            {
+                _MirrorDBTableName = value;
+            }
+        }
+
+        internal string MirrorDBAdapterTypeName
+        {
+            get
+            {
+                return _MirrorDBAdapterTypeName;
+            }
+
+            set
+            {
+                _MirrorDBAdapterTypeName = value;
+            }
+        }
+
+        /// <summary>
+        /// Execute this sql for mirror table when table created.
+        /// </summary>
+        internal string MirrorSQLForCreate
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _MirrorSQLForCreate;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _MirrorSQLForCreate = value;
+                }
+            }
+        }
+
         CreateTable.IBefore[] BeforeEvents = 
         {
             new CreateTable.BeforeDatabaseAttributes(),
@@ -180,7 +256,15 @@ namespace QueryAnalyzer
             sb.AppendFormat("[DBAdapter ('{0}')]\r\n", comboBoxDBAdapter.Text.Replace("'", "''"));
             sb.AppendFormat("[DBConnect ('{0}')]\r\n", textBoxConnectionString.Text.Replace("'", "''"));
 
-
+            if (!string.IsNullOrEmpty(MirrorConnectionString) &&
+                !string.IsNullOrEmpty(MirrorDBTableName) &&
+                !string.IsNullOrEmpty(MirrorDBAdapterTypeName))
+            {
+                sb.AppendFormat("[MirrorDBTableName ('{0}')]\r\n", MirrorDBTableName.Replace("'", "''"));
+                sb.AppendFormat("[MirrorDBAdapter ('{0}')]\r\n", MirrorDBAdapterTypeName.Replace("'", "''"));
+                sb.AppendFormat("[MirrorDBConnect ('{0}')]\r\n", MirrorConnectionString.Replace("'", "''"));
+                sb.AppendFormat("[MirrorSQLForCreate ('{0}')]\r\n", MirrorSQLForCreate.Replace("'", "''"));
+            }
 
             sb.AppendFormat("Create table {0}\r\n", textBoxTableName.Text.Replace("'", "''"));
             sb.AppendLine("(");
@@ -383,13 +467,13 @@ namespace QueryAnalyzer
             {
                 if (comboBoxDBAdapter.Text.Trim() == "")
                 {
-                    MessageBox.Show("Can't use empty Default DBAdapter!", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Can't use empty DBAdapter!", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if (textBoxConnectionString.Text.Trim() == "")
                 {
-                    MessageBox.Show("Can't use empty Default connection string!", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("Can't use empty connection string!", "error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -407,6 +491,7 @@ namespace QueryAnalyzer
         private void radioButtonAppendOnly_CheckedChanged(object sender, EventArgs e)
         {
             panelDocIdReplaceField.Visible = !radioButtonAppendOnly.Checked;
+            buttonMirrorTable.Enabled = !radioButtonAppendOnly.Checked;
         }
 
         private void buttonFinish_Click(object sender, EventArgs e)
@@ -431,6 +516,27 @@ namespace QueryAnalyzer
                     Hubble.Framework.IO.Path.AppendDivision(DefaultIndexFolder, '\\') +
                     textBoxTableName.Text, '\\');
 
+            }
+        }
+
+        private void buttonMirrorTable_Click(object sender, EventArgs e)
+        {
+            FormMirrorTable frmMirrorTable = new FormMirrorTable();
+
+            foreach(string dbAdapter in comboBoxDBAdapter.Items)
+            {
+                frmMirrorTable.comboBoxDBAdapter.Items.Add(dbAdapter);
+            }
+
+            frmMirrorTable.comboBoxDBAdapter.Text = comboBoxDBAdapter.Text;
+            frmMirrorTable.textBoxConnectionString.Text = textBoxConnectionString.Text;
+
+            if (frmMirrorTable.ShowDialog() == DialogResult.OK)
+            {
+                this.MirrorConnectionString = frmMirrorTable.ConnectionString;
+                this.MirrorDBAdapterTypeName = frmMirrorTable.DBAdapter;
+                this.MirrorDBTableName = frmMirrorTable.TableName;
+                this.MirrorSQLForCreate = frmMirrorTable.SqlForCreate;
             }
         }
     }

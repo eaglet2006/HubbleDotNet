@@ -100,6 +100,7 @@ namespace QueryAnalyzer
         }
 
         bool _IndexOnly;
+        bool _TableSynchronization;
         long _LastDocId;
         string _DBTableName;
         string _DocIdReplaceField = null;
@@ -151,6 +152,10 @@ namespace QueryAnalyzer
                         {
                             _DocIdReplaceField = row["Value"].ToString();
                         }
+                    }
+                    else if (row["Attribute"].ToString() == "TableSynchronization")
+                    {
+                        _TableSynchronization = bool.Parse(row["Value"].ToString());
                     }
                 }
 
@@ -685,7 +690,10 @@ namespace QueryAnalyzer
                     }
                     else
                     {
-                        _NeedDisableSynchronizeFirst = true;
+                        if (_TableSynchronization)
+                        {
+                            _NeedDisableSynchronizeFirst = true;
+                        }
                     }
                 }
             }

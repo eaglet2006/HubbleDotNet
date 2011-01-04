@@ -218,6 +218,24 @@ namespace Hubble.Core.StoredProcedure
                             tableName, dbProvider.Table.TriggerTableName));
                     }
                     break;
+
+                case "usingmirrortablefornonfulltextquery":
+                    {
+                        bool usingmirrortablefornonfulltextquery;
+
+                        if (bool.TryParse(value, out usingmirrortablefornonfulltextquery))
+                        {
+                            dbProvider.Table.UsingMirrorTableForNonFulltextQuery = usingmirrortablefornonfulltextquery;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} UsingMirrorTableForNonFulltextQuery to {1} sucessful!",
+                                tableName, dbProvider.Table.UsingMirrorTableForNonFulltextQuery));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+                    break;
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");
             }

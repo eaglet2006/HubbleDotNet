@@ -126,24 +126,55 @@ namespace Hubble.Core.SFQL.Parse
                 whereSql = expressionTree.SqlText;
             }
 
-            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResults from DB");
+            Query.PerformanceReport performanceReport;
+            if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
+            {
+                performanceReport = new Hubble.Core.Query.PerformanceReport("Non-fulltext query from Mirror table");
+            }
+            else
+            {
+                performanceReport = new Hubble.Core.Query.PerformanceReport("Non-fulltext query from DB");
+            }
 
             string orderBy = _OrderBy;
 
-            if (_OrderBy != null)
+            if (!string.IsNullOrEmpty(_OrderBy))
             {
                 if (_OrderBy.ToLower().Contains("score"))
                 {
                     orderBy = null;
                 }
-                else if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null && 
+                else if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null &&
                     _OrderBy.ToLower().Contains("docid"))
                 {
                     orderBy = null;
                 }
             }
+            else
+            {
+                if (whereSql == "")
+                {
+                    if (_DBProvider.Table.DocIdReplaceField != null)
+                    {
+                        orderBy = _DBProvider.Table.DocIdReplaceField;
+                    }
+                    else
+                    {
+                        orderBy = "docid";
+                    }
+                }
+            }
 
-            Core.SFQL.Parse.DocumentResultWhereDictionary result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, orderBy);
+            Core.SFQL.Parse.DocumentResultWhereDictionary result;
+
+            if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
+            {
+                result = _DBProvider.MirrorDBAdapter.GetDocumentResults(End, whereSql, orderBy);
+            }
+            else
+            {
+                result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, orderBy);
+            }
 
             performanceReport.Stop();
             return result;
@@ -375,10 +406,10 @@ namespace Hubble.Core.SFQL.Parse
                 query.DBProvider = _DBProvider;
                 query.TabIndex = _DBProvider.GetField(fieldName).TabIndex;
 
+                _DBProvider.MergeLock.Enter(Hubble.Framework.Threading.Lock.Mode.Share);
+
                 try
                 {
-                    _DBProvider.MergeLock.Enter(Hubble.Framework.Threading.Lock.Mode.Share);
-
                     query.QueryWords = queryWords;
 
                     Hubble.Core.Query.Searcher searcher = new Hubble.Core.Query.Searcher(query);

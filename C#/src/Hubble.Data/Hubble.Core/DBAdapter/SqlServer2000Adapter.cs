@@ -352,6 +352,12 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+        public void CreateMirrorTable()
+        {
+            throw new NotImplementedException();
+        }
+
+
         private string BuildWriteTextLine(string tableName, string fieldName, string text, int docid, DataType datatype)
         {
             switch (datatype)
@@ -451,6 +457,11 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+        public void MirrorInsert(IList<Document> docs)
+        {
+            throw new NotImplementedException();
+        }
+
         public void Delete(IList<int> docIds)
         {
             StringBuilder sql = new StringBuilder();
@@ -480,6 +491,11 @@ namespace Hubble.Core.DBAdapter
                 sqlData.ExcuteSql(sql.ToString());
             }
 
+        }
+
+        public void MirrorDelete(IList<int> docIds)
+        {
+            throw new NotImplementedException();
         }
 
         public void Update(Data.Document doc, IList<Query.DocumentResultForSort> docs)
@@ -591,6 +607,11 @@ namespace Hubble.Core.DBAdapter
                 sqlData.ExcuteSql(sql.ToString());
             }
 
+        }
+
+        public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues, IList<Hubble.Core.Query.DocumentResultForSort> docs)
+        {
+            throw new NotImplementedException();
         }
 
         public System.Data.DataTable Query(IList<Hubble.Core.Data.Field> selectFields, IList<Query.DocumentResultForSort> docs)

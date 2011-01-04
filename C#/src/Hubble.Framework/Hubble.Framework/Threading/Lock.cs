@@ -44,9 +44,9 @@ namespace Hubble.Framework.Threading
 
         int _ShareCounter = 0;
 
-        public void Enter(Mode mode)
+        public bool Enter(Mode mode)
         {
-            Enter(mode, -1);
+            return Enter(mode, -1);
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Hubble.Framework.Threading
         /// </summary>
         /// <param name="mode">Share or mutex</param>
         /// <param name="timeout">how many milliseconds waitting for. If timeout less then 0, wait until enter lock</param>
-        public void Enter(Mode mode, int timeout)
+        public bool Enter(Mode mode, int timeout)
         {
             bool waitShareCounterZero = false;
             bool waitForShareState = false;
@@ -69,7 +69,7 @@ namespace Hubble.Framework.Threading
                         {
                             case State.Share:
                                 _ShareCounter++;
-                                return;
+                                return true;
                             case State.Mutex:
                                 waitForShareState = true;
                                 break;
@@ -129,7 +129,13 @@ namespace Hubble.Framework.Threading
                         if (sw.ElapsedMilliseconds > timeout)
                         {
                             sw.Stop();
-                            throw new TimeoutException();
+
+                            lock (this)
+                            {
+                                _State = State.Share;
+                            }
+
+                            return false;
                         }
                     }
 
@@ -174,7 +180,7 @@ namespace Hubble.Framework.Threading
                         if (sw.ElapsedMilliseconds > timeout)
                         {
                             sw.Stop();
-                            throw new TimeoutException();
+                            return false;
                         }
                     }
 
@@ -189,6 +195,8 @@ namespace Hubble.Framework.Threading
 
                 goto Loop;
             }
+
+            return true;
         }
 
         public void Leave()

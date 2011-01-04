@@ -305,6 +305,82 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+        public void CreateMirrorTable()
+        {
+            Debug.Assert(Table != null);
+
+            List<string> primaryKeys = new List<string>();
+            
+
+            StringBuilder sql = new StringBuilder();
+
+            sql.AppendFormat("create table {0} (", Table.DBTableName);
+
+            if (Table.DocIdReplaceField != null)
+            {
+                primaryKeys.Add(Table.DocIdReplaceField);
+            }
+            else
+            {
+                primaryKeys.Add("DocId");
+                sql.Append("DocId Int NOT NULL,");
+            }
+
+            int i = 0;
+
+            for (i = 0; i < Table.Fields.Count; i++)
+            {
+                Data.Field field = Table.Fields[i];
+                string fieldSql = GetFieldLine(field);
+
+                if (fieldSql != null)
+                {
+                    sql.Append(fieldSql);
+
+                    if (i < Table.Fields.Count - 1)
+                    {
+                        sql.Append(",");
+                    }
+                }
+            }
+
+
+            if (primaryKeys.Count > 0)
+            {
+                i = 0;
+                sql.Append(" primary key (");
+
+                foreach (string pkName in primaryKeys)
+                {
+                    if (i == 0)
+                    {
+                        sql.Append(pkName);
+                    }
+                    else
+                    {
+                        sql.Append("," + pkName);
+                    }
+
+                    i++;
+                }
+
+                sql.Append(")");
+            }
+
+            sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+                
+                if (!string.IsNullOrEmpty(Table.SQLForCreate))
+                {
+                    sqlData.ExcuteSql(Table.SQLForCreate);
+                }
+            }
+        }
+
         public void Insert(IList<Hubble.Core.Data.Document> docs)
         {
             StringBuilder insertString = new StringBuilder();
@@ -362,6 +438,105 @@ namespace Hubble.Core.DBAdapter
 
         }
 
+        public void MirrorInsert(IList<Hubble.Core.Data.Document> docs)
+        {
+            StringBuilder insertString = new StringBuilder();
+
+            foreach (Hubble.Core.Data.Document doc in docs)
+            {
+                if (Table.DocIdReplaceField == null)
+                {
+                    insertString.AppendFormat("Insert {0} ([DocId]", _Table.DBTableName);
+                }
+                else
+                {
+                    insertString.AppendFormat("Insert {0} (", _Table.DBTableName);
+                }
+
+                int i = 0;
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
+                    if (i == 0 && Table.DocIdReplaceField != null)
+                    {
+                        insertString.AppendFormat("[{0}]", fv.FieldName);
+                    }
+                    else
+                    {
+                        insertString.AppendFormat(", [{0}]", fv.FieldName);
+                    }
+
+                    i++;
+                }
+
+                if (Table.DocIdReplaceField == null)
+                {
+                    insertString.AppendFormat(") Values({0}", doc.DocId);
+                }
+                else
+                {
+                    insertString.Append(") Values(");
+                }
+
+                i = 0;
+
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
+                    switch (fv.Type)
+                    {
+                        case Hubble.Core.Data.DataType.Varchar:
+                        case Hubble.Core.Data.DataType.NVarchar:
+                        case Hubble.Core.Data.DataType.Char:
+                        case Hubble.Core.Data.DataType.NChar:
+                        case Hubble.Core.Data.DataType.DateTime:
+                        case Hubble.Core.Data.DataType.Date:
+                        case Hubble.Core.Data.DataType.SmallDateTime:
+                        case Hubble.Core.Data.DataType.Data:
+                            if (i == 0 && Table.DocIdReplaceField != null)
+                            {
+                                insertString.AppendFormat("'{0}'", fv.Value.Replace("'", "''"));
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
+                            }
+                            break;
+                        default:
+                            if (i == 0 && Table.DocIdReplaceField != null)
+                            {
+                                insertString.AppendFormat("{0}", fv.Value);
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",{0}", fv.Value);
+                            }
+                            break;
+                    }
+
+                    i++;
+                }
+
+                insertString.Append(")\r\n");
+            }
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(insertString.ToString());
+            }
+
+        }
+
+
         public void Delete(IList<int> docIds)
         {
             StringBuilder sql = new StringBuilder();
@@ -381,6 +556,65 @@ namespace Hubble.Core.DBAdapter
                 {
                     sql.AppendFormat(",{0}", docId);
                 }
+            }
+
+            sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
+
+        }
+
+        public void MirrorDelete(IList<int> docIds)
+        {
+            StringBuilder sql = new StringBuilder();
+
+            sql.Append("delete ");
+
+            if (Table.DocIdReplaceField != null)
+            {
+                sql.AppendFormat(" {0} where {1} in (", Table.DBTableName, Table.DocIdReplaceField);
+            }
+            else
+            {
+                sql.AppendFormat(" {0} where docId in (", Table.DBTableName);
+            }
+            int i = 0;
+            foreach (int docId in docIds)
+            {
+                long id;
+
+                if (Table.DocIdReplaceField != null)
+                {
+                    id = this.DBProvider.GetDocIdReplaceFieldValue(docId);
+                    if (id == long.MaxValue)
+                    {
+                        //does not find this record
+                        continue;
+                    }
+                }
+                else
+                {
+                    id = docId;
+                }
+
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("{0}", id);
+                }
+                else
+                {
+                    sql.AppendFormat(",{0}", id);
+                }
+            }
+
+            if (i == 0)
+            {
+                //No records need to delete
+                return;
             }
 
             sql.Append(")");
@@ -463,6 +697,59 @@ namespace Hubble.Core.DBAdapter
             }
 
             sql.Append(")");
+
+            using (SQLDataProvider sqlData = new SQLDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
+
+        }
+
+        public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues,
+            IList<Query.DocumentResultForSort> docs)
+        {
+            StringBuilder sql = new StringBuilder();
+
+            for (int index = 0; index < docs.Count; index++)
+            {
+                sql.AppendFormat("update {0} set ", Table.DBTableName);
+
+                for(int i = 0; i < fieldValues.Count; i++)
+                {
+                    Data.FieldValue fvFieldName = fieldValues[i];
+
+                    Data.FieldValue fv = docValues[index][i];
+
+                    string value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
+                        fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
+                        fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
+                        fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ?
+                        string.Format("'{0}'", fv.Value.Replace("'", "''")) : fv.Value;
+
+                    if (i == 0)
+                    {
+                        sql.AppendFormat("[{0}]={1}", fvFieldName.FieldName, value);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",[{0}]={1}", fvFieldName.FieldName, value);
+                    }
+                }
+
+                int docid = docs[index].DocId;
+
+                if (DocIdReplaceField == null)
+                {
+                    sql.AppendFormat(" where docId = {0}; \r\n", docid);
+                }
+                else
+                {
+                    long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docid);
+                    sql.AppendFormat(" where {0} = {1}; \r\n", DocIdReplaceField, replaceFieldValue);
+                }
+
+            }
 
             using (SQLDataProvider sqlData = new SQLDataProvider())
             {

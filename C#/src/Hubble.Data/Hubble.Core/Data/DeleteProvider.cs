@@ -88,8 +88,15 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void Delete(IList<int> docs)
+        /// <summary>
+        /// Delete 
+        /// </summary>
+        /// <param name="docs"></param>
+        /// <returns>Return actually delete count</returns>
+        public int Delete(IList<int> docs)
         {
+            int count = 0;
+
             lock (this)
             {
                 using (FileStream fs = new FileStream(_DelFileName, FileMode.Append, FileAccess.Write))
@@ -100,6 +107,7 @@ namespace Hubble.Core.Data
 
                         if (!_DeleteTbl.ContainsKey(docId))
                         {
+                            count++;
                             _DeleteTbl.Add(docId, 0);
                             fs.Write(BitConverter.GetBytes((long)docId), 0, sizeof(long));
                         }
@@ -110,6 +118,8 @@ namespace Hubble.Core.Data
                 {
                     _DeleteStamp++;
                 }
+
+                return count;
             }
         }
 

@@ -41,6 +41,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
+            this.label27 = new System.Windows.Forms.Label();
             this.comboBoxTableSynchronization = new System.Windows.Forms.ComboBox();
             this.label26 = new System.Windows.Forms.Label();
             this.numericUpDownGroupByLimit = new System.Windows.Forms.NumericUpDown();
@@ -77,8 +79,8 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.label27 = new System.Windows.Forms.Label();
-            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.label28 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -213,6 +215,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.comboBox2);
+            this.tabPageAttributes.Controls.Add(this.label28);
             this.tabPageAttributes.Controls.Add(this.textBoxTriggerTableName);
             this.tabPageAttributes.Controls.Add(this.label27);
             this.tabPageAttributes.Controls.Add(this.comboBoxTableSynchronization);
@@ -258,6 +262,23 @@
             this.tabPageAttributes.TabIndex = 1;
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
+            // 
+            // textBoxTriggerTableName
+            // 
+            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
+            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
+            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
+            this.textBoxTriggerTableName.TabIndex = 41;
+            this.textBoxTriggerTableName.Tag = "TriggerTableName";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(351, 381);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(95, 13);
+            this.label27.TabIndex = 40;
+            this.label27.Text = "TriggerTableName";
             // 
             // comboBoxTableSynchronization
             // 
@@ -666,22 +687,27 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // label27
+            // comboBox2
             // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(351, 381);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(95, 13);
-            this.label27.TabIndex = 40;
-            this.label27.Text = "TriggerTableName";
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBox2.Location = new System.Drawing.Point(229, 378);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(65, 21);
+            this.comboBox2.TabIndex = 43;
+            this.comboBox2.Tag = "UsingMirrorTableForNonFulltextQuery";
+            this.comboBox2.Text = "True";
             // 
-            // textBoxTriggerTableName
+            // label28
             // 
-            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
-            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
-            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
-            this.textBoxTriggerTableName.TabIndex = 41;
-            this.textBoxTriggerTableName.Tag = "TriggerTableName";
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(32, 381);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(191, 13);
+            this.label28.TabIndex = 42;
+            this.label28.Text = "Using mirror table for Non-Fulltext query";
             // 
             // FormTableInfo
             // 
@@ -761,5 +787,7 @@
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label27;
         private System.Windows.Forms.TextBox textBoxTriggerTableName;
+        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.Label label28;
     }
 }

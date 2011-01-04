@@ -197,6 +197,16 @@ namespace Hubble.Core.Index
             {
                 return _DocumentCount;
             }
+
+            set
+            {
+                _DocumentCount = value;
+
+                if (_DocumentCount < 0)
+                {
+                    _DocumentCount = 0;
+                }
+            }
         }
 
         internal string LastDDXFilePath
