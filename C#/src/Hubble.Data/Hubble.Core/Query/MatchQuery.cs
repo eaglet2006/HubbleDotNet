@@ -776,7 +776,14 @@ namespace Hubble.Core.Query
                     }
                     else
                     {
-                        docIdRank.RelTotalCount = wordIndexes[wordIndexes.Length - 1].RelTotalCount;
+                        if (_NotInDict != null)
+                        {
+                            docIdRank.RelTotalCount = documentSum;
+                        }
+                        else
+                        {
+                            docIdRank.RelTotalCount = wordIndexes[wordIndexes.Length - 1].RelTotalCount;
+                        }
                     }
                 }
             }
@@ -968,7 +975,14 @@ namespace Hubble.Core.Query
                     }
                     else
                     {
-                        docIdRank.RelTotalCount = wordIndexes[wordIndexes.Length - 1].RelTotalCount;
+                        if (_NotInDict != null)
+                        {
+                            docIdRank.RelTotalCount = documentSum;
+                        }
+                        else
+                        {
+                            docIdRank.RelTotalCount = wordIndexes[wordIndexes.Length - 1].RelTotalCount;
+                        }
                     }
                 }
             }
