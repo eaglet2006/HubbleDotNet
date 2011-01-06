@@ -645,6 +645,8 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     throw new ParseException("DBTable is same as MirrorDBTable!");
                 }
+
+                table.MirrorTableEnabled = true;
             }
 
             DBProvider.CreateTable(table, directory);

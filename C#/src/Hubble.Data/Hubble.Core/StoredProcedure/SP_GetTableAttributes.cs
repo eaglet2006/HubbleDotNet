@@ -119,6 +119,11 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Value", dbProvider.Table.TriggerTableName);
 
             NewRow();
+            OutputValue("Attribute", "MirrorTableEnabled");
+            OutputValue("Value", dbProvider.Table.MirrorTableEnabled);
+
+
+            NewRow();
             OutputValue("Attribute", "UsingMirrorTableForNonFulltextQuery");
             OutputValue("Value", dbProvider.Table.UsingMirrorTableForNonFulltextQuery);
 

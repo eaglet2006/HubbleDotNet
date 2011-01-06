@@ -38,6 +38,8 @@ namespace Hubble.Core.Data
 
         string _DBAdapterTypeName = null; //eg. SqlServer2005Adapter 
 
+        bool _MirrorTableEnabled = false;
+
         string _MirrorConnectionString = null; //Connection string for mirror table
 
         string _MirrorDBTableName; //DBTableName for mirror table
@@ -241,6 +243,22 @@ namespace Hubble.Core.Data
         }
 
         /// <summary>
+        /// Enable Mirror table
+        /// </summary>
+        public bool MirrorTableEnabled
+        {
+            get
+            {
+                return _MirrorTableEnabled;
+            }
+
+            set
+            {
+                _MirrorTableEnabled = value;
+            }
+        }
+
+        /// <summary>
         /// ConnectionString of database (eg. SQLSERVER) for mirror table
         /// </summary>
         public string MirrorConnectionString
@@ -292,7 +310,7 @@ namespace Hubble.Core.Data
         {
             get
             {
-                return _UsingMirrorTableForNonFulltextQuery && HasMirrorTable;
+                return _UsingMirrorTableForNonFulltextQuery && HasMirrorTable && _MirrorTableEnabled;
             }
 
             set

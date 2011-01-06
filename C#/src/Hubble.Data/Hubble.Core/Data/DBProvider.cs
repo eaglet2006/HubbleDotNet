@@ -1414,7 +1414,7 @@ namespace Hubble.Core.Data
 
                 System.Data.DataTable dt;
 
-                if (Table.HasMirrorTable && MirrorDBAdapter != null)
+                if (Table.HasMirrorTable && MirrorDBAdapter != null && Table.MirrorTableEnabled)
                 {
                     performanceReport = new Hubble.Core.Query.PerformanceReport("Get results from Mirror table");
                     dt = MirrorDBAdapter.Query(dbFields, docs, begin, end);

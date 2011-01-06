@@ -112,7 +112,10 @@ namespace Hubble.Core.Service
             {
                 if (field.IndexType == Field.Index.None)
                 {
-                    continue;
+                    if (!_DBProvider.Table.HasMirrorTable)
+                    {
+                        continue;
+                    }
                 }
 
                 string value = null;

@@ -41,7 +41,8 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
-            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.label28 = new System.Windows.Forms.Label();
             this.label27 = new System.Windows.Forms.Label();
             this.comboBoxTableSynchronization = new System.Windows.Forms.ComboBox();
             this.label26 = new System.Windows.Forms.Label();
@@ -79,8 +80,9 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.comboBox2 = new System.Windows.Forms.ComboBox();
-            this.label28 = new System.Windows.Forms.Label();
+            this.comboBox3 = new System.Windows.Forms.ComboBox();
+            this.label29 = new System.Windows.Forms.Label();
+            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -215,6 +217,8 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.comboBox3);
+            this.tabPageAttributes.Controls.Add(this.label29);
             this.tabPageAttributes.Controls.Add(this.comboBox2);
             this.tabPageAttributes.Controls.Add(this.label28);
             this.tabPageAttributes.Controls.Add(this.textBoxTriggerTableName);
@@ -263,13 +267,27 @@
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
             // 
-            // textBoxTriggerTableName
+            // comboBox2
             // 
-            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
-            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
-            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
-            this.textBoxTriggerTableName.TabIndex = 41;
-            this.textBoxTriggerTableName.Tag = "TriggerTableName";
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBox2.Location = new System.Drawing.Point(174, 378);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(120, 21);
+            this.comboBox2.TabIndex = 17;
+            this.comboBox2.Tag = "MirrorTableEnabled";
+            this.comboBox2.Text = "True";
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(32, 381);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(95, 13);
+            this.label28.TabIndex = 42;
+            this.label28.Text = "Enable Mirror table";
             // 
             // label27
             // 
@@ -289,7 +307,7 @@
             this.comboBoxTableSynchronization.Location = new System.Drawing.Point(513, 341);
             this.comboBoxTableSynchronization.Name = "comboBoxTableSynchronization";
             this.comboBoxTableSynchronization.Size = new System.Drawing.Size(96, 21);
-            this.comboBoxTableSynchronization.TabIndex = 39;
+            this.comboBoxTableSynchronization.TabIndex = 16;
             this.comboBoxTableSynchronization.Tag = "TableSynchronization";
             this.comboBoxTableSynchronization.Text = "True";
             this.comboBoxTableSynchronization.SelectedIndexChanged += new System.EventHandler(this.comboBoxTableSynchronization_SelectedIndexChanged);
@@ -318,7 +336,7 @@
             0});
             this.numericUpDownGroupByLimit.Name = "numericUpDownGroupByLimit";
             this.numericUpDownGroupByLimit.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownGroupByLimit.TabIndex = 37;
+            this.numericUpDownGroupByLimit.TabIndex = 11;
             this.numericUpDownGroupByLimit.Tag = "GroupByLimit";
             this.numericUpDownGroupByLimit.Value = new decimal(new int[] {
             40000,
@@ -344,7 +362,7 @@
             this.comboBox1.Location = new System.Drawing.Point(514, 54);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(96, 21);
-            this.comboBox1.TabIndex = 35;
+            this.comboBox1.TabIndex = 3;
             this.comboBox1.Tag = "Debug";
             this.comboBox1.Text = "False";
             // 
@@ -372,7 +390,7 @@
             0});
             this.numericUpDownIndexThread.Name = "numericUpDownIndexThread";
             this.numericUpDownIndexThread.Size = new System.Drawing.Size(121, 20);
-            this.numericUpDownIndexThread.TabIndex = 33;
+            this.numericUpDownIndexThread.TabIndex = 15;
             this.numericUpDownIndexThread.Tag = "IndexThread";
             this.numericUpDownIndexThread.Value = new decimal(new int[] {
             1,
@@ -398,7 +416,7 @@
             this.comboBoxInitImmediatelyAfterStartup.Location = new System.Drawing.Point(173, 308);
             this.comboBoxInitImmediatelyAfterStartup.Name = "comboBoxInitImmediatelyAfterStartup";
             this.comboBoxInitImmediatelyAfterStartup.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxInitImmediatelyAfterStartup.TabIndex = 31;
+            this.comboBoxInitImmediatelyAfterStartup.TabIndex = 13;
             this.comboBoxInitImmediatelyAfterStartup.Tag = "InitImmediatelyAfterStartup";
             this.comboBoxInitImmediatelyAfterStartup.Text = "True";
             // 
@@ -439,7 +457,7 @@
             0});
             this.numericUpDownQueryCacheTimeout.Name = "numericUpDownQueryCacheTimeout";
             this.numericUpDownQueryCacheTimeout.Size = new System.Drawing.Size(95, 20);
-            this.numericUpDownQueryCacheTimeout.TabIndex = 27;
+            this.numericUpDownQueryCacheTimeout.TabIndex = 10;
             this.numericUpDownQueryCacheTimeout.Tag = "QueryCacheTimeout";
             // 
             // label18
@@ -460,7 +478,7 @@
             this.comboBoxQueryCacheEnabled.Location = new System.Drawing.Point(514, 197);
             this.comboBoxQueryCacheEnabled.Name = "comboBoxQueryCacheEnabled";
             this.comboBoxQueryCacheEnabled.Size = new System.Drawing.Size(96, 21);
-            this.comboBoxQueryCacheEnabled.TabIndex = 25;
+            this.comboBoxQueryCacheEnabled.TabIndex = 8;
             this.comboBoxQueryCacheEnabled.Tag = "QueryCacheEnabled";
             this.comboBoxQueryCacheEnabled.Text = "True";
             // 
@@ -503,7 +521,7 @@
             0});
             this.numericUpDownCleanupQueryCacheFileInDays.Name = "numericUpDownCleanupQueryCacheFileInDays";
             this.numericUpDownCleanupQueryCacheFileInDays.Size = new System.Drawing.Size(96, 20);
-            this.numericUpDownCleanupQueryCacheFileInDays.TabIndex = 21;
+            this.numericUpDownCleanupQueryCacheFileInDays.TabIndex = 14;
             this.numericUpDownCleanupQueryCacheFileInDays.Tag = "CleanupQueryCacheFileInDays";
             // 
             // numericUpDownMaxReturnCount
@@ -521,7 +539,7 @@
             0});
             this.numericUpDownMaxReturnCount.Name = "numericUpDownMaxReturnCount";
             this.numericUpDownMaxReturnCount.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownMaxReturnCount.TabIndex = 20;
+            this.numericUpDownMaxReturnCount.TabIndex = 9;
             this.numericUpDownMaxReturnCount.Tag = "MaxReturnCount";
             this.numericUpDownMaxReturnCount.Value = new decimal(new int[] {
             65536,
@@ -540,7 +558,7 @@
             this.numericUpDownLastDocId.Name = "numericUpDownLastDocId";
             this.numericUpDownLastDocId.ReadOnly = true;
             this.numericUpDownLastDocId.Size = new System.Drawing.Size(120, 20);
-            this.numericUpDownLastDocId.TabIndex = 19;
+            this.numericUpDownLastDocId.TabIndex = 7;
             this.numericUpDownLastDocId.Tag = "LastDocId";
             // 
             // label17
@@ -562,7 +580,7 @@
             this.comboBoxIndexOnly.Location = new System.Drawing.Point(173, 54);
             this.comboBoxIndexOnly.Name = "comboBoxIndexOnly";
             this.comboBoxIndexOnly.Size = new System.Drawing.Size(121, 21);
-            this.comboBoxIndexOnly.TabIndex = 16;
+            this.comboBoxIndexOnly.TabIndex = 2;
             this.comboBoxIndexOnly.Tag = "IndexOnly";
             this.comboBoxIndexOnly.Text = "True";
             // 
@@ -575,7 +593,7 @@
             this.comboBoxStoreQueryCacheInFile.Location = new System.Drawing.Point(514, 269);
             this.comboBoxStoreQueryCacheInFile.Name = "comboBoxStoreQueryCacheInFile";
             this.comboBoxStoreQueryCacheInFile.Size = new System.Drawing.Size(96, 21);
-            this.comboBoxStoreQueryCacheInFile.TabIndex = 15;
+            this.comboBoxStoreQueryCacheInFile.TabIndex = 12;
             this.comboBoxStoreQueryCacheInFile.Tag = "StoreQueryCacheInFile";
             this.comboBoxStoreQueryCacheInFile.Text = "True";
             // 
@@ -612,7 +630,7 @@
             this.textBoxDBAdapter.Name = "textBoxDBAdapter";
             this.textBoxDBAdapter.ReadOnly = true;
             this.textBoxDBAdapter.Size = new System.Drawing.Size(629, 20);
-            this.textBoxDBAdapter.TabIndex = 9;
+            this.textBoxDBAdapter.TabIndex = 6;
             this.textBoxDBAdapter.Tag = "DBAdapter";
             // 
             // label13
@@ -630,7 +648,7 @@
             this.textBoxDBTableName.Name = "textBoxDBTableName";
             this.textBoxDBTableName.ReadOnly = true;
             this.textBoxDBTableName.Size = new System.Drawing.Size(629, 20);
-            this.textBoxDBTableName.TabIndex = 7;
+            this.textBoxDBTableName.TabIndex = 5;
             this.textBoxDBTableName.Tag = "DBTableName";
             // 
             // label12
@@ -648,7 +666,7 @@
             this.textBoxDocId.Name = "textBoxDocId";
             this.textBoxDocId.ReadOnly = true;
             this.textBoxDocId.Size = new System.Drawing.Size(629, 20);
-            this.textBoxDocId.TabIndex = 5;
+            this.textBoxDocId.TabIndex = 4;
             this.textBoxDocId.Tag = "DocId";
             // 
             // label11
@@ -687,27 +705,35 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // comboBox2
+            // comboBox3
             // 
-            this.comboBox2.FormattingEnabled = true;
-            this.comboBox2.Items.AddRange(new object[] {
+            this.comboBox3.FormattingEnabled = true;
+            this.comboBox3.Items.AddRange(new object[] {
             "True",
             "False"});
-            this.comboBox2.Location = new System.Drawing.Point(229, 378);
-            this.comboBox2.Name = "comboBox2";
-            this.comboBox2.Size = new System.Drawing.Size(65, 21);
-            this.comboBox2.TabIndex = 43;
-            this.comboBox2.Tag = "UsingMirrorTableForNonFulltextQuery";
-            this.comboBox2.Text = "True";
+            this.comboBox3.Location = new System.Drawing.Point(229, 410);
+            this.comboBox3.Name = "comboBox3";
+            this.comboBox3.Size = new System.Drawing.Size(65, 21);
+            this.comboBox3.TabIndex = 19;
+            this.comboBox3.Tag = "UsingMirrorTableForNonFulltextQuery";
+            this.comboBox3.Text = "True";
             // 
-            // label28
+            // label29
             // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(32, 381);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(191, 13);
-            this.label28.TabIndex = 42;
-            this.label28.Text = "Using mirror table for Non-Fulltext query";
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(32, 413);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(191, 13);
+            this.label29.TabIndex = 44;
+            this.label29.Text = "Using mirror table for Non-Fulltext query";
+            // 
+            // textBoxTriggerTableName
+            // 
+            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
+            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
+            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
+            this.textBoxTriggerTableName.TabIndex = 18;
+            this.textBoxTriggerTableName.Tag = "TriggerTableName";
             // 
             // FormTableInfo
             // 
@@ -786,8 +812,10 @@
         private System.Windows.Forms.ComboBox comboBoxTableSynchronization;
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label27;
-        private System.Windows.Forms.TextBox textBoxTriggerTableName;
         private System.Windows.Forms.ComboBox comboBox2;
         private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.ComboBox comboBox3;
+        private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.TextBox textBoxTriggerTableName;
     }
 }

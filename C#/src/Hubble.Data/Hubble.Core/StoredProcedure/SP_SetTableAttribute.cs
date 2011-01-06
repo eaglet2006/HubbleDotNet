@@ -218,7 +218,24 @@ namespace Hubble.Core.StoredProcedure
                             tableName, dbProvider.Table.TriggerTableName));
                     }
                     break;
+                case "mirrortableenabled":
+                    {
+                        bool mirrortableenabled;
 
+                        if (bool.TryParse(value, out mirrortableenabled))
+                        {
+                            dbProvider.Table.MirrorTableEnabled = mirrortableenabled;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} MirrorTableEnabled to {1} sucessful!",
+                                tableName, dbProvider.Table.MirrorTableEnabled));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be 'True' or 'False'");
+                        }
+                    }
+
+                    break;
                 case "usingmirrortablefornonfulltextquery":
                     {
                         bool usingmirrortablefornonfulltextquery;
