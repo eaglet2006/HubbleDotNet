@@ -637,11 +637,20 @@ namespace Hubble.Core.DBAdapter
 
             foreach (Data.FieldValue fv in doc.FieldValues)
             {
-                string value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
-                    fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
-                    fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
-                    fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ? 
-                    string.Format("'{0}'", fv.Value.Replace("'", "''"))  : fv.Value;
+                string value;
+
+                if (fv.Value == null)
+                {
+                    value = "NULL";
+                }
+                else
+                {
+                    value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
+                        fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
+                        fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
+                        fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ?
+                        string.Format("'{0}'", fv.Value.Replace("'", "''")) : fv.Value;
+                }
 
                 if (i++ == 0)
                 {
@@ -721,11 +730,20 @@ namespace Hubble.Core.DBAdapter
 
                     Data.FieldValue fv = docValues[index][i];
 
-                    string value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
-                        fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
-                        fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
-                        fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ?
-                        string.Format("'{0}'", fv.Value.Replace("'", "''")) : fv.Value;
+                    string value;
+
+                    if (fv.Value == null)
+                    {
+                        value = "NULL";
+                    }
+                    else
+                    {
+                        value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
+                            fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
+                            fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
+                            fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ?
+                            string.Format("'{0}'", fv.Value.Replace("'", "''")) : fv.Value;
+                    }
 
                     if (i == 0)
                     {

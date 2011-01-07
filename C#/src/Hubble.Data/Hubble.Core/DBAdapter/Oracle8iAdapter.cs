@@ -505,32 +505,40 @@ namespace Hubble.Core.DBAdapter
             {
                 string value;
 
-                switch (fv.Type)
+                if (fv.Value == null)
                 {
-                    case Hubble.Core.Data.DataType.NVarchar:
-                    case Hubble.Core.Data.DataType.NChar:
-                        value = string.Format("N'{0}'", fv.Value.Replace("'", "''"));
-                        break;
-                    case Hubble.Core.Data.DataType.Varchar:
-                    case Hubble.Core.Data.DataType.Char:
-                    case Hubble.Core.Data.DataType.Data:
-                        value = string.Format("'{0}'", fv.Value.Replace("'", "''"));
-                        break;
-                    case Hubble.Core.Data.DataType.DateTime:
-                    case Hubble.Core.Data.DataType.Date:
-                    case Hubble.Core.Data.DataType.SmallDateTime:
-                        DateTime dateTime;
-                        if (!DateTime.TryParseExact(fv.Value, "yyyy-MM-dd HH:mm:ss", null,
-                            System.Globalization.DateTimeStyles.None, out dateTime))
-                        {
-                            dateTime = DateTime.Parse(fv.Value);
-                        }
+                    value = "NULL";
+                }
+                else
+                {
 
-                        value = string.Format("to_date('{0}','yyyy-mm-dd HH24:MI:SS')", dateTime.ToString("yyyy-MM-dd HH:mm:ss"));
-                        break;
-                    default:
-                        value = string.Format("{0}", fv.Value);
-                        break;
+                    switch (fv.Type)
+                    {
+                        case Hubble.Core.Data.DataType.NVarchar:
+                        case Hubble.Core.Data.DataType.NChar:
+                            value = string.Format("N'{0}'", fv.Value.Replace("'", "''"));
+                            break;
+                        case Hubble.Core.Data.DataType.Varchar:
+                        case Hubble.Core.Data.DataType.Char:
+                        case Hubble.Core.Data.DataType.Data:
+                            value = string.Format("'{0}'", fv.Value.Replace("'", "''"));
+                            break;
+                        case Hubble.Core.Data.DataType.DateTime:
+                        case Hubble.Core.Data.DataType.Date:
+                        case Hubble.Core.Data.DataType.SmallDateTime:
+                            DateTime dateTime;
+                            if (!DateTime.TryParseExact(fv.Value, "yyyy-MM-dd HH:mm:ss", null,
+                                System.Globalization.DateTimeStyles.None, out dateTime))
+                            {
+                                dateTime = DateTime.Parse(fv.Value);
+                            }
+
+                            value = string.Format("to_date('{0}','yyyy-mm-dd HH24:MI:SS')", dateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+                            break;
+                        default:
+                            value = string.Format("{0}", fv.Value);
+                            break;
+                    }
                 }
 
                 if (i++ == 0)

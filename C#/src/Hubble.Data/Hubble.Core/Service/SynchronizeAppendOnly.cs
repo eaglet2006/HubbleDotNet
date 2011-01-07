@@ -130,8 +130,11 @@ namespace Hubble.Core.Service
 
                     if (field.DefaultValue == null)
                     {
-                        throw new DataException(string.Format("Field:{0} in table {1} is null but hasn't default value so that it can't be inserted null value!",
-                            field.Name, _DBProvider.Table.Name));
+                        if (field.IndexType != Field.Index.None)
+                        {
+                            throw new DataException(string.Format("Field:{0} in table {1} is null but hasn't default value so that it can't be inserted null value!",
+                                field.Name, _DBProvider.Table.Name));
+                        }
                     }
 
                     value = field.DefaultValue;
