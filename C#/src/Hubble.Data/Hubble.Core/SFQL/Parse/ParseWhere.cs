@@ -137,17 +137,20 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             string orderBy = _OrderBy;
+            int end = End;
 
             if (!string.IsNullOrEmpty(_OrderBy))
             {
                 if (_OrderBy.ToLower().Contains("score"))
                 {
                     orderBy = null;
+                    end = -1;
                 }
                 else if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null &&
                     _OrderBy.ToLower().Contains("docid"))
                 {
                     orderBy = null;
+                    end = -1;
                 }
             }
             else
@@ -169,11 +172,11 @@ namespace Hubble.Core.SFQL.Parse
 
             if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
             {
-                result = _DBProvider.MirrorDBAdapter.GetDocumentResults(End, whereSql, orderBy);
+                result = _DBProvider.MirrorDBAdapter.GetDocumentResults(end, whereSql, orderBy);
             }
             else
             {
-                result = _DBProvider.DBAdapter.GetDocumentResults(End, whereSql, orderBy);
+                result = _DBProvider.DBAdapter.GetDocumentResults(end, whereSql, orderBy);
             }
 
             performanceReport.Stop();
