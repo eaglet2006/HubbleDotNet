@@ -1136,23 +1136,29 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
+                    Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
 
                     QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
+                    int sortLen4Report;
 
                     //qSort.Sort(result);
 
                     if (distinct == null)
                     {
+                        sortLen4Report = sortLen;
                         qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
                     }
                     else
                     {
                         //Do distinct
+                        sortLen4Report = result.Length;
                         qSort.Sort(result);
                         System.Data.DataTable distinctTable;
                         result = distinct.Distinct(result, out distinctTable);
                         relTotalCount = result.Length;
                     }
+
+                    performanceReport.Stop(string.Format("Sort result.length={0}, sort len = {1}", result.Length, sortLen4Report));
                 }
 
                 if (queryCache != null)

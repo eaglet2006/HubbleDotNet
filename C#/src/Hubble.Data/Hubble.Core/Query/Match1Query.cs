@@ -775,7 +775,7 @@ namespace Hubble.Core.Query
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
-            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search of Match1");
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result = new Core.SFQL.Parse.DocumentResultWhereDictionary();
 

@@ -1481,6 +1481,27 @@ namespace Hubble.Core.Data
 
         }
 
+        internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults)
+        {
+            lock (this)
+            {
+                for (int i = 0; i < docResults.Length; i++)
+                {
+                    if (docResults[i].PayloadData != null)
+                    {
+                        continue;
+                    }
+
+                    int* payloadData;
+                    if (_DocPayload.TryGetData(docResults[i].DocId, out payloadData))
+                    {
+                        docResults[i].PayloadData = payloadData;
+                    }
+                }
+
+            }
+        }
+
         internal unsafe int* GetPayloadData(int docId)
         {
             lock (this)

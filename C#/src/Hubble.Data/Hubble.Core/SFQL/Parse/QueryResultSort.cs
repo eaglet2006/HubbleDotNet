@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
 
 using Hubble.Framework.DataStructure;
 
@@ -50,25 +51,35 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (_OrderBys[0].Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                 {
+                    if (docResults.Length > 0)
+                    {
+                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                    }
+
                     for(int i = 0; i < docResults.Length; i++)
                     {
                         docResults[i].SortValue = docResults[i].DocId;
-                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
-                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
+                    QueryResultHeapSort.TopSort(docResults, top);
+                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                     return;
 
                 }
                 else if (_OrderBys[0].Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                 {
+                    if (docResults.Length > 0)
+                    {
+                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                    }
+
                     for (int i = 0; i < docResults.Length; i++)
                     {
                         docResults[i].SortValue = docResults[i].Score;
-                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
                     }
 
-                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
+                    QueryResultHeapSort.TopSort(docResults, top);
+                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                     return;
                 }
                 else
@@ -91,17 +102,25 @@ namespace Hubble.Core.SFQL.Parse
                             case Hubble.Core.Data.DataType.SmallInt:
                             case Hubble.Core.Data.DataType.TinyInt:
                                 {
+                                    if (docResults.Length > 0)
+                                    {
+                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                    }
+
+                                    _DBProvider.FillPayloadData(docResults);
+
                                     for (int i = 0; i < docResults.Length; i++)
                                     {
-                                        int* payLoadData = _DBProvider.GetPayloadData(docResults[i].DocId);
-                                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                        int* payLoadData = docResults[i].PayloadData;
 
                                         Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
                                             payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                                         docResults[i].SortValue = sortInfo.IntValue;
                                     }
 
-                                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
+                                    QueryResultHeapSort.TopSort(docResults, top);
+
+                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                                     return;
 
                                 }
@@ -109,28 +128,30 @@ namespace Hubble.Core.SFQL.Parse
                             case Hubble.Core.Data.DataType.BigInt:
                             case Hubble.Core.Data.DataType.DateTime:
                                 {
+                                    if (docResults.Length > 0)
+                                    {
+                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                    }
+
+                                    _DBProvider.FillPayloadData(docResults);
+
                                     for (int i = 0; i < docResults.Length; i++)
                                     {
-                                        int* payLoadData = _DBProvider.GetPayloadData(docResults[i].DocId);
-                                        docResults[i].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                        int* payLoadData = docResults[i].PayloadData;
 
                                         Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
                                             payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                                         docResults[i].SortValue = sortInfo.LongValue;
                                     }
 
-                                    QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
+                                    QueryResultHeapSort.TopSort(docResults, top);
+                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
                                     return;
 
                                 }
                         }
-
- 
-
                     }
                 }
-
-
             }
 
 

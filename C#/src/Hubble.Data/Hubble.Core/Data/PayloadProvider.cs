@@ -170,6 +170,7 @@ namespace Hubble.Core.Data
 
                 return true;
             }
+
         }
 
         public PayloadProvider()

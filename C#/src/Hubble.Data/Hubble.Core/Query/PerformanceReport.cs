@@ -44,7 +44,8 @@ namespace Hubble.Core.Query
                 _SW.Stop();
 
                 Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.WritePerformanceReportText(
-                    string.Format("PerformanceReport:{0} elapse: {1} ms", title, _SW.ElapsedMilliseconds));
+                    string.Format("PerformanceReport:{0} elapse: {1} ms, at : {2}", title, _SW.ElapsedMilliseconds,
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")));
             }
         }
 
@@ -55,7 +56,8 @@ namespace Hubble.Core.Query
                 _SW.Stop();
 
                 Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.WritePerformanceReportText(
-                    string.Format("PerformanceReport:{0} elapse: {1} ms", _ReportTitle, _SW.ElapsedMilliseconds));
+                    string.Format("PerformanceReport:{0} elapse: {1} ms, at : {2}", _ReportTitle, _SW.ElapsedMilliseconds,
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff")));
             }
         }
 

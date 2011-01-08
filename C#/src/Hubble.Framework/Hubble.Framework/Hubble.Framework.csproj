@@ -74,6 +74,7 @@
     <Compile Include="DataStructure\CacheManage.cs" />
     <Compile Include="DataStructure\DFA.cs" />
     <Compile Include="DataStructure\FingerPrintDictionary.cs" />
+    <Compile Include="DataStructure\HeapSort.cs" />
     <Compile Include="DataStructure\IntDictionary.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\LinkedTable.cs" />

@@ -27,6 +27,7 @@ namespace Hubble.Core.Data
         public int UsedCount = 0;
 
         private int _RealPayloadIntSize;
+        private object _LockObj = new object();
 
         private unsafe int BinarySearch(int index, int length, int value)
         {
@@ -69,16 +70,53 @@ namespace Hubble.Core.Data
             return ~lo;
         }
 
+        int _LastIndex = -1;
+
         public unsafe int* Find(int docId)
         {
-            int index = BinarySearch(0, UsedCount, docId);
+            int lastIndex;
+
+            lock (_LockObj)
+            {
+                lastIndex = _LastIndex;
+            }
+
+            int index = -1;
+
+            bool needBinarySearch = true;
+
+            if (lastIndex >= 0 && lastIndex < UsedCount - 1)
+            {
+                int* objArray = (int*)Ptr;
+                int nextDoc = objArray[(lastIndex + 1) * _RealPayloadIntSize];
+                if (nextDoc == docId)
+                {
+                    index = lastIndex + 1;
+                    needBinarySearch = false;
+                }
+            }
+
+            if (needBinarySearch)
+            {
+                index = BinarySearch(0, UsedCount, docId);
+            }
 
             if (index < 0)
             {
+                lock (_LockObj)
+                {
+                    _LastIndex = -1;
+                }
+
                 return null;
             }
             else
             {
+                lock (_LockObj)
+                {
+                    _LastIndex = index;
+                }
+
                 return ((int*)Ptr) + index * _RealPayloadIntSize;
             }
         }

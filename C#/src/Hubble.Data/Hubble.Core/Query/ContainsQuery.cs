@@ -1384,7 +1384,7 @@ namespace Hubble.Core.Query
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
-            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search");
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search of Contains");
 
             List<WordIndexForQuery[]> partList = GetAllPartOfWordIndexes();
 

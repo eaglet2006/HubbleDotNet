@@ -138,6 +138,7 @@
     <Compile Include="Service\ThreadMonitor.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
+    <Compile Include="SFQL\Parse\QueryResultHeapSort.cs" />
     <Compile Include="SFQL\Parse\ParseDistinct.cs" />
     <Compile Include="SFQL\Parse\DocumentResultWhereDictionary.cs" />
     <Compile Include="SFQL\Parse\IDistinct.cs" />

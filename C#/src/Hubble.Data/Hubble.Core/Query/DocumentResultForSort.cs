@@ -118,7 +118,7 @@ namespace Hubble.Core.Query
         public bool Asc; // Contain with SortValue
 
         unsafe public DocumentResultForSort(DocumentResult* pDocResult)
-            : this(pDocResult->DocId, pDocResult->Score)
+            : this(pDocResult->DocId, pDocResult->Score, pDocResult->PayloadData)
         {
 
         }

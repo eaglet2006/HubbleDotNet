@@ -126,16 +126,6 @@ namespace Hubble.Core.SFQL.Parse
                 whereSql = expressionTree.SqlText;
             }
 
-            Query.PerformanceReport performanceReport;
-            if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
-            {
-                performanceReport = new Hubble.Core.Query.PerformanceReport("Non-fulltext query from Mirror table");
-            }
-            else
-            {
-                performanceReport = new Hubble.Core.Query.PerformanceReport("Non-fulltext query from DB");
-            }
-
             string orderBy = _OrderBy;
             int end = End;
 
@@ -166,6 +156,18 @@ namespace Hubble.Core.SFQL.Parse
                         orderBy = "docid";
                     }
                 }
+            }
+
+            Query.PerformanceReport performanceReport;
+            if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
+            {
+                performanceReport = new Hubble.Core.Query.PerformanceReport(string.Format("Non-fulltext query from Mirror table, where={0}, orderby={1}, end={2}",
+                    whereSql, orderBy, end));
+            }
+            else
+            {
+                performanceReport = new Hubble.Core.Query.PerformanceReport(string.Format("Non-fulltext query from DB, where={0}, orderby={1}, end={2}",
+                    whereSql, orderBy, end));
             }
 
             Core.SFQL.Parse.DocumentResultWhereDictionary result;
@@ -428,23 +430,23 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        unsafe bool GetComparisionExpressionValue(Query.DocumentResult docResult, SyntaxAnalysis.ExpressionTree expressionTree)
+        unsafe bool GetComparisionExpressionValue(Query.DocumentResult* pDocResult, SyntaxAnalysis.ExpressionTree expressionTree)
         {
-            if (docResult.PayloadData == null)
+            if (pDocResult->PayloadData == null)
             {
-                int* payloadData = _DBProvider.GetPayloadData(docResult.DocId);
+                int* payloadData = _DBProvider.GetPayloadData(pDocResult->DocId);
 
                 if (payloadData == null)
                 {
                     return false;
                 }
 
-                docResult.PayloadData = payloadData;
+                pDocResult->PayloadData = payloadData;
             }
 
             if (expressionTree.OrChild != null)
             {
-                if (GetComparisionExpressionValue(docResult, expressionTree.OrChild))
+                if (GetComparisionExpressionValue(pDocResult, expressionTree.OrChild))
                 {
                     return true;
                 }
@@ -452,7 +454,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.Expression.NeedReverse)
             {
-                if (!GetComparisionExpressionValue(docResult, expressionTree.Expression as SyntaxAnalysis.ExpressionTree))
+                if (!GetComparisionExpressionValue(pDocResult, expressionTree.Expression as SyntaxAnalysis.ExpressionTree))
                 {
                     return false;
                 }
@@ -470,7 +472,7 @@ namespace Hubble.Core.SFQL.Parse
                     case DataType.Int:
                         #region Date, SmallDateTime and Int32
 
-                        int payloadInt = docResult.PayloadData[cur.FieldTab];
+                        int payloadInt = pDocResult->PayloadData[cur.FieldTab];
 
                         if (cur.DataType == DataType.TinyInt)
                         {
@@ -542,11 +544,11 @@ namespace Hubble.Core.SFQL.Parse
                         if (cur.FieldTab == -1)
                         {
                             //DocId
-                            leftLong = docResult.DocId;
+                            leftLong = pDocResult->DocId;
                         }
                         else
                         {
-                            leftLong = (((long)docResult.PayloadData[cur.FieldTab]) << 32) + (uint)docResult.PayloadData[cur.FieldTab + 1];
+                            leftLong = (((long)pDocResult->PayloadData[cur.FieldTab]) << 32) + (uint)pDocResult->PayloadData[cur.FieldTab + 1];
                         }
 
 
@@ -606,10 +608,10 @@ namespace Hubble.Core.SFQL.Parse
 
                         long l;
                         //Calculate left float
-                        l = (((long)docResult.PayloadData[cur.FieldTab]) << 32) + docResult.PayloadData[cur.FieldTab + 1];
+                        l = (((long)pDocResult->PayloadData[cur.FieldTab]) << 32) + pDocResult->PayloadData[cur.FieldTab + 1];
 
                         leftFloat = l;
-                        l = (((long)docResult.PayloadData[cur.FieldTab + 2]) << 32) + docResult.PayloadData[cur.FieldTab + 3];
+                        l = (((long)pDocResult->PayloadData[cur.FieldTab + 2]) << 32) + pDocResult->PayloadData[cur.FieldTab + 3];
 
                         leftFloat += (float)l / 1000000000000000000;
 
@@ -679,7 +681,7 @@ namespace Hubble.Core.SFQL.Parse
                                 {
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] >= (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] >= (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
@@ -691,7 +693,7 @@ namespace Hubble.Core.SFQL.Parse
                                 {
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] > (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] > (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
@@ -703,7 +705,7 @@ namespace Hubble.Core.SFQL.Parse
                                 {
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] <= (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] <= (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
@@ -715,7 +717,7 @@ namespace Hubble.Core.SFQL.Parse
                                 {
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
@@ -727,7 +729,7 @@ namespace Hubble.Core.SFQL.Parse
                                 {
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] != (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] != (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
@@ -740,7 +742,7 @@ namespace Hubble.Core.SFQL.Parse
                                     bool equl = true;
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)docResult.PayloadData[i] != (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] != (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             equl = false;
                                             break;
@@ -764,7 +766,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.AndChild != null)
             {
-                if (!GetComparisionExpressionValue(docResult, expressionTree.AndChild))
+                if (!GetComparisionExpressionValue(pDocResult, expressionTree.AndChild))
                 {
                     return false;
                 }
@@ -841,20 +843,22 @@ namespace Hubble.Core.SFQL.Parse
 
             Core.SFQL.Parse.DocumentResultWhereDictionary queryDict;
 
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
+
             if (upDictCount < 8196)
             {
-                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResults from DB");
-
                 queryDict = _DBProvider.DBAdapter.GetDocumentResults(-1,
                     string.Format("({0}) and {1}", expressionTree.ToString(), GetInSql(_DBProvider, upDict)), null);
 
-                performanceReport.Stop();
             }
             else
             {
                 queryDict = _DBProvider.DBAdapter.GetDocumentResults(-1,
                     string.Format("({0})", expressionTree.ToString()), null);
             }
+
+            performanceReport.Stop(string.Format("RemoveByDatabaseQuery, query count={0}, del count = {1}, where = {2}",
+                upDict.Count, queryDict.Count, expressionTree.ToString()));
 
             if (queryDict.Count == 0)
             {
@@ -881,6 +885,7 @@ namespace Hubble.Core.SFQL.Parse
 
         unsafe private void RemoveByPayload(SyntaxAnalysis.ExpressionTree expressionTree, Core.SFQL.Parse.DocumentResultWhereDictionary upDict)
         {
+
             bool needQueryFromDatabase = false;
             Preprocess(expressionTree, ref needQueryFromDatabase);
 
@@ -890,11 +895,13 @@ namespace Hubble.Core.SFQL.Parse
                 return;
             }
 
+            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
+
             List<int> delDocIdList = new List<int>();
 
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in upDict.Values)
             {
-                if (!GetComparisionExpressionValue(*drp.pDocumentResult, expressionTree))
+                if (!GetComparisionExpressionValue(drp.pDocumentResult, expressionTree))
                 {
                     delDocIdList.Add(drp.pDocumentResult->DocId);
                 }
@@ -905,6 +912,8 @@ namespace Hubble.Core.SFQL.Parse
                 upDict.Remove(docId);
                 upDict.RelTotalCount--;
             }
+
+            performanceReport.Stop(string.Format("RemoveByPayload result count = {0}", delDocIdList.Count));
         }
 
         private void Preprocess(SyntaxAnalysis.ExpressionTree expressionTree, ref bool needQueryFromDatabase)
