@@ -420,6 +420,10 @@ namespace Hubble.Core.DBAdapter
                         case Hubble.Core.Data.DataType.Data:
                             insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
                             break;
+                        case DataType.Float:
+                            insertString.AppendFormat(",{0}", fv.Value);
+                            //insertString.AppendFormat(",{0:E}", double.Parse(fv.Value)); //We can change it like this in furture.
+                            break;
                         default:
                             insertString.AppendFormat(",{0}", fv.Value);
                             break;

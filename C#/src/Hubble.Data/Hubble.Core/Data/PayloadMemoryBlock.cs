@@ -26,8 +26,7 @@ namespace Hubble.Core.Data
     {
         public int UsedCount = 0;
 
-        private int _RealPayloadIntSize;
-        private object _LockObj = new object();
+        readonly private int _RealPayloadIntSize;
 
         private unsafe int BinarySearch(int index, int length, int value)
         {
@@ -70,53 +69,31 @@ namespace Hubble.Core.Data
             return ~lo;
         }
 
-        int _LastIndex = -1;
 
         public unsafe int* Find(int docId)
         {
-            int lastIndex;
-
-            lock (_LockObj)
+            if (UsedCount <= 0)
             {
-                lastIndex = _LastIndex;
+                return null;
             }
 
-            int index = -1;
+            int* objArray = (int*)Ptr;
+            int firstDocId = objArray[0];
+            int lastDocId = objArray[(UsedCount - 1) * _RealPayloadIntSize];
 
-            bool needBinarySearch = true;
-
-            if (lastIndex >= 0 && lastIndex < UsedCount - 1)
+            if (lastDocId - firstDocId == UsedCount - 1)
             {
-                int* objArray = (int*)Ptr;
-                int nextDoc = objArray[(lastIndex + 1) * _RealPayloadIntSize];
-                if (nextDoc == docId)
-                {
-                    index = lastIndex + 1;
-                    needBinarySearch = false;
-                }
+                return ((int*)Ptr) + (docId - firstDocId) * _RealPayloadIntSize;
             }
 
-            if (needBinarySearch)
-            {
-                index = BinarySearch(0, UsedCount, docId);
-            }
+            int index = BinarySearch(0, UsedCount, docId);
 
             if (index < 0)
             {
-                lock (_LockObj)
-                {
-                    _LastIndex = -1;
-                }
-
                 return null;
             }
             else
             {
-                lock (_LockObj)
-                {
-                    _LastIndex = index;
-                }
-
                 return ((int*)Ptr) + index * _RealPayloadIntSize;
             }
         }

@@ -101,6 +101,20 @@ namespace Hubble.Core.Entity
             }
         }
 
+        public Int16 TotalWordsInThisDocumentIndex
+        {
+            get
+            {
+                return _TotalWordsInThisDocumentIndex;
+            }
+        }
+
+
+        public void SetTotalWordsInThisDocumentIndex(Int16 value)
+        {
+            _TotalWordsInThisDocumentIndex = value;
+        }
+
         //[FieldOffset(12)]
         /// <summary>
         /// First word position
@@ -109,6 +123,7 @@ namespace Hubble.Core.Entity
 
         /// <summary>
         /// Point to next item
+        /// Used for index not for query
         /// </summary>
         public int Next;
 

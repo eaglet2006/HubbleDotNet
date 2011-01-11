@@ -108,7 +108,7 @@ namespace Hubble.Core.SFQL.Parse
                                     }
 
                                     _DBProvider.FillPayloadData(docResults);
-
+          
                                     for (int i = 0; i < docResults.Length; i++)
                                     {
                                         int* payLoadData = docResults[i].PayloadData;
@@ -142,6 +142,30 @@ namespace Hubble.Core.SFQL.Parse
                                         Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
                                             payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
                                         docResults[i].SortValue = sortInfo.LongValue;
+                                    }
+
+                                    QueryResultHeapSort.TopSort(docResults, top);
+                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
+                                    return;
+
+                                }
+
+                            case Hubble.Core.Data.DataType.Float:
+                                {
+                                    if (docResults.Length > 0)
+                                    {
+                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
+                                    }
+
+                                    _DBProvider.FillPayloadData(docResults);
+
+                                    for (int i = 0; i < docResults.Length; i++)
+                                    {
+                                        int* payLoadData = docResults[i].PayloadData;
+
+                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
+                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
+                                        docResults[i].SortValue = (long)(sortInfo.DoubleValue * 1000);
                                     }
 
                                     QueryResultHeapSort.TopSort(docResults, top);

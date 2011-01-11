@@ -79,6 +79,7 @@
     <Compile Include="BigTable\IBigTableParse.cs" />
     <Compile Include="Cache\CacheManager.cs" />
     <Compile Include="Cache\IManagedCache.cs" />
+    <Compile Include="Cache\IndexCache.cs" />
     <Compile Include="Cache\QueryCache.cs" />
     <Compile Include="Cache\QueryCacheManager.cs" />
     <Compile Include="Data\DataException.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />
+    <Compile Include="Global\Cache.cs" />
     <Compile Include="Global\ExternalReference.cs" />
     <Compile Include="Global\ReEntryException.cs" />
     <Compile Include="Global\Report.cs" />

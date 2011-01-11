@@ -696,6 +696,13 @@ namespace QueryAnalyzer
                         }
                     }
                 }
+                else
+                {
+                    if (_TableSynchronization)
+                    {
+                        _NeedDisableSynchronizeFirst = true;
+                    }
+                }
             }
 
             labelOptimizeProgress.Visible = false;
