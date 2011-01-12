@@ -29,8 +29,16 @@ namespace Hubble.Core.SFQL.Parse
     /// <typeparam name="T"></typeparam>
     public class QueryResultQuickSort<T>
     {
+        readonly bool _Asc; //for only one field for sort.
+
+        public QueryResultQuickSort(bool asc)
+        {
+            _Asc = asc;
+        }
+
+
         //Partition for int
-        private static int PartitionInt(int[] array, int low, int high, int pivotIndex)
+        private int PartitionInt(int[] array, int low, int high, int pivotIndex)
         {
             int pivotValue = array[pivotIndex];
             array[pivotIndex] = array[low];
@@ -66,7 +74,7 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         //Partition for long 
-        private static int PartitionLong(long[] array, int low, int high, int pivotIndex)
+        private int PartitionLong(long[] array, int low, int high, int pivotIndex)
         {
             long pivotValue = array[pivotIndex];
             array[pivotIndex] = array[low];
@@ -102,9 +110,9 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         //Partition for QueryResultSort 
-        private static int PartitionDocumentResult(Query.DocumentResultForSort[] array, int low, int high, int pivotIndex)
+        private int PartitionDocumentResult(Query.DocumentResultForSort[] array, int low, int high, int pivotIndex)
         {
-            if (array[pivotIndex].Asc)
+            if (_Asc)
             {
                 Query.DocumentResultForSort pivotValue = array[pivotIndex];
                 array[pivotIndex] = array[low];
@@ -175,23 +183,23 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         //Normal Partition
-        private static int Partition(T[] array, int low, int high, int pivotIndex, IComparer<T> comparer)
+        private int Partition(T[] array, int low, int high, int pivotIndex, IComparer<T> comparer)
         {
             Array arr = array;
             return PartitionDocumentResult((Query.DocumentResultForSort[])arr, low, high, pivotIndex);
         }
 
-        public static void TopSort(T[] array, int top)
+        public void TopSort(T[] array, int top)
         {
             TopSort(array, top, null);
         }
 
-        public static void TopSort(T[] array, int top, IComparer<T> comparer)
+        public void TopSort(T[] array, int top, IComparer<T> comparer)
         {
             TopSort(array, array.Length, top, comparer);
         }
 
-        public static void TopSort(T[] array, int arrayLen, int top, IComparer<T> comparer)
+        public void TopSort(T[] array, int arrayLen, int top, IComparer<T> comparer)
         {
             //If comparer is null
             if (comparer == null)

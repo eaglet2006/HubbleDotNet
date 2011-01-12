@@ -47,137 +47,13 @@ namespace Hubble.Core.SFQL.Parse
                 return;
             }
 
-            if (_OrderBys.Count == 1)
+            QueryResultHeapSort heapSort = new QueryResultHeapSort(_OrderBys, _DBProvider);
+            if (heapSort.CanDo)
             {
-                if (_OrderBys[0].Name.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    if (docResults.Length > 0)
-                    {
-                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
-                    }
-
-                    for(int i = 0; i < docResults.Length; i++)
-                    {
-                        docResults[i].SortValue = docResults[i].DocId;
-                    }
-
-                    QueryResultHeapSort.TopSort(docResults, top);
-                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
-                    return;
-
-                }
-                else if (_OrderBys[0].Name.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    if (docResults.Length > 0)
-                    {
-                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
-                    }
-
-                    for (int i = 0; i < docResults.Length; i++)
-                    {
-                        docResults[i].SortValue = docResults[i].Score;
-                    }
-
-                    QueryResultHeapSort.TopSort(docResults, top);
-                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
-                    return;
-                }
-                else
-                {
-                    Data.Field field = _DBProvider.GetField(_OrderBys[0].Name);
-
-                    if (field != null)
-                    {
-                        if (field.IndexType != Hubble.Core.Data.Field.Index.Untokenized)
-                        {
-                            throw new ParseException(string.Format("Order by field name:{0} is not Untokenized Index!", _OrderBys[0].Name));
-                        }
-
-
-                        switch (field.DataType)
-                        {
-                            case Hubble.Core.Data.DataType.Date:
-                            case Hubble.Core.Data.DataType.SmallDateTime:
-                            case Hubble.Core.Data.DataType.Int:
-                            case Hubble.Core.Data.DataType.SmallInt:
-                            case Hubble.Core.Data.DataType.TinyInt:
-                                {
-                                    if (docResults.Length > 0)
-                                    {
-                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
-                                    }
-
-                                    _DBProvider.FillPayloadData(docResults);
-          
-                                    for (int i = 0; i < docResults.Length; i++)
-                                    {
-                                        int* payLoadData = docResults[i].PayloadData;
-
-                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
-                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
-                                        docResults[i].SortValue = sortInfo.IntValue;
-                                    }
-
-                                    QueryResultHeapSort.TopSort(docResults, top);
-
-                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
-                                    return;
-
-                                }
-
-                            case Hubble.Core.Data.DataType.BigInt:
-                            case Hubble.Core.Data.DataType.DateTime:
-                                {
-                                    if (docResults.Length > 0)
-                                    {
-                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
-                                    }
-
-                                    _DBProvider.FillPayloadData(docResults);
-
-                                    for (int i = 0; i < docResults.Length; i++)
-                                    {
-                                        int* payLoadData = docResults[i].PayloadData;
-
-                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
-                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
-                                        docResults[i].SortValue = sortInfo.LongValue;
-                                    }
-
-                                    QueryResultHeapSort.TopSort(docResults, top);
-                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
-                                    return;
-
-                                }
-
-                            case Hubble.Core.Data.DataType.Float:
-                                {
-                                    if (docResults.Length > 0)
-                                    {
-                                        docResults[0].Asc = _OrderBys[0].Order.Equals("ASC", StringComparison.CurrentCultureIgnoreCase);
-                                    }
-
-                                    _DBProvider.FillPayloadData(docResults);
-
-                                    for (int i = 0; i < docResults.Length; i++)
-                                    {
-                                        int* payLoadData = docResults[i].PayloadData;
-
-                                        Query.SortInfo sortInfo = Data.DataTypeConvert.GetSortInfo(docResults[i].Asc, field.DataType,
-                                            payLoadData, field.TabIndex, field.SubTabIndex, field.DataLength);
-                                        docResults[i].SortValue = (long)(sortInfo.DoubleValue * 1000);
-                                    }
-
-                                    QueryResultHeapSort.TopSort(docResults, top);
-                                    //QueryResultQuickSort<Query.DocumentResultForSort>.TopSort(docResults, top, new Query.DocumentResultForSortComparer());
-                                    return;
-
-                                }
-                        }
-                    }
-                }
+                heapSort.Prepare(docResults);
+                heapSort.TopSort(docResults, top);
+                return;
             }
-
 
             foreach (SyntaxAnalysis.Select.OrderBy orderBy in _OrderBys)
             {
@@ -247,7 +123,6 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
             }
-
 
             Array.Sort(docResults);
 

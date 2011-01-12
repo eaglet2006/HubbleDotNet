@@ -103,19 +103,16 @@ namespace Hubble.Core.Query
 
         [System.Xml.Serialization.XmlIgnore]
         public long SortValue; //if SortInfoList == null, use SortValue to sort
-        
+
+        [System.Xml.Serialization.XmlIgnore]
+        public long SortValue1; //if SortInfoList == null, use SortValue1 to store value of second sort field
+ 
         [System.Xml.Serialization.XmlIgnore]
         public int* PayloadData;
-
-        //[System.Xml.Serialization.XmlIgnore]
-        //public object Tag;
 
         [System.Xml.Serialization.XmlIgnore]
         public List<SortInfo> SortInfoList;
         public int DocId;
-
-        [System.Xml.Serialization.XmlIgnore]
-        public bool Asc; // Contain with SortValue
 
         unsafe public DocumentResultForSort(DocumentResult* pDocResult)
             : this(pDocResult->DocId, pDocResult->Score, pDocResult->PayloadData)
@@ -146,7 +143,8 @@ namespace Hubble.Core.Query
             Score = score;
             PayloadData = payload;
             SortValue = 0;
-            Asc = true;
+            SortValue1 = 0;
+            //Asc = true;
             SortInfoList = null;
             //Tag = null;
         }
@@ -174,36 +172,7 @@ namespace Hubble.Core.Query
         {
             if (other.SortInfoList == null)
             {
-                if (Asc)
-                {
-                    if (this.SortValue > other.SortValue)
-                    {
-                        return 1;
-                    }
-                    else if (this.SortValue < other.SortValue)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
-                else
-                {
-                    if (this.SortValue < other.SortValue)
-                    {
-                        return 1;
-                    }
-                    else if (this.SortValue > other.SortValue)
-                    {
-                        return -1;
-                    }
-                    else
-                    {
-                        return 0;
-                    }
-                }
+                throw new SFQL.Parse.ParseException("Need use heap sort for sort value!");
             }
             else
             {
