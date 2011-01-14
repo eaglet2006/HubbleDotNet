@@ -283,26 +283,29 @@ namespace Hubble.Core.SFQL.Parse
 
                 for (int j = root * 2 + 1; j <= bottom; j = j * 2 + 1)
                 {
-                    bool lt1 = array[root * 2 + 1].SortValue < array[root * 2 + 2].SortValue;
-
-                    if (_SortFieldsCount == 2)
+                    if (j < bottom)
                     {
-                        if (array[root * 2 + 1].SortValue == array[root * 2 + 2].SortValue)
+                        bool lt1 = array[root * 2 + 1].SortValue < array[root * 2 + 2].SortValue;
+
+                        if (_SortFieldsCount == 2)
                         {
-                            if (_Asc2)
+                            if (array[root * 2 + 1].SortValue == array[root * 2 + 2].SortValue)
                             {
-                                lt1 = array[root * 2 + 1].SortValue1 < array[root * 2 + 2].SortValue1;
-                            }
-                            else
-                            {
-                                lt1 = array[root * 2 + 1].SortValue1 > array[root * 2 + 2].SortValue1;
+                                if (_Asc2)
+                                {
+                                    lt1 = array[root * 2 + 1].SortValue1 < array[root * 2 + 2].SortValue1;
+                                }
+                                else
+                                {
+                                    lt1 = array[root * 2 + 1].SortValue1 > array[root * 2 + 2].SortValue1;
+                                }
                             }
                         }
-                    }
 
-                    if (j < bottom && lt1)
-                    {
-                        j++;
+                        if (lt1)
+                        {
+                            j++;
+                        }
                     }
 
                     bool lt2 = array[root].SortValue >= array[j].SortValue;
@@ -341,26 +344,29 @@ namespace Hubble.Core.SFQL.Parse
 
                 for (int j = root * 2 + 1; j <= bottom; j = j * 2 + 1)
                 {
-                    bool lt1 = array[root * 2 + 1].SortValue > array[root * 2 + 2].SortValue;
-
-                    if (_SortFieldsCount == 2)
+                    if (j < bottom)
                     {
-                        if (array[root * 2 + 1].SortValue == array[root * 2 + 2].SortValue)
+                        bool lt1 = array[root * 2 + 1].SortValue > array[root * 2 + 2].SortValue;
+
+                        if (_SortFieldsCount == 2)
                         {
-                            if (!_Asc2)
+                            if (array[root * 2 + 1].SortValue == array[root * 2 + 2].SortValue)
                             {
-                                lt1 = array[root * 2 + 1].SortValue1 > array[root * 2 + 2].SortValue1;
-                            }
-                            else
-                            {
-                                lt1 = array[root * 2 + 1].SortValue1 < array[root * 2 + 2].SortValue1;
+                                if (!_Asc2)
+                                {
+                                    lt1 = array[root * 2 + 1].SortValue1 > array[root * 2 + 2].SortValue1;
+                                }
+                                else
+                                {
+                                    lt1 = array[root * 2 + 1].SortValue1 < array[root * 2 + 2].SortValue1;
+                                }
                             }
                         }
-                    }
 
-                    if (j < bottom && lt1)
-                    {
-                        j++;
+                        if (lt1)
+                        {
+                            j++;
+                        }
                     }
 
                     bool lt2 = array[root].SortValue <= array[j].SortValue;

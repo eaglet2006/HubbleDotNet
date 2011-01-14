@@ -285,6 +285,8 @@ namespace Hubble.Framework.Net
                            new Thread(new
                            ParameterizedThreadStart(HandleClientComm));
 
+                        clientThread.IsBackground = true;
+
                         PCB pcb = GetPCB(client);
 
                         if (pcb == null)
@@ -628,6 +630,8 @@ namespace Hubble.Framework.Net
             }
             
             this._ListenThread = new Thread(new ThreadStart(ListenForClients));
+            
+            _ListenThread.IsBackground = true;
 
             this._ListenThread.Start();
         }
