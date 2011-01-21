@@ -429,12 +429,12 @@ namespace Hubble.Core.SFQL.Parse
 
         public void TopSort(DocumentResultForSort[] array, int top)
         {
-            if (array.Length <= 0 || top <= 0)
+            if (array.Length <= 0 || top == 0)
             {
                 return;
             }
 
-            if (top >= array.Length)
+            if (top >= array.Length || top < 0)
             {
                 Sort(array);
             }

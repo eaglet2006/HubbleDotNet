@@ -1152,7 +1152,10 @@ namespace Hubble.Core.SFQL.Parse
                     {
                         //Do distinct
                         sortLen4Report = result.Length;
-                        qSort.Sort(result);
+
+                        //Sort before distinct because I want to display results that have the high order then other results.
+                        //For example. Order by time desc, I want the 2010 display not 2009 when the results will be distincted.
+                        qSort.Sort(result); 
                         System.Data.DataTable distinctTable;
                         result = distinct.Distinct(result, out distinctTable);
                         relTotalCount = result.Length;
