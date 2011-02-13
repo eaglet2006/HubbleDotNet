@@ -262,6 +262,10 @@ namespace Hubble.SQLClient
                         parameters[i] = string.Format("'{0}'",
                             ((string)obj).Replace("'", "''"));
                     }
+                    else if (obj is bool)
+                    {
+                        parameters[i] = string.Format("'{0}'", obj);
+                    }
                     else if (obj is DateTime)
                     {
                         parameters[i] = string.Format("'{0}'",

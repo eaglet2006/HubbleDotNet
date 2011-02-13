@@ -23,6 +23,7 @@ namespace Hubble.SQLClient
         string _TableName;
         int _Step;
         OptimizeOption _Option;
+        bool _FastestMode;
 
         /// <summary>
         /// Constractor
@@ -33,11 +34,18 @@ namespace Hubble.SQLClient
         /// <param name="option">optimize option</param>
         public TableSynchronization(HubbleConnection conn, string tableName, int step, 
             OptimizeOption option)
+            :this(conn, tableName, step, option, false)
+        {
+        }
+
+        public TableSynchronization(HubbleConnection conn, string tableName, int step,
+            OptimizeOption option, bool fastestMode)
         {
             _Conn = conn;
             _TableName = tableName;
             _Step = step;
             _Option = option;
+            _FastestMode = fastestMode;
         }
 
         /// <summary>
@@ -47,8 +55,8 @@ namespace Hubble.SQLClient
         {
             if (GetProgress() >= 100)
             {
-                HubbleCommand cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}", _Conn,
-                    _TableName, _Step, (int)_Option);
+                HubbleCommand cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}, {3}", _Conn,
+                    _TableName, _Step, (int)_Option, _FastestMode);
 
                 cmd.ExecuteNonQuery();
                 return true;
@@ -75,9 +83,22 @@ namespace Hubble.SQLClient
         /// <remarks>if synchronize finished, return 100</remarks>
         public double GetProgress()
         {
+            int insertRows;
+            return GetProgress(out insertRows);
+        }
+
+        /// <summary>
+        /// Get synchronize progress
+        /// </summary>
+        /// <param name="insertRows">output current insert rows</param>
+        /// <returns>progress</returns>
+        /// <remarks>if synchronize finished, return 100</remarks>
+        public double GetProgress(out int insertRows)
+        {
             HubbleCommand cmd = new HubbleCommand("exec SP_GetTableSyncProgress {0}", _Conn, _TableName);
             System.Data.DataSet ds = cmd.Query();
-            double progress = double.Parse(ds.Tables[0].Rows[0][0].ToString());
+            double progress = double.Parse(ds.Tables[0].Rows[0]["Progress"].ToString());
+            insertRows = int.Parse(ds.Tables[0].Rows[0]["InsertRows"].ToString());
 
             if (progress >= 100 || progress < 0)
             {

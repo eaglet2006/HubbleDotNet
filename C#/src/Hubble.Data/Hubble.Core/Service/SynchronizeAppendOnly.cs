@@ -31,6 +31,7 @@ namespace Hubble.Core.Service
         DBProvider _DBProvider;
         int _Step;
         OptimizationOption _OptimizeOption;
+        bool _FastestMode;
 
         private string GetSqlServerSelectSql(long from)
         {
@@ -85,6 +86,24 @@ namespace Hubble.Core.Service
             return sb.ToString();
         }
 
+        private string GetMySqlSelectSql(long from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Select `DocId` ");
+
+            foreach (Field field in _DBProvider.Table.Fields)
+            {
+                sb.AppendFormat(", `{0}` ", field.Name);
+            }
+
+            sb.AppendFormat(" from {0} where DocId >= {1} order by DocId  limit {2}", _DBProvider.Table.DBTableName, from, _Step);
+
+            return sb.ToString();
+
+        }
+
+
         private string GetSelectSql(long from)
         {
             if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
@@ -94,6 +113,10 @@ namespace Hubble.Core.Service
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetOracleSelectSql(from);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mysql", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetMySqlSelectSql(from);
             }
             else
             {
@@ -158,10 +181,130 @@ namespace Hubble.Core.Service
             return document;
         }
 
+        #region DoGetDocuments thread fields
+
+        System.Threading.Thread _GetDocForInsertThread = null;
+
+        object _GetDocForInsertThreadLock = new object();
+
+        List<Document> _DocForInsertResult = null;
+
+        long _LastFrom = -1;
+
+        bool _ReadyToGet = false;
+
+        bool ReadyToGet
+        {
+            get
+            {
+                lock (_GetDocForInsertThreadLock)
+                {
+                    return _ReadyToGet;
+                }
+            }
+
+            set
+            {
+                lock (_GetDocForInsertThreadLock)
+                {
+                    _ReadyToGet = value;
+
+                    if (_ReadyToGet)
+                    {
+                        _AlreadyGet = false;
+                    }
+                }
+            }
+        }
+        
+        bool _AlreadyGet = true;
+
+        bool AlreadyGet
+        {
+            get
+            {
+                lock (_GetDocForInsertThreadLock)
+                {
+                    return _AlreadyGet;
+                }
+            }
+
+            set
+            {
+                lock (_GetDocForInsertThreadLock)
+                {
+                    _AlreadyGet = value;
+
+                    if (_AlreadyGet)
+                    {
+                        _ReadyToGet = false;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        private void DoGetDocumentsForInsertAsync(object dbAdapter)
+        {
+            do
+            {
+                if (_TableSync.Stopping)
+                {
+                    _DocForInsertResult = new List<Document>();
+                    return;
+                }
+
+                while (!AlreadyGet)
+                {
+                    if (_TableSync.Stopping)
+                    {
+                        _DocForInsertResult = new List<Document>();
+                        return;
+                    }
+
+                    System.Threading.Thread.Sleep(50);
+                }
+
+                try
+                {
+                    _DocForInsertResult = GetDocumentsForInsert((IDBAdapter)dbAdapter, ref _LastFrom);
+                }
+                catch(Exception e)
+                {
+                    Global.Report.WriteErrorLog("Get documents for insert fail!" ,e);
+                }
+                ReadyToGet = true;
+
+            } while (_DocForInsertResult.Count > 0);
+        }
+
+        private List<Document> GetDocumentsForInsertInvoke(IDBAdapter dbAdapter, ref long from)
+        {
+            if (_GetDocForInsertThread == null)
+            {
+                _GetDocForInsertThread = new System.Threading.Thread(DoGetDocumentsForInsertAsync);
+                _GetDocForInsertThread.IsBackground = true;
+                _LastFrom = from;
+                _GetDocForInsertThread.Start(dbAdapter);
+            }
+
+            while (!ReadyToGet)
+            {
+                System.Threading.Thread.Sleep(50);
+            }
+
+            from = _LastFrom;
+            List<Document> result = _DocForInsertResult;
+            AlreadyGet = true;
+
+            return result;
+        }
+
         private List<Document> GetDocumentsForInsert(IDBAdapter dbAdapter, ref long from)
         {
             List<Document> result = new List<Document>();
-
+           
             System.Data.DataSet ds = dbAdapter.QuerySql(GetSelectSql(from));
 
             StringBuilder sb = new StringBuilder();
@@ -228,12 +371,13 @@ namespace Hubble.Core.Service
         }
 
 
-        public SynchronizeAppendOnly(TableSynchronize tableSync, DBProvider dbProvider, int step, OptimizationOption option)
+        public SynchronizeAppendOnly(TableSynchronize tableSync, DBProvider dbProvider, int step, OptimizationOption option, bool fastestMode)
         {
             _TableSync = tableSync;
             _DBProvider = dbProvider;
             _Step = step;
             _OptimizeOption = option;
+            _FastestMode = fastestMode;
         }
 
         public void Do()
@@ -250,19 +394,22 @@ namespace Hubble.Core.Service
 
             System.Data.DataSet ds = null;
             int times = 0;
-            
-            while (times < 3)
-            {
 
-                try
+            if (!_FastestMode)
+            {
+                while (times < 3)
                 {
-                    ds = dbAdapter.QuerySql(sql);
-                    break;
-                }
-                catch
-                {
-                    ds = null;
-                    times++;
+
+                    try
+                    {
+                        ds = dbAdapter.QuerySql(sql);
+                        break;
+                    }
+                    catch
+                    {
+                        ds = null;
+                        times++;
+                    }
                 }
             }
 
@@ -285,18 +432,30 @@ namespace Hubble.Core.Service
             {
                 if (_TableSync.Stopping)
                 {
-                    _TableSync.SetProgress(-1);
+                    _TableSync.SetProgress(-1, insertCount);
                     _TableSync.ResetStopping();
+
+                    try
+                    {
+                        if (_GetDocForInsertThread != null)
+                        {
+                            _GetDocForInsertThread.Abort();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
                     return;
                 }
 
-                List<Document> documents = GetDocumentsForInsert(dbAdapter, ref from);
+                List<Document> documents = GetDocumentsForInsertInvoke(dbAdapter, ref from);
 
                 if (documents.Count == 0)
                 {
-                    Global.Report.WriteAppLog(string.Format("Exit before finish when synchronized {0}. Some records deleted during synchronization. insertCount={1} count={2}",
+                    Global.Report.WriteAppLog(string.Format("Exit before finish when synchronized {0}. Some records deleted during synchronization or synchronization termination. insertCount={1} count={2}",
                         _DBProvider.Table.Name, insertCount, count));
-                    _TableSync.SetProgress(90);
+                    _TableSync.SetProgress(90, insertCount);
                     break;
                 }
                 else
@@ -308,14 +467,23 @@ namespace Hubble.Core.Service
 
                     _DBProvider.Insert(documents);
 
-                    double progress = (double)insertCount * 80 / (double)count;
+                    double progress;
+
+                    if (_FastestMode)
+                    {
+                        progress = (double)((insertCount % 100000) * 80) / (double)100000;
+                    }
+                    else
+                    {
+                        progress = (double)insertCount * 80 / (double)count;
+                    }
 
                     if (progress > 80)
                     {
                         progress = 80;
                     }
 
-                    _TableSync.SetProgress(10 + progress);
+                    _TableSync.SetProgress(10 + progress, insertCount);
 
                     if (_DBProvider.TooManyIndexFiles)
                     {

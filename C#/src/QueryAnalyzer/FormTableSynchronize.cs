@@ -20,6 +20,8 @@ namespace QueryAnalyzer
 
         System.Threading.Thread _Thread = null;
 
+        DateTime _StartTime;
+
         public string TableName
         {
             get
@@ -50,18 +52,24 @@ namespace QueryAnalyzer
             {
                 MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }   
-    
-        delegate void DelegateShowOptimizeProgress(double progress);
+        }
 
-        private void ShowOptimizeProgress(double progress)
+        delegate void DelegateShowOptimizeProgress(double progress, int insertRows);
+
+        private void ShowOptimizeProgress(double progress, int insertRows)
         {
             if (progressBar.InvokeRequired)
             {
-                progressBar.Invoke(new DelegateShowOptimizeProgress(ShowOptimizeProgress), progress);
+                progressBar.Invoke(new DelegateShowOptimizeProgress(ShowOptimizeProgress), progress, insertRows);
             }
             else
             {
+                labelInsertRows.Text = insertRows.ToString();
+
+                TimeSpan ts = DateTime.Now - _StartTime;
+
+                labelElapse.Text = string.Format("{0:0.00} s", ts.TotalMilliseconds / 1000);
+
                 if (progress >= 100 || progress < 0)
                 {
                     progressBar.Value = 100;
@@ -84,19 +92,21 @@ namespace QueryAnalyzer
             double progress = 0;
             while (progress >= 0 && progress < 100)
             {
+                int insertRows = 0;
+
                 try
                 {
-                    progress = _TableSync.GetProgress();
+                    progress = _TableSync.GetProgress(out insertRows);
 
-                    ShowOptimizeProgress(progress);
+                    ShowOptimizeProgress(progress, insertRows);
 
                     System.Threading.Thread.Sleep(1000);
                 }
                 catch (Exception e)
                 {
                     ShowException(e);
-                    
-                    ShowOptimizeProgress(100);
+
+                    ShowOptimizeProgress(100, insertRows);
                     
                     return;
                 }
@@ -108,16 +118,22 @@ namespace QueryAnalyzer
         {
             try
             {
+                _StartTime = DateTime.Now;
+
                 TableSynchronization.OptimizeOption option = TableSynchronization.OptimizeOption.Minimum;
 
                 if (comboBoxOptimizeOption.Text.Equals("Middle"))
                 {
                     option = TableSynchronization.OptimizeOption.Middle;
                 }
+                else if (comboBoxOptimizeOption.Text.Equals("None"))
+                {
+                    option = TableSynchronization.OptimizeOption.None;
+                }
 
                 int step = (int)numericUpDownStep.Value;
 
-                _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option);
+                _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option, checkBoxFastestMode.Checked);
 
                 _TableSync.Synchronize();
 

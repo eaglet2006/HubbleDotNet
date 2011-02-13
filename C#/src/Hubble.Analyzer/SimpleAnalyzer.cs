@@ -26,9 +26,13 @@ namespace Hubble.Core.Analysis
     public class SimpleAnalyzer : IAnalyzer, Data.INamedExternalReference
     {
         private bool _Lowercase;
-        LinkedList<Framework.WordInfo> _Tokenes = null;
+        List<Hubble.Core.Entity.WordInfo> _Tokenes = null;
         static private object _InitLockObj = new object();
         static private bool _Inited = false;
+
+        static private Int16[] _CharSetTable;
+        static private Int16[] _NGramChar;
+
 
         private LinkedList<Framework.WordInfo> GetInitSegment(string text)
         {
@@ -117,37 +121,110 @@ namespace Hubble.Core.Analysis
                 }
             }
 
-            _Tokenes = GetInitSegment(text);
+            int start = -1;
+            _Tokenes = new List<Hubble.Core.Entity.WordInfo>();
+            bool needToLower = false;
 
-            foreach (Framework.WordInfo wi in _Tokenes)
+            for(int i = 0; i < text.Length; i++)
             {
-                if (wi == null)
-                {
-                    continue;
-                }
+                char c = text[i];
 
-                if (wi.Word == null)
+                if (_NGramChar[c] == Int16.MaxValue)
                 {
-                    continue;
+                    Hubble.Core.Entity.WordInfo wordinfo = new Hubble.Core.Entity.WordInfo();
+                    wordinfo.Word = c.ToString();
+                    wordinfo.Rank = 1;
+                    wordinfo.Position = i;
+                    start = -1;
+                    _Tokenes.Add(wordinfo);
                 }
-
-                if (wi.WordType == Hubble.Core.Analysis.Framework.WordType.None ||
-                    wi.WordType == Hubble.Core.Analysis.Framework.WordType.Space)
+                else if (_CharSetTable[c] == Int16.MaxValue)
                 {
-                    continue;
+                    if (start < 0)
+                    {
+                        start = i;
+                    }
                 }
+                else if (_CharSetTable[c] == 0)
+                {
+                    if (start >= 0)
+                    {
+                        Hubble.Core.Entity.WordInfo wordinfo = new Hubble.Core.Entity.WordInfo();
+                        wordinfo.Word = text.Substring(start, i - start);
+                     
+                        if (needToLower)
+                        {
+                            wordinfo.Word = wordinfo.Word.ToLower();
+                        }
 
+                        wordinfo.Rank = 1;
+                        wordinfo.Position = start;
+                        start = -1;
+                        needToLower = false;
+                        _Tokenes.Add(wordinfo);
+                    }
+                }
+                else
+                {
+                    if (start < 0)
+                    {
+                        start = i;
+                    }
+
+                    needToLower = true;
+                }
+            }
+
+            if (start >= 0)
+            {
                 Hubble.Core.Entity.WordInfo wordinfo = new Hubble.Core.Entity.WordInfo();
-                wordinfo.Word = wi.Word;
-                if (_Lowercase)
+                wordinfo.Word = text.Substring(start, text.Length - start);
+                
+                if (needToLower)
                 {
                     wordinfo.Word = wordinfo.Word.ToLower();
                 }
 
-                wordinfo.Position = wi.Position;
                 wordinfo.Rank = 1;
-                yield return wordinfo;
+                wordinfo.Position = start;
+                start = -1;
+                needToLower = false;
+                _Tokenes.Add(wordinfo);
             }
+
+            return _Tokenes;
+
+            //_Tokenes = GetInitSegment(text);
+
+            //foreach (Framework.WordInfo wi in _Tokenes)
+            //{
+            //    if (wi == null)
+            //    {
+            //        continue;
+            //    }
+
+            //    if (wi.Word == null)
+            //    {
+            //        continue;
+            //    }
+
+            //    if (wi.WordType == Hubble.Core.Analysis.Framework.WordType.None ||
+            //        wi.WordType == Hubble.Core.Analysis.Framework.WordType.Space)
+            //    {
+            //        continue;
+            //    }
+
+            //    Hubble.Core.Entity.WordInfo wordinfo = new Hubble.Core.Entity.WordInfo();
+            //    wordinfo.Word = wi.Word;
+            //    if (_Lowercase)
+            //    {
+            //        wordinfo.Word = wordinfo.Word.ToLower();
+            //    }
+
+            //    wordinfo.Position = wi.Position;
+            //    wordinfo.Rank = 1;
+            //    yield return wordinfo;
+            //}
         }
 
         public IEnumerable<Hubble.Core.Entity.WordInfo> TokenizeForSqlClient(string text)
@@ -158,7 +235,37 @@ namespace Hubble.Core.Analysis
 
         public void Init()
         {
-            Framework.Lexical.Initialize();
+            _CharSetTable = new Int16[65536];
+            _NGramChar = new Int16[65536];
+
+            for (int i = 0; i < _CharSetTable.Length; i++)
+            {
+                if ((i >= 'a' && i <= 'z') ||
+                    (i >= '0' && i <= '9') ||
+                    (i >= '_' && i <= '_') ||
+                    (i >= 0x410 && i <= 0x42F))
+                {
+                    _CharSetTable[i] = Int16.MaxValue;
+                }
+                else if (i >= 'A' && i <= 'Z')
+                {
+                    _CharSetTable[i] = 'A' - 'a'; // 'A' to 'a'
+                }
+                else if (i >= 0x430 && i <= 0x44F)
+                {
+                    _CharSetTable[i] = 0x430 - 0x410; // 'A' to 'a' lartin char
+                }
+            }
+
+            for (int i = 0; i < _NGramChar.Length; i++)
+            {
+                if (i >= 0x3000 && i <= 0x9FFF)
+                {
+                    _NGramChar[i] = Int16.MaxValue;
+                }
+            }
+
+            //Framework.Lexical.Initialize();
         }
 
         #endregion

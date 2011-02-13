@@ -38,6 +38,11 @@
             this.comboBoxOptimizeOption = new System.Windows.Forms.ComboBox();
             this.labelProgress = new System.Windows.Forms.Label();
             this.buttonClose = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.labelInsertRows = new System.Windows.Forms.Label();
+            this.labelElapse = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.checkBoxFastestMode = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).BeginInit();
             this.SuspendLayout();
             // 
@@ -121,7 +126,8 @@
             this.comboBoxOptimizeOption.FormattingEnabled = true;
             this.comboBoxOptimizeOption.Items.AddRange(new object[] {
             "Minimum",
-            "Middle"});
+            "Middle",
+            "None"});
             this.comboBoxOptimizeOption.Location = new System.Drawing.Point(100, 61);
             this.comboBoxOptimizeOption.Name = "comboBoxOptimizeOption";
             this.comboBoxOptimizeOption.Size = new System.Drawing.Size(121, 21);
@@ -148,11 +154,62 @@
             this.buttonClose.UseVisualStyleBackColor = true;
             this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(208, 167);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(61, 13);
+            this.label3.TabIndex = 27;
+            this.label3.Text = "Insert rows:";
+            // 
+            // labelInsertRows
+            // 
+            this.labelInsertRows.AutoSize = true;
+            this.labelInsertRows.Location = new System.Drawing.Point(275, 167);
+            this.labelInsertRows.Name = "labelInsertRows";
+            this.labelInsertRows.Size = new System.Drawing.Size(13, 13);
+            this.labelInsertRows.TabIndex = 28;
+            this.labelInsertRows.Text = "0";
+            // 
+            // labelElapse
+            // 
+            this.labelElapse.AutoSize = true;
+            this.labelElapse.Location = new System.Drawing.Point(469, 167);
+            this.labelElapse.Name = "labelElapse";
+            this.labelElapse.Size = new System.Drawing.Size(13, 13);
+            this.labelElapse.TabIndex = 30;
+            this.labelElapse.Text = "0";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(421, 167);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(42, 13);
+            this.label6.TabIndex = 29;
+            this.label6.Text = "Elapse:";
+            // 
+            // checkBoxFastestMode
+            // 
+            this.checkBoxFastestMode.AutoSize = true;
+            this.checkBoxFastestMode.Location = new System.Drawing.Point(249, 62);
+            this.checkBoxFastestMode.Name = "checkBoxFastestMode";
+            this.checkBoxFastestMode.Size = new System.Drawing.Size(90, 17);
+            this.checkBoxFastestMode.TabIndex = 31;
+            this.checkBoxFastestMode.Text = "Fastest Mode";
+            this.checkBoxFastestMode.UseVisualStyleBackColor = true;
+            // 
             // FormTableSynchronize
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(597, 201);
+            this.Controls.Add(this.checkBoxFastestMode);
+            this.Controls.Add(this.labelElapse);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.labelInsertRows);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.buttonClose);
             this.Controls.Add(this.labelProgress);
             this.Controls.Add(this.comboBoxOptimizeOption);
@@ -183,5 +240,10 @@
         private System.Windows.Forms.ComboBox comboBoxOptimizeOption;
         private System.Windows.Forms.Label labelProgress;
         private System.Windows.Forms.Button buttonClose;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label labelInsertRows;
+        private System.Windows.Forms.Label labelElapse;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.CheckBox checkBoxFastestMode;
     }
 }

@@ -32,6 +32,8 @@ namespace Hubble.Core.Query
         public int DocId;
 
         internal int LastPosition;
+        internal int HitCount;
+
         internal UInt16 LastIndex;
         internal UInt16 LastCount;
 
@@ -61,6 +63,7 @@ namespace Hubble.Core.Query
             this.LastCount = (UInt16)lastCount;
             this.LastIndex = (UInt16)lastIndex;
             this.LastPosition = lastPostion;
+            HitCount = 1;
         }
 
         public DocumentResult(int docId, long score)
@@ -79,6 +82,7 @@ namespace Hubble.Core.Query
             LastPosition = 0;
             LastCount = 0;
             LastIndex = 0;
+            HitCount = 1;
         }
     }
 }

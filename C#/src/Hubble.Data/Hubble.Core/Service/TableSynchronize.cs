@@ -33,8 +33,11 @@ namespace Hubble.Core.Service
 
         int _Step;
         OptimizationOption _OptimizeOption;
+        bool _FastestMode;
 
         double _Progress = -1;
+        int _InsertRows = 0;
+
         object _ProgressLock = new object();
 
         Exception _Exception = null;
@@ -90,6 +93,25 @@ namespace Hubble.Core.Service
             }
         }
 
+        public int InsertRows
+        {
+            get
+            {
+                if (Exception != null)
+                {
+                    Exception e = this.Exception;
+                    SetException(null);
+
+                    throw e;
+                }
+
+                lock (_ProgressLock)
+                {
+                    return _InsertRows;
+                }
+            }
+        }
+
         Thread SyncThread
         {
             get
@@ -111,9 +133,19 @@ namespace Hubble.Core.Service
 
         internal void SetProgress(double progress)
         {
+            SetProgress(progress, -1);
+        }
+
+        internal void SetProgress(double progress, int insertRows)
+        {
             lock (_ProgressLock)
             {
                 _Progress = progress;
+                
+                if (insertRows >= 0)
+                {
+                    _InsertRows = insertRows;
+                }
             }
         }
 
@@ -159,13 +191,13 @@ namespace Hubble.Core.Service
 
         private void DoSynchronizeAppendOnly()
         {
-            SynchronizeAppendOnly syncAppendOnly = new SynchronizeAppendOnly(this, _DBProvider, _Step, _OptimizeOption);
+            SynchronizeAppendOnly syncAppendOnly = new SynchronizeAppendOnly(this, _DBProvider, _Step, _OptimizeOption, _FastestMode);
             syncAppendOnly.Do();
         }
 
         private void DoSynchronizeCanUpdate()
         {
-            SynchronizeCanUpdate syncCanUpdate = new SynchronizeCanUpdate(this, _DBProvider, _Step, _OptimizeOption);
+            SynchronizeCanUpdate syncCanUpdate = new SynchronizeCanUpdate(this, _DBProvider, _Step, _OptimizeOption, _FastestMode);
             syncCanUpdate.Do();
         }
 
@@ -207,7 +239,7 @@ namespace Hubble.Core.Service
         /// </summary>
         /// <param name="step"></param>
         /// <param name="option">optimize option</param>
-        public void Synchronize(int step, OptimizationOption option)
+        public void Synchronize(int step, OptimizationOption option, bool fastestMode)
         {
             if (SyncThread != null)
             {
@@ -244,6 +276,7 @@ namespace Hubble.Core.Service
             }
 
             _OptimizeOption = option;
+            _FastestMode = fastestMode;
 
             SetProgress(0);
             SyncThread = new Thread(DoSynchronize);

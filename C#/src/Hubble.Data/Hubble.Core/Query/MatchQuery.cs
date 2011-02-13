@@ -270,6 +270,7 @@ namespace Hubble.Core.Query
                     if (exits)
                     {
                         drp.pDocumentResult->Score += score;
+                        drp.pDocumentResult->HitCount++;
 
                         double queryPositionDelta = wifq.FirstPosition - drp.pDocumentResult->LastWordIndexFirstPosition;
                         double positionDelta = docList.FirstPosition - drp.pDocumentResult->LastPosition;
@@ -328,6 +329,21 @@ namespace Hubble.Core.Query
                 }
             }
 
+            long maxScoreValue = 0; //Max score value of the docid that hit count less then wordIndexes.Length
+            int wordIndexesLen = wordIndexes.Length;
+
+            //Get the max score value of the docs that hit count less then wordIndexes.Length
+            foreach (DocumentResultPoint docResult in docIdRank.Values)
+            {
+                if (docResult.pDocumentResult->HitCount < wordIndexesLen)
+                {
+                    if (docResult.pDocumentResult->Score > maxScoreValue)
+                    {
+                        maxScoreValue = docResult.pDocumentResult->Score;
+                    }
+                }
+            }
+
             double hitRate = 0;
 
             if (indexInTop < wordIndexes.Length - 1)
@@ -343,8 +359,6 @@ namespace Hubble.Core.Query
 
                 Array.Sort(docidlist);
 
-                int wordIndexesLen = wordIndexes.Length;
-                
                 int lastWordHitCount = 0;
 
                 foreach (int firstDocId in docidlist)
@@ -362,6 +376,8 @@ namespace Hubble.Core.Query
 
                             if (curDocId >= 0)
                             {
+                                drp.pDocumentResult->HitCount++;
+
                                 if (curWord == wordIndexesLen - 1)
                                 {
                                     lastWordHitCount++;
@@ -436,12 +452,29 @@ namespace Hubble.Core.Query
                             }
                             curWord++;
                         } //While
+
+                        if (drp.pDocumentResult->HitCount < wordIndexesLen)
+                        {
+                            if (drp.pDocumentResult->Score > maxScoreValue)
+                            {
+                                maxScoreValue = drp.pDocumentResult->Score;
+                            }
+                        }
                     }
                 }
 
                 if (docidlist.Length > 0)
                 {
                     hitRate = (double)lastWordHitCount / (double)docidlist.Length;
+                }
+            }
+
+            //Adjust score of the docs that hit count equal wordIndexes.Length
+            foreach (DocumentResultPoint docResult in docIdRank.Values)
+            {
+                if (docResult.pDocumentResult->HitCount == wordIndexesLen)
+                {
+                    docResult.pDocumentResult->Score += maxScoreValue;
                 }
             }
 
@@ -543,6 +576,13 @@ namespace Hubble.Core.Query
 
                 while (docList.DocumentId >= 0)
                 {
+
+                    if (docList.DocumentId == 4206)
+                    {
+                        Console.WriteLine(4206);
+                    }
+
+
                     Core.SFQL.Parse.DocumentResultPoint drp;
                     drp.pDocumentResult = null;
 
@@ -590,6 +630,8 @@ namespace Hubble.Core.Query
                     if (exits)
                     {
                         drp.pDocumentResult->Score += score;
+
+                        drp.pDocumentResult->HitCount++;
 
                         double queryPositionDelta = wifq.FirstPosition - drp.pDocumentResult->LastWordIndexFirstPosition;
                         double positionDelta = docList.FirstPosition - drp.pDocumentResult->LastPosition;
@@ -693,6 +735,34 @@ namespace Hubble.Core.Query
                     }
                 }
             }
+
+            //Adjust score of the docs that hit count equal wordIndexes.Length
+            //Let these docs's score large then others
+
+            //Get the max score value of the docs that hit count less then wordIndexes.Length
+            int wordIndexesLen = wordIndexes.Length;
+            long maxScoreValue = 0;
+            foreach (DocumentResultPoint docResult in docIdRank.Values)
+            {
+                if (docResult.pDocumentResult->HitCount < wordIndexesLen)
+                {
+                    if (docResult.pDocumentResult->Score > maxScoreValue)
+                    {
+                        maxScoreValue = docResult.pDocumentResult->Score;
+                    }
+                }
+            }
+
+            //Adjust score of the docs that hit count equal wordIndexes.Length
+            foreach (DocumentResultPoint docResult in docIdRank.Values)
+            {
+                if (docResult.pDocumentResult->HitCount == wordIndexesLen)
+                {
+                    docResult.pDocumentResult->Score += maxScoreValue;
+                }
+            }
+
+
 
             //Merge score if upDict != null
             if (upDict != null)

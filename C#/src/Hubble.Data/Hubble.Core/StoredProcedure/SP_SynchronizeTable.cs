@@ -51,6 +51,7 @@ namespace Hubble.Core.StoredProcedure
 
             int option = 0;
             int step = 5000;
+            bool fastestMode = false;
 
             if (Parameters.Count > 1)
             {
@@ -61,6 +62,12 @@ namespace Hubble.Core.StoredProcedure
             {
                 option = int.Parse(Parameters[2]);
             }
+
+            if (Parameters.Count > 3)
+            {
+                fastestMode = bool.Parse(Parameters[3]);
+            }
+
             Hubble.Core.Data.OptimizationOption optimizeOption ;
 
             switch (option)
@@ -83,7 +90,7 @@ namespace Hubble.Core.StoredProcedure
                     break;
             }
 
-            dbProvider.SynchronizeWithDatabase(step, optimizeOption);
+            dbProvider.SynchronizeWithDatabase(step, optimizeOption, fastestMode);
 
             OutputMessage(string.Format("Table: {0} is synchronizing now!", Parameters[0]));
         }
@@ -96,7 +103,7 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "Synchronize from database. Parameter 1 is table name, Parameter 1 is table name, Parameter 2 is step, Parameter 3 is merge mode.";
+                return "Synchronize from database. Parameter 1 is table name, Parameter 1 is table name, Parameter 2 is step, Parameter 3 is merge mode, Parameter 4 is fastest mode, true or false.";
             }
         }
 

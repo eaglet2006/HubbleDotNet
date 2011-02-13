@@ -100,7 +100,15 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
 
                         if (selectField.IsTop)
                         {
-                            selectField.End--;
+                            if (selectField.End <= 0)
+                            {
+                                selectField.End = 0;
+                                selectField.Begin = -1;
+                            }
+                            else
+                            {
+                                selectField.End--;
+                            }
                         }
                     }
                     break;

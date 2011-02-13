@@ -1118,6 +1118,10 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     sortLen = ((sortLen - 1) / 100 + 1) * 100;
                 }
+                else
+                {
+                    sortLen = -1;
+                }
 
                 if (OrderByFromDatabase(select, dbProvider))
                 {

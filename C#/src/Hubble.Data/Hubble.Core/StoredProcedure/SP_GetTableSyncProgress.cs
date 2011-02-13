@@ -48,10 +48,12 @@ namespace Hubble.Core.StoredProcedure
             }
 
             AddColumn("Progress");
+            AddColumn("InsertRows");
 
             NewRow();
 
             OutputValue("Progress", dbProvider.TableSynchronizeProgress);
+            OutputValue("InsertRows", dbProvider.TableSynchronizeInsertRows);
         }
 
         #endregion

@@ -216,6 +216,19 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal double TableSynchronizeInsertRows
+        {
+            get
+            {
+                if (_TableSync == null)
+                {
+                    return -1;
+                }
+
+                return _TableSync.InsertRows;
+            }
+        }
+
         public string Directory
         {
             get
@@ -2905,11 +2918,11 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void SynchronizeWithDatabase(int step, OptimizationOption option)
+        public void SynchronizeWithDatabase(int step, OptimizationOption option, bool fastestMode)
         {
             if (_TableSync != null)
             {
-                _TableSync.Synchronize(step, option);
+                _TableSync.Synchronize(step, option, fastestMode);
             }
         }
 
