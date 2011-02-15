@@ -209,6 +209,15 @@ namespace Hubble.Framework.DataStructure
             }
         }
 
+        protected virtual void BeginCollect()
+        {
+        }
+
+        protected virtual void AfterCollect()
+        {
+        }
+
+
         /// <summary>
         /// Collect cache
         /// </summary>
@@ -225,6 +234,13 @@ namespace Hubble.Framework.DataStructure
                 {
                     lock (_LockObj)
                     {
+                        if (TotalMemorySize < MaxMemorySize)
+                        {
+                            return;
+                        }
+
+                        BeginCollect();
+
                         long targetMemorySize = (long)(_MaxMemorySize * (_Ratio));
 
                         if (targetMemorySize > _MaxMemorySize)
@@ -280,6 +296,8 @@ namespace Hubble.Framework.DataStructure
 
                         _TotalMemoryNotCollect = 0;
                         ThreadPool.QueueUserWorkItem(new WaitCallback(GCCollect));
+
+                        AfterCollect();
                     }
                 }
             }

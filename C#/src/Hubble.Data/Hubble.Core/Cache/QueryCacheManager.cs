@@ -26,6 +26,17 @@ namespace Hubble.Core.Cache
     {
         internal static QueryCacheManager Manager = new QueryCacheManager();
 
+        protected override void BeginCollect()
+        {
+            Global.Report.WriteAppLog(string.Format("QueryCacheManager is Collecting!, TotalMemorySize = {0}", TotalMemorySize));
+        }
+
+        protected override void AfterCollect()
+        {
+            Global.Report.WriteAppLog(string.Format("QueryCacheManager is Collected!, TotalMemorySize = {0}", TotalMemorySize));
+        }
+
+
         internal string GetQueryCacheReport()
         {
             StringBuilder sb = new StringBuilder();
