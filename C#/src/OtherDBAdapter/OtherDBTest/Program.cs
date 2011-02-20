@@ -8,7 +8,7 @@ namespace OtherDBTest
 {
     class Program
     {
-        static void Main(string[] args)
+        static void TestMySql()
         {
             string connectionString = "Server=192.168.1.4;Database=test;Uid=root;Pwd=sa;";
             string sql = "select * from News where docid >0 order by docid limit 5000";
@@ -40,6 +40,13 @@ namespace OtherDBTest
             sw1.Stop();
 
             Console.WriteLine(sw1.ElapsedMilliseconds);
+        }
+
+
+        static void Main(string[] args)
+        {
+            //TestMySql();
+
             Console.ReadKey();
         }
     }

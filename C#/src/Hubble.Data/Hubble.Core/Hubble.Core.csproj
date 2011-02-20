@@ -98,6 +98,7 @@
     <Compile Include="Data\Table.cs" />
     <Compile Include="Data\UpdatePayloadFileProvider.cs" />
     <Compile Include="DBAdapter\Oracle8iAdapter.cs" />
+    <Compile Include="DBAdapter\SQLite3Adapter.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />

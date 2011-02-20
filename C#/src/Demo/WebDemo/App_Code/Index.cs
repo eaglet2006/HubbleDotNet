@@ -129,7 +129,7 @@ namespace Hubble.WebDemo
                 adapter.SelectCommand.Parameters.Add("@begin", (pageNo - 1) * pageLen);
                 adapter.SelectCommand.Parameters.Add("@end", pageNo * pageLen - 1);
                 adapter.SelectCommand.Parameters.Add("@matchString", matchString);
-                adapter.SelectCommand.Parameters.Add("@likeString", "%" + q.Trim() + "%");
+                adapter.SelectCommand.Parameters.Add("@likeString", "*" + q.Trim() + "*");
 
                 adapter.SelectCommand.CacheTimeout = CacheTimeout;
 

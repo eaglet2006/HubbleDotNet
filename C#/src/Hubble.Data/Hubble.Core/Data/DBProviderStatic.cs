@@ -500,7 +500,16 @@ namespace Hubble.Core.Data
                     {
                         if (dbProvider.MirrorDBAdapter != null)
                         {
-                            dbProvider.MirrorDBAdapter.Truncate();
+                            try
+                            {
+                                dbProvider.MirrorDBAdapter.Truncate();
+                            }
+                            catch (Exception e)
+                            {
+                                Global.Report.WriteErrorLog(string.Format("Truncate mirror table fail! tablename={0}, dbadapter={1} connectstring={2}",
+                                    dbProvider.Table.MirrorDBTableName, dbProvider.Table.MirrorDBAdapterTypeName,
+                                    dbProvider.Table.MirrorConnectionString), e);
+                            }
                         }
                     }
 

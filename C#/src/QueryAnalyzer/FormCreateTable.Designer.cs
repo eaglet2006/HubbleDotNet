@@ -34,7 +34,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBoxTableName = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.textBoxExample = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.textBoxConnectionString = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -44,6 +44,7 @@
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxIndexFolder = new System.Windows.Forms.TextBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.buttonMirrorTable = new System.Windows.Forms.Button();
             this.groupBoxIncrementalMode = new System.Windows.Forms.GroupBox();
             this.radioButtonAll = new System.Windows.Forms.RadioButton();
             this.radioButtonAppendOnly = new System.Windows.Forms.RadioButton();
@@ -73,7 +74,6 @@
             this.buttonBack = new System.Windows.Forms.Button();
             this.buttonNext = new System.Windows.Forms.Button();
             this.buttonFinish = new System.Windows.Forms.Button();
-            this.buttonMirrorTable = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -105,7 +105,7 @@
             this.tabPage1.Controls.Add(this.label1);
             this.tabPage1.Controls.Add(this.textBoxTableName);
             this.tabPage1.Controls.Add(this.label8);
-            this.tabPage1.Controls.Add(this.textBox2);
+            this.tabPage1.Controls.Add(this.textBoxExample);
             this.tabPage1.Controls.Add(this.label5);
             this.tabPage1.Controls.Add(this.textBoxConnectionString);
             this.tabPage1.Controls.Add(this.label6);
@@ -158,16 +158,16 @@
             this.label8.TabIndex = 26;
             this.label8.Text = "Index Folder";
             // 
-            // textBox2
+            // textBoxExample
             // 
-            this.textBox2.BackColor = System.Drawing.SystemColors.Control;
-            this.textBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.textBox2.Location = new System.Drawing.Point(181, 207);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.Size = new System.Drawing.Size(346, 13);
-            this.textBox2.TabIndex = 25;
-            this.textBox2.Text = "E.g. Data Source=(local);Initial Catalog=xxx;Integrated Security=True";
+            this.textBoxExample.BackColor = System.Drawing.SystemColors.Control;
+            this.textBoxExample.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.textBoxExample.Location = new System.Drawing.Point(181, 207);
+            this.textBoxExample.Name = "textBoxExample";
+            this.textBoxExample.ReadOnly = true;
+            this.textBoxExample.Size = new System.Drawing.Size(346, 13);
+            this.textBoxExample.TabIndex = 25;
+            this.textBoxExample.Text = "E.g. Data Source=(local);Initial Catalog=xxx;Integrated Security=True";
             // 
             // label5
             // 
@@ -200,6 +200,7 @@
             this.comboBoxDBAdapter.Name = "comboBoxDBAdapter";
             this.comboBoxDBAdapter.Size = new System.Drawing.Size(241, 21);
             this.comboBoxDBAdapter.TabIndex = 2;
+            this.comboBoxDBAdapter.SelectedIndexChanged += new System.EventHandler(this.comboBoxDBAdapter_SelectedIndexChanged);
             // 
             // label3
             // 
@@ -249,6 +250,17 @@
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Index Mode";
             this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // buttonMirrorTable
+            // 
+            this.buttonMirrorTable.Enabled = false;
+            this.buttonMirrorTable.Location = new System.Drawing.Point(30, 380);
+            this.buttonMirrorTable.Name = "buttonMirrorTable";
+            this.buttonMirrorTable.Size = new System.Drawing.Size(75, 23);
+            this.buttonMirrorTable.TabIndex = 35;
+            this.buttonMirrorTable.Text = "Mirror table";
+            this.buttonMirrorTable.UseVisualStyleBackColor = true;
+            this.buttonMirrorTable.Click += new System.EventHandler(this.buttonMirrorTable_Click);
             // 
             // groupBoxIncrementalMode
             // 
@@ -553,17 +565,6 @@
             this.buttonFinish.UseVisualStyleBackColor = true;
             this.buttonFinish.Click += new System.EventHandler(this.buttonFinish_Click);
             // 
-            // buttonMirrorTable
-            // 
-            this.buttonMirrorTable.Enabled = false;
-            this.buttonMirrorTable.Location = new System.Drawing.Point(30, 380);
-            this.buttonMirrorTable.Name = "buttonMirrorTable";
-            this.buttonMirrorTable.Size = new System.Drawing.Size(75, 23);
-            this.buttonMirrorTable.TabIndex = 35;
-            this.buttonMirrorTable.Text = "Mirror table";
-            this.buttonMirrorTable.UseVisualStyleBackColor = true;
-            this.buttonMirrorTable.Click += new System.EventHandler(this.buttonMirrorTable_Click);
-            // 
             // FormCreateTable
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -606,7 +607,7 @@
         private System.Windows.Forms.Button buttonNext;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox textBoxExample;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Label label3;

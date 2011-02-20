@@ -103,6 +103,23 @@ namespace Hubble.Core.Service
 
         }
 
+        private string GetSqliteSelectSql(long from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Select [DocId] ");
+
+            foreach (Field field in _DBProvider.Table.Fields)
+            {
+                sb.AppendFormat(", [{0}] ", field.Name);
+            }
+
+            sb.AppendFormat(" from {0} where DocId >= {1} order by DocId  limit {2}", _DBProvider.Table.DBTableName, from, _Step);
+
+            return sb.ToString();
+
+        }
+
 
         private string GetSelectSql(long from)
         {
@@ -117,6 +134,10 @@ namespace Hubble.Core.Service
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mysql", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetMySqlSelectSql(from);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlite", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetSqliteSelectSql(from);
             }
             else
             {

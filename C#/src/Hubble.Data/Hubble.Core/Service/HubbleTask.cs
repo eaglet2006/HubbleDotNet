@@ -285,13 +285,16 @@ namespace Hubble.Core.Service
                 {
                     if (args.InnerException.Message.Trim() == "Too many connects on server")
                     {
-                        if (TooManyConnectionsErrorTimes++ != 0)
+                        if (TooManyConnectionsErrorTimes++ % 100 != 0)
                         {
-                            if (TooManyConnectionsErrorTimes > 1000)
-                            {
-                                TooManyConnectionsErrorTimes = 0;
-                            }
-
+                            return;
+                        }
+                        else
+                        {
+                            string error = string.Format("Error = {0}, try to connect times = {1} StackTrace = {2}",
+                                args.InnerException.Message, TooManyConnectionsErrorTimes, args.InnerException.StackTrace);
+                            Console.WriteLine(error);
+                            Global.Report.WriteErrorLog(error);
                             return;
                         }
                     }

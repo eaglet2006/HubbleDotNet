@@ -333,6 +333,49 @@ namespace QueryAnalyzer
 
         }
 
+        private string GetSqliteSelectSql(long from)
+        {
+            QueryResult qResult = DataAccess.Excute(string.Format("exec sp_columns '{0}'", TableName));
+
+            StringBuilder sb = new StringBuilder();
+
+            if (_DocIdReplaceField == null)
+            {
+                sb.Append("Select [DocId] ");
+
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    sb.AppendFormat(", [{0}] ", row["FieldName"].ToString());
+                }
+
+                sb.AppendFormat(" from {0} where DocId >= {1} order by DocId  limit {2}", _DBTableName, from, numericUpDownStep.Value);
+            }
+            else
+            {
+                sb.Append("Select ");
+
+                int i = 0;
+                foreach (DataRow row in qResult.DataSet.Tables[0].Rows)
+                {
+                    if (i == 0)
+                    {
+                        sb.AppendFormat("[{0}] ", row["FieldName"].ToString());
+                    }
+                    else
+                    {
+                        sb.AppendFormat(", [{0}] ", row["FieldName"].ToString());
+                    }
+
+                    i++;
+                }
+
+                sb.AppendFormat(" from {0} where {1} >= {2} order by {1} limit {3}", _DBTableName, _DocIdReplaceField, from, numericUpDownStep.Value);
+            }
+
+            return sb.ToString();
+
+        }
+
 
         private string GetSelectSql(long from)
         {
@@ -347,6 +390,10 @@ namespace QueryAnalyzer
             else if (_DBAdapterName.IndexOf("mysql", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetMySqlSelectSql(from);
+            }
+            else if (_DBAdapterName.IndexOf("sqlite", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetSqliteSelectSql(from);
             }
             else
             {

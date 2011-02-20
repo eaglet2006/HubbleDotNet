@@ -66,6 +66,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\References\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -84,6 +88,7 @@
     <Compile Include="DataStructure\StepList.cs" />
     <Compile Include="DataStructure\SuperList.cs" />
     <Compile Include="Data\OLEDataProvider.cs" />
+    <Compile Include="Data\SQLiteDataProvider.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />

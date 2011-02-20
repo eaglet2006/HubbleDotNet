@@ -539,5 +539,34 @@ namespace QueryAnalyzer
                 this.MirrorSQLForCreate = frmMirrorTable.SqlForCreate;
             }
         }
+
+        private void comboBoxDBAdapter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboBoxDBAdapter.Text.StartsWith("SQLSERVER", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxExample.Text = "E.g. Data Source=(local);Initial Catalog=xxx;Integrated Security=True";
+            }
+            else if (comboBoxDBAdapter.Text.StartsWith("Oracle8i", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxExample.Text = "E.g. MSDAORA;host=192.168.1.1;data source=MyTest;user id=system;password=xxx";
+            }
+            else if (comboBoxDBAdapter.Text.StartsWith("Oracle9i", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxExample.Text = "E.g. server=192.168.1.1;data source=MyTest;user id=system;password=xxx ";
+            }
+            else if (comboBoxDBAdapter.Text.StartsWith("Mysql", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxExample.Text = "E.g. Server=192.168.1.4;Database=test;Uid=root;Pwd=sa;";
+            }
+            else if (comboBoxDBAdapter.Text.StartsWith("Sqlite", StringComparison.CurrentCultureIgnoreCase))
+            {
+                textBoxExample.Text = "E.g. Data Source=c:\\hbdata\\Test.db3;Pooling=true;FailIfMissing=false";
+            }
+            else
+            {
+                textBoxExample.Text = "E.g. Data Source=(local);Initial Catalog=xxx;Integrated Security=True";
+            }
+
+        }
     }
 }

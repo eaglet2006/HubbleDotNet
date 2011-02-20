@@ -126,12 +126,46 @@ namespace Hubble.Core.Service
             return sb.ToString();
         }
 
+        private string GetSqliteSelectSql(long from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.Append("Select ");
+
+            int i = 0;
+            foreach (Field field in _DBProvider.Table.Fields)
+            {
+                if (i == 0)
+                {
+                    sb.AppendFormat("[{0}] ", field.Name);
+                }
+                else
+                {
+                    sb.AppendFormat(", [{0}] ", field.Name);
+                }
+
+                i++;
+            }
+
+            sb.AppendFormat(" from {0} where {1} >= {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
+                _DBProvider.Table.DocIdReplaceField, from, _Step);
+
+            return sb.ToString();
+
+        }
+
         private string GetMySqlTriggleSql(long serial, int top, string opr)
         {
             return string.Format("select Serial, Id, Fields from {1} where Opr = '{2}' and serial > {3} order by Serial limit {0}",
                 top, _DBProvider.Table.TriggerTableName, opr, serial);
         }
 
+        private string GetSqliteTriggleSql(long serial, int top, string opr)
+        {
+            return string.Format("select Serial, Id, Fields from {1} where Opr = '{2}' and serial > {3} order by Serial limit {0}",
+                top, _DBProvider.Table.TriggerTableName, opr, serial);
+        }
+        
 
         private string GetSelectSql(long from)
         {
@@ -146,6 +180,10 @@ namespace Hubble.Core.Service
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mysql", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetMySqlSelectSql(from);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlite", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetSqliteSelectSql(from);
             }
             else
             {
@@ -168,6 +206,10 @@ namespace Hubble.Core.Service
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mysql", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetMySqlTriggleSql(serial, top, opr);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlite", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetSqliteTriggleSql(serial, top, opr);
             }
             else
             {

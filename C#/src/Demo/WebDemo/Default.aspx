@@ -52,7 +52,7 @@ a.m:visited{COLOR:#660066;}
     <form id="form1" runat="server">
     <div class = "align-center">
         <br />
-        Hubble.net&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        HubbleDotNet&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <asp:TextBox ID="TextBoxSearch" runat="server" Width="308px" ></asp:TextBox>&nbsp;&nbsp;
         <asp:Label ID="LabelDuration" runat="server" Text="Duration:0ms"></asp:Label>
         <br />
