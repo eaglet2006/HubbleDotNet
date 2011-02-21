@@ -478,8 +478,10 @@ namespace Hubble.Core.SFQL.Parse
                         }
                         else
                         {
+                            temp = array[0];
                             array[0] = array[top - 1];
                             array[top - 1] = array[i];
+                            array[i] = temp;
 
                             if (array[top - 1].SortValue <= array[0].SortValue)
                             {
@@ -522,8 +524,10 @@ namespace Hubble.Core.SFQL.Parse
                         }
                         else
                         {
+                            temp = array[0];
                             array[0] = array[top - 1];
                             array[top - 1] = array[i];
+                            array[i] = temp;
 
                             if (array[top - 1].SortValue >= array[0].SortValue)
                             {
@@ -542,6 +546,7 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
+                //Sort values from 0 to top - 1
                 for (i = top - 1; i >= 1; i--)
                 {
                     temp = array[0];
