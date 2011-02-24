@@ -1286,7 +1286,23 @@ namespace Hubble.Core.SFQL.Parse
 
             Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
 
-            return ExcuteSelect(select, dbProvider, tableName, Service.CurrentConnection.ConnectionInfo);
+            if (dbProvider.Table.SelectTimeout > 0)
+            {
+                SelectWatchDog.WatchDog.Enter(dbProvider.Table.SelectTimeout, dbProvider.Table.Name);
+            }
+
+            try
+            {
+                return ExcuteSelect(select, dbProvider, tableName, Service.CurrentConnection.ConnectionInfo);
+            }
+            finally
+            {
+                if (dbProvider.Table.SelectTimeout > 0)
+                {
+                    SelectWatchDog.WatchDog.Exit();
+                }
+            }
+
         }
 
         private List<QueryResult> _UnionQueryResult;
@@ -1930,6 +1946,7 @@ namespace Hubble.Core.SFQL.Parse
             {
                 case SentenceType.SELECT:
                     Global.UserRightProvider.CanDo(RightItem.Select);
+
                     return ExcuteSelect(sentence);
                 case SentenceType.DELETE:
                     Global.UserRightProvider.CanDo(RightItem.Delete);

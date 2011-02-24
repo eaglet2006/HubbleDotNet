@@ -41,8 +41,11 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.comboBox3 = new System.Windows.Forms.ComboBox();
+            this.label29 = new System.Windows.Forms.Label();
             this.comboBox2 = new System.Windows.Forms.ComboBox();
             this.label28 = new System.Windows.Forms.Label();
+            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
             this.label27 = new System.Windows.Forms.Label();
             this.comboBoxTableSynchronization = new System.Windows.Forms.ComboBox();
             this.label26 = new System.Windows.Forms.Label();
@@ -80,9 +83,9 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.comboBox3 = new System.Windows.Forms.ComboBox();
-            this.label29 = new System.Windows.Forms.Label();
-            this.textBoxTriggerTableName = new System.Windows.Forms.TextBox();
+            this.label30 = new System.Windows.Forms.Label();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.label31 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
@@ -93,6 +96,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -217,6 +221,9 @@
             // 
             // tabPageAttributes
             // 
+            this.tabPageAttributes.Controls.Add(this.label31);
+            this.tabPageAttributes.Controls.Add(this.numericUpDown1);
+            this.tabPageAttributes.Controls.Add(this.label30);
             this.tabPageAttributes.Controls.Add(this.comboBox3);
             this.tabPageAttributes.Controls.Add(this.label29);
             this.tabPageAttributes.Controls.Add(this.comboBox2);
@@ -267,6 +274,28 @@
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
             // 
+            // comboBox3
+            // 
+            this.comboBox3.FormattingEnabled = true;
+            this.comboBox3.Items.AddRange(new object[] {
+            "True",
+            "False"});
+            this.comboBox3.Location = new System.Drawing.Point(229, 410);
+            this.comboBox3.Name = "comboBox3";
+            this.comboBox3.Size = new System.Drawing.Size(65, 21);
+            this.comboBox3.TabIndex = 19;
+            this.comboBox3.Tag = "UsingMirrorTableForNonFulltextQuery";
+            this.comboBox3.Text = "True";
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(32, 413);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(191, 13);
+            this.label29.TabIndex = 44;
+            this.label29.Text = "Using mirror table for Non-Fulltext query";
+            // 
             // comboBox2
             // 
             this.comboBox2.FormattingEnabled = true;
@@ -288,6 +317,14 @@
             this.label28.Size = new System.Drawing.Size(95, 13);
             this.label28.TabIndex = 42;
             this.label28.Text = "Enable Mirror table";
+            // 
+            // textBoxTriggerTableName
+            // 
+            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
+            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
+            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
+            this.textBoxTriggerTableName.TabIndex = 18;
+            this.textBoxTriggerTableName.Tag = "TriggerTableName";
             // 
             // label27
             // 
@@ -705,35 +742,41 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // comboBox3
+            // label30
             // 
-            this.comboBox3.FormattingEnabled = true;
-            this.comboBox3.Items.AddRange(new object[] {
-            "True",
-            "False"});
-            this.comboBox3.Location = new System.Drawing.Point(229, 410);
-            this.comboBox3.Name = "comboBox3";
-            this.comboBox3.Size = new System.Drawing.Size(65, 21);
-            this.comboBox3.TabIndex = 19;
-            this.comboBox3.Tag = "UsingMirrorTableForNonFulltextQuery";
-            this.comboBox3.Text = "True";
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(351, 413);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(74, 13);
+            this.label30.TabIndex = 45;
+            this.label30.Text = "Select timeout";
             // 
-            // label29
+            // numericUpDown1
             // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(32, 413);
-            this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(191, 13);
-            this.label29.TabIndex = 44;
-            this.label29.Text = "Using mirror table for Non-Fulltext query";
+            this.numericUpDown1.Location = new System.Drawing.Point(513, 409);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            300000,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(96, 20);
+            this.numericUpDown1.TabIndex = 46;
+            this.numericUpDown1.Tag = "SelectTimeout";
             // 
-            // textBoxTriggerTableName
+            // label31
             // 
-            this.textBoxTriggerTableName.Location = new System.Drawing.Point(513, 378);
-            this.textBoxTriggerTableName.Name = "textBoxTriggerTableName";
-            this.textBoxTriggerTableName.Size = new System.Drawing.Size(96, 20);
-            this.textBoxTriggerTableName.TabIndex = 18;
-            this.textBoxTriggerTableName.Tag = "TriggerTableName";
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(624, 413);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(20, 13);
+            this.label31.TabIndex = 47;
+            this.label31.Text = "ms";
             // 
             // FormTableInfo
             // 
@@ -757,6 +800,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownCleanupQueryCacheFileInDays)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -817,5 +861,8 @@
         private System.Windows.Forms.ComboBox comboBox3;
         private System.Windows.Forms.Label label29;
         private System.Windows.Forms.TextBox textBoxTriggerTableName;
+        private System.Windows.Forms.Label label31;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Label label30;
     }
 }

@@ -127,6 +127,9 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("Attribute", "UsingMirrorTableForNonFulltextQuery");
             OutputValue("Value", dbProvider.Table.UsingMirrorTableForNonFulltextQuery);
 
+            NewRow();
+            OutputValue("Attribute", "SelectTimeout");
+            OutputValue("Value", dbProvider.Table.SelectTimeout);
         }
 
         #endregion

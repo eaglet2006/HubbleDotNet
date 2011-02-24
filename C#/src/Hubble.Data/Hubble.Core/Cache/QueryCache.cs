@@ -21,6 +21,7 @@ using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Core.Query;
 using System.IO.Compression;
+using System.Threading;
 
 namespace Hubble.Core.Cache
 {
@@ -273,13 +274,20 @@ namespace Hubble.Core.Cache
 
         public void Insert(string key, QueryCacheDocuments item, DateTime expireTime, QueryCacheInformation cacheInfo)
         {
-            lock (_LockObj)
+            if (Monitor.TryEnter(_LockObj, Timeout))
             {
-                base.Insert(key, item, expireTime, cacheInfo);
-
-                if (CacheFileEnabled)
+                try
                 {
-                    WriteCacheFile(new CacheFile(key, item, cacheInfo));
+                    base.Insert(key, item, expireTime, cacheInfo);
+
+                    if (CacheFileEnabled)
+                    {
+                        WriteCacheFile(new CacheFile(key, item, cacheInfo));
+                    }
+                }
+                finally
+                {
+                    Monitor.Exit(_LockObj);
                 }
             }
         }
@@ -292,82 +300,97 @@ namespace Hubble.Core.Cache
 
         public bool TryGetValue(string key, out QueryCacheDocuments value, out DateTime expireTime, out int hitCount, out QueryCacheInformation cacheInfo)
         {
-            lock (_LockObj)
+            if (Monitor.TryEnter(_LockObj, Timeout))
             {
-                if (CacheFileEnabled)
+                try
                 {
-                    string bit16String = base.GetMD5String(key);
-
-                    object tag;
-                    bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
-
-                    string filePath = _CacheFileFolder + bit16String + ".xml";
-
-                    if (!result)
+                    if (CacheFileEnabled)
                     {
-                        if (System.IO.File.Exists(filePath))
+                        string bit16String = base.GetMD5String(key);
+
+                        object tag;
+                        bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
+
+                        string filePath = _CacheFileFolder + bit16String + ".xml";
+
+                        if (!result)
                         {
-                            using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
-                                 System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
+                            if (System.IO.File.Exists(filePath))
                             {
-                                CacheFile cacheFile;
-
-                                try
+                                using (System.IO.FileStream fs = new System.IO.FileStream(filePath,
+                                     System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read))
                                 {
-                                    cacheFile = Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Deserialize(fs);
-                                }
-                                catch
-                                {
-                                    cacheInfo = null;
-                                    return false;
+                                    CacheFile cacheFile;
 
+                                    try
+                                    {
+                                        cacheFile = Hubble.Framework.Serialization.XmlSerialization<CacheFile>.Deserialize(fs);
+                                    }
+                                    catch
+                                    {
+                                        cacheInfo = null;
+                                        return false;
+
+                                    }
+
+                                    value = cacheFile.Documents;
+                                    cacheInfo = cacheFile.Info;
+                                    expireTime = new DateTime();
+                                    hitCount = 1;
+                                    base.Insert(key, value, expireTime, cacheInfo);
                                 }
 
-                                value = cacheFile.Documents;
-                                cacheInfo = cacheFile.Info;
-                                expireTime = new DateTime();
-                                hitCount = 1;
-                                base.Insert(key, value, expireTime, cacheInfo);
+                                System.IO.File.SetLastWriteTime(filePath, DateTime.Now);
+                                return true;
                             }
-
-                            System.IO.File.SetLastWriteTime(filePath, DateTime.Now);
-                            return true;
+                            else
+                            {
+                                cacheInfo = null;
+                                return false;
+                            }
                         }
                         else
                         {
-                            cacheInfo = null;
-                            return false;
+                            cacheInfo = tag as QueryCacheInformation;
+
+                            try
+                            {
+                                if (!System.IO.File.Exists(filePath))
+                                {
+                                    WriteCacheFile(new CacheFile(key, value, cacheInfo));
+                                }
+                                else
+                                {
+                                    SetFileLastWriteTime(filePath);
+                                }
+                            }
+                            catch
+                            {
+                            }
+
+                            return true;
                         }
                     }
                     else
                     {
+                        object tag;
+                        bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
                         cacheInfo = tag as QueryCacheInformation;
-
-                        try
-                        {
-                            if (!System.IO.File.Exists(filePath))
-                            {
-                                WriteCacheFile(new CacheFile(key, value, cacheInfo));
-                            }
-                            else
-                            {
-                                SetFileLastWriteTime(filePath);
-                            }
-                        }
-                        catch
-                        {
-                        }
-
-                        return true;
+                        return result;
                     }
                 }
-                else
+                finally
                 {
-                    object tag;
-                    bool result = base.TryGetValue(key, out value, out expireTime, out hitCount, out tag);
-                    cacheInfo = tag as QueryCacheInformation;
-                    return result;
+                    Monitor.Exit(_LockObj);
                 }
+            }
+            else
+            {
+                value = null;
+                expireTime = default(DateTime);
+                hitCount = 0;
+                cacheInfo = null;
+                return false;
             }
         }
 

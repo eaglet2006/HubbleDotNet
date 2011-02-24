@@ -546,6 +546,11 @@ namespace Hubble.Framework.Net
                             OnMessageReceiveEvent(receiveEvent);
                             customSerializer = receiveEvent.CustomSerializtion;
                         }
+                        catch (System.Threading.ThreadAbortException)
+                        {
+                            receiveEvent.ReturnMsg = new System.Threading.ThreadInterruptedException("Thread abort. Maybe execute select too long. Please check the error log.");
+                            System.Threading.Thread.ResetAbort();
+                        }
                         catch (Exception e)
                         {
                             receiveEvent.ReturnMsg = e;

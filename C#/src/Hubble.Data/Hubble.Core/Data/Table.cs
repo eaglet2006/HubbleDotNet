@@ -88,6 +88,7 @@ namespace Hubble.Core.Data
 
         private BigTable.BigTable _BigTable = new Hubble.Core.BigTable.BigTable();
 
+        int _SelectTimeout = -1;
         #endregion
 
         #region XmlIgnore Public properties
@@ -694,6 +695,34 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// Timeout for select,
+        /// in millisecond
+        /// </summary>
+        public int SelectTimeout
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _SelectTimeout;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _SelectTimeout = value;
+
+                    if (_SelectTimeout > 300 * 1000)
+                    {
+                        _SelectTimeout = 300 * 1000;
+                    }
+                }
+            }
+
+        }
 
         private static void TableCheck(Table table)
         {

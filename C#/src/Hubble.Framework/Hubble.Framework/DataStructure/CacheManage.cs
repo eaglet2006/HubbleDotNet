@@ -28,6 +28,8 @@ namespace Hubble.Framework.DataStructure
     {
         object _LockObj = new object();
 
+        object _PropertyLockObj = new object();
+
         private int _MaxStair = 0;
 
         private long _TotalMemorySize = 0;
@@ -42,7 +44,7 @@ namespace Hubble.Framework.DataStructure
 
         private long _TotalMemoryNotCollect = 0;
 
-        private Thread _Thread;
+        //private Thread _Thread; //Waiting for I fix the problem of cache file
 
         private bool _CacheAdded = false;
         private int _Tick = 0;
@@ -51,7 +53,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     return _TotalMemoryNotCollect;
                 }
@@ -59,7 +61,7 @@ namespace Hubble.Framework.DataStructure
 
             set
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     _TotalMemoryNotCollect = value;
                 }
@@ -72,7 +74,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     return _TotalMemorySize;
                 }
@@ -80,7 +82,7 @@ namespace Hubble.Framework.DataStructure
 
             set
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     _TotalMemoryNotCollect += Math.Abs(value - _TotalMemorySize);
                     _TotalMemorySize = value;
@@ -98,7 +100,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     return _MaxMemorySize;
                 }
@@ -106,7 +108,7 @@ namespace Hubble.Framework.DataStructure
 
             set
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     if (value < 0)
                     {
@@ -126,7 +128,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     return _Ratio;
                 }
@@ -134,7 +136,7 @@ namespace Hubble.Framework.DataStructure
 
             set
             {
-                lock (_LockObj)
+                lock (_PropertyLockObj)
                 {
                     _Ratio = value;
 
@@ -232,72 +234,79 @@ namespace Hubble.Framework.DataStructure
             {
                 if (TotalMemorySize > MaxMemorySize)
                 {
-                    lock (_LockObj)
+                    if (Monitor.TryEnter(_LockObj, 200))
                     {
-                        if (TotalMemorySize < MaxMemorySize)
+                        try
                         {
-                            return;
-                        }
-
-                        BeginCollect();
-
-                        long targetMemorySize = (long)(_MaxMemorySize * (_Ratio));
-
-                        if (targetMemorySize > _MaxMemorySize)
-                        {
-                            targetMemorySize = _MaxMemorySize;
-                        }
-
-                        if (targetMemorySize < 0)
-                        {
-                            targetMemorySize = 0;
-                        }
-
-
-                        for (int i = 0; i < _MaxStair; i++)
-                        {
-                            long delta = _TotalMemorySize - targetMemorySize;
-
-                            if (delta <= 0)
+                            if (TotalMemorySize < MaxMemorySize)
                             {
-                                break;
+                                return;
                             }
 
-                            long stairMemory = 0;
+                            BeginCollect();
 
-                            foreach (IManagedCache cache in _ManagedCacheList)
+                            long targetMemorySize = (long)(_MaxMemorySize * (_Ratio));
+
+                            if (targetMemorySize > _MaxMemorySize)
                             {
-                                stairMemory += cache.GetBucketMemorySize(i);
+                                targetMemorySize = _MaxMemorySize;
                             }
 
-                            double ratio = 0;
-
-                            if (stairMemory <= delta)
+                            if (targetMemorySize < 0)
                             {
-                                ratio = 0;
-                            }
-                            else
-                            {
-                                ratio = (double)(stairMemory - delta) / (double)stairMemory;
+                                targetMemorySize = 0;
                             }
 
-                            foreach (IManagedCache cache in _ManagedCacheList)
+
+                            for (int i = 0; i < _MaxStair; i++)
                             {
-                                if (i >= cache.MaxStair)
+                                long delta = _TotalMemorySize - targetMemorySize;
+
+                                if (delta <= 0)
                                 {
-                                    continue;
+                                    break;
                                 }
 
-                                cache.Clear(i, ratio);
+                                long stairMemory = 0;
+
+                                foreach (IManagedCache cache in _ManagedCacheList)
+                                {
+                                    stairMemory += cache.GetBucketMemorySize(i);
+                                }
+
+                                double ratio = 0;
+
+                                if (stairMemory <= delta)
+                                {
+                                    ratio = 0;
+                                }
+                                else
+                                {
+                                    ratio = (double)(stairMemory - delta) / (double)stairMemory;
+                                }
+
+                                foreach (IManagedCache cache in _ManagedCacheList)
+                                {
+                                    if (i >= cache.MaxStair)
+                                    {
+                                        continue;
+                                    }
+
+                                    cache.Clear(i, ratio);
+                                }
                             }
+
+                            GC.Collect();
+
+                            _TotalMemoryNotCollect = 0;
+                            ThreadPool.QueueUserWorkItem(new WaitCallback(GCCollect));
+
+                            AfterCollect();
                         }
-
-                        GC.Collect();
-
-                        _TotalMemoryNotCollect = 0;
-                        ThreadPool.QueueUserWorkItem(new WaitCallback(GCCollect));
-
-                        AfterCollect();
+                        finally
+                        {
+                            Monitor.Exit(_LockObj);
+                        }
                     }
                 }
             }
@@ -331,11 +340,11 @@ namespace Hubble.Framework.DataStructure
 
             MaxMemorySize = maxMemorySize;
 
-            _Thread = new Thread(ThreadProc);
+            //_Thread = new Thread(ThreadProc);
 
-            _Thread.IsBackground = true;
+            //_Thread.IsBackground = true;
 
-            _Thread.Start();
+            //_Thread.Start();
 
         }
 

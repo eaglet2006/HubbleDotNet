@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace Hubble.Framework.DataStructure
 {
@@ -43,6 +44,8 @@ namespace Hubble.Framework.DataStructure
     /// <typeparam name="T">type of cache item</typeparam>
     public abstract class Cache<T> : IManagedCache
     {
+        protected const int Timeout = 200;
+
         #region Bucket
 
         private class Bucket : LinkedList<CacheItem>
@@ -419,37 +422,44 @@ namespace Hubble.Framework.DataStructure
         /// <param name="expireTime">expire time</param>
         public void Insert(string key, T item, DateTime expireTime, object tag)
         {
-            lock (_LockObj)
+            if (Monitor.TryEnter(_LockObj, Timeout))
             {
-                CacheItem node;
-
-                if (_Dict.TryGetValue(key, out node))
+                try
                 {
-                    node.ExpireTime = expireTime;
+                    CacheItem node;
 
-                    long oldSize = node.Size;
+                    if (_Dict.TryGetValue(key, out node))
+                    {
+                        node.ExpireTime = expireTime;
 
-                    node.Value = item;
-                    node.Tag = tag;
+                        long oldSize = node.Size;
 
-                    _Buckets[node.Stair].IncSize(node.Size - oldSize);
+                        node.Value = item;
+                        node.Tag = tag;
+
+                        _Buckets[node.Stair].IncSize(node.Size - oldSize);
+                    }
+                    else
+                    {
+                        CacheItem cacheItem = new Cache<T>.CacheItem(item, expireTime, this, 0);
+
+                        LinkedListNode<CacheItem> n = _Buckets[0].AddLast(cacheItem);
+
+                        cacheItem.Node = n;
+
+                        node = n.Value;
+
+                        Bit16Int md5Key;
+                        _Dict.Add(key, node, out md5Key);
+
+                        node.Key = md5Key;
+                        node.Tag = tag;
+
+                    }
                 }
-                else
+                finally
                 {
-                    CacheItem cacheItem = new Cache<T>.CacheItem(item, expireTime, this, 0);
-
-                    LinkedListNode<CacheItem> n = _Buckets[0].AddLast(cacheItem);
-
-                    cacheItem.Node = n;
-
-                    node = n.Value;
-
-                    Bit16Int md5Key;
-                    _Dict.Add(key, node, out md5Key);
-
-                    node.Key = md5Key;
-                    node.Tag = tag;
-
+                    Monitor.Exit(_LockObj);
                 }
             }
 
@@ -476,42 +486,57 @@ namespace Hubble.Framework.DataStructure
 
         public bool TryGetValue(string key, out T value, out DateTime expireTime, out int hitCount, out object tag)
         {
-            lock (_LockObj)
+            if (Monitor.TryEnter(_LockObj, Timeout))
             {
-                CacheItem node;
-                if (_Dict.TryGetValue(key, out node))
+                try
                 {
-                    value = node.Value;
-                    expireTime = node.ExpireTime;
-                    
-                    if (node.HitCount <= int.MaxValue)
+                    CacheItem node;
+                    if (_Dict.TryGetValue(key, out node))
                     {
-                        node.HitCount++;
+                        value = node.Value;
+                        expireTime = node.ExpireTime;
 
-                        if (node.HitCount > _Buckets[node.Stair].MaxHitCount)
+                        if (node.HitCount <= int.MaxValue)
                         {
-                            if (node.Stair < _Buckets.Length - 1)
+                            node.HitCount++;
+
+                            if (node.HitCount > _Buckets[node.Stair].MaxHitCount)
                             {
-                                _Buckets[node.Stair].Remove(node, false);
-                                node.Stair++;
-                                node.Node = _Buckets[node.Stair].AddLast(node);
+                                if (node.Stair < _Buckets.Length - 1)
+                                {
+                                    _Buckets[node.Stair].Remove(node, false);
+                                    node.Stair++;
+                                    node.Node = _Buckets[node.Stair].AddLast(node);
+                                }
                             }
                         }
+
+                        tag = node.Tag;
+                        hitCount = node.HitCount;
+
+                        return true;
                     }
-
-                    tag = node.Tag;
-                    hitCount = node.HitCount;
-
-                    return true;
+                    else
+                    {
+                        value = default(T);
+                        expireTime = default(DateTime);
+                        hitCount = 0;
+                        tag = null;
+                        return false;
+                    }
                 }
-                else
+                finally
                 {
-                    value = default(T);
-                    expireTime = default(DateTime);
-                    hitCount = 0;
-                    tag = null;
-                    return false;
+                    Monitor.Exit(_LockObj);
                 }
+            }
+            else
+            {
+                value = default(T);
+                expireTime = default(DateTime);
+                hitCount = 0;
+                tag = null;
+                return false;
             }
         }
 

@@ -253,6 +253,23 @@ namespace Hubble.Core.StoredProcedure
                         }
                     }
                     break;
+                case "selecttimeout":
+                    {
+                        int selecttimeout;
+
+                        if (int.TryParse(value, out selecttimeout))
+                        {
+                            dbProvider.Table.SelectTimeout = selecttimeout;
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} SelectTimeout to {1} sucessful!",
+                                tableName, dbProvider.Table.SelectTimeout));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be integer");
+                        }
+                    }
+                    break;
                 default:
                     throw new StoredProcException("Can't set attribute:{0}, it is only can set at create statement");
             }
