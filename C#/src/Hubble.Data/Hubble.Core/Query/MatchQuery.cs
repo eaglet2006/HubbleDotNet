@@ -123,16 +123,25 @@ namespace Hubble.Core.Query
             Array.Sort(wordIndexes);
 
             //Calculate top
-            int top = (1 + this.End / 100) * 100;
-            
-            if (top <= 0)
-            {
-                top = 100;
-            }
+            int top;
 
-            if (this.End * 2 > top)
+            if (this.End >= 0)
             {
-                top *= 2;
+                top = (1 + this.End / 100) * 100;
+
+                if (top <= 0)
+                {
+                    top = 100;
+                }
+
+                if (this.End * 2 > top)
+                {
+                    top *= 2;
+                }
+            }
+            else
+            {
+                top = int.MaxValue;
             }
 
             double ratio = 1;
