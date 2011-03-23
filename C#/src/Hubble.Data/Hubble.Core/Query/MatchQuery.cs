@@ -585,13 +585,6 @@ namespace Hubble.Core.Query
 
                 while (docList.DocumentId >= 0)
                 {
-
-                    if (docList.DocumentId == 4206)
-                    {
-                        Console.WriteLine(4206);
-                    }
-
-
                     Core.SFQL.Parse.DocumentResultPoint drp;
                     drp.pDocumentResult = null;
 

@@ -606,6 +606,10 @@ namespace Hubble.Core.Service
                                 fieldsSQL = fields.Substring(0, fields.Length - 1);
                             }
 
+                            //sb.AppendFormat("{0}, {1} from {2} with(nolock) where {0} in ", _DBProvider.DocIdReplaceField,
+                            //    fieldsSQL, _DBProvider.Table.DBTableName);
+                            // Mark here. Will add a option.
+
                             sb.AppendFormat("{0}, {1} from {2} where {0} in ", _DBProvider.DocIdReplaceField,
                                 fieldsSQL, _DBProvider.Table.DBTableName);
 
