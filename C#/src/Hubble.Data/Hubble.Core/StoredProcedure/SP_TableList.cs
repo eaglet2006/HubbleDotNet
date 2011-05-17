@@ -38,6 +38,7 @@ namespace Hubble.Core.StoredProcedure
         {
             AddColumn("TableName");
             AddColumn("InitError");
+            AddColumn("IsBigTable");
 
             string databaseName = null;
 
@@ -70,6 +71,14 @@ namespace Hubble.Core.StoredProcedure
                 NewRow();
                 OutputValue("TableName", tableName);
                 OutputValue("InitError", dbProvider.InitError);
+                if (string.IsNullOrEmpty(dbProvider.InitError))
+                {
+                    OutputValue("IsBigTable", dbProvider.Table.IsBigTable);
+                }
+                else
+                {
+                    OutputValue("IsBigTable", false);
+                }
             }
 
         }

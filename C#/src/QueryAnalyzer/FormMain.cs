@@ -34,11 +34,13 @@ namespace QueryAnalyzer
         {
             public string TableName;
             public string InitError;
+            public bool IsBigTable;
 
-            public TableInfo(string tableName, string initError)
+            public TableInfo(string tableName, string initError, bool isBigTable)
             {
                 TableName = tableName;
                 InitError = initError;
+                IsBigTable = isBigTable;
             }
 
             public override string ToString()
@@ -78,7 +80,14 @@ namespace QueryAnalyzer
 
                 if (string.IsNullOrEmpty(tableInfo.InitError))
                 {
-                    tableNode.ImageIndex = 1;
+                    if (tableInfo.IsBigTable)
+                    {
+                        tableNode.ImageIndex = 6;
+                    }
+                    else
+                    {
+                        tableNode.ImageIndex = 1;
+                    }
                 }
                 else
                 {
@@ -137,9 +146,21 @@ namespace QueryAnalyzer
             QueryResult result = GlobalSetting.DataAccess.Excute(string.Format("exec sp_tablelist '{0}'",
                 databaseName.Replace("'", "''")));
 
-            foreach (DataRow row in result.DataSet.Tables[0].Rows)
+            if (result.DataSet.Tables[0].Columns.Contains("IsBigTable"))
             {
-                yield return new TableInfo(row["TableName"].ToString(), row["InitError"].ToString());
+                foreach (DataRow row in result.DataSet.Tables[0].Rows)
+                {
+                    yield return new TableInfo(row["TableName"].ToString(),
+                        row["InitError"].ToString(), bool.Parse(row["IsBigTable"].ToString()));
+                }
+            }
+            else
+            {
+                foreach (DataRow row in result.DataSet.Tables[0].Rows)
+                {
+                    yield return new TableInfo(row["TableName"].ToString(),
+                        row["InitError"].ToString(), false);
+                }
             }
         }
 
@@ -819,6 +840,28 @@ namespace QueryAnalyzer
         {
             FormTaskSchedulerList frmTaskScheduler = new FormTaskSchedulerList();
             frmTaskScheduler.ShowDialog();
+        }
+
+        private void createBigTableToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string databaseName = treeViewData.SelectedNode.Text;
+                toolStripComboBoxDatabases.Text = databaseName;
+                FormBigTable frmBigTable = new FormBigTable();
+                frmBigTable.Text = "Create BigTable";
+                frmBigTable.DatabaseName = databaseName;
+
+                if (frmBigTable.ShowDialog() == DialogResult.OK)
+                {
+                    refreshToolStripMenuItem_Click(sender, e);
+                }
+            
+            }
+            catch (Exception ex)
+            {
+                QAMessageBox.ShowErrorMessage(ex.Message);
+            }
         }
 
     }

@@ -49,26 +49,19 @@ namespace Hubble.Core.BigTable
         {
             BigTable bigTable = dbProvider.BigTableCfg;
 
-            if (bigTable.TableCollectionList.Count <= 0)
-            {
-                throw new ParseException("The Bigtable must have at least one table collection");
-            }
+            //if (!string.IsNullOrEmpty(tc.ConnectString))
+            //{
+            //    throw new ParseException("Free version does not provider distributable BigTable. You should use HubblePro for it");
+            //}
 
-            TableCollection tc = bigTable.TableCollectionList[0];
-
-            if (!string.IsNullOrEmpty(tc.ConnectString))
-            {
-                throw new ParseException("Free version does not provider distributable BigTable. You should use HubblePro for it");
-            }
-
-            if (tc.TableNames.Count <= 0)
+            if (bigTable.Tablets.Count <= 0)
             {
                 throw new ParseException("The Bigtable must have at least one table in table collection");
             }
 
             List<Select> unionSelect = new List<Select>();
 
-            foreach(TableInfo tf in tc.TableNames)
+            foreach(TabletInfo tf in bigTable.Tablets)
             {
                 string tableName = tf.TableName;
                 Select sel = select.Clone();

@@ -185,6 +185,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_CreateBigTable.cs" />
     <Compile Include="StoredProcedure\SP_GetSchema.cs" />
     <Compile Include="StoredProcedure\SP_RemoveSchema.cs" />
     <Compile Include="StoredProcedure\SP_AddSchema.cs" />

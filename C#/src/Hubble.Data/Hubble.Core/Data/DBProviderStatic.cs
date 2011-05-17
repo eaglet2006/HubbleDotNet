@@ -417,15 +417,18 @@ namespace Hubble.Core.Data
                 {
                     if (dbProvider.Table != null)
                     {
-                        if (!dbProvider.Table.IndexOnly)
+                        if (!dbProvider.Table.IsBigTable)
                         {
-                            dbProvider.DBAdapter.Drop();
-                        }
-                        else
-                        {
-                            if (dbProvider.MirrorDBAdapter != null)
+                            if (!dbProvider.Table.IndexOnly)
                             {
-                                dbProvider.MirrorDBAdapter.Drop();
+                                dbProvider.DBAdapter.Drop();
+                            }
+                            else
+                            {
+                                if (dbProvider.MirrorDBAdapter != null)
+                                {
+                                    dbProvider.MirrorDBAdapter.Drop();
+                                }
                             }
                         }
                     }

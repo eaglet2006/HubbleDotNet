@@ -448,9 +448,9 @@ namespace Hubble.Core.Data
                 {
                     BigTable.BigTable bigTable = new Hubble.Core.BigTable.BigTable();
 
-                    foreach(BigTable.TableCollection tc in _Table.BigTable.TableCollectionList)
+                    foreach(BigTable.TabletInfo ti in _Table.BigTable.Tablets)
                     {
-                        bigTable.TableCollectionList.Add(tc.Clone());
+                        bigTable.Tablets.Add(ti.Clone());
                     }
 
                     return _Table.BigTable;
@@ -851,8 +851,11 @@ namespace Hubble.Core.Data
             }
 
             //Delete optimize files
-            DeleteOptimizeFiles(optimizeDir);
 
+            if (optimizeDir != null)
+            {
+                DeleteOptimizeFiles(optimizeDir);
+            }
         }
 
         private void Drop()
@@ -861,6 +864,14 @@ namespace Hubble.Core.Data
             {
                 if (_Table == null)
                 {
+                    return;
+                }
+
+                if (_Table.IsBigTable)
+                {
+                    //Delete files
+                    DeleteAllFiles(Directory, null);
+
                     return;
                 }
 
@@ -898,6 +909,7 @@ namespace Hubble.Core.Data
                 //{
                 //    _PayloadFile.Close(2000);
                 //}
+
 
                 string dir = Directory;
                 string optimizeDir = Hubble.Framework.IO.Path.AppendDivision(Directory, '\\') + "Optimize";
@@ -1645,7 +1657,45 @@ namespace Hubble.Core.Data
                 }
 
                 _Directory = directory;
+
                 _DelProvider = new DeleteProvider();
+
+                if (table.IsBigTable)
+                {
+                    //Create table directory and create table index files
+                    try
+                    {
+                        table.Save(directory);
+                    }
+                    catch
+                    {
+                        if (!table.IndexOnly)
+                        {
+                            DBAdapter.Drop();
+                        }
+                        else
+                        {
+                            if (table.HasMirrorTable)
+                            {
+                                if (MirrorDBAdapter != null)
+                                {
+                                    MirrorDBAdapter.Drop();
+                                }
+                            }
+                        }
+                        throw;
+                    }
+
+                    //Add to global configuration file
+                    Setting.AddTableConfig(directory, table.Name);
+                    Setting.Save();
+
+                    ClearVars();
+
+                    Open(directory);
+
+                    return;
+                }
 
                 //Get DB adapter
                 if (!string.IsNullOrEmpty(table.DBAdapterTypeName))

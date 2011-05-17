@@ -21,74 +21,81 @@ using System.Text;
 
 namespace Hubble.Core.BigTable
 {
-    public class TableInfo
+    public class TabletInfo
     {
         public string TableName = "";
 
+        /// <summary>
+        /// Connection String list of balance servers
+        /// </summary>
         public List<string> BalanceServers = new List<string>();
 
+        /// <summary>
+        /// Connection String list of failover servers
+        /// </summary>
         public List<string> FailoverServers = new List<string>();
 
-        public TableInfo()
+        public TabletInfo()
         {
         }
 
-        public TableInfo(string tableName, string serverName)
+        public TabletInfo(string tableName, string connectionString)
         {
             this.TableName = tableName;
-            BalanceServers.Add(serverName);
+            BalanceServers.Add(connectionString);
         }
 
-
-
-        public TableInfo Clone()
+        public TabletInfo Clone()
         {
-            TableInfo tableInfo = new TableInfo();
+            TabletInfo tableInfo = new TabletInfo();
             tableInfo.TableName = this.TableName;
 
-            foreach (string server in this.BalanceServers)
+            foreach (string connectionString in this.BalanceServers)
             {
-                tableInfo.BalanceServers.Add(server);
+                tableInfo.BalanceServers.Add(connectionString);
             }
 
-            foreach (string server in this.FailoverServers)
+            foreach (string connectionString in this.FailoverServers)
             {
-                tableInfo.FailoverServers.Add(server);
+                tableInfo.FailoverServers.Add(connectionString);
             }
 
             return tableInfo;
+        }
+
+        public override bool Equals(object obj)
+        {
+            TabletInfo dest = obj as TabletInfo;
+            if (dest == null)
+            {
+                return false;
+            }
+
+            return this.TableName.Equals(dest.TableName, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.TableName.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return this.TableName;
         }
 
     }
 
     public class TableCollection
     {
-        public string ServerName;
-        public string ConnectString;
-        public List<TableInfo> TableNames;
+        public List<TabletInfo> TableNames;
 
         public TableCollection()
         {
-            ServerName = "";
-            ConnectString = "";
-            TableNames = new List<TableInfo>();
+            TableNames = new List<TabletInfo>();
 
             //TableNames.Add(new TableInfo("News", "ServerName=127.0.0.1"));
             //TableNames.Add(new TableInfo("TitleNews", "ServerName=127.0.0.1"));
-        }
-
-        public TableCollection Clone()
-        {
-            TableCollection tc = new TableCollection();
-            tc.ServerName = this.ServerName;
-            tc.ConnectString = this.ConnectString;
-
-            foreach (TableInfo tableInfo in this.TableNames)
-            {
-                tc.TableNames.Add(tableInfo.Clone());
-            }
-
-            return tc;
         }
     }
 
@@ -97,11 +104,21 @@ namespace Hubble.Core.BigTable
     /// </summary>
     public class BigTable
     {
-        public List<TableCollection> TableCollectionList = new List<TableCollection>();
+        public List<TabletInfo> Tablets = new List<TabletInfo>();
 
         public BigTable()
         {
             //TableCollectionList.Add(new TableCollection());
+        }
+
+        public void Add(TabletInfo tablet)
+        {
+            if (Tablets.Contains(tablet))
+            {
+                throw new Hubble.Core.Data.DataException("Can insert same table name into bigtable");
+            }
+
+            Tablets.Add(tablet);
         }
     }
 }
