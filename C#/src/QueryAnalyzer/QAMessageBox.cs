@@ -13,6 +13,11 @@ namespace QueryAnalyzer
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
+        public static DialogResult ShowQuestionMessage(string message)
+        {
+            return MessageBox.Show(message, "Question", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        }
+
         /// <summary>
         /// Show input box
         /// </summary>

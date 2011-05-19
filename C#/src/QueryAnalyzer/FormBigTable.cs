@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using Hubble.SQLClient;
+using Hubble.Core.BigTable;
 
 namespace QueryAnalyzer
 {
@@ -14,6 +15,64 @@ namespace QueryAnalyzer
         BigTableGenerate _BigTableGenerate;
         internal string DatabaseName;
         internal DialogResult _Result = DialogResult.Cancel;
+
+        BigTable _BigTable;
+
+        internal BigTable BigTable
+        {
+            get
+            {
+                return _BigTable;
+            }
+
+            set
+            {
+                _BigTable = value;
+            }
+        }
+
+        string _TableName;
+        internal string TableName
+        {
+            get
+            {
+                return _TableName;
+            }
+
+            set
+            {
+                _TableName = value;
+            }
+        }
+
+        private string _IndexFolder;
+        internal string IndexFolder
+        {
+            get
+            {
+                return _IndexFolder;
+            }
+
+            set
+            {
+                _IndexFolder = value;
+            }
+        }
+
+        bool _CreateTable;
+
+        internal bool CreateTable
+        {
+            get
+            {
+                return _CreateTable;
+            }
+
+            set
+            {
+                _CreateTable = value;
+            }
+        }
 
         public FormBigTable()
         {
@@ -29,31 +88,39 @@ namespace QueryAnalyzer
         private void FormBigTable_Load(object sender, EventArgs e)
         {
             _BigTableGenerate = new BigTableGenerate();
+            _BigTableGenerate.BigTableInfo = this.BigTable;
+            _BigTableGenerate.CreateTable = this.CreateTable;
+            _BigTableGenerate.TableName = this.TableName;
+            _BigTableGenerate.IndexFolder = this.IndexFolder;
+            _BigTableGenerate.DatabaseName = DatabaseName;
             _BigTableGenerate.Parent = this;
             _BigTableGenerate.Visible = true;
             _BigTableGenerate.Dock = DockStyle.Fill;
-            _BigTableGenerate.DatabaseName = DatabaseName;
 
-            try
+
+            if (this.CreateTable)
             {
-                QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
-                    DatabaseName);
-
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                try
                 {
-                    if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
+                        DatabaseName);
+
+                    foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                     {
-                        _BigTableGenerate.IndexFolder = row["Value"].ToString().Trim();
-                        _BigTableGenerate.DefaultIndexFolder = _BigTableGenerate.IndexFolder;
-                        break;
+                        if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
+                        {
+                            _BigTableGenerate.IndexFolder = row["Value"].ToString().Trim();
+                            _BigTableGenerate.DefaultIndexFolder = _BigTableGenerate.IndexFolder;
+                            break;
+                        }
                     }
                 }
+                catch (Exception e1)
+                {
+                    MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Close();
+                }
             }
-            catch (Exception e1)
-            {
-                MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Close();
-            }   
         }
     }
 }

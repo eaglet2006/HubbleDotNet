@@ -21,17 +21,69 @@ using System.Text;
 
 namespace Hubble.Core.BigTable
 {
+    public class ServerInfo
+    {
+        public string ServerName = "";
+        public string ConnectionString = "";
+
+        public ServerInfo()
+        {
+
+        }
+
+        public ServerInfo(string serverName, string connectionString)
+        {
+            ServerName = serverName;
+            ConnectionString = connectionString;
+        }
+
+        public override bool Equals(object obj)
+        {
+            ServerInfo dest = obj as ServerInfo;
+            if (dest == null)
+            {
+                return false;
+            }
+
+            if (dest.ServerName == null || this.ServerName == null)
+            {
+                return this.ServerName == dest.ServerName;
+            }
+            else
+            {
+                return this.ServerName.ToLower() == dest.ServerName.ToLower();
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            if (this.ServerName == null)
+            {
+                return base.GetHashCode();
+            }
+            else
+            {
+                return this.ServerName.ToLower().GetHashCode();
+            }
+        }
+
+        public override string ToString()
+        {
+            return this.ServerName;
+        }
+    }
+
     public class TabletInfo
     {
         public string TableName = "";
 
         /// <summary>
-        /// Connection String list of balance servers
+        /// server name list of balance servers
         /// </summary>
         public List<string> BalanceServers = new List<string>();
 
         /// <summary>
-        /// Connection String list of failover servers
+        /// server name list of failover servers
         /// </summary>
         public List<string> FailoverServers = new List<string>();
 
@@ -86,19 +138,6 @@ namespace Hubble.Core.BigTable
 
     }
 
-    public class TableCollection
-    {
-        public List<TabletInfo> TableNames;
-
-        public TableCollection()
-        {
-            TableNames = new List<TabletInfo>();
-
-            //TableNames.Add(new TableInfo("News", "ServerName=127.0.0.1"));
-            //TableNames.Add(new TableInfo("TitleNews", "ServerName=127.0.0.1"));
-        }
-    }
-
     /// <summary>
     /// Configure of BigTable
     /// </summary>
@@ -106,9 +145,10 @@ namespace Hubble.Core.BigTable
     {
         public List<TabletInfo> Tablets = new List<TabletInfo>();
 
+        public List<ServerInfo> ServerList = new List<ServerInfo>();
+
         public BigTable()
         {
-            //TableCollectionList.Add(new TableCollection());
         }
 
         public void Add(TabletInfo tablet)

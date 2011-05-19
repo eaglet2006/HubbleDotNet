@@ -36,9 +36,20 @@
             this.textBoxTableName = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.textBoxIndexFolder = new System.Windows.Forms.TextBox();
+            this.tabPageServers = new System.Windows.Forms.TabPage();
+            this.panelServers = new System.Windows.Forms.Panel();
+            this.listViewServers = new System.Windows.Forms.ListView();
+            this.buttonDeleteServer = new System.Windows.Forms.Button();
+            this.buttonAddServer = new System.Windows.Forms.Button();
             this.tabPageTables = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.groupBoxFailoverServers = new System.Windows.Forms.GroupBox();
+            this.comboBoxFailoverServers = new System.Windows.Forms.ComboBox();
+            this.buttonDelFailoverServers = new System.Windows.Forms.Button();
+            this.listBoxFailoverServers = new System.Windows.Forms.ListBox();
+            this.buttonAddFailoverServers = new System.Windows.Forms.Button();
             this.groupBoxBalanceServers = new System.Windows.Forms.GroupBox();
+            this.comboBoxBalanceServers = new System.Windows.Forms.ComboBox();
             this.buttonDeleteBS = new System.Windows.Forms.Button();
             this.listBoxBlanceServer = new System.Windows.Forms.ListBox();
             this.buttonAddBS = new System.Windows.Forms.Button();
@@ -48,20 +59,24 @@
             this.listBoxTablets = new System.Windows.Forms.ListBox();
             this.tabControl.SuspendLayout();
             this.tabPageGlobal.SuspendLayout();
+            this.tabPageServers.SuspendLayout();
+            this.panelServers.SuspendLayout();
             this.tabPageTables.SuspendLayout();
             this.panel1.SuspendLayout();
+            this.groupBoxFailoverServers.SuspendLayout();
             this.groupBoxBalanceServers.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl
             // 
             this.tabControl.Controls.Add(this.tabPageGlobal);
+            this.tabControl.Controls.Add(this.tabPageServers);
             this.tabControl.Controls.Add(this.tabPageTables);
             this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl.Location = new System.Drawing.Point(0, 0);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
-            this.tabControl.Size = new System.Drawing.Size(684, 413);
+            this.tabControl.Size = new System.Drawing.Size(748, 501);
             this.tabControl.TabIndex = 0;
             // 
             // tabPageGlobal
@@ -75,7 +90,7 @@
             this.tabPageGlobal.Location = new System.Drawing.Point(4, 22);
             this.tabPageGlobal.Name = "tabPageGlobal";
             this.tabPageGlobal.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageGlobal.Size = new System.Drawing.Size(676, 387);
+            this.tabPageGlobal.Size = new System.Drawing.Size(740, 475);
             this.tabPageGlobal.TabIndex = 0;
             this.tabPageGlobal.Text = "Global Setting";
             this.tabPageGlobal.UseVisualStyleBackColor = true;
@@ -133,6 +148,57 @@
             this.textBoxIndexFolder.Size = new System.Drawing.Size(241, 20);
             this.textBoxIndexFolder.TabIndex = 30;
             // 
+            // tabPageServers
+            // 
+            this.tabPageServers.Controls.Add(this.panelServers);
+            this.tabPageServers.Location = new System.Drawing.Point(4, 22);
+            this.tabPageServers.Name = "tabPageServers";
+            this.tabPageServers.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageServers.Size = new System.Drawing.Size(740, 475);
+            this.tabPageServers.TabIndex = 2;
+            this.tabPageServers.Text = "Servers";
+            this.tabPageServers.UseVisualStyleBackColor = true;
+            // 
+            // panelServers
+            // 
+            this.panelServers.Controls.Add(this.listViewServers);
+            this.panelServers.Controls.Add(this.buttonDeleteServer);
+            this.panelServers.Controls.Add(this.buttonAddServer);
+            this.panelServers.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panelServers.Location = new System.Drawing.Point(3, 3);
+            this.panelServers.Name = "panelServers";
+            this.panelServers.Size = new System.Drawing.Size(734, 469);
+            this.panelServers.TabIndex = 6;
+            // 
+            // listViewServers
+            // 
+            this.listViewServers.Dock = System.Windows.Forms.DockStyle.Top;
+            this.listViewServers.Location = new System.Drawing.Point(0, 0);
+            this.listViewServers.Name = "listViewServers";
+            this.listViewServers.Size = new System.Drawing.Size(734, 349);
+            this.listViewServers.TabIndex = 5;
+            this.listViewServers.UseCompatibleStateImageBehavior = false;
+            // 
+            // buttonDeleteServer
+            // 
+            this.buttonDeleteServer.Location = new System.Drawing.Point(84, 355);
+            this.buttonDeleteServer.Name = "buttonDeleteServer";
+            this.buttonDeleteServer.Size = new System.Drawing.Size(75, 23);
+            this.buttonDeleteServer.TabIndex = 4;
+            this.buttonDeleteServer.Text = "Delete";
+            this.buttonDeleteServer.UseVisualStyleBackColor = true;
+            this.buttonDeleteServer.Click += new System.EventHandler(this.buttonDeleteServer_Click);
+            // 
+            // buttonAddServer
+            // 
+            this.buttonAddServer.Location = new System.Drawing.Point(3, 355);
+            this.buttonAddServer.Name = "buttonAddServer";
+            this.buttonAddServer.Size = new System.Drawing.Size(75, 23);
+            this.buttonAddServer.TabIndex = 3;
+            this.buttonAddServer.Text = "Add";
+            this.buttonAddServer.UseVisualStyleBackColor = true;
+            this.buttonAddServer.Click += new System.EventHandler(this.buttonAddServer_Click);
+            // 
             // tabPageTables
             // 
             this.tabPageTables.Controls.Add(this.panel1);
@@ -141,63 +207,126 @@
             this.tabPageTables.Location = new System.Drawing.Point(4, 22);
             this.tabPageTables.Name = "tabPageTables";
             this.tabPageTables.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTables.Size = new System.Drawing.Size(676, 387);
+            this.tabPageTables.Size = new System.Drawing.Size(740, 475);
             this.tabPageTables.TabIndex = 1;
             this.tabPageTables.Text = "Tablets";
             this.tabPageTables.UseVisualStyleBackColor = true;
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.groupBoxFailoverServers);
             this.panel1.Controls.Add(this.groupBoxBalanceServers);
             this.panel1.Controls.Add(this.buttonDelete);
             this.panel1.Controls.Add(this.buttonAdd);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(202, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(471, 381);
+            this.panel1.Size = new System.Drawing.Size(535, 469);
             this.panel1.TabIndex = 2;
+            // 
+            // groupBoxFailoverServers
+            // 
+            this.groupBoxFailoverServers.Controls.Add(this.comboBoxFailoverServers);
+            this.groupBoxFailoverServers.Controls.Add(this.buttonDelFailoverServers);
+            this.groupBoxFailoverServers.Controls.Add(this.listBoxFailoverServers);
+            this.groupBoxFailoverServers.Controls.Add(this.buttonAddFailoverServers);
+            this.groupBoxFailoverServers.Location = new System.Drawing.Point(27, 274);
+            this.groupBoxFailoverServers.Name = "groupBoxFailoverServers";
+            this.groupBoxFailoverServers.Size = new System.Drawing.Size(410, 132);
+            this.groupBoxFailoverServers.TabIndex = 5;
+            this.groupBoxFailoverServers.TabStop = false;
+            this.groupBoxFailoverServers.Text = "Failover Servers";
+            // 
+            // comboBoxFailoverServers
+            // 
+            this.comboBoxFailoverServers.FormattingEnabled = true;
+            this.comboBoxFailoverServers.Location = new System.Drawing.Point(7, 20);
+            this.comboBoxFailoverServers.Name = "comboBoxFailoverServers";
+            this.comboBoxFailoverServers.Size = new System.Drawing.Size(308, 21);
+            this.comboBoxFailoverServers.TabIndex = 8;
+            this.comboBoxFailoverServers.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.comboBoxServers_KeyPress);
+            // 
+            // buttonDelFailoverServers
+            // 
+            this.buttonDelFailoverServers.Location = new System.Drawing.Point(329, 89);
+            this.buttonDelFailoverServers.Name = "buttonDelFailoverServers";
+            this.buttonDelFailoverServers.Size = new System.Drawing.Size(75, 23);
+            this.buttonDelFailoverServers.TabIndex = 7;
+            this.buttonDelFailoverServers.Text = "Delete";
+            this.buttonDelFailoverServers.UseVisualStyleBackColor = true;
+            this.buttonDelFailoverServers.Click += new System.EventHandler(this.buttonDelFailoverServers_Click);
+            // 
+            // listBoxFailoverServers
+            // 
+            this.listBoxFailoverServers.FormattingEnabled = true;
+            this.listBoxFailoverServers.Location = new System.Drawing.Point(6, 56);
+            this.listBoxFailoverServers.Name = "listBoxFailoverServers";
+            this.listBoxFailoverServers.Size = new System.Drawing.Size(309, 56);
+            this.listBoxFailoverServers.TabIndex = 0;
+            // 
+            // buttonAddFailoverServers
+            // 
+            this.buttonAddFailoverServers.Location = new System.Drawing.Point(329, 56);
+            this.buttonAddFailoverServers.Name = "buttonAddFailoverServers";
+            this.buttonAddFailoverServers.Size = new System.Drawing.Size(75, 23);
+            this.buttonAddFailoverServers.TabIndex = 5;
+            this.buttonAddFailoverServers.Text = "Add";
+            this.buttonAddFailoverServers.UseVisualStyleBackColor = true;
+            this.buttonAddFailoverServers.Click += new System.EventHandler(this.buttonAddFailoverServers_Click);
             // 
             // groupBoxBalanceServers
             // 
+            this.groupBoxBalanceServers.Controls.Add(this.comboBoxBalanceServers);
             this.groupBoxBalanceServers.Controls.Add(this.buttonDeleteBS);
             this.groupBoxBalanceServers.Controls.Add(this.listBoxBlanceServer);
             this.groupBoxBalanceServers.Controls.Add(this.buttonAddBS);
             this.groupBoxBalanceServers.Location = new System.Drawing.Point(27, 14);
             this.groupBoxBalanceServers.Name = "groupBoxBalanceServers";
-            this.groupBoxBalanceServers.Size = new System.Drawing.Size(410, 209);
+            this.groupBoxBalanceServers.Size = new System.Drawing.Size(410, 254);
             this.groupBoxBalanceServers.TabIndex = 4;
             this.groupBoxBalanceServers.TabStop = false;
             this.groupBoxBalanceServers.Text = "Balance Servers";
             // 
+            // comboBoxBalanceServers
+            // 
+            this.comboBoxBalanceServers.FormattingEnabled = true;
+            this.comboBoxBalanceServers.Location = new System.Drawing.Point(7, 20);
+            this.comboBoxBalanceServers.Name = "comboBoxBalanceServers";
+            this.comboBoxBalanceServers.Size = new System.Drawing.Size(308, 21);
+            this.comboBoxBalanceServers.TabIndex = 8;
+            this.comboBoxBalanceServers.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.comboBoxServers_KeyPress);
+            // 
             // buttonDeleteBS
             // 
-            this.buttonDeleteBS.Location = new System.Drawing.Point(329, 58);
+            this.buttonDeleteBS.Location = new System.Drawing.Point(329, 94);
             this.buttonDeleteBS.Name = "buttonDeleteBS";
             this.buttonDeleteBS.Size = new System.Drawing.Size(75, 23);
             this.buttonDeleteBS.TabIndex = 7;
             this.buttonDeleteBS.Text = "Delete";
             this.buttonDeleteBS.UseVisualStyleBackColor = true;
+            this.buttonDeleteBS.Click += new System.EventHandler(this.buttonDeleteBS_Click);
             // 
             // listBoxBlanceServer
             // 
             this.listBoxBlanceServer.FormattingEnabled = true;
-            this.listBoxBlanceServer.Location = new System.Drawing.Point(6, 17);
+            this.listBoxBlanceServer.Location = new System.Drawing.Point(6, 56);
             this.listBoxBlanceServer.Name = "listBoxBlanceServer";
             this.listBoxBlanceServer.Size = new System.Drawing.Size(309, 186);
             this.listBoxBlanceServer.TabIndex = 0;
             // 
             // buttonAddBS
             // 
-            this.buttonAddBS.Location = new System.Drawing.Point(329, 29);
+            this.buttonAddBS.Location = new System.Drawing.Point(329, 56);
             this.buttonAddBS.Name = "buttonAddBS";
             this.buttonAddBS.Size = new System.Drawing.Size(75, 23);
             this.buttonAddBS.TabIndex = 5;
             this.buttonAddBS.Text = "Add";
             this.buttonAddBS.UseVisualStyleBackColor = true;
+            this.buttonAddBS.Click += new System.EventHandler(this.buttonAddBS_Click);
             // 
             // buttonDelete
             // 
-            this.buttonDelete.Location = new System.Drawing.Point(108, 338);
+            this.buttonDelete.Location = new System.Drawing.Point(107, 436);
             this.buttonDelete.Name = "buttonDelete";
             this.buttonDelete.Size = new System.Drawing.Size(75, 23);
             this.buttonDelete.TabIndex = 2;
@@ -207,7 +336,7 @@
             // 
             // buttonAdd
             // 
-            this.buttonAdd.Location = new System.Drawing.Point(27, 338);
+            this.buttonAdd.Location = new System.Drawing.Point(26, 436);
             this.buttonAdd.Name = "buttonAdd";
             this.buttonAdd.Size = new System.Drawing.Size(75, 23);
             this.buttonAdd.TabIndex = 0;
@@ -219,7 +348,7 @@
             // 
             this.splitter1.Location = new System.Drawing.Point(199, 3);
             this.splitter1.Name = "splitter1";
-            this.splitter1.Size = new System.Drawing.Size(3, 381);
+            this.splitter1.Size = new System.Drawing.Size(3, 469);
             this.splitter1.TabIndex = 1;
             this.splitter1.TabStop = false;
             // 
@@ -229,8 +358,9 @@
             this.listBoxTablets.FormattingEnabled = true;
             this.listBoxTablets.Location = new System.Drawing.Point(3, 3);
             this.listBoxTablets.Name = "listBoxTablets";
-            this.listBoxTablets.Size = new System.Drawing.Size(196, 381);
+            this.listBoxTablets.Size = new System.Drawing.Size(196, 459);
             this.listBoxTablets.TabIndex = 0;
+            this.listBoxTablets.SelectedIndexChanged += new System.EventHandler(this.listBoxTablets_SelectedIndexChanged);
             // 
             // BigTableGenerate
             // 
@@ -238,13 +368,16 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.tabControl);
             this.Name = "BigTableGenerate";
-            this.Size = new System.Drawing.Size(684, 413);
+            this.Size = new System.Drawing.Size(748, 501);
             this.Load += new System.EventHandler(this.BigTableGenerate_Load);
             this.tabControl.ResumeLayout(false);
             this.tabPageGlobal.ResumeLayout(false);
             this.tabPageGlobal.PerformLayout();
+            this.tabPageServers.ResumeLayout(false);
+            this.panelServers.ResumeLayout(false);
             this.tabPageTables.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
+            this.groupBoxFailoverServers.ResumeLayout(false);
             this.groupBoxBalanceServers.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -270,5 +403,16 @@
         private System.Windows.Forms.ListBox listBoxBlanceServer;
         private System.Windows.Forms.Button buttonDeleteBS;
         private System.Windows.Forms.Button buttonAddBS;
+        private System.Windows.Forms.TabPage tabPageServers;
+        private System.Windows.Forms.ComboBox comboBoxBalanceServers;
+        private System.Windows.Forms.Button buttonDeleteServer;
+        private System.Windows.Forms.Button buttonAddServer;
+        private System.Windows.Forms.ListView listViewServers;
+        private System.Windows.Forms.Panel panelServers;
+        private System.Windows.Forms.GroupBox groupBoxFailoverServers;
+        private System.Windows.Forms.ComboBox comboBoxFailoverServers;
+        private System.Windows.Forms.Button buttonDelFailoverServers;
+        private System.Windows.Forms.ListBox listBoxFailoverServers;
+        private System.Windows.Forms.Button buttonAddFailoverServers;
     }
 }

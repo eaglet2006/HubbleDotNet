@@ -374,10 +374,36 @@ namespace QueryAnalyzer
             {
                 string tableName = treeViewData.SelectedNode.Text;
 
-                FormTableInfo frmTableInfo = new FormTableInfo();
-                frmTableInfo.TableName = tableName;
-                frmTableInfo.DataAccess = GlobalSetting.DataAccess;
-                frmTableInfo.ShowDialog();
+                if (treeViewData.SelectedNode.ImageIndex == 6)
+                {
+                    //BigTable
+                    FormBigTable frmBigTable = new FormBigTable();
+                    frmBigTable.CreateTable = false;
+                    frmBigTable.Text = "Edit BigTable";
+                    frmBigTable.TableName = tableName;
+
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetBigTable {0}",
+                        frmBigTable.TableName);
+
+
+                    frmBigTable.IndexFolder = queryResult.DataSet.Tables[0].Rows[0]["IndexFolder"].ToString();
+
+                    System.IO.Stream stream = Hubble.Framework.IO.Stream.WriteStringToStream(queryResult.DataSet.Tables[0].Rows[0]["BigTable"].ToString(),
+                        Encoding.UTF8);
+
+                    frmBigTable.BigTable = Hubble.Framework.Serialization.XmlSerialization<Hubble.Core.BigTable.BigTable>.Deserialize(stream);
+
+                    frmBigTable.ShowDialog();
+
+                }
+                else
+                {
+                    //Normal table
+                    FormTableInfo frmTableInfo = new FormTableInfo();
+                    frmTableInfo.TableName = tableName;
+                    frmTableInfo.DataAccess = GlobalSetting.DataAccess;
+                    frmTableInfo.ShowDialog();
+                }
             }
             catch (Exception e1)
             {
@@ -849,11 +875,20 @@ namespace QueryAnalyzer
                 string databaseName = treeViewData.SelectedNode.Text;
                 toolStripComboBoxDatabases.Text = databaseName;
                 FormBigTable frmBigTable = new FormBigTable();
+                frmBigTable.CreateTable = true;
                 frmBigTable.Text = "Create BigTable";
                 frmBigTable.DatabaseName = databaseName;
 
                 if (frmBigTable.ShowDialog() == DialogResult.OK)
                 {
+                    string xml;
+                    Hubble.Framework.IO.Stream.ReadStreamToString(
+                        Hubble.Framework.Serialization.XmlSerialization<Hubble.Core.BigTable.BigTable>.Serialize(frmBigTable.BigTable),
+                        out xml, Encoding.UTF8);
+
+                    QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_CreateBigTable {0}, {1}, {2}",
+                        frmBigTable.TableName, frmBigTable.IndexFolder, xml);
+
                     refreshToolStripMenuItem_Click(sender, e);
                 }
             

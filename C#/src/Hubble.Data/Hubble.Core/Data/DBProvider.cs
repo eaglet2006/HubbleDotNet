@@ -446,12 +446,12 @@ namespace Hubble.Core.Data
             {
                 lock (_BigTableLock)
                 {
-                    BigTable.BigTable bigTable = new Hubble.Core.BigTable.BigTable();
+                    //BigTable.BigTable bigTable = new Hubble.Core.BigTable.BigTable();
 
-                    foreach(BigTable.TabletInfo ti in _Table.BigTable.Tablets)
-                    {
-                        bigTable.Tablets.Add(ti.Clone());
-                    }
+                    //foreach(BigTable.TabletInfo ti in _Table.BigTable.Tablets)
+                    //{
+                    //    bigTable.Tablets.Add(ti.Clone());
+                    //}
 
                     return _Table.BigTable;
                 }
