@@ -36,7 +36,7 @@ namespace Hubble.SQLClient
 
         protected TcpClient _TcpClient;
 
-        System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder;
+        System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder = null;
 
         protected string _ConnectionString;
 
@@ -297,10 +297,6 @@ namespace Hubble.SQLClient
         public HubbleConnection(string connectionString)
         {
             ConnectionString = connectionString;
-        }
-
-        protected void InitTcpClient(out TcpClient tcpClient)
-        {
 
             _SqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder(ConnectionString);
 
@@ -325,6 +321,37 @@ namespace Hubble.SQLClient
             if (_Password == null)
             {
                 _Password = "";
+            }
+        }
+
+        protected void InitTcpClient(out TcpClient tcpClient)
+        {
+            if (_SqlConnBuilder == null)
+            {
+                _SqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder(ConnectionString);
+
+                string[] strs = _SqlConnBuilder.DataSource.Split(new char[] { ':' });
+
+                if (strs.Length > 1)
+                {
+                    _TcpPort = int.Parse(strs[1]);
+                }
+
+                _DataSource = strs[0];
+                _Database = _SqlConnBuilder.InitialCatalog;
+                _UserId = _SqlConnBuilder.UserID;
+
+                if (_UserId == null)
+                {
+                    _UserId = "";
+                }
+
+                _Password = _SqlConnBuilder.Password;
+
+                if (_Password == null)
+                {
+                    _Password = "";
+                }
             }
 
             tcpClient = new TcpClient();

@@ -34,7 +34,7 @@ namespace Hubble.WebDemo
         private static string _TitleAnalyzerName = null;
         private static string _ContentAnalyzerName = null;
 
-        private static void GetAnalyzerName(HubbleConnection conn, string tableName)
+        private static void GetAnalyzerName(HubbleAsyncConnection conn, string tableName)
         {
             if (_TitleAnalyzerName != null && _ContentAnalyzerName != null)
             {
@@ -81,7 +81,7 @@ namespace Hubble.WebDemo
 
             sw.Start();
 
-            using (HubbleConnection conn = new HubbleConnection(connectString))
+            using (HubbleAsyncConnection conn = new HubbleAsyncConnection(connectString))
             {
                 conn.Open();
 

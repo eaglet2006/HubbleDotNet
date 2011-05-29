@@ -532,7 +532,7 @@ namespace Hubble.SQLClient
 
                 _QueryEvent = new System.Threading.ManualResetEvent(false);
 
-                if (_QueryEvent.WaitOne(CommandTimeout * 1000))
+                if (_QueryEvent.WaitOne(CommandTimeout * 1000, false))
                 {
                     if (_AsyncException != null)
                     {
