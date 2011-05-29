@@ -36,7 +36,7 @@ namespace Hubble.SQLClient
 
         protected TcpClient _TcpClient;
 
-        System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder = null;
+        protected System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder = null;
 
         protected string _ConnectionString;
 
@@ -389,6 +389,8 @@ namespace Hubble.SQLClient
                 }
 
                 _ConnectionString = value;
+
+                _SqlConnBuilder = null;
 
                 InitTcpClient(out _TcpClient);
 

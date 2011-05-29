@@ -54,7 +54,7 @@ namespace Hubble.SQLClient
             set
             {
                 _ConnectionString = value;
-
+                _SqlConnBuilder = null;
                 //ConnectionTimeout = 300;
             }
         }
