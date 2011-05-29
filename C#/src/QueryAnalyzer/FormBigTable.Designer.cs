@@ -34,7 +34,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(724, 457);
+            this.ClientSize = new System.Drawing.Size(724, 492);
             this.Name = "FormBigTable";
             this.Text = "BigTable";
             this.Load += new System.EventHandler(this.FormBigTable_Load);

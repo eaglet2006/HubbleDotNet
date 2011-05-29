@@ -66,8 +66,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncTcpManager.cs" />
     <Compile Include="DataCache.cs" />
     <Compile Include="DataCacheMgr.cs" />
+    <Compile Include="HubbleAsyncConnection.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="IAsyncClass.cs" />
     <Compile Include="QueryResultSerialization.cs" />
     <Compile Include="HubbleCommand.cs">
       <SubType>Component</SubType>
@@ -87,7 +92,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
-      <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
+      <Name>Hubble.Framework</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

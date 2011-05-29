@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Hubble.Core.Service;
 
 namespace Hubble.Core.SFQL.Parse
 {
@@ -32,6 +33,7 @@ namespace Hubble.Core.SFQL.Parse
 
         class ThreadInfo
         {
+            internal QueryThread QueryThread;
             internal string TableName;
             internal int TimeOut;
             internal int TimeRemain;
@@ -42,6 +44,16 @@ namespace Hubble.Core.SFQL.Parse
                 TimeRemain = timeout;
                 Thread = thread;
                 TableName = tableName;
+                QueryThread = null;
+            }
+
+            internal ThreadInfo(string tableName, int timeout, QueryThread thread)
+            {
+                TimeOut = timeout;
+                TimeRemain = timeout;
+                Thread = null;
+                TableName = tableName;
+                QueryThread = thread;
             }
         }
 
@@ -75,10 +87,26 @@ namespace Hubble.Core.SFQL.Parse
 
                         foreach (ThreadInfo threadInfo in terminateThreads)
                         {
-                            _ThreadIdToThread.Remove(threadInfo.Thread.ManagedThreadId);
+                            if (threadInfo.QueryThread != null)
+                            {
+                                _ThreadIdToThread.Remove(threadInfo.QueryThread.ManagedThreadId);
+                            }
+                            else
+                            {
+                                _ThreadIdToThread.Remove(threadInfo.Thread.ManagedThreadId);
+                            }
+
                             try
                             {
-                                threadInfo.Thread.Abort();
+                                if (threadInfo.QueryThread == null)
+                                {
+                                    threadInfo.Thread.Abort();
+                                }
+                                else
+                                {
+                                    threadInfo.QueryThread.AbortAndRestart();
+                                }
+
                                 Global.Report.WriteErrorLog(string.Format("Select statement of {0} has been executing more then {1} ms. Abort it",
                                     threadInfo.TableName, threadInfo.TimeOut));
                             }
@@ -86,7 +114,6 @@ namespace Hubble.Core.SFQL.Parse
                             {
                                 Global.Report.WriteErrorLog("Select Watch dog Abort fail.", e);
                             }
-
                         }
 
                         if (terminateThreads.Count > 0)
@@ -131,7 +158,23 @@ namespace Hubble.Core.SFQL.Parse
                     }
                     else
                     {
-                        threadInfo = new ThreadInfo(tableName, timeout, thread);
+                        if (CurrentConnection.ConnectionInfo != null)
+                        {
+                            if (CurrentConnection.ConnectionInfo.QueryThread != null)
+                            {
+                                threadInfo = new ThreadInfo(tableName, timeout,
+                                    CurrentConnection.ConnectionInfo.QueryThread);
+                            }
+                            else
+                            {
+                                threadInfo = new ThreadInfo(tableName, timeout, thread);
+                            }
+                        }
+                        else
+                        {
+                            threadInfo = new ThreadInfo(tableName, timeout, thread);
+                        }
+
                         _ThreadIdToThread.Add(thread.ManagedThreadId, threadInfo);
                     }
                 }

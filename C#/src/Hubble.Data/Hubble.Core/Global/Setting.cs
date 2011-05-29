@@ -400,6 +400,8 @@ namespace Hubble.Core.Global
             {
                 Config = new Setting();
             }
+
+            Hubble.Core.Service.QueryThreadPool.Init(Config.QueryThreadNum);
         }
 
         #endregion
@@ -442,6 +444,26 @@ namespace Hubble.Core.Global
             set
             {
                 _TcpPort = value;
+            }
+        }
+
+        int _QueryThreadNum = 64;
+
+        public int QueryThreadNum
+        {
+            get
+            {
+                return _QueryThreadNum;
+            }
+
+            set
+            {
+                _QueryThreadNum = value;
+
+                if (_QueryThreadNum < 1)
+                {
+                    _QueryThreadNum = 1;
+                }
             }
         }
 

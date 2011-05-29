@@ -19,9 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Hubble.Framework.Net;
+
 namespace Hubble.SQLClient
 {
-    public class HubbleCommand : System.Data.Common.DbCommand, ICloneable
+    public class HubbleCommand : System.Data.Common.DbCommand, ICloneable, IAsyncClass
     {
         class DbParameterForSort : IComparer<System.Data.Common.DbParameter>
         {
@@ -36,10 +38,27 @@ namespace Hubble.SQLClient
             #endregion
         }
 
+        public delegate void DeleReceiveAsyncMessage(object message);
+
+        public DeleReceiveAsyncMessage OnReceiveAsyncMessage = null;
+
+        #region Private fields
 
         private HubbleConnection _SqlConnection;
 
+        private System.Threading.ManualResetEvent _QueryEvent = null;
         private string _Sql;
+        private object[] _ObjParameters = null;
+        private HubbleParameterCollection _Parameters = null;
+        private QueryResult _QueryResult;
+        private Exception _AsyncException = null;
+        private int _CacheTimeout = -1;
+        private bool _ResetDataCacheAfterTimeout = false;
+        private int _ClassId = -1;
+
+        #endregion
+
+        #region Properties
 
         public string Sql
         {
@@ -60,10 +79,6 @@ namespace Hubble.SQLClient
             }
         }
 
-        private object[] _ObjParameters = null;
-
-        private HubbleParameterCollection _Parameters = null;
-
         new public HubbleParameterCollection Parameters
         {
             get
@@ -77,8 +92,6 @@ namespace Hubble.SQLClient
             }
         }
 
-        private QueryResult _QueryResult;
-
         public QueryResult Result
         {
             get
@@ -86,8 +99,6 @@ namespace Hubble.SQLClient
                 return _QueryResult;
             }
         }
-
-        private int _CacheTimeout = -1;
 
         public int CacheTimeout
         {
@@ -102,8 +113,6 @@ namespace Hubble.SQLClient
             }
         }
 
-        private bool _ResetDataCacheAfterTimeout = false;
-
         public bool ResetDataCacheAfterTimeout
         {
             get
@@ -117,7 +126,10 @@ namespace Hubble.SQLClient
             }
         }
 
+        #endregion
 
+        #region static methods
+        
         private static string BuildSqlWithSqlParameter(string sql, System.Data.Common.DbParameterCollection paras)
         {
             System.Data.Common.DbParameter[] arrParas = new System.Data.Common.DbParameter[paras.Count];
@@ -238,61 +250,11 @@ namespace Hubble.SQLClient
             return BuildSql(sql, objParas);
         }
 
-        public static string BuildSql(string sql, object[] paras)
+        #endregion
+
+        #region constractors
+        ~HubbleCommand()
         {
-            if (paras == null)
-            {
-                return sql;
-            }
-            else
-            {
-                object[] parameters = new object[paras.Length];
-                paras.CopyTo(parameters, 0);
-
-                for (int i = 0; i < parameters.Length; i++)
-                {
-                    object obj = parameters[i];
-
-                    if (obj == null)
-                    {
-                        parameters[i] = "NULL";
-                    }
-                    else if (obj is string)
-                    {
-                        parameters[i] = string.Format("'{0}'",
-                            ((string)obj).Replace("'", "''"));
-                    }
-                    else if (obj is bool)
-                    {
-                        parameters[i] = string.Format("'{0}'", obj);
-                    }
-                    else if (obj is DateTime)
-                    {
-                        parameters[i] = string.Format("'{0}'",
-                            ((DateTime)obj).ToString("yyyy-MM-dd HH:mm:ss"));
-                    }
-                    else if (obj is byte[])
-                    {
-                        StringBuilder sb = new StringBuilder();
-
-                        sb.Append("0x");
-
-                        foreach (byte b in (byte[])obj)
-                        {
-                            sb.AppendFormat("{0:x1}", b);
-                        }
-
-                        parameters[i] = sb.ToString();
-                    }
-                    else
-                    {
-                        parameters[i] = obj.ToString();
-                    }
-
-                }
-
-                return string.Format(sql, parameters);
-            }
         }
 
         public HubbleCommand(HubbleConnection sqlConn)
@@ -314,7 +276,9 @@ namespace Hubble.SQLClient
             _SqlConnection = sqlConn;
             _ObjParameters = parameters;
         }
+        #endregion
 
+        #region private methods
         private string GetTableTicks(QueryResult qResult)
         {
             StringBuilder sb = new StringBuilder();
@@ -395,6 +359,76 @@ namespace Hubble.SQLClient
                 }
                 while (!IsSelectOrSpTalbe(tables[i]));
             }
+        }
+
+        private void AsyncInnerQuery(string orginalSql, int cacheTimeout)
+        {
+            if (!(_SqlConnection is HubbleAsyncConnection))
+            {
+                throw new Exception("Command must bind HubbleAsyncConnection when it call AsyncInnerQuery!");
+            }
+
+            HubbleAsyncConnection asyncConnection = _SqlConnection as HubbleAsyncConnection;
+
+            string tableTicks = "";
+
+            bool needCache = cacheTimeout >= 0;
+
+            if (cacheTimeout >= 0)
+            {
+                DateTime expireTime;
+                int hitCount;
+
+                _QueryResult = DataCacheMgr.Get(_SqlConnection,
+                    orginalSql, out expireTime, out hitCount, out tableTicks);
+
+                if (_QueryResult == null)
+                {
+                    tableTicks = "";
+                }
+
+                if (DateTime.Now < expireTime && _QueryResult != null)
+                {
+                    //not expire
+
+                    return;
+                }
+                else
+                {
+                    if (orginalSql.Contains(";"))
+                    {
+                        //if multi select and not unionselect, disable data cache
+
+                        if (orginalSql.Trim().IndexOf("[UnionSelect]", 0, StringComparison.CurrentCultureIgnoreCase) != 0)
+                        {
+                            needCache = false;
+                        }
+                    }
+                }
+            }
+
+            string sql = "";
+
+            if (needCache)
+            {
+                if (ResetDataCacheAfterTimeout)
+                {
+                    tableTicks = "";
+                }
+
+                if (tableTicks == "")
+                {
+                    sql = "exec SP_InnerDataCache;";
+                }
+                else
+                {
+                    sql = "exec SP_InnerDataCache '" + tableTicks.Replace("'", "''") + "';";
+                }
+            }
+
+            sql += orginalSql;
+
+            asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId);
         }
 
         private System.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
@@ -488,7 +522,33 @@ namespace Hubble.SQLClient
 
             sql += orginalSql;
 
-            _QueryResult = _SqlConnection.QuerySql(sql);
+            if (_SqlConnection is HubbleAsyncConnection)
+            {
+                //Async query
+                _AsyncException = null;
+                HubbleAsyncConnection asyncConnection = _SqlConnection as HubbleAsyncConnection;
+
+                asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId);
+
+                _QueryEvent = new System.Threading.ManualResetEvent(false);
+
+                if (_QueryEvent.WaitOne(CommandTimeout * 1000))
+                {
+                    if (_AsyncException != null)
+                    {
+                        throw _AsyncException;
+                    }
+                }
+                else
+                {
+                    this.EndAsyncQuery();
+                    throw new System.TimeoutException("Query sql timeout");
+                }
+            }
+            else
+            {
+                _QueryResult = _SqlConnection.QuerySql(sql);
+            }
 
             //Data cache
             if (cacheTimeout > 0 || needCache)
@@ -568,20 +628,46 @@ namespace Hubble.SQLClient
             return _QueryResult.DataSet;
         }
 
-        private System.Data.DataSet Query(string orginalSql, int cacheTimeout)
+        private void BeginAsyncQuery(string orginalSql, int cacheTimeout)
         {
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            DateTime startTime = DateTime.Now;
 
             try
             {
-                sw.Start();
+                AsyncInnerQuery(orginalSql, cacheTimeout);
+            }
+            catch (System.IO.IOException ex)
+            {
+                TimeSpan ts = DateTime.Now - startTime;
+
+                if (ts.TotalMilliseconds < 1000)
+                {
+                    AsyncInnerQuery(orginalSql, cacheTimeout);
+                }
+                else
+                {
+                    throw ex;
+                }
+            }
+            finally
+            {
+            }
+        }
+
+
+        private System.Data.DataSet Query(string orginalSql, int cacheTimeout)
+        {
+            DateTime startTime = DateTime.Now;
+
+            try
+            {
                 return InnerQuery(orginalSql, cacheTimeout);
             }
             catch (System.IO.IOException ex)
             {
-                sw.Stop();
+                TimeSpan ts = DateTime.Now - startTime;
 
-                if (sw.ElapsedMilliseconds < 1000)
+                if (ts.TotalMilliseconds < 1000)
                 {
                     return InnerQuery(orginalSql, cacheTimeout);
                 }
@@ -592,10 +678,85 @@ namespace Hubble.SQLClient
             }
             finally
             {
-                if (sw.IsRunning)
+            }
+        }
+
+        #endregion
+
+        #region public methods
+        public static string BuildSql(string sql, object[] paras)
+        {
+            if (paras == null)
+            {
+                return sql;
+            }
+            else
+            {
+                object[] parameters = new object[paras.Length];
+                paras.CopyTo(parameters, 0);
+
+                for (int i = 0; i < parameters.Length; i++)
                 {
-                    sw.Stop();
+                    object obj = parameters[i];
+
+                    if (obj == null)
+                    {
+                        parameters[i] = "NULL";
+                    }
+                    else if (obj is string)
+                    {
+                        parameters[i] = string.Format("'{0}'",
+                            ((string)obj).Replace("'", "''"));
+                    }
+                    else if (obj is bool)
+                    {
+                        parameters[i] = string.Format("'{0}'", obj);
+                    }
+                    else if (obj is DateTime)
+                    {
+                        parameters[i] = string.Format("'{0}'",
+                            ((DateTime)obj).ToString("yyyy-MM-dd HH:mm:ss"));
+                    }
+                    else if (obj is byte[])
+                    {
+                        StringBuilder sb = new StringBuilder();
+
+                        sb.Append("0x");
+
+                        foreach (byte b in (byte[])obj)
+                        {
+                            sb.AppendFormat("{0:x1}", b);
+                        }
+
+                        parameters[i] = sb.ToString();
+                    }
+                    else
+                    {
+                        parameters[i] = obj.ToString();
+                    }
+
                 }
+
+                return string.Format(sql, parameters);
+            }
+        }
+
+        public void BeginAsyncQuery(int cacheTimeout)
+        {
+            BeginAsyncQuery(Sql, cacheTimeout);
+        }
+
+        public void BeginAsyncQuery()
+        {
+            BeginAsyncQuery(CacheTimeout);
+        }
+
+        public void EndAsyncQuery()
+        {
+            HubbleAsyncConnection asyncConnection = _SqlConnection as HubbleAsyncConnection;
+            if (asyncConnection != null)
+            {
+                asyncConnection.EndAsyncQuery(_ClassId);
             }
         }
 
@@ -668,16 +829,6 @@ namespace Hubble.SQLClient
             return Query(sb.ToString(), cacheTimeout).Tables[0];
         }
 
-
-        #region ICloneable Members
-
-        public object Clone()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-
         public override void Cancel()
         {
             throw new NotImplementedException();
@@ -695,6 +846,8 @@ namespace Hubble.SQLClient
             }
         }
 
+        private int _CommandTimeout = 300;
+
         /// <summary>
         /// Gets or sets the wait time before terminating the attempt to execute a command and generating an error. 
         /// The time in seconds to wait for the command to execute. The default is 300 seconds.
@@ -703,11 +856,13 @@ namespace Hubble.SQLClient
         {
             get
             {
-                return _SqlConnection.ConnectionTimeout;
+                return _CommandTimeout;
             }
+
             set
             {
-                _SqlConnection.SetConnectionTimeout(value);
+                _CommandTimeout = value;
+                //_SqlConnection.SetConnectionTimeout(value);
             }
         }
 
@@ -721,44 +876,6 @@ namespace Hubble.SQLClient
 
             set
             {
-            }
-        }
-
-        protected override System.Data.Common.DbParameter CreateDbParameter()
-        {
-            return new System.Data.SqlClient.SqlParameter();
-        }
-
-        protected override System.Data.Common.DbConnection DbConnection
-        {
-            get
-            {
-                return _SqlConnection;
-            }
-
-            set
-            {
-                _SqlConnection = value as HubbleConnection;
-            }
-        }
-
-        protected override System.Data.Common.DbParameterCollection DbParameterCollection
-        {
-            get
-            {
-                return this.Parameters;
-            }
-        }
-
-        protected override System.Data.Common.DbTransaction DbTransaction
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
             }
         }
 
@@ -789,11 +906,6 @@ namespace Hubble.SQLClient
             return 0;
         }
 
-        protected override System.Data.Common.DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior)
-        {
-            throw new NotImplementedException();
-        }
-
         public override object ExecuteScalar()
         {
             throw new NotImplementedException();
@@ -815,5 +927,98 @@ namespace Hubble.SQLClient
                 throw new NotImplementedException();
             }
         }
+        #endregion
+
+        #region Protected methods
+        protected override System.Data.Common.DbParameter CreateDbParameter()
+        {
+            return new System.Data.SqlClient.SqlParameter();
+        }
+
+        protected override System.Data.Common.DbConnection DbConnection
+        {
+            get
+            {
+                return _SqlConnection;
+            }
+
+            set
+            {
+                _SqlConnection = value as HubbleConnection;
+            }
+        }
+
+        protected override System.Data.Common.DbDataReader ExecuteDbDataReader(System.Data.CommandBehavior behavior)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override System.Data.Common.DbParameterCollection DbParameterCollection
+        {
+            get
+            {
+                return this.Parameters;
+            }
+        }
+
+        protected override System.Data.Common.DbTransaction DbTransaction
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        #endregion
+
+        #region ICloneable Members
+
+        public object Clone()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+
+        #region IAsyncClass Members
+
+        public void ReceiveMessage(object message)
+        {
+            if (_QueryEvent != null)
+            {
+                if (message is QueryResult)
+                {
+                    _QueryResult = message as QueryResult;
+                }
+                else if (message is InnerServerException)
+                {
+                    _AsyncException = new ServerException(message as InnerServerException);
+                }
+                else if (message is TcpRemoteCloseException)
+                {
+                    _AsyncException = message as TcpRemoteCloseException;
+                }
+                else if (message is Exception)
+                {
+                    _AsyncException = message as Exception;
+                }
+
+                this.EndAsyncQuery();
+                _QueryEvent.Set();
+                return;
+            }
+
+            if (OnReceiveAsyncMessage != null)
+            {
+                OnReceiveAsyncMessage(message);
+            }
+        }
+
+        #endregion
     }
 }

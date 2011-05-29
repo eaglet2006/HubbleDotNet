@@ -91,6 +91,11 @@ namespace Hubble.Core.BigTable
         {
         }
 
+        public TabletInfo(string tableName)
+        {
+            this.TableName = tableName;
+        }
+
         public TabletInfo(string tableName, string connectionString)
         {
             this.TableName = tableName;

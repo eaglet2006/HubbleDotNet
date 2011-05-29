@@ -292,7 +292,7 @@ namespace Hubble.Framework.Net
                         if (pcb == null)
                         {
                             //Over max connect number
-                            ReturnMessage(client.GetStream(), new MessageHead(), new Exception("Too many connects on server"), null);
+                            ReturnMessage(client, client, new MessageHead(), new Exception("Too many connects on server"), null);
 
                             System.Threading.Thread.Sleep(200);
 
@@ -316,100 +316,158 @@ namespace Hubble.Framework.Net
             }
         }
 
-        private void ReturnMessage(System.Net.Sockets.NetworkStream clientStream, MessageHead msgHead, 
+        static public void ReturnMessage(MessageReceiveEventArgs receiveMessage)
+        {
+            ReturnMessage(receiveMessage.LockObj, receiveMessage.TcpClient, receiveMessage.MsgHead, 
+                receiveMessage.ReturnMsg, receiveMessage.CustomSerializtion, receiveMessage.ClassId);
+        }
+
+        static private void ReturnMessage(object lockObj, System.Net.Sockets.TcpClient tcpClient, MessageHead msgHead,
             object returnMsg, Hubble.Framework.Serialization.IMySerialization customSerializer)
         {
-            Hubble.Framework.Net.TcpCacheStream tcpStream = new TcpCacheStream(clientStream);
+            ReturnMessage(lockObj, tcpClient, msgHead, returnMsg, customSerializer, -1);
+        }
 
-            byte[] sendBuf = BitConverter.GetBytes(msgHead.Event);
-            tcpStream.Write(sendBuf, 0, sendBuf.Length);
-
-            if (returnMsg != null)
+        static private void ReturnMessage(object lockObj, System.Net.Sockets.TcpClient tcpClient, MessageHead msgHead,
+            object returnMsg, Hubble.Framework.Serialization.IMySerialization customSerializer, int classId)
+        {
+            lock (lockObj)
             {
-                //Send Flag
+                System.Net.Sockets.NetworkStream clientStream = tcpClient.GetStream();
 
-                msgHead.Flag = 0;
+                //System.Net.Sockets.NetworkStream tcpStream = clientStream;
+                Hubble.Framework.Net.TcpCacheStream tcpStream = new TcpCacheStream(clientStream);
 
-                if (customSerializer != null)
+                byte[] sendBuf = BitConverter.GetBytes(msgHead.Event);
+                tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                bool isAsync = (msgHead.Flag & MessageFlag.ASyncMessage) != 0;
+
+                if (returnMsg != null)
                 {
-                    msgHead.Flag |= MessageFlag.CustomSerialization;
-                    sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
-                    tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                    //Send Flag
 
-                    //MemoryStream m = new MemoryStream();
-
-                    //customSerializer.Serialize(m);
-                    //m.Position = 0;
-
-                    //while (m.Position < m.Length)
-                    //{
-                    //    byte[] buf = new byte[8192];
-
-                    //    int len = m.Read(buf, 0, buf.Length);
-
-                    //    tcpStream.Write(buf, 0, len);
-                    //}
-
-                    //customSerializer.Serialize(tcpStream);
-                    customSerializer.Serialize(tcpStream);
-                    
-                }
-                else if (returnMsg is string)
-                {
-                    msgHead.Flag |= MessageFlag.IsString;
-                    sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
-                    tcpStream.Write(sendBuf, 0, sendBuf.Length);
-
-                    byte[] buf = Encoding.UTF8.GetBytes((returnMsg as string));
-
-                    for (int i = 0; i < buf.Length; i++)
+                    if (isAsync)
                     {
-                        if (buf[i] == 0)
-                        {
-                            buf[i] = 0x20;
-                        }
+                        msgHead.Flag = MessageFlag.ASyncMessage;
+                    }
+                    else
+                    {
+                        msgHead.Flag = 0;
                     }
 
-                    tcpStream.Write(buf, 0, buf.Length);
-                    tcpStream.WriteByte(0);
-                    
-                }
-                else if (returnMsg is Exception)
-                {
-                    msgHead.Flag |= MessageFlag.IsException;
-                    msgHead.Flag |= MessageFlag.IsString;
 
-                    sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
-                    tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                    if (customSerializer != null)
+                    {
+                        msgHead.Flag |= MessageFlag.CustomSerialization;
+                        sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
 
-                    StringBuilder sb = new StringBuilder();
-                    sb.AppendFormat("{0} innerStackTrace:{1}",
-                        (returnMsg as Exception).Message, (returnMsg as Exception).StackTrace);
+                        if ((msgHead.Flag & MessageFlag.ASyncMessage) != 0)
+                        {
+                            sendBuf = BitConverter.GetBytes(classId);
+                            tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                        }
 
-                    byte[] buf = Encoding.UTF8.GetBytes(sb.ToString());
+                        //MemoryStream m = new MemoryStream();
 
-                    tcpStream.Write(buf, 0, buf.Length);
-                    tcpStream.WriteByte(0);
+                        //customSerializer.Serialize(m);
+                        //m.Position = 0;
+
+                        //while (m.Position < m.Length)
+                        //{
+                        //    byte[] buf = new byte[8192];
+
+                        //    int len = m.Read(buf, 0, buf.Length);
+
+                        //    tcpStream.Write(buf, 0, len);
+                        //}
+
+                        //customSerializer.Serialize(tcpStream);
+                        customSerializer.Serialize(tcpStream);
+
+                    }
+                    else if (returnMsg is string)
+                    {
+                        msgHead.Flag |= MessageFlag.IsString;
+                        sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
+
+                        if ((msgHead.Flag & MessageFlag.ASyncMessage) != 0)
+                        {
+                            sendBuf = BitConverter.GetBytes(classId);
+                            tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                        }
+
+                        byte[] buf = Encoding.UTF8.GetBytes((returnMsg as string));
+
+                        for (int i = 0; i < buf.Length; i++)
+                        {
+                            if (buf[i] == 0)
+                            {
+                                buf[i] = 0x20;
+                            }
+                        }
+
+                        tcpStream.Write(buf, 0, buf.Length);
+                        tcpStream.WriteByte(0);
+
+                    }
+                    else if (returnMsg is Exception)
+                    {
+                        msgHead.Flag |= MessageFlag.IsException;
+                        msgHead.Flag |= MessageFlag.IsString;
+
+                        sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
+
+                        if ((msgHead.Flag & MessageFlag.ASyncMessage) != 0)
+                        {
+                            sendBuf = BitConverter.GetBytes(classId);
+                            tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                        }
+
+                        StringBuilder sb = new StringBuilder();
+                        sb.AppendFormat("{0} innerStackTrace:{1}",
+                            (returnMsg as Exception).Message, (returnMsg as Exception).StackTrace);
+
+                        byte[] buf = Encoding.UTF8.GetBytes(sb.ToString());
+
+                        tcpStream.Write(buf, 0, buf.Length);
+                        tcpStream.WriteByte(0);
+                    }
+                    else
+                    {
+                        sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
+
+                        if ((msgHead.Flag & MessageFlag.ASyncMessage) != 0)
+                        {
+                            sendBuf = BitConverter.GetBytes(classId);
+                            tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                        }
+
+                        IFormatter formatter = new BinaryFormatter();
+                        formatter.Serialize(tcpStream, returnMsg);
+                    }
                 }
                 else
                 {
+                    msgHead.Flag |= MessageFlag.NullData;
+
+                    //Send Flag
                     sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
                     tcpStream.Write(sendBuf, 0, sendBuf.Length);
 
-                    IFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(tcpStream, returnMsg);
+                    if ((msgHead.Flag & MessageFlag.ASyncMessage) != 0)
+                    {
+                        sendBuf = BitConverter.GetBytes(classId);
+                        tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                    }
                 }
-            }
-            else
-            {
-                msgHead.Flag |= MessageFlag.NullData;
 
-                //Send Flag
-                sendBuf = BitConverter.GetBytes((short)msgHead.Flag);
-                tcpStream.Write(sendBuf, 0, sendBuf.Length);
+                tcpStream.Flush();
             }
 
-            tcpStream.Flush();
         }
 
         private void HandleClientComm(object pcb)
@@ -417,6 +475,7 @@ namespace Hubble.Framework.Net
             PCB p = (PCB)pcb;
 
             System.Net.Sockets.TcpClient tcpClient = p.Client;
+            object lockObj = new object();
 
             try
             {
@@ -431,6 +490,8 @@ namespace Hubble.Framework.Net
 
                 System.Net.Sockets.NetworkStream clientStream = tcpClient.GetStream();
 
+                TcpCacheStream tcpStream = new TcpCacheStream(clientStream);
+
                 while (true)
                 {
                     MessageHead msgHead = new MessageHead();
@@ -441,7 +502,7 @@ namespace Hubble.Framework.Net
                         object msg = null;
 
                         //Recevie data
-                        TcpCacheStream tcpStream = new TcpCacheStream(clientStream);
+                        //Stream tcpStream = clientStream;
 
                         byte[] revBuf = new byte[4];
                         int offset = 0;
@@ -478,6 +539,23 @@ namespace Hubble.Framework.Net
                         msgHead.Event = BitConverter.ToInt16(revBuf, 0);
                         msgHead.Flag = (MessageFlag)BitConverter.ToInt16(revBuf, 2);
 
+                        bool isAsync = (msgHead.Flag & MessageFlag.ASyncMessage) != 0;
+                        int classId = -1;
+
+                        if (isAsync)
+                        {
+                            if (!Hubble.Framework.IO.Stream.ReadToBuf(tcpStream, revBuf, 0, 4))
+                            {
+                                disconnected = true;
+                                break;
+                            }
+                            else
+                            {
+                                classId = BitConverter.ToInt32(revBuf, 0);
+                            }
+                        }
+
+
                         if ((msgHead.Flag & MessageFlag.NullData) == 0)
                         {
                             if ((msgHead.Flag & MessageFlag.CustomSerialization) != 0)
@@ -507,37 +585,62 @@ namespace Hubble.Framework.Net
                             }
                             else
                             {
-                                MemoryStream m = new MemoryStream();
-
-                                byte[] buf = new byte[1024];
-
-                                int len = 0;
-
-                                do
+                                if ((msgHead.Flag & MessageFlag.IsString) != 0 &&
+                                    (msgHead.Flag & MessageFlag.ASyncMessage) != 0)
                                 {
-                                    len = tcpStream.Read(buf, 0, buf.Length);
-                                    if (buf[len - 1] == 0)
-                                    {
-                                        m.Write(buf, 0, len - 1);
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        m.Write(buf, 0, len);
-                                    }
-                                } while (true);
+                                    MemoryStream m = new MemoryStream();
 
-                                m.Position = 0;
+                                    byte b = (byte)tcpStream.ReadByte();
+                                    while (b != 0)
+                                    {
+                                        m.WriteByte(b);
+                                        b = (byte)tcpStream.ReadByte();
+                                    }
 
-                                using (StreamReader sr = new StreamReader(m, Encoding.UTF8))
+                                    m.Position = 0;
+
+                                    using (StreamReader sr = new StreamReader(m, Encoding.UTF8))
+                                    {
+                                        msg = sr.ReadToEnd();
+                                    }
+
+                                }
+                                else
                                 {
-                                    msg = sr.ReadToEnd();
+                                    MemoryStream m = new MemoryStream();
+
+                                    byte[] buf = new byte[1024];
+
+                                    int len = 0;
+
+                                    do
+                                    {
+                                        len = tcpStream.Read(buf, 0, buf.Length);
+                                        if (buf[len - 1] == 0)
+                                        {
+                                            m.Write(buf, 0, len - 1);
+                                            break;
+                                        }
+                                        else
+                                        {
+                                            m.Write(buf, 0, len);
+                                        }
+                                    } while (true);
+
+                                    m.Position = 0;
+
+                                    using (StreamReader sr = new StreamReader(m, Encoding.UTF8))
+                                    {
+                                        msg = sr.ReadToEnd();
+                                    }
                                 }
                             }
 
                         }
-                           
-                        MessageReceiveEventArgs receiveEvent = new MessageReceiveEventArgs(msgHead, msg, p.ThreadId);
+
+                        MessageReceiveEventArgs receiveEvent = new MessageReceiveEventArgs(
+                            this, msgHead, msg, p.ThreadId, classId, tcpClient, 
+                            clientStream, lockObj);
 
                         Hubble.Framework.Serialization.IMySerialization customSerializer = null;
 
@@ -556,8 +659,10 @@ namespace Hubble.Framework.Net
                             receiveEvent.ReturnMsg = e;
                         }
 
-                        ReturnMessage(clientStream, msgHead, receiveEvent.ReturnMsg, customSerializer);
-
+                        if (!isAsync)
+                        {
+                            ReturnMessage(lockObj, tcpClient, msgHead, receiveEvent.ReturnMsg, customSerializer);
+                        }
                     }
                     catch (Exception innerException)
                     {

@@ -111,13 +111,123 @@ namespace Hubble.Core.Service
 
             Global.Report.WriteErrorLog(sb.ToString());
 
+            //if (Global.Setting.Config.SqlTrace)
+            //{
+            //    if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
+            //    {
+            //        _ThreadMonitor.UnRegister(args.Thread);
+            //        args.Thread.Abort();
+            //    }
+            //}
+        }
+
+        internal static void ExcuteSqlMessageProcess(MessageReceiveEventArgs args)
+        {
+            CurrentConnection.ConnectionInfo.StartCommand();
+
+            System.Diagnostics.Stopwatch sw = null;
+            TimeSpan ts = default(TimeSpan);
+            long sqlid = 0;
+
+            string sql = (args.InMessage as string);
+            int len = Math.Min(255, sql.Length);
+
+            sql = sql.Substring(0, len);
+
             if (Global.Setting.Config.SqlTrace)
             {
-                if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                ts = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+
+                sw = new System.Diagnostics.Stopwatch();
+                sqlid = _SqlId++;
+
+                Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}",
+                    sqlid, sql));
+
+                _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
+                    System.Threading.Thread.CurrentThread, string.Format("sqlid={0} sql={1}",
+                    sqlid, sql), 30000, 20000,
+                    ThreadMonitor.MonitorFlag.MonitorHang));
+
+                sw.Start();
+
+            }
+            else
+            {
+                _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
+                    System.Threading.Thread.CurrentThread, string.Format("time={0} sql={1}",
+                    DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), sql), 60000, 20000,
+                    ThreadMonitor.MonitorFlag.MonitorHang));
+            }
+
+            if ((args.MsgHead.Flag & MessageFlag.ASyncMessage) != 0)
+            {
+                try
                 {
-                    _ThreadMonitor.UnRegister(args.Thread);
-                    args.Thread.Abort();
+                    args.ReturnMsg = Excute(args.InMessage as string);
                 }
+                catch (System.Threading.ThreadAbortException)
+                {
+                    Global.Report.WriteAppLog("Thread abort");
+                }
+                catch (Exception e)
+                {
+                    args.ReturnMsg = e;
+                }
+                finally
+                {
+                    if (Global.Setting.Config.SqlTrace && sw != null)
+                    {
+                        sw.Stop();
+                    }
+
+                    _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
+                }
+
+            }
+            else
+            {
+                try
+                {
+                    args.ReturnMsg = Excute(args.InMessage as string);
+                }
+                finally
+                {
+                    if (Global.Setting.Config.SqlTrace && sw != null)
+                    {
+                        sw.Stop();
+                    }
+
+                    _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
+                }
+            }
+
+            if (args.ReturnMsg is QueryResult)
+            {
+                args.CustomSerializtion = new Hubble.SQLClient.QueryResultSerialization(
+                    args.ReturnMsg as QueryResult);
+
+                if (Global.Setting.Config.SqlTrace && sw != null)
+                {
+                    sw.Stop();
+
+                    TimeSpan ts1 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
+
+                    Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
+                        sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
+                }
+            }
+            else
+            {
+                if (Global.Setting.Config.SqlTrace && sw != null)
+                {
+                    sw.Stop();
+                }
+            }
+
+            if ((args.MsgHead.Flag & MessageFlag.ASyncMessage) != 0)
+            {
+                TcpServer.ReturnMessage(args);
             }
         }
 
@@ -146,80 +256,15 @@ namespace Hubble.Core.Service
                     break;
 
                 case ConnectEvent.ExcuteSql: //excute sql
-                    CurrentConnection.ConnectionInfo.StartCommand();
-
-                    System.Diagnostics.Stopwatch sw = null;
-                    TimeSpan ts = default(TimeSpan);
-                    long sqlid = 0;
-
-                    string sql = (args.InMessage as string);
-                    int len = Math.Min(255, sql.Length);
-
-                    sql = sql.Substring(0, len);
-
-                    if (Global.Setting.Config.SqlTrace)
+                    if ((args.MsgHead.Flag & MessageFlag.ASyncMessage) != 0)
                     {
-                        ts = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-
-                        sw = new System.Diagnostics.Stopwatch();
-                        sqlid = _SqlId++;
-
-                        Global.Report.WriteAppLog(string.Format("Excute sqlid={0} sql={1}",
-                            sqlid, sql));
-
-                        _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
-                            System.Threading.Thread.CurrentThread, string.Format("sqlid={0} sql={1}",
-                            sqlid, sql), 30000, 20000,
-                            ThreadMonitor.MonitorFlag.MonitorHang));
-
-                        sw.Start();
-
+                        args.ConnectionInfo = CurrentConnection.ConnectionInfo.Clone();
+                        QueryThreadPool.ExcuteSql(args);
                     }
                     else
                     {
-                        _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
-                            System.Threading.Thread.CurrentThread, string.Format("time={0} sql={1}",
-                            DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), sql), 60000, 20000,
-                            ThreadMonitor.MonitorFlag.MonitorHang));
+                        ExcuteSqlMessageProcess(args);
                     }
-
-                    try
-                    {
-                        args.ReturnMsg = Excute(args.InMessage as string);
-                    }
-                    finally
-                    {
-                        if (Global.Setting.Config.SqlTrace && sw != null)
-                        {
-                            sw.Stop();
-                        }
-
-                        _ThreadMonitor.UnRegister(System.Threading.Thread.CurrentThread);
-                    }
-
-                    if (args.ReturnMsg is QueryResult)
-                    {
-                        args.CustomSerializtion = new Hubble.SQLClient.QueryResultSerialization(
-                            args.ReturnMsg as QueryResult);
-
-                        if (Global.Setting.Config.SqlTrace && sw != null)
-                        {
-                            sw.Stop();
-
-                            TimeSpan ts1 = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
-
-                            Global.Report.WriteAppLog(string.Format("Excute esplase:{0}ms, total processortime={1}ms, sqlid={2}",
-                                sw.ElapsedMilliseconds, (int)(ts1.TotalMilliseconds - ts.TotalMilliseconds), sqlid));
-                        }
-                    }
-                    else
-                    {
-                        if (Global.Setting.Config.SqlTrace && sw != null)
-                        {
-                            sw.Stop();
-                        }
-                    }
-
                     break;
                 case ConnectEvent.Exit: //quit
 
@@ -326,8 +371,6 @@ namespace Hubble.Core.Service
             AppDomain.CurrentDomain.UnhandledException +=
                          new UnhandledExceptionEventHandler(UnhandledExceptionEventHandler);
 
-
-
             _ThreadMonitor.ThradMonitorEventHandler +=
                 new EventHandler<ThreadMonitor.ThreadMonitorEvent>(OnThreadMonitorEvent); //Init thread monitor
 
@@ -358,7 +401,7 @@ namespace Hubble.Core.Service
 
         }
 
-        private QueryResult Excute(string sql)
+        static private QueryResult Excute(string sql)
         {
             using (Hubble.Core.Data.DBAccess dbAccess = new DBAccess())
             {

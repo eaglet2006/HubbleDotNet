@@ -34,11 +34,11 @@ namespace Hubble.SQLClient
     {
         static readonly byte[] _DefaultKey = {0x87, 0x45, 0xA0, 0xE8, 0x39, 0xC3, 0x99, 0x56 };
 
-        TcpClient _TcpClient;
+        protected TcpClient _TcpClient;
 
         System.Data.SqlClient.SqlConnectionStringBuilder _SqlConnBuilder;
 
-        private string _ConnectionString;
+        protected string _ConnectionString;
 
         private string _DataSource;
 
@@ -83,7 +83,7 @@ namespace Hubble.SQLClient
 
         private bool _Connected = false;
 
-        public bool Connected
+        public virtual bool Connected
         {
             get
             {
@@ -132,7 +132,6 @@ namespace Hubble.SQLClient
                 return _Password;
             }
         }
-
 
         /// <summary>
         /// The time (in seconds) to wait for a connection to open. The default value is 300 seconds.
@@ -194,7 +193,7 @@ namespace Hubble.SQLClient
 
         private bool _ServerBusy = false;
 
-        internal bool ServerBusy
+        internal virtual bool ServerBusy
         {
             get
             {
@@ -204,7 +203,7 @@ namespace Hubble.SQLClient
 
         private bool _CommandReportNoCache = false;
 
-        internal bool CommandReportNoCache
+        internal virtual bool CommandReportNoCache
         {
             get
             {
@@ -256,19 +255,28 @@ namespace Hubble.SQLClient
             _State = state;
         }
 
+        internal virtual int GetConnectionTimeout()
+        {
+            return _ConnectionTimeout;
+        }
+
         /// <summary>
         /// The time (in seconds) to wait for a connection to open. The default value is determined by the specific type of connection that you are using.
         /// </summary>
         /// <param name="timeout"></param>
-        internal void SetConnectionTimeout(int timeout)
+        internal void SetConnectionTimeout(TcpClient tcpClient, int timeout)
         {
             _ConnectionTimeout = timeout;
-            _TcpClient.SendTimeout = timeout * 1000;
-            _TcpClient.ReceiveTimeout = timeout * 1000;
+            tcpClient.SendTimeout = timeout * 1000;
+            tcpClient.ReceiveTimeout = timeout * 1000;
         }
 
+        internal virtual void SetConnectionTimeout(int timeout)
+        {
+            SetConnectionTimeout(_TcpClient, timeout);
+        }
 
-        internal QueryResult QuerySql(string sql)
+        virtual internal QueryResult QuerySql(string sql)
         {
             return _TcpClient.SendSyncMessage((short)ConnectEvent.ExcuteSql, sql) as QueryResult;
         }
@@ -291,6 +299,52 @@ namespace Hubble.SQLClient
             ConnectionString = connectionString;
         }
 
+        protected void InitTcpClient(out TcpClient tcpClient)
+        {
+
+            _SqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder(ConnectionString);
+
+            string[] strs = _SqlConnBuilder.DataSource.Split(new char[] { ':' });
+
+            if (strs.Length > 1)
+            {
+                _TcpPort = int.Parse(strs[1]);
+            }
+
+            _DataSource = strs[0];
+            _Database = _SqlConnBuilder.InitialCatalog;
+            _UserId = _SqlConnBuilder.UserID;
+
+            if (_UserId == null)
+            {
+                _UserId = "";
+            }
+
+            _Password = _SqlConnBuilder.Password;
+
+            if (_Password == null)
+            {
+                _Password = "";
+            }
+
+            tcpClient = new TcpClient();
+
+            System.Net.IPAddress[] addresslist = System.Net.Dns.GetHostAddresses(_DataSource);
+
+            tcpClient.RemoteAddress = addresslist[0];
+            tcpClient.Port = TcpPort;
+            tcpClient.RequireCustomSerialization = RequireCustomSerialization;
+
+            if (ConnectionString.IndexOf("Connection Timeout", StringComparison.CurrentCultureIgnoreCase) >= 0)
+            {
+                SetConnectionTimeout(tcpClient, _SqlConnBuilder.ConnectTimeout);
+            }
+            else
+            {
+                SetConnectionTimeout(tcpClient, 300);
+            }
+        }
+
         #region Override from DbConnection
 
         public override string ConnectionString
@@ -307,56 +361,15 @@ namespace Hubble.SQLClient
                     Close();
                 }
 
-                string connectionString = value;
+                _ConnectionString = value;
 
-                _SqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+                InitTcpClient(out _TcpClient);
 
-                string[] strs = _SqlConnBuilder.DataSource.Split(new char[] { ':' });
-
-                if (strs.Length > 1)
-                {
-                    _TcpPort = int.Parse(strs[1]);
-                }
-
-                _DataSource = strs[0];
-                _Database = _SqlConnBuilder.InitialCatalog;
-                _UserId = _SqlConnBuilder.UserID;
-
-                if (_UserId == null)
-                {
-                    _UserId = "";
-                }
-
-                _Password = _SqlConnBuilder.Password;
-
-                if (_Password == null)
-                {
-                    _Password = "";
-                }
-
-                _TcpClient = new TcpClient();
-
-                System.Net.IPAddress[] addresslist = System.Net.Dns.GetHostAddresses(_DataSource);
-
-                _TcpClient.RemoteAddress = addresslist[0];
-                _TcpClient.Port = TcpPort;
-                _TcpClient.RequireCustomSerialization = RequireCustomSerialization;
-
-                _ConnectionString = connectionString;
-
-                if (connectionString.IndexOf("Connection Timeout", StringComparison.CurrentCultureIgnoreCase) >= 0)
-                {
-                    SetConnectionTimeout(_SqlConnBuilder.ConnectTimeout);
-                }
-                else
-                {
-                    SetConnectionTimeout(300);
-                }
                 //ConnectionTimeout = 300;
             }
         }
 
-        public override void Open()
+        protected void Open(TcpClient tcpClient)
         {
             int elapseConnectTime = 0;
             Random rand = new Random();
@@ -364,18 +377,18 @@ namespace Hubble.SQLClient
 
             while (elapseConnectTime < this.ConnectionTimeout * 1000)
             {
-                _TcpClient.Connect();
+                tcpClient.Connect();
 
                 try
                 {
-                    _TcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
+                    tcpClient.SendSyncMessage((short)ConnectEvent.Connect, BuildConnectionMessage());
                     break;
                 }
                 catch (Exception e)
                 {
                     if (e.Message.Trim() == "Too many connects on server")
                     {
-                        _TcpClient.Close();
+                        tcpClient.Close();
                         _Connected = false;
                         ConnectionString = ConnectionString;
 
@@ -395,7 +408,7 @@ namespace Hubble.SQLClient
                         continue;
                     }
 
-                    _TcpClient.Close();
+                    tcpClient.Close();
 
                     throw e;
                 }
@@ -409,6 +422,12 @@ namespace Hubble.SQLClient
             _Connected = true;
             _State = System.Data.ConnectionState.Open;
             DataCacheMgr.OnConnect(this);
+        }
+
+
+        public override void Open()
+        {
+            Open(_TcpClient);
         }
 
         public override void Close()
@@ -460,17 +479,32 @@ namespace Hubble.SQLClient
 
         #region IDisposable Members
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
             try
             {
-                _TcpClient.Dispose();
+                if (_TcpClient != null)
+                {
+                    try
+                    {
+                        _TcpClient.Dispose();
+                    }
+                    catch
+                    {
+                    }
+                    finally
+                    {
+                        _TcpClient = null;
+                    }
+                }
+
+                base.Dispose(disposing);
             }
             catch
             {
             }
         }
-
+        
         #endregion
 
         #region ICloneable Members

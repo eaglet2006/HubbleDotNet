@@ -131,6 +131,8 @@
     <Compile Include="Right\UserRightException.cs" />
     <Compile Include="Service\CommandContent.cs" />
     <Compile Include="Service\ConnectionInformation.cs" />
+    <Compile Include="Service\QueryThread.cs" />
+    <Compile Include="Service\QueryThreadPool.cs" />
     <Compile Include="Service\ScheduleTaskMgr.cs" />
     <Compile Include="Service\SynchronizeCanUpdate.cs" />
     <Compile Include="Service\CurrentConnection.cs" />
@@ -185,6 +187,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_Test.cs" />
     <Compile Include="StoredProcedure\SP_GetBigTable.cs" />
     <Compile Include="StoredProcedure\SP_CreateBigTable.cs" />
     <Compile Include="StoredProcedure\SP_GetSchema.cs" />
@@ -262,7 +265,7 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
-      <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
+      <Name>Hubble.Framework</Name>
     </ProjectReference>
     <ProjectReference Include="..\Hubble.SQLClient\Hubble.SQLClient.csproj">
       <Project>{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}</Project>

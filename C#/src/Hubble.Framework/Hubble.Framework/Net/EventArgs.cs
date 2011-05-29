@@ -179,11 +179,28 @@ namespace Hubble.Framework.Net
     /// </summary>
     public class MessageReceiveEventArgs : EventArgs
     {
+        private TcpServer _TcpServer;
         private MessageHead _MsgHead;
         private object _Msg;
         private object _ReturnMsg;
         private IMySerialization _CustomSerializtion;
         private int _ThreadId;
+        private System.Net.Sockets.TcpClient _TcpClient;
+        private System.Net.Sockets.NetworkStream _TcpStream;
+        private int _ClassId;
+        private object _ConnectionInfo;
+        public object LockObj;
+
+        /// <summary>
+        /// Tcp server
+        /// </summary>
+        public TcpServer TcpServer
+        {
+            get
+            {
+                return _TcpServer;
+            }
+        }
 
         /// <summary>
         /// Message Head
@@ -225,6 +242,18 @@ namespace Hubble.Framework.Net
         }
 
         /// <summary>
+        /// This property is used for async connection.
+        /// Spicify the class id 
+        /// </summary>
+        public int ClassId
+        {
+            get
+            {
+                return _ClassId;
+            }
+        }
+
+        /// <summary>
         /// Custom serialization
         /// </summary>
         public IMySerialization CustomSerializtion
@@ -253,13 +282,48 @@ namespace Hubble.Framework.Net
             }
         }
 
-        public MessageReceiveEventArgs(MessageHead msgHead, object msg, int threadId)
+        public System.Net.Sockets.TcpClient TcpClient
         {
+            get
+            {
+                return _TcpClient;
+            }
+        }
+
+        public System.Net.Sockets.NetworkStream TcpStream
+        {
+            get
+            {
+                return _TcpStream;
+            }
+        }
+
+        public object ConnectionInfo
+        {
+            get
+            {
+                return _ConnectionInfo;
+            }
+
+            set
+            {
+                _ConnectionInfo = value;
+            }
+        }
+
+        public MessageReceiveEventArgs(TcpServer tcpServer, MessageHead msgHead, object msg, int threadId, int classId, 
+            System.Net.Sockets.TcpClient tcpClient,  System.Net.Sockets.NetworkStream tcpStream, object lockObj)
+        {
+            LockObj = lockObj;
+            _TcpServer = tcpServer;
             _MsgHead = msgHead;
             _Msg = msg;
             _ReturnMsg = null;
+            _ClassId = classId;
             _CustomSerializtion = null;
             _ThreadId = threadId;
+            _TcpClient = tcpClient;
+            _TcpStream = tcpStream;
         }
 
     }

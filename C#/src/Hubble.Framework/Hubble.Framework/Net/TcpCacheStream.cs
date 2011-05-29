@@ -30,7 +30,7 @@ namespace Hubble.Framework.Net
     {
         #region Private fields
         const int BUF_SIZE = 4096;
-        private byte[] _Buf = new byte[BUF_SIZE];
+        readonly private byte[] _Buf = new byte[BUF_SIZE];
 
         private MemoryStream _CacheStream = new MemoryStream(BUF_SIZE);
         private NetworkStream _NetworkStream;
@@ -61,7 +61,10 @@ namespace Hubble.Framework.Net
         {
             get
             {
-                return _NetworkStream;
+                lock (this)
+                {
+                    return _NetworkStream;
+                }
             }
         }
 
@@ -101,8 +104,14 @@ namespace Hubble.Framework.Net
 
         public override void Flush()
         {
+            if (NetworkStream == null)
+            {
+                throw new TcpRemoteCloseException("Remote connection closed");
+            }
+
             NetworkStream.Write(_Buf, 0, _BufLen);
             NetworkStream.Flush();
+            _BufLen = 0;
         }
 
         public override long Length
@@ -135,6 +144,11 @@ namespace Hubble.Framework.Net
             {
                 len = CacheStream.Read(buffer, offset, count);
                 return len;
+            }
+
+            if (NetworkStream == null)
+            {
+                throw new TcpRemoteCloseException("Remote connection closed");
             }
 
             //Fill cache
@@ -182,6 +196,12 @@ namespace Hubble.Framework.Net
             else
             {
                 Array.Copy(buffer, offset, _Buf, _BufLen, BUF_SIZE - _BufLen);
+
+                if (NetworkStream == null)
+                {
+                    throw new TcpRemoteCloseException("Remote connection closed");
+                }
+
                 NetworkStream.Write(_Buf, 0, _Buf.Length);
 
                 offset += BUF_SIZE - _BufLen;

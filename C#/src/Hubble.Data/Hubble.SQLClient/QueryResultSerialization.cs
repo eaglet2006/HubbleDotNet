@@ -427,6 +427,7 @@ namespace Hubble.SQLClient
                 table.Rows.Add(row);
             }
 
+
             table.MinimumCapacity = minimumCapacity;
 
             return table;

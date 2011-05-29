@@ -27,7 +27,7 @@ namespace QueryAnalyzer
         {
             get
             {
-                return _TableName;
+                return textBoxTableName.Text;
             }
 
             set
@@ -36,18 +36,16 @@ namespace QueryAnalyzer
             }
         }
 
-        string _IndexFolder;
-
         public string IndexFolder
         {
             get
             {
-                return _IndexFolder;
+                return textBoxIndexFolder.Text;
             }
 
             set
             {
-                _IndexFolder = value;
+                textBoxIndexFolder.Text = value;
             }
         }
 
@@ -119,18 +117,18 @@ namespace QueryAnalyzer
         private void RefreshBalanceServerList(TabletInfo tablet)
         {
             listBoxBlanceServer.Items.Clear();
-            foreach (string connectionString in tablet.BalanceServers)
+            foreach (string serverName in tablet.BalanceServers)
             {
-                listBoxBlanceServer.Items.Add(connectionString);
+                listBoxBlanceServer.Items.Add(serverName);
             }
         }
 
         private void RefreshFailoverServerList(TabletInfo tablet)
         {
             listBoxFailoverServers.Items.Clear();
-            foreach (string connectionString in tablet.FailoverServers)
+            foreach (string serverName in tablet.FailoverServers)
             {
-                listBoxFailoverServers.Items.Add(connectionString);
+                listBoxFailoverServers.Items.Add(serverName);
             }
         }
 
@@ -150,9 +148,14 @@ namespace QueryAnalyzer
                         return;
                     }
 
+#if HubblePro
+                    TabletInfo tablet = new TabletInfo(tableName);
+                    BigTableInfo.Add(tablet);
+#else
                     TabletInfo tablet = new TabletInfo(tableName, connectionString);
                     BigTableInfo.Add(tablet);
 
+#endif
                     listBoxTablets.Items.Add(tablet);
                     listBoxTablets.SelectedItem = tablet;
                 }
@@ -167,8 +170,7 @@ namespace QueryAnalyzer
         {
             _ParentForm = this.Parent as FormBigTable;
 
-            textBoxIndexFolder.Text = IndexFolder;
-            textBoxTableName.Text = TableName;
+            textBoxTableName.Text = _TableName;
 
 #if HubblePro
             groupBoxBalanceServers.Enabled = true;
@@ -267,8 +269,17 @@ namespace QueryAnalyzer
 
             if (tablet != null)
             {
-                listBoxTablets.Items.Remove(tablet);
-                BigTableInfo.Tablets.Remove(tablet);
+                if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove tablet: {0} ?",
+                   tablet.TableName)) == DialogResult.Yes)
+                {
+                    listBoxTablets.Items.Remove(tablet);
+                    BigTableInfo.Tablets.Remove(tablet);
+
+                    if (listBoxTablets.Items.Count > 0)
+                    {
+                        listBoxTablets.SelectedIndex = 0;
+                    }
+                }
             }
         }
 
@@ -398,6 +409,14 @@ namespace QueryAnalyzer
 
         private void buttonAddBS_Click(object sender, EventArgs e)
         {
+            TabletInfo tablet = listBoxTablets.SelectedItem as TabletInfo;
+
+            if (tablet == null)
+            {
+                QAMessageBox.ShowErrorMessage("Please choose a tablet");
+                return;
+            }
+
             ServerInfomation serverInfo = comboBoxBalanceServers.SelectedItem as ServerInfomation;
             if (serverInfo == null)
             {
@@ -411,24 +430,42 @@ namespace QueryAnalyzer
                 return;
             }
 
-            listBoxBlanceServer.Items.Add(serverInfo);
+            tablet.BalanceServers.Add(serverInfo.ServerName);
+            listBoxBlanceServer.Items.Add(serverInfo.ServerName);
         }
 
         private void buttonDeleteBS_Click(object sender, EventArgs e)
         {
-            ServerInfomation serverInfo = listBoxBlanceServer.SelectedItem as ServerInfomation;
-            if (serverInfo != null)
+            TabletInfo tablet = listBoxTablets.SelectedItem as TabletInfo;
+
+            if (tablet == null)
+            {
+                QAMessageBox.ShowErrorMessage("Please choose a tablet");
+                return;
+            }
+
+            string serverName = listBoxBlanceServer.SelectedItem as string;
+            if (serverName != null)
             {
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
-                   serverInfo.ServerName)) == DialogResult.Yes)
+                   serverName)) == DialogResult.Yes)
                 {
-                    listBoxBlanceServer.Items.Remove(serverInfo);
+                    listBoxBlanceServer.Items.Remove(serverName);
+                    tablet.BalanceServers.Remove(serverName);
                 }
             }
         }
 
         private void buttonAddFailoverServers_Click(object sender, EventArgs e)
         {
+            TabletInfo tablet = listBoxTablets.SelectedItem as TabletInfo;
+
+            if (tablet == null)
+            {
+                QAMessageBox.ShowErrorMessage("Please choose a tablet");
+                return;
+            }
+
             ServerInfomation serverInfo = comboBoxFailoverServers.SelectedItem as ServerInfomation;
             if (serverInfo == null)
             {
@@ -442,18 +479,28 @@ namespace QueryAnalyzer
                 return;
             }
 
-            listBoxFailoverServers.Items.Add(serverInfo);
+            listBoxFailoverServers.Items.Add(serverInfo.ServerName);
+            tablet.FailoverServers.Add(serverInfo.ServerName);
         }
 
         private void buttonDelFailoverServers_Click(object sender, EventArgs e)
         {
-            ServerInfomation serverInfo = listBoxFailoverServers.SelectedItem as ServerInfomation;
-            if (serverInfo != null)
+            TabletInfo tablet = listBoxTablets.SelectedItem as TabletInfo;
+
+            if (tablet == null)
+            {
+                QAMessageBox.ShowErrorMessage("Please choose a tablet");
+                return;
+            }
+
+            string serverName = listBoxFailoverServers.SelectedItem as string;
+            if (serverName != null)
             {
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
-                   serverInfo.ServerName)) == DialogResult.Yes)
+                   serverName)) == DialogResult.Yes)
                 {
-                    listBoxFailoverServers.Items.Remove(serverInfo);
+                    listBoxFailoverServers.Items.Remove(serverName);
+                    tablet.FailoverServers.Remove(serverName);
                 }
             }
         }
@@ -461,8 +508,12 @@ namespace QueryAnalyzer
         private void listBoxTablets_SelectedIndexChanged(object sender, EventArgs e)
         {
             TabletInfo tablet = listBoxTablets.SelectedItem as TabletInfo;
-            RefreshBalanceServerList(tablet);
-            RefreshFailoverServerList(tablet);
+
+            if (tablet != null)
+            {
+                RefreshBalanceServerList(tablet);
+                RefreshFailoverServerList(tablet);
+            }
         }
     }
 }

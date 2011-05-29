@@ -210,6 +210,12 @@ namespace Hubble.Framework.Threading
         #endregion
 
         #region Private fields
+        
+        private long _RestartTimes = 0;
+
+        private object _LockObj = new object();
+        private readonly bool _CloseWhenEmpty;
+        private readonly bool _StartOnce;
 
         private System.Threading.Thread _Thread;
 
@@ -220,12 +226,73 @@ namespace Hubble.Framework.Threading
         private OnError _OnError;
         private System.Threading.Semaphore _Sema;
 
+        private System.Threading.ManualResetEvent _CloseEvent = null;
+        private bool _Started = false;
         private bool _Closing = false;
+
+        #endregion
+
+        #region Properties
+
+        public int ManagedThreadId
+        {
+            get
+            {
+                if (_Thread == null)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return _Thread.ManagedThreadId;
+                }
+            }
+        }
+
+        public long RestartTimes
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _RestartTimes;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _RestartTimes = value;
+                }
+            }
+        }
+
+
+        public bool Started
+        {
+            get
+            {
+                lock (_LockObj)
+                {
+                    return _Started;
+                }
+            }
+
+            set
+            {
+                lock (_LockObj)
+                {
+                    _Started = value;
+                }
+            }
+        }
+
         private bool Closing
         {
             get
             {
-                lock (this)
+                lock (_LockObj)
                 {
                     return _Closing;
                 }
@@ -233,7 +300,7 @@ namespace Hubble.Framework.Threading
 
             set
             {
-                lock (this)
+                lock (_LockObj)
                 {
                     _Closing = value;
                 }
@@ -252,12 +319,6 @@ namespace Hubble.Framework.Threading
                 _OnMessageEvent = value;
             }
         }
-
-        private System.Threading.ManualResetEvent _CloseEvent = new System.Threading.ManualResetEvent(false);
-
-        #endregion
-
-        #region Public properties
 
         /// <summary>
         /// call back when error raise
@@ -295,7 +356,7 @@ namespace Hubble.Framework.Threading
                         {
                             bool close = true;
 
-                            lock (this)
+                            lock (_LockObj)
                             {
                                 if (_UrgentQueue.Count > 0 || _Queue.Count > 0)
                                 {
@@ -318,7 +379,7 @@ namespace Hubble.Framework.Threading
 
                     try
                     {
-                        lock (this)
+                        lock (_LockObj)
                         {
                             if (_UrgentQueue.Count > 0)
                             {
@@ -335,23 +396,6 @@ namespace Hubble.Framework.Threading
                             msg.RetData = _OnMessageEvent(msg.Event, msg.Flag, msg.Data);
                         }
 
-                    }
-                    catch (Exception e)
-                    {
-                        if (OnErrorEvent != null)
-                        {
-                            try
-                            {
-                                msg.RetData = e;
-                                OnErrorEvent(e);
-                            }
-                            catch
-                            {
-                            }
-                        }
-                    }
-                    finally
-                    {
                         try
                         {
                             if (msg != null)
@@ -373,6 +417,75 @@ namespace Hubble.Framework.Threading
                             {
                             }
                         }
+
+                        lock (_LockObj)
+                        {
+                            if (_CloseWhenEmpty)
+                            {
+                                if (_UrgentQueue.Count == 0 && _Queue.Count == 0)
+                                {
+                                    //Close
+
+                                    ReleaseResources();
+                                    return;
+                                }
+                            }
+                        }
+
+                    }
+                    catch (Exception e)
+                    {
+                        if (OnErrorEvent != null)
+                        {
+                            try
+                            {
+                                msg.RetData = e;
+                                OnErrorEvent(e);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        try
+                        {
+                            if (msg != null)
+                            {
+                                if ((msg.Flag & MessageFlag.SyncMsg) != 0)
+                                {
+                                    //Sync msg
+                                    msg.SetSSendEvent();
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            try
+                            {
+                                OnErrorEvent(ex);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        lock (_LockObj)
+                        {
+                            if (_CloseWhenEmpty)
+                            {
+                                if (_UrgentQueue.Count == 0 && _Queue.Count == 0)
+                                {
+                                    //Close
+
+                                    ReleaseResources();
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                    finally
+                    {
+                       
                     }
                 }
             }
@@ -386,21 +499,33 @@ namespace Hubble.Framework.Threading
         #region Constructor
 
         public MessageQueue()
+            :this (null, false, true)
+            
         {
-            _Sema = new System.Threading.Semaphore(0, int.MaxValue);
-            _Thread = new System.Threading.Thread(new System.Threading.ThreadStart(MessageProc));
-            _Thread.IsBackground = true;
         }
 
         public MessageQueue(OnMessage onMessageEvent)
-            :this()
+            : this(onMessageEvent, false, true)
         {
-            if (onMessageEvent == null)
-            {
-                throw new ArgumentNullException();
-            }
+        }
 
+        public MessageQueue(bool closeWhenEmpty)
+            : this(null, closeWhenEmpty, true)
+        {
+        }
+
+        public MessageQueue(bool closeWhenEmpty, bool startOnce)
+            : this(null, closeWhenEmpty, startOnce)
+        {
+        }
+
+        public MessageQueue(OnMessage onMessageEvent, bool closeWhenEmpty, bool startOnce)
+        {
             _OnMessageEvent = onMessageEvent;
+
+            _CloseWhenEmpty = closeWhenEmpty;
+
+            _StartOnce = startOnce;
         }
 
         #endregion
@@ -412,7 +537,104 @@ namespace Hubble.Framework.Threading
         /// </summary>
         public void Start()
         {
-            _Thread.Start();
+            lock (_LockObj)
+            {
+                if (!Started)
+                {
+                    if (RestartTimes > 0 && _StartOnce)
+                    {
+                        return;
+                    }
+
+                    _CloseEvent = new System.Threading.ManualResetEvent(false);
+                    Closing = false;
+                    _Sema = new System.Threading.Semaphore(0, int.MaxValue);
+                    _Thread = new System.Threading.Thread(new System.Threading.ThreadStart(MessageProc));
+                    _Thread.IsBackground = true;
+
+
+                    if (_UrgentQueue.Count > 0)
+                    {
+                        _Sema.Release(_UrgentQueue.Count);
+                    }
+
+                    if (_Queue.Count > 0)
+                    {
+                        _Sema.Release(_Queue.Count);
+                    }
+
+
+                    _Thread.Start();
+
+                    RestartTimes++;
+
+                    Started = true;
+                }
+            }
+        }
+
+        public void AbortAndRestart()
+        {
+            Abort();
+            Start();
+        }
+
+
+        public void Abort()
+        {
+            Closing = true;
+
+            lock (_LockObj)
+            {
+                try
+                {
+                    _Thread.Abort();
+                    ReleaseResources();
+
+                    try
+                    {
+                        OnErrorEvent(new Hubble.Framework.Threading.MQAbortException("Message queue abort because of timeout"));
+                    }
+                    catch
+                    {
+                    }
+                }
+                catch
+                {
+                    ReleaseResources();
+                }
+                finally
+                {
+
+                    //_OnMessageEvent = null;
+                    //_OnError = null;
+                }
+            }
+        }
+
+        private void ReleaseResources()
+        {
+            try
+            {
+                _CloseEvent.Close();
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                _Sema.Close();
+            }
+            catch
+            {
+            }
+
+            _CloseEvent = null;
+            _Sema = null;
+            _Thread = null;
+            Started = false;
+
         }
 
         /// <summary>
@@ -424,45 +646,34 @@ namespace Hubble.Framework.Threading
         {
             Closing = true;
 
-            try
-            {
-                _Sema.Release();
-
-                if (!_CloseEvent.WaitOne(millisecondsTimeout, true))
-                {
-                    _Thread.Abort();
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            catch
-            {
-            }
-            finally
+            lock (_LockObj)
             {
                 try
                 {
-                    _CloseEvent.Close();
+                    _Sema.Release();
+
+                    if (!_CloseEvent.WaitOne(millisecondsTimeout, true))
+                    {
+                        _Thread.Abort();
+                    }
+                    else
+                    {
+                        return true;
+                    }
                 }
                 catch
                 {
                 }
-
-                try
+                finally
                 {
-                    _Sema.Close();
-                }
-                catch
-                {
+                    ReleaseResources();
+
+                    //_OnMessageEvent = null;
+                    //_OnError = null;
                 }
 
-                _OnMessageEvent = null;
-                _OnError = null;
+                return false;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -472,16 +683,27 @@ namespace Hubble.Framework.Threading
         /// <param name="data">Message data</param>
         public void ASendMessage(int evt, object data)
         {
-            if (Closing)
+            if (_StartOnce && Closing)
             {
                 return;
                 //throw new Exception("MessageQueue is closing");
             }
 
-            Message msg = new Message(evt, MessageFlag.None, data);
-
-            lock(this)
+            lock (_LockObj)
             {
+                if (_StartOnce && Closing)
+                {
+                    return;
+                    //throw new Exception("MessageQueue is closing");
+                }
+
+                if (!Started)
+                {
+                    Start();
+                }
+
+                Message msg = new Message(evt, MessageFlag.None, data);
+
                 _Queue.Enqueue(msg);
                 _Sema.Release();
             }
@@ -494,17 +716,27 @@ namespace Hubble.Framework.Threading
         /// <param name="data">Message data</param>
         public void ASendUrgentMessage(int evt, object data)
         {
-            if (Closing)
+            if (_StartOnce && Closing)
             {
                 return;
                 //throw new Exception("MessageQueue is closing");
             }
 
-
-            Message msg = new Message(evt, MessageFlag.Urgent, data);
-
-            lock(this)
+            lock (_LockObj)
             {
+                if (_StartOnce && Closing)
+                {
+                    return;
+                    //throw new Exception("MessageQueue is closing");
+                }
+
+                if (!Started)
+                {
+                    Start();
+                }
+
+                Message msg = new Message(evt, MessageFlag.Urgent, data);
+
                 _UrgentQueue.Enqueue(msg);
                 _Sema.Release();
             }
@@ -519,14 +751,27 @@ namespace Hubble.Framework.Threading
         /// <returns>Recevers return data</returns>
         public object SSendMessage(int evt, object data, int millisecondsTimeout)
         {
-            if (Closing)
+            if (_StartOnce && Closing)
             {
                 throw new Exception("MessageQueue is closing");
             }
 
+            lock (_LockObj)
+            {
+                if (_StartOnce && Closing)
+                {
+                    throw new Exception("MessageQueue is closing");
+                }
+
+                if (!Started)
+                {
+                    Start();
+                }
+            }
+
             using (Message msg = new Message(evt, MessageFlag.SyncMsg, data, new System.Threading.ManualResetEvent(false)))
             {
-                lock (this)
+                lock (_LockObj)
                 {
                     _Queue.Enqueue(msg);
                     _Sema.Release();
@@ -546,6 +791,7 @@ namespace Hubble.Framework.Threading
                     throw new System.TimeoutException("SSend timeout");
                 }
             }
+
         }
 
         /// <summary>
@@ -557,14 +803,27 @@ namespace Hubble.Framework.Threading
         /// <returns>Recevers return data</returns>
         public object SSendUrgentMessage(int evt, object data, int millisecondsTimeout)
         {
-            if (Closing)
+            if (_StartOnce && Closing)
             {
                 throw new Exception("MessageQueue is closing");
             }
 
+            lock (_LockObj)
+            {
+                if (_StartOnce && Closing)
+                {
+                    throw new Exception("MessageQueue is closing");
+                }
+
+                if (!Started)
+                {
+                    Start();
+                }
+            }
+
             using (Message msg = new Message(evt, MessageFlag.SyncMsg | MessageFlag.Urgent, data, new System.Threading.ManualResetEvent(false)))
             {
-                lock (this)
+                lock (_LockObj)
                 {
                     _UrgentQueue.Enqueue(msg);
                     _Sema.Release();
@@ -583,6 +842,7 @@ namespace Hubble.Framework.Threading
                 {
                     throw new System.TimeoutException("SSend timeout");
                 }
+
             }
         }
 

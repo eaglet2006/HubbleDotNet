@@ -1302,7 +1302,6 @@ namespace Hubble.Core.SFQL.Parse
                     SelectWatchDog.WatchDog.Exit();
                 }
             }
-
         }
 
         private List<QueryResult> _UnionQueryResult;

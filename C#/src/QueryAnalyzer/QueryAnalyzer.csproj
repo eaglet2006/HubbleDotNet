@@ -381,7 +381,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
       <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
-      <Name>Hubble.Framework %28Hubble.Framework\Hubble.Framework%29</Name>
+      <Name>Hubble.Framework</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

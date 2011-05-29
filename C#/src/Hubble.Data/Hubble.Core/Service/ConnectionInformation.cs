@@ -24,6 +24,21 @@ namespace Hubble.Core.Service
 {
     public class ConnectionInformation 
     {
+        private QueryThread _QueryThread = null;
+
+        internal QueryThread QueryThread
+        {
+            get
+            {
+                return _QueryThread;
+            }
+
+            set
+            {
+                _QueryThread = value;
+            }
+        }
+
         private string _DatabaseName;
 
         internal string DatabaseName
@@ -59,6 +74,20 @@ namespace Hubble.Core.Service
             _CurrentCommandContent = new CommandContent();
         }
 
+        internal ConnectionInformation Clone()
+        {
+            ConnectionInformation connectionInfo = new ConnectionInformation();
+            connectionInfo._CurrentCommandContent = null;
+            connectionInfo._DatabaseName = this._DatabaseName;
+            connectionInfo._QueryThread = null;
+            connectionInfo._UserName = this._UserName;
+            return connectionInfo;
+        }
+
+        public ConnectionInformation()
+        {
+        }
+        
         public ConnectionInformation(string connectionString)
         {
             System.Data.SqlClient.SqlConnectionStringBuilder sqlConnString = null;

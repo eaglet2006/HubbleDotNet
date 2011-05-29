@@ -63,6 +63,19 @@ namespace Hubble.Core.Service
             }
         }
 
+        public static void Disconnect(int managedThreadId)
+        {
+            lock (_RootSyn)
+            {
+                int threadId = managedThreadId;
+
+                if (_ConnectionInformationDict.ContainsKey(threadId))
+                {
+                    _ConnectionInformationDict.Remove(threadId);
+                }
+            }
+        }
+
         public static void Disconnect()
         {
             lock (_RootSyn)
