@@ -463,7 +463,11 @@ namespace Hubble.SQLClient
         {
             _Connected = false;
             _State = System.Data.ConnectionState.Closed;
-            _TcpClient.Close();
+
+            if (_TcpClient != null)
+            {
+                _TcpClient.Close();
+            }
         }
 
         protected override System.Data.Common.DbTransaction BeginDbTransaction(System.Data.IsolationLevel isolationLevel)
