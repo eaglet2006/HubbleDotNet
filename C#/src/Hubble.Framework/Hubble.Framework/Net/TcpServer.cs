@@ -428,7 +428,8 @@ namespace Hubble.Framework.Net
 
                         StringBuilder sb = new StringBuilder();
                         sb.AppendFormat("{0} innerStackTrace:{1}",
-                            (returnMsg as Exception).Message, (returnMsg as Exception).StackTrace);
+                            (returnMsg as Exception).Message, 
+                            Hubble.Framework.HubbleException.GetStackTrace(returnMsg as Exception));
 
                         byte[] buf = Encoding.UTF8.GetBytes(sb.ToString());
 

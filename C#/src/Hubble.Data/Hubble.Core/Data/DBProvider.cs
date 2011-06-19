@@ -440,6 +440,28 @@ namespace Hubble.Core.Data
             }
         }
 
+        public DateTime BigTableTimeStamp
+        {
+            get
+            {
+                lock (_BigTableLock)
+                {
+                              
+                    if (_Table == null)
+                    {
+                        return default(DateTime);
+                    }
+
+                    if (_Table.BigTable == null)
+                    {
+                        return default(DateTime);
+                    }
+
+                    return _Table.BigTable.TimeStamp; 
+                }
+            }
+        }
+
         public BigTable.BigTable BigTableCfg
         {
             get
@@ -453,7 +475,17 @@ namespace Hubble.Core.Data
                     //    bigTable.Tablets.Add(ti.Clone());
                     //}
 
-                    return _Table.BigTable;
+                    if (_Table == null)
+                    {
+                        return null;
+                    }
+
+                    if (_Table.BigTable == null)
+                    {
+                        return null;
+                    }
+
+                    return _Table.BigTable.Clone();
                 }
             }
         }

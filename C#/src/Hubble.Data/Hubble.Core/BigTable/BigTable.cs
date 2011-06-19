@@ -37,6 +37,15 @@ namespace Hubble.Core.BigTable
             ConnectionString = connectionString;
         }
 
+
+        public ServerInfo Clone()
+        {
+            ServerInfo serverInfo = new ServerInfo();
+            serverInfo.ConnectionString = this.ConnectionString;
+            serverInfo.ServerName = this.ServerName;
+            return serverInfo;
+        }
+
         public override bool Equals(object obj)
         {
             ServerInfo dest = obj as ServerInfo;
@@ -146,14 +155,35 @@ namespace Hubble.Core.BigTable
     /// <summary>
     /// Configure of BigTable
     /// </summary>
-    public class BigTable
+    public class BigTable 
     {
+        public DateTime TimeStamp = DateTime.Parse("1900-01-01");
+
         public List<TabletInfo> Tablets = new List<TabletInfo>();
 
         public List<ServerInfo> ServerList = new List<ServerInfo>();
 
         public BigTable()
         {
+        }
+
+        public BigTable Clone()
+        {
+            BigTable bigTable = new BigTable();
+
+            bigTable.TimeStamp = this.TimeStamp;
+
+            foreach (TabletInfo tabletInfo in Tablets)
+            {
+                bigTable.Tablets.Add(tabletInfo.Clone());
+            }
+
+            foreach (ServerInfo serverInfo in ServerList)
+            {
+                bigTable.ServerList.Add(serverInfo.Clone());
+            }
+
+            return bigTable;
         }
 
         public void Add(TabletInfo tablet)

@@ -552,7 +552,7 @@ namespace Hubble.Core.Data
 
 #if HubblePro
             System.Reflection.Assembly bigTableAsm;
-            bigTableAsm = System.Reflection.Assembly.LoadFrom("HubblePro.BigTable.dll");
+            bigTableAsm = System.Reflection.Assembly.LoadFrom("HubblePro.dll");
             BigTableParseType = bigTableAsm.GetType("HubblePro.BigTable.BigTableParse");
 #else
             BigTableParseType = typeof(BigTable.BigTableParse);

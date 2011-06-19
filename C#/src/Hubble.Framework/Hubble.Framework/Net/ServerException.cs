@@ -97,5 +97,18 @@ namespace Hubble.Framework.Net
         {
             _InnerStackTrace = stack;
         }
+
+        public ServerException(Exception innerException)
+            : base(innerException.Message, innerException)
+        {
+            if (innerException is ServerException)
+            {
+                _InnerStackTrace = (innerException as ServerException).InnerStackTrace;
+            }
+            else
+            {
+                _InnerStackTrace = innerException.StackTrace;
+            }
+        }
     }
 }

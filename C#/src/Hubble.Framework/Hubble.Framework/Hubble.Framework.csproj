@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\BinarySearch.cs" />
     <Compile Include="DataStructure\BlockedAppendList.cs" />
     <Compile Include="DataStructure\Cache.cs" />
     <Compile Include="DataStructure\CacheManage.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="DataStructure\SuperList.cs" />
     <Compile Include="Data\OLEDataProvider.cs" />
     <Compile Include="Data\SQLiteDataProvider.cs" />
+    <Compile Include="HubbleException.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />

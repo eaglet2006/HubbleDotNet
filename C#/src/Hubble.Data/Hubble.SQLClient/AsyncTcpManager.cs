@@ -55,7 +55,7 @@ namespace Hubble.SQLClient
         {
             lock (_ClassIdLock)
             {
-                _ClassDict.Remove(_ClassId);
+                _ClassDict.Remove(classId);
             }
         }
 
@@ -158,6 +158,8 @@ namespace Hubble.SQLClient
             {
                 if (!_ClassDict.TryGetValue(package.ClassId, out asyncClass))
                 {
+                    Console.WriteLine(string.Format("AsyncTcp Manager, class id = {0} is not find", 
+                        package.ClassId));
                     return;
                 }
             }

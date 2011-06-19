@@ -235,6 +235,27 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis.Select
                 sql.Append(this.Where.ToString());
             }
 
+            if (this.OrderBys != null)
+            {
+                if (this.OrderBys.Count > 0)
+                {
+                    sql.Append(" Order By ");
+
+                    for (int i = 0; i < this.OrderBys.Count; i++)
+                    {
+                        OrderBy orderBy = this.OrderBys[i];
+                        if (i == 0)
+                        {
+                            sql.AppendFormat("{0}", orderBy.ToString());
+                        }
+                        else
+                        {
+                            sql.AppendFormat(", {0}", orderBy.ToString());
+                        }
+                    }
+                }
+            }
+
             return sql.ToString();
         }
 

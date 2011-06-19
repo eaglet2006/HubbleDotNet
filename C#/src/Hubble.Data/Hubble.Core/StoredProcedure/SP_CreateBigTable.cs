@@ -48,11 +48,13 @@ namespace Hubble.Core.StoredProcedure
             System.IO.Stream stream = Hubble.Framework.IO.Stream.WriteStringToStream(Parameters[2], Encoding.UTF8);
 
             BigTable.BigTable bigtable = Hubble.Framework.Serialization.XmlSerialization<BigTable.BigTable>.Deserialize(stream);
+            bigtable.TimeStamp = DateTime.Now.ToUniversalTime();
 
             Data.Table table = new Hubble.Core.Data.Table();
             table.Name = tableName;
             table.IsBigTable = true;
             table.BigTable = bigtable;
+
 
             Data.DBProvider.CreateTable(table, indexFolder);
 

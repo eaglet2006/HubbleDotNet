@@ -73,6 +73,11 @@ namespace Hubble.SQLClient
             _PrintMessages.Add(printMessage);
         }
 
+        public void SetDocumentCount(long totalDocumnts)
+        {
+            _PrintMessages.Add(string.Format("TotalDocuments:{0}", totalDocumnts));
+        }
+
         public int GetDocumentCount()
         {
             foreach (string message in _PrintMessages)

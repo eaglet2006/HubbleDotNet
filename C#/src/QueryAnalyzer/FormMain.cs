@@ -122,7 +122,7 @@ namespace QueryAnalyzer
                 }
 
                 toolStripComboBoxDatabases.Text = GlobalSetting.DataAccess.DatabaseName;
-
+                treeViewData.SelectedNode = serverNode;
             }
             catch (Exception e)
             {
@@ -333,6 +333,10 @@ namespace QueryAnalyzer
                     troubleshooterToolStripMenuItem1.Enabled = false;
                     troubleshooterToolStripMenuItem2.Enabled = false;
 
+                    if (treeViewData.SelectedNode == null)
+                    {
+                        return;
+                    }
 
                     if (treeViewData.SelectedNode.Tag.ToString() == "Table")
                     {
