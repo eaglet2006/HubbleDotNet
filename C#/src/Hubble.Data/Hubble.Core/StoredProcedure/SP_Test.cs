@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
+
 using Hubble.Core.Data;
 
 namespace Hubble.Core.StoredProcedure
@@ -34,11 +36,55 @@ namespace Hubble.Core.StoredProcedure
             }
         }
 
+        private void TestGetDocIdReplaceFieldValue(string tableName)
+        {
+            OutputMessage("TestGetDocIdReplaceFieldValue");
+
+            AddColumn("Times");
+            AddColumn("Elapse(ms)");
+            AddColumn("ElapseOneTime(ms)");
+
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0], false);
+
+            if (dbProvider == null)
+            {
+                throw new DataException(string.Format("Table name {0} does not exist!", Parameters[0]));
+            }
+
+            Random rand = new Random();
+            int count = 1000000;
+            int lastDocId = dbProvider.LastDocId;
+
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
+
+            for (int i = 0; i < count; i++)
+            {
+                int docid = rand.Next(lastDocId);
+
+                dbProvider.GetDocIdReplaceFieldValue(docid);
+            }
+
+            sw.Stop();
+
+            OutputValue("Times", count);
+            OutputValue("Elapse(ms)", sw.ElapsedMilliseconds);
+            OutputValue("ElapseOneTime(ms)", (double)sw.ElapsedMilliseconds / count);
+        }
+
+
         public void Run()
         {
-            AddColumn("Name");
 
-            OutputValue("Name", "Test");
+            if (Parameters.Count != 1)
+            {
+                throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
+            }
+
+            string tableName = Parameters[0];
+            TestGetDocIdReplaceFieldValue(tableName);
+
         }
 
         #endregion
@@ -49,7 +95,7 @@ namespace Hubble.Core.StoredProcedure
         {
             get
             {
-                return "This store procedure is used to test";
+                return "This store procedure is used to test. Parameter 1 is table name.";
             }
         }
 

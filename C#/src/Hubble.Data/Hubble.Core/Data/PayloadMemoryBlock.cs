@@ -83,6 +83,11 @@ namespace Hubble.Core.Data
 
             if (lastDocId - firstDocId == UsedCount - 1)
             {
+                if (docId - firstDocId > UsedCount - 1)
+                {
+                    return null;
+                }
+
                 return ((int*)Ptr) + (docId - firstDocId) * _RealPayloadIntSize;
             }
 

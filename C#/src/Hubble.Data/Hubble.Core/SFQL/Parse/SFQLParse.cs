@@ -1286,6 +1286,11 @@ namespace Hubble.Core.SFQL.Parse
 
             Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(tableName);
 
+            if (dbProvider == null)
+            {
+                throw new DataException(string.Format("Table name:{0} does not exist in current database", tableName));
+            }
+
             if (dbProvider.Table.SelectTimeout > 0)
             {
                 SelectWatchDog.WatchDog.Enter(dbProvider.Table.SelectTimeout, dbProvider.Table.Name);

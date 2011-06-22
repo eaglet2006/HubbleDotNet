@@ -81,7 +81,7 @@ namespace Hubble.Core.Data
         int _Count = 0;
         int _IndexCount = 0; //Count of IndexBuf
         int _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
-        int _CurIndex = 0; //Current index of IndexBuf;
+        //int _CurIndex = 0; //Current index of IndexBuf;
         Field _DocIdReplaceField = null;
 
         ReplaceFieldValueToDocId _ReplaceFieldValueToDocId = null;
@@ -109,41 +109,47 @@ namespace Hubble.Core.Data
 
             IndexElement indexElement = null;
 
+            int index = (docId - IndexBuf[0].StartDocId) / BufSize;
+            if (index >= _IndexCount)
+            {
+                index = _IndexCount - 1;
+            }
+
             while (scanTimes < _IndexCount)
             {
-                if (docId >= IndexBuf[_CurIndex].StartDocId)
+                if (docId >= IndexBuf[index].StartDocId)
                 {
-                    if (_CurIndex == _IndexCount - 1)
+                    if (index == _IndexCount - 1)
                     {
                         //last index element
-                        indexElement = IndexBuf[_CurIndex];
+                        indexElement = IndexBuf[index];
                         break;
                     }
-                    else if (docId < IndexBuf[_CurIndex + 1].StartDocId)
+                    else if (docId < IndexBuf[index + 1].StartDocId)
                     {
-                        indexElement = IndexBuf[_CurIndex];
+                        indexElement = IndexBuf[index];
                         break;
                     }
                     else
                     {
-                        _CurIndex++;
+                        index++;
                     }
                 }
                 else
                 {
-                    _CurIndex--;
+                    index--;
 
-                    if (_CurIndex < 0)
+                    if (index < 0)
                     {
                         //less then first docid
-                        _CurIndex = 0;
+                        index = 0;
                         indexElement = null;
                         break;
                     }
-                    
-                    if (docId >= IndexBuf[_CurIndex].StartDocId)
+
+                    if (docId >= IndexBuf[index].StartDocId)
                     {
-                        indexElement = IndexBuf[_CurIndex];
+                        indexElement = IndexBuf[index];
                         break;
                     }
                 }
@@ -427,7 +433,7 @@ namespace Hubble.Core.Data
                 _Count = 0;
                 _IndexCount = 0; //Count of IndexBuf
                 _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
-                _CurIndex = 0; //Current index of IndexBuf;
+                //_CurIndex = 0; //Current index of IndexBuf;
             }
         }
     }
