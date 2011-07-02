@@ -8,6 +8,11 @@ namespace QueryAnalyzer
 {
     class QAMessageBox
     {
+        public static void ShowErrorMessage(Exception e)
+        {
+            MessageBox.Show(e.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
         public static void ShowErrorMessage(string message)
         {
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

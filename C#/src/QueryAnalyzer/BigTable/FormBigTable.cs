@@ -8,7 +8,7 @@ using System.Windows.Forms;
 using Hubble.SQLClient;
 using Hubble.Core.BigTable;
 
-namespace QueryAnalyzer
+namespace QueryAnalyzer.BigTable
 {
     public partial class FormBigTable : Form
     {
@@ -16,9 +16,9 @@ namespace QueryAnalyzer
         internal string DatabaseName;
         internal DialogResult _Result = DialogResult.Cancel;
 
-        BigTable _BigTable;
+        Hubble.Core.BigTable.BigTable _BigTable;
 
-        internal BigTable BigTable
+        internal Hubble.Core.BigTable.BigTable BigTable
         {
             get
             {

@@ -8,9 +8,15 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HubbleTask")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hubble.Net")]
-[assembly: AssemblyProduct("HubbleTask")]
-[assembly: AssemblyCopyright("Copyright © eaglet 2009-2010")]
+[assembly: AssemblyCompany("Hubble Star Pty")]
+#if HubblePro
+[assembly: AssemblyProduct("HubblePro 2011 Beta 1 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+#else
+[assembly: AssemblyProduct("HubbleDotNet Community Edition")]
+[assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]
+#endif
+
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

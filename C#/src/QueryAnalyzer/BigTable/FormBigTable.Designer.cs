@@ -1,4 +1,4 @@
-﻿namespace QueryAnalyzer
+﻿namespace QueryAnalyzer.BigTable
 {
     partial class FormBigTable
     {

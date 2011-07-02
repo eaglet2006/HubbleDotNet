@@ -1,4 +1,4 @@
-﻿namespace QueryAnalyzer
+﻿namespace QueryAnalyzer.BigTable
 {
     partial class BigTableGenerate
     {
@@ -51,12 +51,13 @@
             this.groupBoxBalanceServers = new System.Windows.Forms.GroupBox();
             this.comboBoxBalanceServers = new System.Windows.Forms.ComboBox();
             this.buttonDeleteBS = new System.Windows.Forms.Button();
-            this.listBoxBlanceServer = new System.Windows.Forms.ListBox();
+            this.listBoxBalanceServer = new System.Windows.Forms.ListBox();
             this.buttonAddBS = new System.Windows.Forms.Button();
             this.buttonDelete = new System.Windows.Forms.Button();
             this.buttonAdd = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.listBoxTablets = new System.Windows.Forms.ListBox();
+            this.labelLastUpdateTime = new System.Windows.Forms.Label();
             this.tabControl.SuspendLayout();
             this.tabPageGlobal.SuspendLayout();
             this.tabPageServers.SuspendLayout();
@@ -81,6 +82,7 @@
             // 
             // tabPageGlobal
             // 
+            this.tabPageGlobal.Controls.Add(this.labelLastUpdateTime);
             this.tabPageGlobal.Controls.Add(this.buttonCancel);
             this.tabPageGlobal.Controls.Add(this.buttonSave);
             this.tabPageGlobal.Controls.Add(this.label1);
@@ -278,7 +280,7 @@
             // 
             this.groupBoxBalanceServers.Controls.Add(this.comboBoxBalanceServers);
             this.groupBoxBalanceServers.Controls.Add(this.buttonDeleteBS);
-            this.groupBoxBalanceServers.Controls.Add(this.listBoxBlanceServer);
+            this.groupBoxBalanceServers.Controls.Add(this.listBoxBalanceServer);
             this.groupBoxBalanceServers.Controls.Add(this.buttonAddBS);
             this.groupBoxBalanceServers.Location = new System.Drawing.Point(27, 14);
             this.groupBoxBalanceServers.Name = "groupBoxBalanceServers";
@@ -306,13 +308,13 @@
             this.buttonDeleteBS.UseVisualStyleBackColor = true;
             this.buttonDeleteBS.Click += new System.EventHandler(this.buttonDeleteBS_Click);
             // 
-            // listBoxBlanceServer
+            // listBoxBalanceServer
             // 
-            this.listBoxBlanceServer.FormattingEnabled = true;
-            this.listBoxBlanceServer.Location = new System.Drawing.Point(6, 56);
-            this.listBoxBlanceServer.Name = "listBoxBlanceServer";
-            this.listBoxBlanceServer.Size = new System.Drawing.Size(309, 186);
-            this.listBoxBlanceServer.TabIndex = 0;
+            this.listBoxBalanceServer.FormattingEnabled = true;
+            this.listBoxBalanceServer.Location = new System.Drawing.Point(6, 56);
+            this.listBoxBalanceServer.Name = "listBoxBalanceServer";
+            this.listBoxBalanceServer.Size = new System.Drawing.Size(309, 186);
+            this.listBoxBalanceServer.TabIndex = 0;
             // 
             // buttonAddBS
             // 
@@ -362,6 +364,16 @@
             this.listBoxTablets.TabIndex = 0;
             this.listBoxTablets.SelectedIndexChanged += new System.EventHandler(this.listBoxTablets_SelectedIndexChanged);
             // 
+            // labelLastUpdateTime
+            // 
+            this.labelLastUpdateTime.AutoSize = true;
+            this.labelLastUpdateTime.Location = new System.Drawing.Point(394, 19);
+            this.labelLastUpdateTime.Name = "labelLastUpdateTime";
+            this.labelLastUpdateTime.Size = new System.Drawing.Size(94, 13);
+            this.labelLastUpdateTime.TabIndex = 35;
+            this.labelLastUpdateTime.Text = "Last Update Time:";
+            this.labelLastUpdateTime.Visible = false;
+            // 
             // BigTableGenerate
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -400,7 +412,7 @@
         private System.Windows.Forms.Button buttonCancel;
         private System.Windows.Forms.Button buttonDelete;
         private System.Windows.Forms.GroupBox groupBoxBalanceServers;
-        private System.Windows.Forms.ListBox listBoxBlanceServer;
+        private System.Windows.Forms.ListBox listBoxBalanceServer;
         private System.Windows.Forms.Button buttonDeleteBS;
         private System.Windows.Forms.Button buttonAddBS;
         private System.Windows.Forms.TabPage tabPageServers;
@@ -414,5 +426,6 @@
         private System.Windows.Forms.Button buttonDelFailoverServers;
         private System.Windows.Forms.ListBox listBoxFailoverServers;
         private System.Windows.Forms.Button buttonAddFailoverServers;
+        private System.Windows.Forms.Label labelLastUpdateTime;
     }
 }

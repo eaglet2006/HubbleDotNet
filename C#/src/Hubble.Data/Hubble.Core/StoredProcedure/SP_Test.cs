@@ -56,13 +56,12 @@ namespace Hubble.Core.StoredProcedure
             int lastDocId = dbProvider.LastDocId;
 
             Stopwatch sw = new Stopwatch();
+            int docid = rand.Next(lastDocId);
 
             sw.Start();
 
             for (int i = 0; i < count; i++)
             {
-                int docid = rand.Next(lastDocId);
-
                 dbProvider.GetDocIdReplaceFieldValue(docid);
             }
 
@@ -83,7 +82,7 @@ namespace Hubble.Core.StoredProcedure
             }
 
             string tableName = Parameters[0];
-            TestGetDocIdReplaceFieldValue(tableName);
+            //TestGetDocIdReplaceFieldValue(tableName);
 
         }
 

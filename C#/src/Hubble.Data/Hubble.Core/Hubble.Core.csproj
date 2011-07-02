@@ -187,6 +187,8 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_SetBigTable.cs" />
+    <Compile Include="StoredProcedure\SP_QueryByDocIds.cs" />
     <Compile Include="StoredProcedure\SP_Test.cs" />
     <Compile Include="StoredProcedure\SP_GetBigTable.cs" />
     <Compile Include="StoredProcedure\SP_CreateBigTable.cs" />

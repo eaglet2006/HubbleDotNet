@@ -22,7 +22,7 @@ using System.Text;
 namespace Hubble.Core.Service
 {
 
-    internal class CommandContent
+    public class CommandContent
     {
         internal class DataCacheInfo
         {
@@ -65,7 +65,7 @@ namespace Hubble.Core.Service
 
         private bool _PerformanceReport = false;
 
-        internal bool PerformanceReport
+        public bool PerformanceReport
         {
             get
             {

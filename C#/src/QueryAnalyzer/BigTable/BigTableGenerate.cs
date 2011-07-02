@@ -10,7 +10,7 @@ using Hubble.SQLClient;
 
 using ServerInfomation = Hubble.Core.BigTable.ServerInfo;
 
-namespace QueryAnalyzer
+namespace QueryAnalyzer.BigTable
 {
     public partial class BigTableGenerate : UserControl
     {
@@ -63,17 +63,18 @@ namespace QueryAnalyzer
                 _CreateTable = value;
                 textBoxTableName.Enabled = value;
                 textBoxIndexFolder.Enabled = value;
+                labelLastUpdateTime.Visible = !value;
             }
         }
 
-        private BigTable _BigTableInfo;
-        public BigTable BigTableInfo
+        private Hubble.Core.BigTable.BigTable _BigTableInfo;
+        public Hubble.Core.BigTable.BigTable BigTableInfo
         {
             get
             {
                 if (_BigTableInfo == null)
                 {
-                    _BigTableInfo = new BigTable();
+                    _BigTableInfo = new Hubble.Core.BigTable.BigTable();
                 }
                 
                 return _BigTableInfo;
@@ -90,18 +91,23 @@ namespace QueryAnalyzer
             InitializeComponent();
         }
 
-        private void RefreshGUI()
+        private void RefreshServerGUI()
         {
             listViewServers.Items.Clear();
 
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
-                ListViewItem item = new ListViewItem(new string[] { serverInfo.ServerName, serverInfo.ConnectionString});
+                ListViewItem item = new ListViewItem(new string[] { serverInfo.ServerName, serverInfo.ConnectionString });
 
                 listViewServers.Items.Add(item);
             }
 
             RefreshServersComboBox();
+        }
+
+        private void RefreshTabletGUI()
+        {
+            listBoxTablets.Items.Clear();
 
             foreach (TabletInfo tableinfo in BigTableInfo.Tablets)
             {
@@ -114,12 +120,23 @@ namespace QueryAnalyzer
             }
         }
 
+        private void RefreshGUI()
+        {
+            if (BigTableInfo != null)
+            {
+                labelLastUpdateTime.Text = string.Format("Last Update Time:{0}", 
+                    BigTableInfo.TimeStamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+            RefreshServerGUI();
+            RefreshTabletGUI();
+        }
+
         private void RefreshBalanceServerList(TabletInfo tablet)
         {
-            listBoxBlanceServer.Items.Clear();
+            listBoxBalanceServer.Items.Clear();
             foreach (string serverName in tablet.BalanceServers)
             {
-                listBoxBlanceServer.Items.Add(serverName);
+                listBoxBalanceServer.Items.Add(serverName);
             }
         }
 
@@ -135,11 +152,19 @@ namespace QueryAnalyzer
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            string tableName = null;
-            string connectionString = "";
-
             try
             {
+#if HubblePro
+                FormBigTableBatchInsert frmBigtableBatchInsert = new FormBigTableBatchInsert();
+                frmBigtableBatchInsert.BigTableInfo = this.BigTableInfo;
+                if (frmBigtableBatchInsert.ShowDialog() == DialogResult.OK)
+                {
+                    RefreshTabletGUI();
+                }
+#else
+                string tableName = null;
+                string connectionString = "";
+
                 if (QAMessageBox.ShowInputBox("Add tablet", "Input table name", ref tableName) == DialogResult.OK)
                 {
                     if (string.IsNullOrEmpty(tableName))
@@ -148,17 +173,13 @@ namespace QueryAnalyzer
                         return;
                     }
 
-#if HubblePro
-                    TabletInfo tablet = new TabletInfo(tableName);
-                    BigTableInfo.Add(tablet);
-#else
                     TabletInfo tablet = new TabletInfo(tableName, connectionString);
                     BigTableInfo.Add(tablet);
-
-#endif
                     listBoxTablets.Items.Add(tablet);
                     listBoxTablets.SelectedItem = tablet;
                 }
+
+#endif
             }
             catch (Exception ex)
             {
@@ -171,6 +192,7 @@ namespace QueryAnalyzer
             _ParentForm = this.Parent as FormBigTable;
 
             textBoxTableName.Text = _TableName;
+            
 
 #if HubblePro
             groupBoxBalanceServers.Enabled = true;
@@ -283,6 +305,39 @@ namespace QueryAnalyzer
             }
         }
 
+        private void CheckServerList()
+        {
+            List<string> delServerInfos = new List<string>();
+
+            foreach (string serverName in listBoxBalanceServer.Items)
+            {
+                if (!BigTableInfo.ServerList.Contains(new Hubble.Core.BigTable.ServerInfo(serverName, "")))
+                {
+                    delServerInfos.Add(serverName);
+                }
+            }
+
+            foreach (string serverName in delServerInfos)
+            {
+                listBoxBalanceServer.Items.Remove(serverName);
+            }
+
+            delServerInfos.Clear();
+
+            foreach (string serverName in listBoxFailoverServers.Items)
+            {
+                if (!BigTableInfo.ServerList.Contains(new Hubble.Core.BigTable.ServerInfo(serverName, "")))
+                {
+                    delServerInfos.Add(serverName);
+                }
+            }
+
+            foreach (string serverName in delServerInfos)
+            {
+                listBoxFailoverServers.Items.Remove(serverName);
+            }
+        }
+
         private void RefreshServersComboBox()
         {
             comboBoxBalanceServers.Items.Clear();
@@ -297,36 +352,6 @@ namespace QueryAnalyzer
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
                 comboBoxFailoverServers.Items.Add(serverInfo);
-            }
-
-            List<ServerInfomation> delServerInfos = new List<Hubble.Core.BigTable.ServerInfo>();
-
-            foreach (ServerInfomation serverInfo in listBoxBlanceServer.Items)
-            {
-                if (!BigTableInfo.ServerList.Contains(serverInfo))
-                {
-                    delServerInfos.Add(serverInfo);
-                }
-            }
-
-            foreach (ServerInfomation serverInfo in delServerInfos)
-            {
-                listBoxBlanceServer.Items.Remove(serverInfo);
-            }
-
-            delServerInfos.Clear();
-
-            foreach (ServerInfomation serverInfo in listBoxFailoverServers.Items)
-            {
-                if (!BigTableInfo.ServerList.Contains(serverInfo))
-                {
-                    delServerInfos.Add(serverInfo);
-                }
-            }
-
-            foreach (ServerInfomation serverInfo in delServerInfos)
-            {
-                listBoxFailoverServers.Items.Remove(serverInfo);
             }
 
             if (BigTableInfo.ServerList.Count > 0)
@@ -394,9 +419,10 @@ namespace QueryAnalyzer
                                            new Hubble.Core.BigTable.ServerInfo(item.SubItems[0].Text,
                                            item.SubItems[1].Text);
 
-                    BigTableInfo.ServerList.Remove(serverInfo);
+                    BigTableInfo.RemoveServerInfo(serverInfo);
 
                     RefreshServersComboBox();
+                    CheckServerList();
                 }
 
             }
@@ -424,14 +450,14 @@ namespace QueryAnalyzer
                 return;
             }
 
-            if (listBoxBlanceServer.Items.Contains(serverInfo))
+            if (listBoxBalanceServer.Items.Contains(serverInfo))
             {
                 QAMessageBox.ShowErrorMessage("Can't input reduplicate server name!");
                 return;
             }
 
             tablet.BalanceServers.Add(serverInfo.ServerName);
-            listBoxBlanceServer.Items.Add(serverInfo.ServerName);
+            listBoxBalanceServer.Items.Add(serverInfo.ServerName);
         }
 
         private void buttonDeleteBS_Click(object sender, EventArgs e)
@@ -444,13 +470,13 @@ namespace QueryAnalyzer
                 return;
             }
 
-            string serverName = listBoxBlanceServer.SelectedItem as string;
+            string serverName = listBoxBalanceServer.SelectedItem as string;
             if (serverName != null)
             {
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
                    serverName)) == DialogResult.Yes)
                 {
-                    listBoxBlanceServer.Items.Remove(serverName);
+                    listBoxBalanceServer.Items.Remove(serverName);
                     tablet.BalanceServers.Remove(serverName);
                 }
             }
@@ -513,6 +539,7 @@ namespace QueryAnalyzer
             {
                 RefreshBalanceServerList(tablet);
                 RefreshFailoverServerList(tablet);
+                //CheckServerList();
             }
         }
     }

@@ -25,9 +25,14 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Hubble.SQLClient")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hubble.net")]
-[assembly: AssemblyProduct("Hubble.SQLClient")]
-[assembly: AssemblyCopyright("Copyright © eaglet 2009-2010")]
+[assembly: AssemblyCompany("Hubble Star Pty")]
+#if HubblePro
+[assembly: AssemblyProduct("HubblePro 2011 Beta 1 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+#else
+[assembly: AssemblyProduct("HubbleDotNet Community Edition")]
+[assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]
+#endif
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

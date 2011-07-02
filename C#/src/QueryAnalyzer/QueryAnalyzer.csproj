@@ -77,11 +77,17 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
     </Compile>
     <Compile Include="BatchInsert.cs" />
-    <Compile Include="BigTableGenerate.cs">
+    <Compile Include="BigTable\BigTableGenerate.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="BigTableGenerate.Designer.cs">
+    <Compile Include="BigTable\BigTableGenerate.Designer.cs">
       <DependentUpon>BigTableGenerate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BigTable\FormBigTableBatchInsert.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BigTable\FormBigTableBatchInsert.Designer.cs">
+      <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
     </Compile>
     <Compile Include="CreateTable\AfterDatabaseAttributes.cs" />
     <Compile Include="CreateTable\AfterFields.cs" />
@@ -108,10 +114,10 @@
     <Compile Include="FormChooseDatabase.Designer.cs">
       <DependentUpon>FormChooseDatabase.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormBigTable.cs">
+    <Compile Include="BigTable\FormBigTable.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormBigTable.Designer.cs">
+    <Compile Include="BigTable\FormBigTable.Designer.cs">
       <DependentUpon>FormBigTable.cs</DependentUpon>
     </Compile>
     <Compile Include="FormCreateTable.cs">
@@ -233,8 +239,12 @@
       <DependentUpon>AboutBox.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="BigTableGenerate.resx">
+    <EmbeddedResource Include="BigTable\BigTableGenerate.resx">
       <DependentUpon>BigTableGenerate.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BigTable\FormBigTableBatchInsert.resx">
+      <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormAddUser.resx">
@@ -249,7 +259,7 @@
       <DependentUpon>FormChooseDatabase.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormBigTable.resx">
+    <EmbeddedResource Include="BigTable\FormBigTable.resx">
       <DependentUpon>FormBigTable.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

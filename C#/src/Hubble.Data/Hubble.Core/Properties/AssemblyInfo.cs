@@ -8,9 +8,14 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Hubble.Core")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Hubble.Net")]
-[assembly: AssemblyProduct("Hubble.Core")]
-[assembly: AssemblyCopyright("Copyright © Bo Xiao 2008-2010")]
+[assembly: AssemblyCompany("Hubble Star Pty")]
+#if HubblePro
+[assembly: AssemblyProduct("HubblePro 2011 Beta 1 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+#else
+[assembly: AssemblyProduct("HubbleDotNet Community Edition")]
+[assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]
+#endif
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -31,5 +36,5 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.2.5")]
-[assembly: AssemblyFileVersion("1.1.2.5")]
+[assembly: AssemblyVersion("1.1.3.0")]
+[assembly: AssemblyFileVersion("1.1.3.0")]

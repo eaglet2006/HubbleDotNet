@@ -89,7 +89,7 @@ namespace Hubble.Core.Service
             }
         }
 
-        internal static ConnectionInformation ConnectionInfo
+        public static ConnectionInformation ConnectionInfo
         {
             get
             {

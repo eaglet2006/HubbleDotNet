@@ -67,6 +67,14 @@ namespace Hubble.Core.SFQL.Parse
 
         private List<SyntaxAnalysis.Select.Select> _UnionSelects = new List<Hubble.Core.SFQL.SyntaxAnalysis.Select.Select>();
 
+        internal List<TSFQLSentence> SFQLSentenceList
+        {
+            get
+            {
+                return _SFQLSentenceList;
+            }
+        }
+
         private void InputLexicalToken(Lexical.Token token)
         {
             if (token.SyntaxType == SyntaxType.Space)
@@ -92,8 +100,10 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private void SyntaxAnalyse(string text)
+        internal void SyntaxAnalyse(string text)
         {
+            _SFQLSentenceList = new List<TSFQLSentence>();
+
             Lexical lexical = new Lexical(text);
 
             DFAResult dfaResult;
@@ -696,7 +706,7 @@ namespace Hubble.Core.SFQL.Parse
             return sb.ToString();
         }
 
-        private void GetSelectFields(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider,
+        internal void GetSelectFields(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider,
             out List<Data.Field> selectFields, out int allFieldsCount)
         {
             selectFields = new List<Data.Field>();
@@ -2096,8 +2106,6 @@ namespace Hubble.Core.SFQL.Parse
             _NeedCollect = false;
             _NeedCollectUpdate = false;
             _InsertTables.Clear();
-
-            _SFQLSentenceList = new List<TSFQLSentence>();
 
             QueryResult result = new QueryResult();
 

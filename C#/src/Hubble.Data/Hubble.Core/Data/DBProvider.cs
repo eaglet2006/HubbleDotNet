@@ -464,6 +464,17 @@ namespace Hubble.Core.Data
 
         public BigTable.BigTable BigTableCfg
         {
+            set
+            {
+                lock (_BigTableLock)
+                {
+                    if (_Table != null)
+                    {
+                        _Table.BigTable = value;
+                    }
+                }
+            }
+
             get
             {
                 lock (_BigTableLock)

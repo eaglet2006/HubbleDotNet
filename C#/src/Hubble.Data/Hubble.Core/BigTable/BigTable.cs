@@ -21,6 +21,12 @@ using System.Text;
 
 namespace Hubble.Core.BigTable
 {
+    public enum ServerType
+    {
+        Balance  = 0,
+        Failover = 1,
+    }
+
     public class ServerInfo
     {
         public string ServerName = "";
@@ -184,6 +190,73 @@ namespace Hubble.Core.BigTable
             }
 
             return bigTable;
+        }
+
+        public void RemoveServerInfo(ServerInfo serverInfo)
+        {
+            if (ServerList.Contains(serverInfo))
+            {
+                ServerList.Remove(serverInfo);
+
+                foreach (TabletInfo tablet in Tablets)
+                {
+                    tablet.BalanceServers.Remove(serverInfo.ServerName);
+                    tablet.FailoverServers.Remove(serverInfo.ServerName);
+                }
+            }
+
+        }
+
+        public void Add(string tableName, ServerType serverType, string serverName)
+        {
+            TabletInfo tablet = new TabletInfo(tableName);
+
+            int index = Tablets.IndexOf(tablet);
+            if (index >= 0)
+            {
+                tablet = Tablets[index];
+
+                switch (serverType)
+                {
+                    case ServerType.Balance:
+                        if (tablet.BalanceServers.Contains(serverName))
+                        {
+                            throw new Hubble.Core.Data.DataException("Can insert same table name with same server name into bigtable");
+                        }
+                        else
+                        {
+                            tablet.BalanceServers.Add(serverName);
+                        }
+                        break;
+
+                    case ServerType.Failover:
+                        if (tablet.FailoverServers.Contains(serverName))
+                        {
+                            throw new Hubble.Core.Data.DataException("Can insert same table name with same server name into bigtable");
+                        }
+                        else
+                        {
+                            tablet.FailoverServers.Add(serverName);
+                        }
+                        break;
+                }
+
+            }
+            else
+            {
+                switch (serverType)
+                {
+                    case ServerType.Balance:
+                        tablet.BalanceServers.Add(serverName);
+                        break;
+
+                    case ServerType.Failover:
+                        tablet.FailoverServers.Add(serverName);
+                        break;
+                }
+
+                Tablets.Add(tablet);
+            }
         }
 
         public void Add(TabletInfo tablet)

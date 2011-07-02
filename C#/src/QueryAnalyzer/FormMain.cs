@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using Hubble.Core.SFQL.Parse;
 using Hubble.SQLClient;
 
+using QueryAnalyzer.BigTable;
+
 namespace QueryAnalyzer
 {
     public partial class FormMain : Form
@@ -397,8 +399,16 @@ namespace QueryAnalyzer
 
                     frmBigTable.BigTable = Hubble.Framework.Serialization.XmlSerialization<Hubble.Core.BigTable.BigTable>.Deserialize(stream);
 
-                    frmBigTable.ShowDialog();
+                    if (frmBigTable.ShowDialog() == DialogResult.OK)
+                    {
+                        string xml;
+                        Hubble.Framework.IO.Stream.ReadStreamToString(
+                            Hubble.Framework.Serialization.XmlSerialization<Hubble.Core.BigTable.BigTable>.Serialize(frmBigTable.BigTable),
+                            out xml, Encoding.UTF8);
 
+                        GlobalSetting.DataAccess.Excute("exec SP_SetBigTable {0}, {1}",
+                            frmBigTable.TableName, xml);
+                    }
                 }
                 else
                 {

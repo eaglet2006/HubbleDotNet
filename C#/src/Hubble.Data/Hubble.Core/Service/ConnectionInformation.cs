@@ -61,7 +61,7 @@ namespace Hubble.Core.Service
 
         private CommandContent _CurrentCommandContent;
 
-        internal CommandContent CurrentCommandContent
+        public CommandContent CurrentCommandContent
         {
             get
             {

@@ -117,6 +117,7 @@ namespace Hubble.SQLClient
                     else
                     {
                         serial = int.Parse(serialStr);
+                        serial++;
                     }
                 }
             }
@@ -142,6 +143,14 @@ namespace Hubble.SQLClient
             lock (_LockObj)
             {
                 _PrintMessages.Add(string.Format("{0}:{1}", section, message));
+            }
+        }
+
+        public void SetPrintMessages(List<string> messages)
+        {
+            lock (_LockObj)
+            {
+                this._PrintMessages = messages;
             }
         }
 
