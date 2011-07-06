@@ -18,12 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Data
 {
     class ReplaceFieldValueToDocId
     {
-        Dictionary<int, int> _ReplaceFieldValueIntToDocId = null;
+        IntDictionary<int> _ReplaceFieldValueIntToDocId = null;
         Dictionary<long, int> _ReplaceFieldValueLongToDocId = null;
 
         internal ReplaceFieldValueToDocId(bool isLong)
@@ -34,7 +35,7 @@ namespace Hubble.Core.Data
             }
             else
             {
-                _ReplaceFieldValueIntToDocId = new Dictionary<int, int>();
+                _ReplaceFieldValueIntToDocId = new IntDictionary<int>();
             }
         }
 

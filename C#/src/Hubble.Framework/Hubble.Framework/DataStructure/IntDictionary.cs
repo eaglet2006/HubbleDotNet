@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,338 +16,49 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using System.Diagnostics;
 
 namespace Hubble.Framework.DataStructure
 {
     /// <summary>
-    /// UIntDictinary is a special dictinary for UInt 
-    /// Base arithmetic: Hash
+    /// This class is the dictionary which the key is type of int.
+    /// This dictioinary uses two level index to store and index data.
+    /// Usually used in sequential keys or approximately sequential.
     /// </summary>
-    /// <typeparam name="TValue">Value</typeparam>
-    public class IntDictionary<TValue> : IDictionary<int, TValue>
+    public class IntDictionary<T> : IDictionary<int, T>
     {
-        enum Operator
+        sealed class Bucket
         {
-            Query = 0,
-            Add = 1,
-            Get = 2,
-            Set = 3,
-            Remove = 4,
+            internal byte[] Used;
+            internal T[] Data;
+
+            internal Bucket(int bucketSize)
+            {
+                Used = new byte[bucketSize];
+                Data = new T[bucketSize];
+            }
         }
 
-        #region DataEntity
-
-        [Serializable]
-        public struct DataEntity
+        sealed class KeyCollection : ICollection<int>
         {
-            public int Used;
-            public TValue Value;
-        }
+            private IntDictionary<T> _Dictionary;
 
-
-        #endregion
-
-        #region Node class
-
-        /// <summary>
-        /// Node
-        /// </summary>
-        [Serializable]
-        class Node 
-        {
-            int _Count;
-            int _FirstKey;
-            int _ChildrenNumber;
-            Node _Parent;
-            int _ParentIndex;
-            Node[] _Children;
-            DataEntity[] _DataList;
-            int _MaxChildren;
-            Node _Prev;
-            Node _Next;
-
-            /// <summary>
-            /// Constructor
-            /// </summary>
-            /// <param name="isLeafNode">is leaf node or not</param>
-            /// <param name="maxChildren">max children number</param>
-            public Node(bool isLeafNode, int maxChildren)
-            {
-                _MaxChildren = maxChildren;
-
-                if (isLeafNode)
-                {
-                    _DataList = new DataEntity[_MaxChildren];
-
-                    _Children = null;
-                }
-                else
-                {
-                    _DataList = null;
-                    _Children = new Node[_MaxChildren];
-                }
-            }
-
-            #region Public properties
-
-            /// <summary>
-            /// Get the node is leaf node or not
-            /// </summary>
-            public bool IsLeafNode
-            {
-                get
-                {
-                    return DataList != null;
-                }
-            }
-
-            /// <summary>
-            /// Count of the data entities below this node
-            /// </summary>
-            public int FirstKey
-            {
-                get
-                {
-                    return _FirstKey;
-                }
-
-                set
-                {
-                    _FirstKey = value;
-                }
-            }
-
-
-
-            /// <summary>
-            /// Count of the data entities below this node
-            /// </summary>
-            public int Count
-            {
-                get
-                {
-                    return _Count;
-                }
-
-                set
-                {
-                    _Count = value;
-                }
-            }
-
-            /// <summary>
-            /// The children number of this node
-            /// If this is leaf node, it is the number of data
-            /// </summary>
-            public int ChildrenNumber
-            {
-                get
-                {
-                    return _ChildrenNumber;
-                }
-
-                set
-                {
-                    _ChildrenNumber = value;
-                }
-            }
-
-            /// <summary>
-            /// The parent node of this node.
-            /// If parent is null, this is the root node
-            /// </summary>
-            public Node Parent
-            {
-                get
-                {
-                    return _Parent;
-                }
-
-                set
-                {
-                    _Parent = value;
-                }
-            }
-
-            /// <summary>
-            /// Index of parent node
-            /// </summary>
-            public int ParentIndex
-            {
-                get
-                {
-                    return _ParentIndex;
-                }
-
-                set
-                {
-                    _ParentIndex = value;
-                }
-            }
-
-            
-            /// <summary>
-            /// Children of this node.
-            /// If children is null, this is leaf node
-            /// </summary>
-            public Node[] Children
-            {
-                get
-                {
-                    return _Children;
-                }
-  
-            }
-
-            /// <summary>
-            /// Data list 
-            /// only for leaf nodes
-            /// </summary>
-            public DataEntity[] DataList
-            {
-                get
-                {
-                    return _DataList;
-                }
-            }
-
-
-            /// <summary>
-            /// Only leaf node use it.
-            /// Prev leaf node
-            /// </summary>
-            public Node Prev
-            {
-                get
-                {
-                    return _Prev;
-                }
-
-                set
-                {
-                    _Prev = value;
-                }
-            }
-
-            /// <summary>
-            /// Only leaf node use it.
-            /// Next leaf node
-            /// </summary>
-            public Node Next
-            {
-                get
-                {
-                    return _Next;
-                }
-
-                set
-                {
-                    _Next = value;
-                }
-            }
-
-            #endregion
-        }
-
-        #endregion
-
-        #region Collection classes
-
-        [Serializable()]
-        public sealed class KeyCollection : ICollection<int>, ICollection
-        {
-            private IntDictionary<TValue> _Dictionary;
-
-            public KeyCollection(IntDictionary<TValue> dictionary)
+            internal KeyCollection(IntDictionary<T> dictionary)
             {
                 _Dictionary = dictionary;
             }
-
-            #region ICollection members
-
-            public void CopyTo(Array array, int index)
-            {
-                if (array == null)
-                {
-                    throw new ArgumentNullException("array is null!");
-                }
-
-                if (array.GetLowerBound(0) != 0)
-                {
-                    throw new ArgumentException("Arg_NonZeroLowerBound");
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(string.Format("index={0} out of range", index));
-                }
-
-                if (array.Length - index < _Dictionary.Count)
-                {
-                    throw new ArgumentException("Arg_ArrayPlusOffTooSmall");
-                }
-
-                int i = 0;
-                int[] keys = array as int[];
-                foreach (int key in _Dictionary.GetKeys())
-                {
-                    keys[i] = key;
-                    i++;
-                }
-            }
-
-            public int Count
-            {
-                get 
-                {
-                    return _Dictionary.Count;
-                }
-            }
-
-            public bool IsSynchronized
-            {
-                get 
-                {
-                    return false;
-                }
-            }
-
-            public object SyncRoot
-            {
-                get 
-                {
-                    return false;
-                }
-            }
-
-            #endregion
-
-            #region IEnumerable members
-
-            public IEnumerator GetEnumerator()
-            {
-                foreach (int key in _Dictionary.GetKeys())
-                {
-                    yield return key;
-                }
-            }
-
-            #endregion
 
             #region ICollection<int> Members
 
             public void Add(int item)
             {
-                throw new Exception("Not supported KeyCollectionSet");
+                throw new NotImplementedException();
             }
 
             public void Clear()
             {
-                throw new Exception("Not supported KeyCollectionSet");
+                throw new NotImplementedException();
             }
 
             public bool Contains(int item)
@@ -355,105 +66,101 @@ namespace Hubble.Framework.DataStructure
                 return _Dictionary.ContainsKey(item);
             }
 
-            public void CopyTo(int[] array, int index)
+            public void CopyTo(int[] array, int arrayIndex)
             {
-                if (array == null)
-                {
-                    throw new ArgumentNullException("array is null!");
-                }
+                throw new NotImplementedException();
+            }
 
-                if (array.GetLowerBound(0) != 0)
-                {
-                    throw new ArgumentException("Arg_NonZeroLowerBound");
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(string.Format("index={0} out of range", index));
-                }
-
-                if (array.Length - index < _Dictionary.Count)
-                {
-                    throw new ArgumentException("Arg_ArrayPlusOffTooSmall");
-                }
-
-                int i = 0;
-                foreach (int key in _Dictionary.GetKeys())
-                {
-                    array[i] = key;
-                    i++;
-                }
+            public int Count
+            {
+                get { return _Dictionary.Count; }
             }
 
             public bool IsReadOnly
             {
-                get 
-                {
-                    return true;    
-                }
+                get { return true; }
             }
 
             public bool Remove(int item)
             {
-                throw new Exception("Not supported KeyCollectionSet");
+                throw new NotImplementedException();
             }
 
             #endregion
 
             #region IEnumerable<int> Members
 
-            IEnumerator<int> IEnumerable<int>.GetEnumerator()
+            public IEnumerator<int> GetEnumerator()
             {
-                foreach (int key in _Dictionary.GetKeys())
+                if (_Dictionary._Negative != null)
                 {
-                    yield return key;
+                    foreach (int key in _Dictionary._Negative.Keys)
+                    {
+                        yield return 0 - key;
+                    }
                 }
+
+                for (int i = 0; i < _Dictionary._Index.Length; i++)
+                {
+                    if (_Dictionary._Index[i] == null)
+                    {
+                        continue;
+                    }
+
+                    int baseNum = _Dictionary._BucketSize * i;
+
+                    for (int j = 0; j < _Dictionary._Index[i].Used.Length; j++)
+                    {
+                        if (_Dictionary._Index[i].Used[j] != 0)
+                        {
+                            yield return baseNum + j;
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
+            #region IEnumerable Members
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                throw new NotImplementedException();
             }
 
             #endregion
         }
 
-        [Serializable()]
-        public sealed class ValueCollection : ICollection<TValue>, ICollection
-        {
-            private IntDictionary<TValue> _Dictionary;
 
-            public ValueCollection(IntDictionary<TValue> dictionary)
+        sealed class ValueCollection : ICollection<T>
+        {
+            private IntDictionary<T> _Dictionary;
+
+            internal ValueCollection(IntDictionary<T> dictionary)
             {
                 _Dictionary = dictionary;
             }
 
-            #region ICollection members
+            #region ICollection<T> Members
 
-            public void CopyTo(Array array, int index)
+            public void Add(T item)
             {
-                if (array == null)
-                {
-                    throw new ArgumentNullException("array is null!");
-                }
+                throw new NotImplementedException();
+            }
 
-                if (array.GetLowerBound(0) != 0)
-                {
-                    throw new ArgumentException("Arg_NonZeroLowerBound");
-                }
+            public void Clear()
+            {
+                throw new NotImplementedException();
+            }
 
-                if (index < 0 || index > array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(string.Format("index={0} out of range", index));
-                }
+            public bool Contains(T item)
+            {
+                throw new NotImplementedException();
+            }
 
-                if (array.Length - index < _Dictionary.Count)
-                {
-                    throw new ArgumentException("Arg_ArrayPlusOffTooSmall");
-                }
-
-                int i = 0;
-                TValue[] values = array as TValue[];
-                foreach (TValue value in _Dictionary.GetValues())
-                {
-                    values[i] = value;
-                    i++;
-                }
+            public void CopyTo(T[] array, int arrayIndex)
+            {
+                throw new NotImplementedException();
             }
 
             public int Count
@@ -464,852 +171,192 @@ namespace Hubble.Framework.DataStructure
                 }
             }
 
-            public bool IsSynchronized
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public object SyncRoot
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            #endregion
-
-            #region IEnumerable members
-
-            public IEnumerator GetEnumerator()
-            {
-                foreach (TValue value in _Dictionary.GetValues())
-                {
-                    yield return value;
-                }
-            }
-
-            #endregion
-
-            #region ICollection<TValue> Members
-
-            public void Add(TValue item)
-            {
-                throw new Exception("Not supported KeyCollectionSet");
-            }
-
-            public void Clear()
-            {
-                throw new Exception("Not supported KeyCollectionSet");
-            }
-
-            public bool Contains(TValue item)
-            {
-                return _Dictionary.ContainsValue(item);
-            }
-
-            public void CopyTo(TValue[] array, int index)
-            {
-                if (array == null)
-                {
-                    throw new ArgumentNullException("array is null!");
-                }
-
-                if (array.GetLowerBound(0) != 0)
-                {
-                    throw new ArgumentException("Arg_NonZeroLowerBound");
-                }
-
-                if (index < 0 || index > array.Length)
-                {
-                    throw new ArgumentOutOfRangeException(string.Format("index={0} out of range", index));
-                }
-
-                if (array.Length - index < _Dictionary.Count)
-                {
-                    throw new ArgumentException("Arg_ArrayPlusOffTooSmall");
-                }
-
-                int i = 0;
-                foreach (TValue value in _Dictionary.GetValues())
-                {
-                    array[i] = value;
-                    i++;
-                }
-            }
-
             public bool IsReadOnly
             {
-                get
-                {
-                    return true;
-                }
+                get { return true; }
             }
 
-            public bool Remove(TValue item)
+            public bool Remove(T item)
             {
-                throw new Exception("Not supported KeyCollectionSet");
+                throw new NotImplementedException();
             }
 
             #endregion
 
-            #region IEnumerable<TValue> Members
+            #region IEnumerable<T> Members
 
-            IEnumerator<TValue> IEnumerable<TValue>.GetEnumerator()
+            public IEnumerator<T> GetEnumerator()
             {
-                foreach (TValue value in _Dictionary.GetValues())
+                if (_Dictionary._Negative != null)
                 {
-                    yield return value;
+                    foreach (T value in _Dictionary._Negative.Values)
+                    {
+                        yield return value;
+                    }
                 }
+
+                for (int i = 0; i < _Dictionary._Index.Length; i++)
+                {
+                    if (_Dictionary._Index[i] == null)
+                    {
+                        continue;
+                    }
+
+                    for (int j = 0; j < _Dictionary._Index[i].Used.Length; j++)
+                    {
+                        if (_Dictionary._Index[i].Used[j] != 0)
+                        {
+                            yield return _Dictionary._Index[i].Data[j];
+                        }
+                    }
+                }
+            }
+
+            #endregion
+
+            #region IEnumerable Members
+
+            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            {
+                throw new NotImplementedException();
             }
 
             #endregion
         }
 
+        int _Count;
+        int _BucketSize;
+        int _Capability;
+        Bucket[] _Index;
 
-        #endregion
+        private IntDictionary<T> _Negative = null;
 
-        #region Private fields
-
-        private int _Height = 0;  //Height of the tree
-        private int _MaxChildren; //Max children number of each node.
-        private List<int> _PowPool; //Caculate Pow and Log
-        private int _MinFreeKey = 0; //Used by getting free key automaticly.
-
-        /// <summary>
-        /// The root node
-        /// </summary>
-        Node _Root = null;
-
-        #endregion
-
-        #region Public properties
-
-        /// <summary>
-        /// The maximum children number of every nodes
-        /// </summary>
-        public int MaxChildren
+        private void Resize(int key)
         {
-            get
+            if (key >= _Capability)
             {
-                return _MaxChildren;
+                _Capability = ((key / _Capability) + 1) * _Capability;
+
+                Bucket[] newIndex = new Bucket[_Capability / _BucketSize];
+
+                Array.Copy(_Index, newIndex, _Index.Length);
+
+                _Index = newIndex;
             }
-
-            set
-            {
-                _MaxChildren = value;
-                _PowPool = new List<int>();
-
-                long pow = 0;
-                int times = 0;
-                _PowPool.Add((int)pow);
-                pow = (long)Math.Pow(_MaxChildren, ++times);
-
-                while (pow <= int.MaxValue)
-                {
-                    _PowPool.Add((int)pow);
-                    pow = (long)Math.Pow(_MaxChildren, ++times);
-                }
-
-            }
-        }
-
-        /// <summary>
-        /// The height of the tree
-        /// </summary>
-        public int Height
-        {
-            get
-            {
-                return _Height;
-            }
-        }
-
-        #endregion
-
-
-        #region Constructor
-
-        public IntDictionary(int maxChildren)
-        {
-            MaxChildren = maxChildren;
         }
 
         public IntDictionary()
-            : this(2048)
+            : this(10 * 1024 * 1024, 64 * 1024)
         {
-        }
-
-        #endregion
-
-        #region Private methods
-
-        private Node GetFirstLeafNode()
-        {
-            if (_Root == null)
-            {
-                return null;
-            }
-
-            Node cur = _Root;
-
-            while (!cur.IsLeafNode)
-            {
-                foreach (Node node in cur.Children)
-                {
-                    if (node != null)
-                    {
-                        cur = node;
-                        break;
-                    }
-                }
-            }
-
-            return cur;
-        }
-
-        private Node GetLastLeafNode()
-        {
-            if (_Root == null)
-            {
-                return null;
-            }
-
-            Node cur = _Root;
-
-            while (!cur.IsLeafNode)
-            {
-                for (int i = MaxChildren - 1; i >= 0; i--)
-                {
-                    Node node = cur.Children[i];
-                    
-                    if (node != null)
-                    {
-                        cur = node;
-                        break;
-                    }
-                }
-            }
-
-            return cur;
-        }
-
-
-        private Node GetPrevLeafNode(Node curLeafNode)
-        {
-            Node cur = curLeafNode;
-            int index = cur.ParentIndex;
-            cur = cur.Parent;
-
-            while (cur != null)
-            {
-                while (!cur.IsLeafNode)
-                {
-                    while (--index >= 0)
-                    {
-                        if (cur.Children[index] != null)
-                        {
-                            cur = cur.Children[index];
-                            index = (int)MaxChildren;
-                            break;
-                        }
-                    }
-
-                    if (index < 0)
-                    {
-                        break;
-                    }
-                }
-
-                if (cur.IsLeafNode)
-                {
-                    return cur;
-                }
-
-                index = cur.ParentIndex;
-                cur = cur.Parent;
-            }
-
-            return null;
 
         }
 
-
-        private Node GetNextLeafNode(Node curLeafNode)
+        public IntDictionary(int capability, int bucketSize)
         {
-            Node cur = curLeafNode;
-            int index = cur.ParentIndex;
-            cur = cur.Parent;
-
-            while (cur != null)
+            if (bucketSize < 1024)
             {
-                while (!cur.IsLeafNode)
-                {
-                    while (++index < (int)MaxChildren)
-                    {
-                        if (cur.Children[index] != null)
-                        {
-                            cur = cur.Children[index];
-                            index = -1;
-                            break;
-                        }
-                    }
-
-                    if (index >= (int)MaxChildren)
-                    {
-                        break;
-                    }
-                }
-
-                if (cur.IsLeafNode)
-                {
-                    return cur;
-                }
-
-                index = cur.ParentIndex;
-                cur = cur.Parent;
-
+                bucketSize = 1024;
             }
 
-            return null;
+            _BucketSize = bucketSize;
 
-        }
-
-        private IEnumerable<KeyValuePair<int, TValue>> GetKeyValuePairs()
-        {
-            Node cur = GetFirstLeafNode();
-
-            while (cur != null)
+            if (capability < 1024 * 1024)
             {
-                int i = 0;
-                foreach (DataEntity entity in cur.DataList)
-                {
-                    if (entity.Used != 0)
-                    {
-                        yield return new KeyValuePair<int, TValue>(i + cur.FirstKey, entity.Value);
-                    }
-
-                    i++;
-                }
-
-                cur = cur.Next;
+                capability = 1024 * 1024;
             }
-        }
 
-        public IEnumerable<TValue> GetValuesDesc()
-        {
-            Node cur = GetLastLeafNode();
-
-            while (cur != null)
+            if (capability < _BucketSize)
             {
-                for (int i = MaxChildren - 1; i >= 0; i--)
-                {
-                    DataEntity entity = cur.DataList[i];
-                    if (entity.Used != 0)
-                    {
-                        yield return entity.Value;
-                    }
-                }
-
-                cur = cur.Prev;
+                capability = _BucketSize;
             }
-        }
 
-        private IEnumerable<TValue> GetValues()
-        {
-            Node cur = GetFirstLeafNode();
+            int detal = capability % bucketSize;
 
-            while (cur != null)
+            if (detal != 0)
             {
-                foreach (DataEntity entity in cur.DataList)
-                {
-                    if (entity.Used != 0)
-                    {
-                        yield return entity.Value;
-                    }
-                }
-
-                cur = cur.Next;
+                capability += detal;
             }
+
+            _Capability = capability;
+
+            _Count = 0;
+            _Index = new Bucket[_Capability / _BucketSize];
         }
 
 
-        private IEnumerable<int> GetKeys()
+        #region IDictionary<int,T> Members
+
+        public void Add(int key, T value)
         {
-            Node cur = GetFirstLeafNode();
-
-            while (cur != null)
+            if (key < 0)
             {
-                int i = 0;
-                foreach (DataEntity entity in cur.DataList)
+                if (_Negative == null)
                 {
-                    if (entity.Used != 0)
-                    {
-                        yield return i + cur.FirstKey;
-                    }
-
-                    i++;
+                    _Negative = new IntDictionary<T>(_Capability, _BucketSize);
                 }
 
-                cur = cur.Next;
-            }
-        }
-
-        /// <summary>
-        /// Construct the tree
-        /// </summary>
-        /// <param name="key"></param>
-        private void Construct(int key)
-        {
-            #region Math.Log(key, MaxChildren) + 1
-
-            int height = 0;
-            foreach (int pow in _PowPool)
-            {
-                if (key >= pow)
-                {
-                    height++;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            #endregion
-
-            if (height <= Height)
-            {
+                _Negative.Add(0 - key, value);
                 return;
             }
 
-            if (Height == 0)
+            if (key >= _Capability)
             {
-                Node node = new Node(true, MaxChildren);
-                Node leafNode = node;
-                node.FirstKey = (key / MaxChildren) * MaxChildren;
-
-                if (height == 1)
-                {
-                    _Root = node;
-                    _Height = height;
-                    return;
-                }
-                else
-                {
-                    _Height = 1;
-
-                    while (--height > 0)
-                    {
-                        Node pNode = new Node(false, MaxChildren);
-
-                        node.Parent = pNode;
-
-                        _Height++;
-
-                        #region Caculate pow and index
-                        //long mPowh = (long)Math.Pow(MaxChildren, Height);
-                        //int index = (int)((int)(key % mPowh) / (int)(mPowh / MaxChildren));
-
-                        int index;
-
-                        if (height >= _PowPool.Count)
-                        {
-                            index = (int)(key / _PowPool[_PowPool.Count - 1]);
-                        }
-                        else
-                        {
-                            index = (int)((key % _PowPool[height]) / (_PowPool[height] / MaxChildren));
-                        }
-                        #endregion
-
-
-                        pNode.Children[index] = node;
-                        node.ParentIndex = index;
-                        node = pNode;
-                    }
-
-                    _Root = node;
-
-
-                    //Add friend 
-                    Node cur = leafNode;
-
-                    if (cur.IsLeafNode)
-                    {
-                        Node prev = GetPrevLeafNode(cur);
-                        Node next = GetNextLeafNode(cur);
-
-                        if (prev != null)
-                        {
-                            cur.Prev = prev;
-                            cur.Next = prev.Next;
-                            prev.Next = cur;
-
-                            if (cur.Next != null)
-                            {
-                                cur.Next.Prev = cur;
-                            }
-                        }
-                        else if (next != null)
-                        {
-                            cur.Next = next;
-                            cur.Prev = next.Prev;
-                            next.Prev = cur;
-
-                            if (cur.Prev != null)
-                            {
-                                cur.Prev.Next = cur;
-                            }
-                        }
-                    }
-
-
-                }
-            }
-            else
-            {
-                while (height > Height)
-                {
-                    Node pNode = new Node(false, MaxChildren);
-
-                    pNode.Count = _Root.Count;
-                    _Root.Parent = pNode;
-
-                    _Height++;
-
-                    pNode.Children[0] = _Root;
-                    _Root.ParentIndex = 0;
-
-                    _Root = pNode;
-                }
-            }
-        }
-
-        private bool Get(int key, out Node leafNode, out int index, Operator opr)
-        {
-            System.Diagnostics.Debug.Assert(opr == Operator.Get || opr == Operator.Query || opr == Operator.Remove);
-
-            int height = Height;
-            Node cur = _Root;
-            leafNode = null;
-            index = 0;
-
-            while (height > 0)
-            {
-                #region Caculate pow and index
-                //long mPowh = (long)Math.Pow(MaxChildren, Height);
-                //int index = (int)((int)(key % mPowh) / (int)(mPowh / MaxChildren));
-
-                if (height >= _PowPool.Count)
-                {
-                    index = (int)(key / _PowPool[_PowPool.Count - 1]);
-                }
-                else
-                {
-                    index = (int)((key % _PowPool[height]) / (_PowPool[height] / MaxChildren));
-                }
-
-                #endregion
-
-                if (height > 1)
-                {
-                    //Branch node
-                    if (cur.Children[index] == null)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        cur = cur.Children[index];
-                    }
-                }
-                else
-                {
-                    //Leaf node
-                    leafNode = cur;
-                    return cur.DataList[index].Used != 0;
-                }
-
-                height--;
+                Resize(key);
             }
 
-            return false;
-        }
+            int index = key / _BucketSize;
 
-        /// <summary>
-        /// Do something with the tree
-        /// </summary>
-        /// <param name="key">key</param>
-        /// <param name="value">value</param>
-        /// <param name="opr">operator type</param>
-        /// <returns>if find key return true</returns>
-        private bool Set(int key, TValue value, Operator opr)
-        {
-            System.Diagnostics.Debug.Assert(opr == Operator.Add || opr == Operator.Set);
-
-            if (key < 0)
+            if (_Index[index] == null)
             {
-                throw new System.ArgumentException("Key must not be less than zero!");
+                _Index[index] = new Bucket(_BucketSize);
             }
 
-            int height = Height;
-            Node cur = _Root;
+            int subIndex = key % _BucketSize;
 
-            while (height > 0)
+            if (_Index[index].Used[subIndex] != 0)
             {
-                #region Caculate pow and index
-                //long mPowh = (long)Math.Pow(MaxChildren, Height);
-                //int index = (int)((int)(key % mPowh) / (int)(mPowh / MaxChildren));
-
-                int index;
-
-                if (height >= _PowPool.Count)
-                {
-                    index = (int)(key / _PowPool[_PowPool.Count - 1]);
-                }
-                else
-                {
-                    index = (int)((key % _PowPool[height]) / (_PowPool[height] / MaxChildren));
-                }
-
-                #endregion
-
-                if (height > 1)
-                {
-                    //Branch node
-                    if (cur.Children[index] == null)
-                    {
-                        Node node = new Node(height == 2, MaxChildren);
-
-                        if (node.IsLeafNode)
-                        {
-                            node.FirstKey = (key / MaxChildren) * MaxChildren;
-                        }
-
-                        cur.Children[index] = node;
-                        node.ParentIndex = index;
-                        node.Parent = cur;
-                        cur = node;
-
-                        //Add friend 
-                        if (cur.IsLeafNode)
-                        {
-                            Node prev = GetPrevLeafNode(cur);
-                            Node next = GetNextLeafNode(cur);
-
-                            if (prev != null)
-                            {
-                                cur.Prev = prev;
-                                cur.Next = prev.Next;
-                                prev.Next = cur;
-
-                                if (cur.Next != null)
-                                {
-                                    cur.Next.Prev = cur;
-                                }
-                            }
-                            else if (next != null)
-                            {
-                                cur.Next = next;
-                                cur.Prev = next.Prev;
-                                next.Prev = cur;
-
-                                if (cur.Prev != null)
-                                {
-                                    cur.Prev.Next = cur;
-                                }
-                            }
-                        }
-
-
-
-                    }
-                    else
-                    {
-                        cur = cur.Children[index];
-                    }
-                }
-                else
-                {
-                    //Leaf node
-
-                    if (opr == Operator.Set || (cur.DataList[index].Used == 0 && opr == Operator.Add))
-                    {
-                        //Set value
-                        int used = cur.DataList[index].Used;
-                        cur.DataList[index].Used = 1;
-                        cur.DataList[index].Value = value;
-
-                        //Inc count
-                        if (used == 0)
-                        {
-                            while (cur != null)
-                            {
-                                cur.Count++;
-                                cur = cur.Parent;
-                            }
-                        }
-
-                        return true;
-                    }
-                    else
-                    {
-                        throw new System.ArgumentException("An item with the same key has already been added.");
-                    }
-                }
-
-                height--;
+                throw new System.ArgumentException("Adding duplicate key");
             }
 
-            return false;
-
-        }
-
-        #endregion
-
-        #region Public methods
-
-        public int SortInsert(int key, TValue value)
-        {
-            _MinFreeKey = key;
-
-            return Add(value);
-        }
-
-        /// <summary>
-        /// Add value by automatic key
-        /// </summary>
-        /// <param name="value">value</param>
-        /// <returns>The key that allocates automaticly</returns>
-        public int Add(TValue value)
-        {
-            Node leafNode;
-            int index;
-            int key = 0;
-            int existsKey;
-
-            if (Get(_MinFreeKey, out leafNode, out index, Operator.Query))
-            {
-                existsKey = _MinFreeKey;
-
-                Node cur = leafNode;
-
-                bool find = false;
-                int lastKey = cur.FirstKey;
-
-                while (cur != null)
-                {
-                    if (lastKey != cur.FirstKey)
-                    {
-                        //hole of leaf nodes
-                        key = lastKey;
-                        find = true;
-                        break;
-                    }
-
-                    if (cur.Count < MaxChildren)
-                    {
-                        int i = 0;
-
-                        foreach (DataEntity entity in cur.DataList)
-                        {
-                            if (entity.Used == 0 && cur.FirstKey + i > existsKey)
-                            {
-                                key = cur.FirstKey + i;
-                                find = true;
-                                break;
-                            }
-
-                            i++;
-                        }
-
-                        if (find)
-                        {
-                            break;
-                        }
-                    }
-
-                    lastKey = cur.FirstKey + MaxChildren;
-
-                    cur = cur.Next;
-                }
-
-                if (!find)
-                {
-                    key = this.Count;
-                }
-            }
-            else
-            {
-                key = _MinFreeKey;
-            }
-
-            Add(key, value);
-
-            _MinFreeKey = key + 1;
-
-            return key;
-        }
-
-        #endregion
-
-        #region IDictionary<int,TValue> Members
-
-        public void Add(int key, TValue value)
-        {
-            Construct(key);
-            Set(key, value, Operator.Add);
+            _Count++;
+            _Index[index].Used[subIndex] = 1;
+            _Index[index].Data[subIndex] = value;
         }
 
         public bool ContainsKey(int key)
         {
-            Node leafNode;
-            int index;
-
-            return Get(key, out leafNode, out index, Operator.Query); 
-        }
-
-        public bool ContainsValue(TValue value)
-        {
-            foreach (TValue v in GetValues())
+            if (key < 0)
             {
-                if (typeof(TValue).IsClass)
+                if (_Negative == null)
                 {
-                    if (v == null && value == null)
-                    {
-                        return true;
-                    }
-                    else if (v == null || value == null)
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        if (v.Equals(value))
-                        {
-                            return true;
-                        }
-                    }
+                    return false;
                 }
                 else
                 {
-                    if (v.Equals(value))
-                    {
-                        return true;
-                    }
+                    return _Negative.ContainsKey(0 - key);
                 }
             }
 
-            return false;
+            if (key >= _Capability)
+            {
+                return false;
+            }
+
+            int index = key / _BucketSize;
+
+            if (_Index[index] == null)
+            {
+                return false;
+            }
+
+            int subIndex = key % _BucketSize;
+
+            return _Index[index].Used[subIndex] != 0;
         }
 
         public ICollection<int> Keys
         {
-            get 
+            get
             {
                 return new KeyCollection(this);
             }
@@ -1317,229 +364,226 @@ namespace Hubble.Framework.DataStructure
 
         public bool Remove(int key)
         {
-            Node leafNode;
-            int index;
-
-            if (!Get(key, out leafNode, out index, Operator.Remove))
+            if (key < 0)
             {
-                return false;
-            }
-            else
-            {
-                if (leafNode != null)
-                {
-                    leafNode.DataList[index].Used = 0;
-
-                    Node cur = leafNode;
-                    
-                    //Dec node count including parent nodes
-                    while (cur != null)
-                    {
-                        cur.Count--;
-                        cur = cur.Parent;
-                    }
-
-                    cur = leafNode;
-
-                    int i = 0;
-
-                    //Remove empty nodes
-                    while (cur != null)
-                    {
-                        i = cur.ParentIndex;
-
-                        if (cur.Count <= 0)
-                        {
-                            if (cur.IsLeafNode)
-                            {
-                                //If cur node is leaf node, remove prev and next
-
-                                if (cur.Prev != null)
-                                {
-                                    cur.Prev.Next = cur.Next;
-                                }
-
-                                if (cur.Next != null)
-                                {
-                                    cur.Next.Prev = cur.Prev;
-                                }
-                            }
-
-                            Node parent = cur.Parent;
-
-                            if (parent == null)
-                            {
-                                //Root node empty
-                                _Root = null;
-                                _Height = 0;
-                            }
-                            else
-                            {
-                                parent.Children[i] = null;
-                            }
-                        }
-                        else
-                        {
-                            break;
-                        }
-
-                        cur = cur.Parent;
-                    }
-
-                    if (_MinFreeKey > key)
-                    {
-                        _MinFreeKey = key;
-                    }
-
-                    return true;
-                }
-                else
+                if (_Negative == null)
                 {
                     return false;
                 }
-
+                else
+                {
+                    return _Negative.Remove(0 - key);
+                }
             }
-        }
 
-        public bool TryGetValue(int key, out TValue value)
-        {
-            Node leafNode;
-            int index;
-
-            if (!Get(key, out leafNode, out index, Operator.Get))
+            if (key >= _Capability)
             {
-                value = default(TValue);
                 return false;
             }
-            else
+
+            int index = key / _BucketSize;
+
+            if (_Index[index] == null)
             {
-                value = leafNode.DataList[index].Value;
-                return true;
+                return false;
             }
+
+            int subIndex = key % _BucketSize;
+
+            if (_Index[index].Used[subIndex] == 0)
+            {
+                return false;
+            }
+
+            _Index[index].Used[subIndex] = 0;
+            _Count--;
+            return true;
         }
 
-        public ICollection<TValue> Values
+        public bool TryGetValue(int key, out T value)
         {
-            get 
+            if (key < 0)
+            {
+                if (_Negative == null)
+                {
+                    value = default(T);
+                    return false;
+                }
+                else
+                {
+                    return _Negative.TryGetValue(0 - key, out value);
+                }
+            }
+
+            if (key >= _Capability)
+            {
+                value = default(T);
+                return false;
+            }
+
+            int index = key / _BucketSize;
+
+            if (_Index[index] == null)
+            {
+                value = default(T);
+                return false;
+            }
+
+            int subIndex = key % _BucketSize;
+
+            if (_Index[index].Used[subIndex] == 0)
+            {
+                value = default(T);
+                return false;
+            }
+
+            value = _Index[index].Data[subIndex];
+
+            return true;
+        }
+
+        public ICollection<T> Values
+        {
+            get
             {
                 return new ValueCollection(this);
             }
         }
 
-        public TValue this[int key]
+        public T this[int key]
         {
             get
             {
-                Node leafNode;
-                int index;
+                if (key < 0)
+                {
+                    if (_Negative == null)
+                    {
+                        throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                    }
+                    else
+                    {
+                        return _Negative[0 - key];
+                    }
+                }
 
-                if (!Get(key, out leafNode, out index, Operator.Get))
+                if (key >= _Capability)
                 {
-                    throw new System.Collections.Generic.KeyNotFoundException("The given key was not present in the dictionary.");
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
                 }
-                else
+
+                int index = key / _BucketSize;
+
+                if (_Index[index] == null)
                 {
-                    return leafNode.DataList[index].Value;
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
                 }
+
+                int subIndex = key % _BucketSize;
+
+                if (_Index[index].Used[subIndex] == 0)
+                {
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                }
+
+                return _Index[index].Data[subIndex];
             }
 
             set
             {
-                Construct(key);
+                if (key < 0)
+                {
+                    if (_Negative == null)
+                    {
+                        throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                    }
+                    else
+                    {
+                        _Negative[0 - key] = value;
+                    }
 
-                Set(key, value, Operator.Set);
+                    return;
+                }
+
+                if (key >= _Capability)
+                {
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                }
+
+                int index = key / _BucketSize;
+
+                if (_Index[index] == null)
+                {
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                }
+
+                int subIndex = key % _BucketSize;
+
+                if (_Index[index].Used[subIndex] == 0)
+                {
+                    throw new System.Collections.Generic.KeyNotFoundException(string.Format("Key = {0} does not find", key));
+                }
+
+                _Count++;
+                _Index[index].Data[subIndex] = value;
             }
         }
 
         #endregion
 
-        #region ICollection<KeyValuePair<int,TValue>> Members
+        #region ICollection<KeyValuePair<int,T>> Members
 
-        public void Add(KeyValuePair<int, TValue> item)
+        public void Add(KeyValuePair<int, T> item)
         {
             Add(item.Key, item.Value);
         }
 
         public void Clear()
         {
-            _Root = null;
-            _Height = 0;
+            _Count = 0;
+            _Index = new Bucket[_Capability / _BucketSize];
+            _Negative = null;
         }
 
-        public bool Contains(KeyValuePair<int, TValue> item)
+        public bool Contains(KeyValuePair<int, T> item)
         {
             return ContainsKey(item.Key);
         }
 
-        public void CopyTo(KeyValuePair<int, TValue>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<int, T>[] array, int arrayIndex)
         {
-            if (array == null)
-            {
-                throw new ArgumentNullException("array is null!");
-            }
-
-            if (array.GetLowerBound(0) != 0)
-            {
-                throw new ArgumentException("Arg_NonZeroLowerBound");
-            }
-
-            if (arrayIndex < 0 || arrayIndex > array.Length)
-            {
-                throw new ArgumentOutOfRangeException(string.Format("index={0} out of range", arrayIndex));
-            }
-
-            if (array.Length - arrayIndex < this.Count)
-            {
-                throw new ArgumentException("Arg_ArrayPlusOffTooSmall");
-            }
-
-            int i = 0;
-            foreach (KeyValuePair<int, TValue> kv in this.GetKeyValuePairs())
-            {
-                array[i] = kv;
-                i++;
-            }
+            throw new NotImplementedException();
         }
 
         public int Count
         {
-            get 
+            get
             {
-                if (_Root == null)
+                if (_Negative != null)
                 {
-                    return 0;
-                }
-                else
-                {
-                    return _Root.Count;
+                    return _Count + _Negative.Count;
                 }
 
+                return _Count;
             }
         }
 
         public bool IsReadOnly
         {
-            get 
-            {
-                return false;
-            }
+            get { return false; }
         }
 
-        public bool Remove(KeyValuePair<int, TValue> item)
+        public bool Remove(KeyValuePair<int, T> item)
         {
             return Remove(item.Key);
         }
 
         #endregion
 
-        #region IEnumerable<KeyValuePair<int,TValue>> Members
+        #region IEnumerable<KeyValuePair<int,T>> Members
 
-        public IEnumerator<KeyValuePair<int, TValue>> GetEnumerator()
+        public IEnumerator<KeyValuePair<int, T>> GetEnumerator()
         {
-            foreach (KeyValuePair<int, TValue> kv in this.GetKeyValuePairs())
-            {
-                yield return kv;
-            }
+            throw new NotImplementedException();
         }
 
         #endregion
@@ -1548,10 +592,7 @@ namespace Hubble.Framework.DataStructure
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            foreach (KeyValuePair<int, TValue> kv in this.GetKeyValuePairs())
-            {
-                yield return kv;
-            }
+            throw new NotImplementedException();
         }
 
         #endregion
