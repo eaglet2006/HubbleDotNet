@@ -361,7 +361,7 @@ namespace Hubble.SQLClient
             }
         }
 
-        private void AsyncInnerQuery(string orginalSql, int cacheTimeout)
+        private void AsyncInnerQuery(string orginalSql, int cacheTimeout, bool priorMessage)
         {
             if (!(_SqlConnection is HubbleAsyncConnection))
             {
@@ -428,7 +428,7 @@ namespace Hubble.SQLClient
 
             sql += orginalSql;
 
-            asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId);
+            asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId, priorMessage);
         }
 
         private System.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
@@ -628,13 +628,13 @@ namespace Hubble.SQLClient
             return _QueryResult.DataSet;
         }
 
-        private void BeginAsyncQuery(string orginalSql, int cacheTimeout)
+        private void BeginAsyncQuery(string orginalSql, int cacheTimeout, bool priorMessage)
         {
             DateTime startTime = DateTime.Now;
 
             try
             {
-                AsyncInnerQuery(orginalSql, cacheTimeout);
+                AsyncInnerQuery(orginalSql, cacheTimeout, priorMessage);
             }
             catch (System.IO.IOException ex)
             {
@@ -642,7 +642,7 @@ namespace Hubble.SQLClient
 
                 if (ts.TotalMilliseconds < 1000)
                 {
-                    AsyncInnerQuery(orginalSql, cacheTimeout);
+                    AsyncInnerQuery(orginalSql, cacheTimeout, priorMessage);
                 }
                 else
                 {
@@ -743,12 +743,17 @@ namespace Hubble.SQLClient
 
         public void BeginAsyncQuery(int cacheTimeout)
         {
-            BeginAsyncQuery(Sql, cacheTimeout);
+            BeginAsyncQuery(Sql, cacheTimeout, false);
         }
 
         public void BeginAsyncQuery()
         {
             BeginAsyncQuery(CacheTimeout);
+        }
+
+        public void BeginAsyncQuery(bool priorMessage)
+        {
+            BeginAsyncQuery(Sql, CacheTimeout, priorMessage);
         }
 
         public void EndAsyncQuery()

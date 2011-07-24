@@ -41,6 +41,8 @@ namespace Hubble.Core.SFQL.Parse
         int _UnitIndex;
         Query.DocumentResult* _Cur;
 
+        public bool Sorted = false;
+
         public bool Not = false;
 
         public bool ZeroResult = false;
@@ -78,7 +80,7 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         unsafe public DocumentResultWhereDictionary()
-            :this(DefaultSize)
+            :this(128) //Old version use 32768 at here, it is too big
         {
         }
 

@@ -69,6 +69,14 @@ namespace Hubble.Core.Index
 
         #region Public Properties
 
+        internal IndexReader IndexReader
+        {
+            get
+            {
+                return _IndexReader;
+            }
+        }
+
         /// <summary>
         /// Word
         /// </summary>
@@ -213,6 +221,18 @@ namespace Hubble.Core.Index
             }
 
             return _IndexReader.Get(docid);
+        }
+
+        public OriginalDocumentPositionList GetNextOriginal()
+        {
+            if (_IndexReader == null)
+            {
+                return new OriginalDocumentPositionList(-1);
+            }
+
+            OriginalDocumentPositionList odpl = new OriginalDocumentPositionList();
+            _IndexReader.GetNextOriginal(ref odpl);
+            return odpl;
         }
 
         public DocumentPositionList GetNext()

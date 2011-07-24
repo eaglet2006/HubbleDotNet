@@ -183,13 +183,15 @@ namespace Hubble.Core.SFQL.Parse
 
             ICollection<int> groupByCollection;
 
+            bool sorted;
+
             if (update.Where == null)
             {
-                result = parseWhere.Parse(null, out groupByCollection);
+                result = parseWhere.Parse(null, out groupByCollection, out sorted);
             }
             else
             {
-                result = parseWhere.Parse(update.Where.ExpressionTree, out groupByCollection);
+                result = parseWhere.Parse(update.Where.ExpressionTree, out groupByCollection, out sorted);
             }
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(update.TableName);
@@ -254,13 +256,15 @@ namespace Hubble.Core.SFQL.Parse
 
             ICollection<int> groupByCollection;
 
+            bool sorted;
+
             if (delete.Where == null)
             {
-                result = parseWhere.Parse(null, out groupByCollection);
+                result = parseWhere.Parse(null, out groupByCollection, out sorted);
             }
             else
             {
-                result = parseWhere.Parse(delete.Where.ExpressionTree, out groupByCollection);
+                result = parseWhere.Parse(delete.Where.ExpressionTree, out groupByCollection, out sorted);
             }
 
             Data.DBProvider dBProvider = Data.DBProvider.GetDBProvider(delete.TableName);
@@ -1075,17 +1079,19 @@ namespace Hubble.Core.SFQL.Parse
 
             ICollection<int> groupByCollection = null;
 
+            bool sorted = false;
+
             //Get document result
             if (noQueryCache)
             {
                 if (select.Where == null)
                 {
-                    result = parseWhere.Parse(null, out relTotalCount, out groupByCollection);
+                    result = parseWhere.Parse(null, out relTotalCount, out groupByCollection, out sorted);
                     //relTotalCount = result.Length;
                 }
                 else
                 {
-                    result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount, out groupByCollection);
+                    result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount, out groupByCollection, out sorted);
                 }
 
                 //Sort
@@ -1096,7 +1102,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 Data.Field rankField = dbProvider.GetField("Rank");
 
-                if (rankField != null)
+                if (rankField != null && !sorted)
                 {
                     if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
                         rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)

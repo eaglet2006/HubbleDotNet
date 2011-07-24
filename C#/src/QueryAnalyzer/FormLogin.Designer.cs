@@ -36,11 +36,12 @@
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.panelAuthentication = new System.Windows.Forms.Panel();
-            this.label4 = new System.Windows.Forms.Label();
-            this.textBoxUserName = new System.Windows.Forms.TextBox();
-            this.textBoxPassword = new System.Windows.Forms.TextBox();
             this.checkBoxRememberPassword = new System.Windows.Forms.CheckBox();
+            this.textBoxPassword = new System.Windows.Forms.TextBox();
+            this.textBoxUserName = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.buttonRemove = new System.Windows.Forms.Button();
+            this.checkBoxAsyncConnect = new System.Windows.Forms.CheckBox();
             this.panelAuthentication.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -113,30 +114,6 @@
             this.panelAuthentication.Size = new System.Drawing.Size(321, 104);
             this.panelAuthentication.TabIndex = 11;
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(5, 45);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(56, 13);
-            this.label4.TabIndex = 11;
-            this.label4.Text = "Password:";
-            // 
-            // textBoxUserName
-            // 
-            this.textBoxUserName.Location = new System.Drawing.Point(85, 13);
-            this.textBoxUserName.Name = "textBoxUserName";
-            this.textBoxUserName.Size = new System.Drawing.Size(232, 20);
-            this.textBoxUserName.TabIndex = 12;
-            // 
-            // textBoxPassword
-            // 
-            this.textBoxPassword.Location = new System.Drawing.Point(85, 42);
-            this.textBoxPassword.Name = "textBoxPassword";
-            this.textBoxPassword.PasswordChar = '*';
-            this.textBoxPassword.Size = new System.Drawing.Size(232, 20);
-            this.textBoxPassword.TabIndex = 13;
-            // 
             // checkBoxRememberPassword
             // 
             this.checkBoxRememberPassword.AutoSize = true;
@@ -146,6 +123,30 @@
             this.checkBoxRememberPassword.TabIndex = 14;
             this.checkBoxRememberPassword.Text = "Remember Password";
             this.checkBoxRememberPassword.UseVisualStyleBackColor = true;
+            // 
+            // textBoxPassword
+            // 
+            this.textBoxPassword.Location = new System.Drawing.Point(85, 42);
+            this.textBoxPassword.Name = "textBoxPassword";
+            this.textBoxPassword.PasswordChar = '*';
+            this.textBoxPassword.Size = new System.Drawing.Size(232, 20);
+            this.textBoxPassword.TabIndex = 13;
+            // 
+            // textBoxUserName
+            // 
+            this.textBoxUserName.Location = new System.Drawing.Point(85, 13);
+            this.textBoxUserName.Name = "textBoxUserName";
+            this.textBoxUserName.Size = new System.Drawing.Size(232, 20);
+            this.textBoxUserName.TabIndex = 12;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(5, 45);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(56, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Password:";
             // 
             // buttonRemove
             // 
@@ -157,11 +158,22 @@
             this.buttonRemove.UseVisualStyleBackColor = true;
             this.buttonRemove.Click += new System.EventHandler(this.buttonRemove_Click);
             // 
+            // checkBoxAsyncConnect
+            // 
+            this.checkBoxAsyncConnect.AutoSize = true;
+            this.checkBoxAsyncConnect.Location = new System.Drawing.Point(238, 189);
+            this.checkBoxAsyncConnect.Name = "checkBoxAsyncConnect";
+            this.checkBoxAsyncConnect.Size = new System.Drawing.Size(95, 17);
+            this.checkBoxAsyncConnect.TabIndex = 13;
+            this.checkBoxAsyncConnect.Text = "AsyncConnect";
+            this.checkBoxAsyncConnect.UseVisualStyleBackColor = true;
+            // 
             // FormLogin
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(360, 225);
+            this.Controls.Add(this.checkBoxAsyncConnect);
             this.Controls.Add(this.buttonRemove);
             this.Controls.Add(this.panelAuthentication);
             this.Controls.Add(this.comboBoxAuthentication);
@@ -196,5 +208,6 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.CheckBox checkBoxRememberPassword;
         private System.Windows.Forms.Button buttonRemove;
+        private System.Windows.Forms.CheckBox checkBoxAsyncConnect;
     }
 }

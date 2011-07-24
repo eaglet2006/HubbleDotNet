@@ -54,7 +54,11 @@ namespace Hubble.Framework.Net
         /// </summary>
         IsException = 0x0020,
 
-
+        /// <summary>
+        /// available as ASyncMessage 
+        /// Send to prior queue
+        /// </summary>
+        Prior = 0x0040,
     }
 
     public struct MessageHead

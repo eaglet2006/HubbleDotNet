@@ -424,7 +424,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 finally
                 {
-                    _DBProvider.MergeLock.Leave();
+                    _DBProvider.MergeLock.Leave(Hubble.Framework.Threading.Lock.Mode.Share);
                 }
             }
 
@@ -1247,14 +1247,14 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out ICollection<int> groupByCollection)
+        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out ICollection<int> groupByCollection, out bool sorted)
         {
             int relTotalCount;
-            return Parse(expressionTree, out relTotalCount, out groupByCollection);
+            return Parse(expressionTree, out relTotalCount, out groupByCollection, out sorted);
         }
 
         unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, 
-            out int relTotalCount, out ICollection<int> groupByCollection)
+            out int relTotalCount, out ICollection<int> groupByCollection, out bool sorted)
         {
             Core.SFQL.Parse.DocumentResultWhereDictionary dict;
 
@@ -1290,12 +1290,14 @@ namespace Hubble.Core.SFQL.Parse
                                                 dresult[0] = new Hubble.Core.Query.DocumentResultForSort(docid);
                                                 relTotalCount = 1;
                                                 groupByCollection = null;
+                                                sorted = false;
                                                 return dresult;
                                             }
                                             else
                                             {
                                                 relTotalCount = 0;
                                                 groupByCollection = null;
+                                                sorted = false;
                                                 return new Query.DocumentResultForSort[0];
                                             }
                                         }
@@ -1329,6 +1331,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             groupByCollection = dict.GroupByCollection;
+            sorted = dict.Sorted;
 
             return result;
         }

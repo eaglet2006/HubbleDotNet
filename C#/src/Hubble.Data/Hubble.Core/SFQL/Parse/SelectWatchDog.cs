@@ -104,6 +104,9 @@ namespace Hubble.Core.SFQL.Parse
                                 }
                                 else
                                 {
+                                    // For async connection
+                                    //Don't worry about abort when return message. because 
+                                    //return select watch dog before return message to tcp channel.
                                     threadInfo.QueryThread.AbortAndRestart();
                                 }
 

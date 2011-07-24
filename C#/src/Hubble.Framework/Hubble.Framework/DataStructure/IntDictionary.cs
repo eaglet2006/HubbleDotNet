@@ -283,6 +283,49 @@ namespace Hubble.Framework.DataStructure
             _Index = new Bucket[_Capability / _BucketSize];
         }
 
+        /// <summary>
+        /// if key doesn't exist, add it else update it
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        public void AddOrUpdate(int key, T value)
+        {
+
+            if (key < 0)
+            {
+                if (_Negative == null)
+                {
+                    _Negative = new IntDictionary<T>(_Capability, _BucketSize);
+                }
+
+                _Negative.Add(0 - key, value);
+                return;
+            }
+
+            if (key >= _Capability)
+            {
+                Resize(key);
+            }
+
+            int index = key / _BucketSize;
+
+            if (_Index[index] == null)
+            {
+                _Index[index] = new Bucket(_BucketSize);
+            }
+
+            int subIndex = key % _BucketSize;
+
+            if (_Index[index].Used[subIndex] != 0)
+            {
+                _Index[index].Data[subIndex] = value;
+                return;
+            }
+
+            _Count++;
+            _Index[index].Used[subIndex] = 1;
+            _Index[index].Data[subIndex] = value;
+        }
 
         #region IDictionary<int,T> Members
 

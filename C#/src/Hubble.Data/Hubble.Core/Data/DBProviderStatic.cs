@@ -456,7 +456,7 @@ namespace Hubble.Core.Data
                     }
                     finally
                     {
-                        dbProvider._TableLock.Leave();
+                        dbProvider._TableLock.Leave(Lock.Mode.Mutex);
                     }
                 }
             }

@@ -34,6 +34,8 @@ namespace Hubble.Core.Data
         int _DeleteStamp;
         object _DeleteStampLock = new object();
 
+        int[] _DelDocs = new int[0];
+
         public int DeleteStamp
         {
             get
@@ -52,6 +54,20 @@ namespace Hubble.Core.Data
                 return _DeleteTbl.Count;
             }
         }
+
+        private void GetDelDocs()
+        {
+            _DelDocs = new int[Count];
+            int i = 0;
+
+            foreach (int docid in _DeleteTbl.Keys)
+            {
+                _DelDocs[i++] = docid;
+            }
+
+            Array.Sort(_DelDocs);
+        }
+
 
         public void Open(string indexFolder)
         {
@@ -78,6 +94,8 @@ namespace Hubble.Core.Data
                     fs.SetLength(fs.Length - remain);
                 }
             }
+
+            GetDelDocs();
         }
 
         public void IncDeleteStamp()
@@ -119,25 +137,19 @@ namespace Hubble.Core.Data
                     _DeleteStamp++;
                 }
 
+                GetDelDocs();
+
                 return count;
             }
         }
 
-        internal IList<int> DelDocs 
+        internal int[] DelDocs 
         {
             get
             {
                 lock (this)
                 {
-                    int[] docs = new int[Count];
-                    int i = 0;
-
-                    foreach (int docid in _DeleteTbl.Keys)
-                    {
-                        docs[i++] = docid;
-                    }
-
-                    return docs;
+                    return _DelDocs;
                 }
             }
         }

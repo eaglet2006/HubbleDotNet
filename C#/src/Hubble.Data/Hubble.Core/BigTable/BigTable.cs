@@ -165,6 +165,14 @@ namespace Hubble.Core.BigTable
     {
         public DateTime TimeStamp = DateTime.Parse("1900-01-01");
 
+        public int ExecuteTimeout = 300000; //Execute time out, in millisecond
+
+        /// <summary>
+        /// If set to true. It will raise a exception when some 
+        /// tablets have problem for query.
+        /// </summary>
+        public bool KeepDataIntegrity = true; 
+
         public List<TabletInfo> Tablets = new List<TabletInfo>();
 
         public List<ServerInfo> ServerList = new List<ServerInfo>();
@@ -178,6 +186,10 @@ namespace Hubble.Core.BigTable
             BigTable bigTable = new BigTable();
 
             bigTable.TimeStamp = this.TimeStamp;
+
+            bigTable.ExecuteTimeout = this.ExecuteTimeout;
+
+            bigTable.KeepDataIntegrity = this.KeepDataIntegrity;
 
             foreach (TabletInfo tabletInfo in Tablets)
             {

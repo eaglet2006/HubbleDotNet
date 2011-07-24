@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Framework.DataStructure;
 using Hubble.Framework.IO;
+using Hubble.Framework.Threading;
+using Hubble.Core.Entity;
 
 namespace Hubble.Core.Data
 {
@@ -62,6 +64,7 @@ namespace Hubble.Core.Data
 
             #endregion
         }
+
         const int BufSize = 128 * 1024;
 
         class IndexElement
@@ -80,11 +83,14 @@ namespace Hubble.Core.Data
 
         int _Count = 0;
         int _IndexCount = 0; //Count of IndexBuf
-        int _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
+        int _PayloadSize = 0; //How may elements in one payload data. sizeof(Data). count of int
         //int _CurIndex = 0; //Current index of IndexBuf;
         Field _DocIdReplaceField = null;
+        int _RankTab = -1;
 
         ReplaceFieldValueToDocId _ReplaceFieldValueToDocId = null;
+
+        IntDictionary<UInt16> _DocIdToRank = new IntDictionary<UInt16>();
 
         internal Field DocIdReplaceField
         {
@@ -96,8 +102,34 @@ namespace Hubble.Core.Data
 
         object _LockObj = new object();
 
-        unsafe private bool TryGetValue(int docId, out int* pFileIndex)
+        unsafe public bool TestTryGetValue(int docId, out int* pFileIndex)
         {
+            if (InnerTryGetValue(docId, out pFileIndex))
+            {
+                pFileIndex++;
+                return true;
+            }
+            else
+            {
+                pFileIndex = null;
+                return false;
+            }
+        }
+
+        unsafe private bool InnerTryGetValue(int docId, out int* pFileIndex)
+        {
+            //IntPtr p;
+            //if (_DocIdToFileIndex.TryGetValue(docId, out p))
+            //{
+            //    pFileIndex = (int*)p;
+            //    return true;
+            //}
+            //else
+            //{
+            //    pFileIndex = null;
+            //    return false;
+            //}
+
             pFileIndex = null;
 
             if (_Count == 0)
@@ -252,12 +284,47 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// Fill the array of DocidPayloadRank
+        /// This method is for calculate rank
+        /// </summary>
+        /// <param name="count">fill count. the array maybe does not filled</param>
+        /// <param name="docidPayloads"></param>
+        internal unsafe void FillRank(int rankTabIndex, int count, OriginalDocumentPositionList[] docidPayloads)
+        {
+            lock (_LockObj)
+            {
+                if (count > docidPayloads.Length)
+                {
+                    count = docidPayloads.Length;
+                }
+                
+                //int rank;
+                //int* pFileIndex;
+                UInt16 urank;
+
+                for (int i = 0; i < count; i++)
+                {
+                    if (_DocIdToRank.TryGetValue(docidPayloads[i].DocumentId, out urank))
+                    {
+                        docidPayloads[i].CountAndWordCount *= urank;
+                    }
+
+                    //if (InnerTryGetValue(docidPayloads[i].DocumentId, out pFileIndex))
+                    //{
+                    //    rank = *(pFileIndex + 1 + rankTabIndex);
+                    //    docidPayloads[i].CountAndWordCount *= rank;
+                    //}
+                }
+            }
+        }
+
         unsafe public void SetFileIndex(int docId, int fileIndex)
         {
             lock (_LockObj)
             {
                 int* pFileIndex;
-                if (TryGetValue(docId, out pFileIndex))
+                if (InnerTryGetValue(docId, out pFileIndex))
                 {
                     *pFileIndex = fileIndex;
                 }
@@ -270,7 +337,7 @@ namespace Hubble.Core.Data
             {
                 int* pFileIndex;
 
-                if (TryGetValue(docId, out pFileIndex))
+                if (InnerTryGetValue(docId, out pFileIndex))
                 {
                     int* pData = pFileIndex + 1;
                     count = pData[tabIndex];
@@ -288,7 +355,7 @@ namespace Hubble.Core.Data
             lock (_LockObj)
             {
                 int* pFileIndex;
-                if (!TryGetValue(docId, out pFileIndex))
+                if (!InnerTryGetValue(docId, out pFileIndex))
                 {
                     fileIndex = -1;
                     return false;
@@ -309,7 +376,7 @@ namespace Hubble.Core.Data
 
                 int* pFileIndex;
 
-                if (!TryGetValue(docId, out pFileIndex))
+                if (!InnerTryGetValue(docId, out pFileIndex))
                 {
                     data = null;
                     fileIndex = -1;
@@ -329,7 +396,7 @@ namespace Hubble.Core.Data
             lock (_LockObj)
             {
                 int* pFileIndex;
-                if (!TryGetValue(docId, out pFileIndex))
+                if (!InnerTryGetValue(docId, out pFileIndex))
                 {
                     data = null;
                     return false;
@@ -339,6 +406,169 @@ namespace Hubble.Core.Data
                     data = pFileIndex + 1;
                     return true;
                 }
+            }
+        }
+
+        /// <summary>
+        /// this function is called in first time loading.
+        /// </summary>
+        /// <param name="fs">file stream that position is already set to end of the header</param>
+        /// <param name="storeLength">record length that stored in file</param>
+        unsafe internal int LoadFromFile(System.IO.FileStream fs, int storeLength, int rankTab)
+        {
+            Clear();
+
+            _RankTab = rankTab;
+
+            _Count =(int)((fs.Length - fs.Position) / storeLength);
+
+            byte[] block = new byte[storeLength * BufSize];
+            
+            int realPayloadSize = storeLength + 4; //add fileindex 4 bytes
+
+            _PayloadSize = storeLength / 4 - 1; //subtract docid length (4 bytes); _PayloadSize is count of int
+
+            int readCount = block.Length;
+            Hubble.Framework.IO.Stream.ReadToBuf(fs, block, 0, ref readCount);
+            int firstFileIndex = 0;
+            int recordsInBlock = readCount / storeLength;
+            int docId = -1;
+            int lastDocId = -1;
+
+            while (readCount > 0)
+            {
+                int fstDocid = BitConverter.ToInt32(block, 0);
+                IndexElement indexElement = new IndexElement(fstDocid, realPayloadSize);
+                IndexBuf[_IndexCount++] = indexElement;
+                indexElement.MB.UsedCount = recordsInBlock;
+
+                int* head = (int*)(IntPtr)indexElement.MB;
+                
+                int payloadIntLength = storeLength / 4 - 1; //how may int of payload data
+
+                fixed (byte* pHead = &block[0])
+                {
+                    byte* pb = pHead;
+
+                    for (int i = 0; i < recordsInBlock; i++)
+                    {
+                        int* pInt = (int*)pb;
+
+                        *head = *pInt; //docid
+                        docId = *head;
+
+                        if (docId < lastDocId)
+                        {
+                            throw new Data.DataException(string.Format("docid = {0} < last docid ={1}", docId, lastDocId));
+                        }
+
+                        lastDocId = docId;
+
+                        head++; //fileindex address
+                        pInt++;
+
+                        if (_DocIdReplaceField != null)
+                        {
+                            if (_DocIdReplaceField.DataType == DataType.BigInt)
+                            {
+                                long value = (((long)pInt[_DocIdReplaceField.TabIndex]) << 32) +
+                                    (uint)pInt[_DocIdReplaceField.TabIndex + 1];
+
+                                if (!_ReplaceFieldValueToDocId.ContainsKey(value))
+                                {
+                                    _ReplaceFieldValueToDocId.Add(value, docId);
+                                }
+                                else
+                                {
+                                    _ReplaceFieldValueToDocId[value] = docId;
+                                }
+                            }
+                            else
+                            {
+                                int value = pInt[_DocIdReplaceField.TabIndex];
+
+                                _ReplaceFieldValueToDocId.AddOrUpdate(value, docId);
+
+                                //if (!_ReplaceFieldValueToDocId.ContainsKey(value))
+                                //{
+                                //    _ReplaceFieldValueToDocId.Add(value, docId);
+                                //}
+                                //else
+                                //{
+                                //    _ReplaceFieldValueToDocId[value] = docId;
+                                //}
+
+                            }
+                        }
+
+                        *head = firstFileIndex + i; 
+
+                        head++; //Payload Data first byte address
+
+                        if (_RankTab > 0)
+                        {
+                            int rank = *(pInt + _RankTab);
+                            if (rank < 0)
+                            {
+                                rank = 0;
+                            }
+                            else if (rank > 65535)
+                            {
+                                rank = 65535;
+                            }
+
+                            _DocIdToRank.Add(docId, (UInt16)rank);
+                        }
+
+                        for (int j = 0; j < payloadIntLength; j++)
+                        {
+                            *head = *pInt;
+                            head++;
+                            pInt++;
+                        }
+
+                        pb += storeLength;
+
+
+                    }
+                }
+
+
+                firstFileIndex += recordsInBlock;
+                readCount = block.Length;
+                Hubble.Framework.IO.Stream.ReadToBuf(fs, block, 0, ref readCount);
+                recordsInBlock = readCount / storeLength;
+            }
+
+            return docId;
+        }
+
+        public void UpdateRankIndex(int docId, int tabIndex, int value)
+        {
+            if (_RankTab < 0)
+            {
+                return;
+            }
+
+            if (tabIndex != _RankTab)
+            {
+                return;
+            }
+
+            lock (_LockObj)
+            {
+
+                int rank = value;
+                if (rank < 0)
+                {
+                    rank = 0;
+                }
+                else if (rank > 65535)
+                {
+                    rank = 65535;
+                }
+
+                _DocIdToRank.AddOrUpdate(docId, (UInt16)rank);
             }
         }
 
@@ -414,6 +644,21 @@ namespace Hubble.Core.Data
                     payloadData[i] = payload.Data[i];
                 }
 
+                if (_RankTab > 0)
+                {
+                    int rank = *(payloadData + _RankTab);
+                    if (rank < 0)
+                    {
+                        rank = 0;
+                    }
+                    else if (rank > 65535)
+                    {
+                        rank = 65535;
+                    }
+
+                    _DocIdToRank.Add(docId, (UInt16)rank);
+                }
+
                 _Count++;
 
             }
@@ -429,7 +674,7 @@ namespace Hubble.Core.Data
                 }
 
                 IndexBuf = new IndexElement[(512 * 1024 * 1024) / BufSize];
-
+                _DocIdToRank.Clear();
                 _Count = 0;
                 _IndexCount = 0; //Count of IndexBuf
                 _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).

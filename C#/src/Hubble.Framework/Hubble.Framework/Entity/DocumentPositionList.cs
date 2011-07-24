@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using Hubble.Framework.Serialization;
 using Hubble.Framework.DataStructure;
+using Hubble.Framework.IO;
 
 namespace Hubble.Core.Entity
 {
@@ -56,6 +57,48 @@ namespace Hubble.Core.Entity
         }
     }
 
+    public struct OriginalDocumentPositionList
+    {
+        //[FieldOffset(0)]
+        public int DocumentId;
+
+        //[FieldOffset(4)]
+        /// <summary>
+        /// Count of items of this word in one document.
+        /// Adn TotalWordsInThisDocumentIndex
+        /// </summary>
+        public int CountAndWordCount;
+
+        //[FieldOffset(8)]
+        /// <summary>
+        /// First word position
+        /// </summary>
+        public int FirstPosition;
+
+        public int Count
+        {
+            get
+            {
+                return CountAndWordCount / 8;
+            }
+        }
+
+        public int TotalWordsInThisDocument
+        {
+            get
+            {
+                return DocumentPositionList.TotalWordsInDocRank[CountAndWordCount % 8];
+            }
+        }
+
+        public OriginalDocumentPositionList(int docId)
+        {
+            this.DocumentId = docId;
+            this.CountAndWordCount = 0;
+            this.FirstPosition = 0;
+        }
+    }
+
 
     /// <summary>
     /// This class record all the position for one word in one document.
@@ -71,7 +114,7 @@ namespace Hubble.Core.Entity
     //[StructLayout(LayoutKind.Sequential,Pack=4)]
     public struct DocumentPositionList
     {
-        readonly static int[] TotalWordsInDocRank = { 64, 192, 576, 1728, 5184, 15562, 46656, 139968 };
+        internal readonly static int[] TotalWordsInDocRank = { 64, 192, 576, 1728, 5184, 15562, 46656, 139968 };
 
         //[FieldOffset(0)]
         public int DocumentId ;
@@ -293,6 +336,139 @@ namespace Hubble.Core.Entity
             return Deserialize(stream, ref count, simple, out wordCountSum);
         }
 
+        static public void GetNextOriginalDocumentPositionList(ref OriginalDocumentPositionList odpl,
+            ref int docId, BufferMemory bufferMemory, bool simple)
+        {
+            if (docId < 0)
+            {
+                docId = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                odpl.DocumentId = docId;
+
+                odpl.CountAndWordCount = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+
+                if (!simple)
+                {
+                    odpl.FirstPosition = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                }
+
+                //return odpl;
+            }
+            else
+            {
+                byte b = bufferMemory.Buf[bufferMemory.Position];
+
+                if (b < 128)
+                {
+                    docId += b;
+                    bufferMemory.Position++;
+                }
+                else
+                {
+                    docId = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position) + docId;
+                }
+
+
+                odpl.DocumentId = docId;
+
+                b = bufferMemory.Buf[bufferMemory.Position];
+                if (b < 128)
+                {
+                    odpl.CountAndWordCount = b;
+                    bufferMemory.Position++;
+                }
+                else
+                {
+                    odpl.CountAndWordCount = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                }
+
+                if (!simple)
+                {
+                    b = bufferMemory.Buf[bufferMemory.Position];
+                    if (b < 128)
+                    {
+                        odpl.FirstPosition = b;
+                        bufferMemory.Position++;
+                    }
+                    else
+                    {
+                        odpl.FirstPosition = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                    }
+                }
+
+                //return odpl;
+            }
+        }
+
+        static public DocumentPositionList GetNextDocumentPositionList(ref int docId, BufferMemory bufferMemory, bool simple)
+        {
+            if (docId < 0)
+            {
+                docId = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+
+                int count = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+
+                if (!simple)
+                {
+                    int firstPosition = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                    return new DocumentPositionList(docId, count / 8, (Int16)(count % 8), firstPosition);
+                }
+                else
+                {
+                    return new DocumentPositionList(docId, count / 8, (Int16)(count % 8));
+                }
+            }
+            else
+            {
+                byte b = bufferMemory.Buf[bufferMemory.Position];
+                if (b < 128)
+                {
+                    docId += b;
+                    bufferMemory.Position++;
+                }
+                else
+                {
+                    docId = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position) + docId;
+                }
+
+                b = bufferMemory.Buf[bufferMemory.Position];
+                int count;
+
+                if (b < 128)
+                {
+                    count = b;
+                    bufferMemory.Position++;
+                }
+                else
+                {
+                    count = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                }
+
+                int docCount = count / 8;
+
+                if (!simple)
+                {
+                    b = bufferMemory.Buf[bufferMemory.Position];
+                    int firstPosition;
+
+                    if (b < 128)
+                    {
+                        firstPosition = b;
+                        bufferMemory.Position++;
+                    }
+                    else
+                    {
+                        firstPosition = VInt.sReadFromBuffer(bufferMemory.Buf, ref bufferMemory.Position);
+                    }
+
+                    return new DocumentPositionList(docId, docCount, (Int16)(count % 8), firstPosition);
+                }
+                else
+                {
+                    return new DocumentPositionList(docId, docCount, (Int16)(count % 8));
+                }
+            }
+        }
+
         static public DocumentPositionList GetNextDocumentPositionList(ref int docId, System.IO.Stream stream, bool simple)
         {
             if (docId < 0)
@@ -315,12 +491,7 @@ namespace Hubble.Core.Entity
             {
                 docId = VInt.sReadFromStream(stream) + docId;
                 int count = VInt.sReadFromStream(stream);
-                int docCount = (Int16)(count / 8);
-
-                if (docCount >= 32768)
-                {
-                    docCount = 32767;
-                }
+                int docCount = count / 8;
 
                 if (!simple)
                 {

@@ -157,5 +157,62 @@ namespace Hubble.Framework.DataStructure
             return value;
         }
 
+        static public int sReadFromBuffer(byte[] buf, ref int offset)
+        {
+            int value = 0;
+            int zeroBits = 0;
+            int b;
+
+            do
+            {
+                b = buf[offset];
+
+                offset++;
+
+                if (b < 128 && zeroBits == 0)
+                {
+                    return b;
+                }
+
+                value |= (int)((b & 0x7f) << zeroBits);
+
+                zeroBits += 7;
+
+            }
+            while (b >= 128);
+
+            return value;
+        }
+
+        unsafe static public int sReadFromBuffer(IntPtr buf, ref int offset, int length)
+        {
+            int value = 0;
+            int zeroBits = 0;
+            int b;
+
+            do
+            {
+                if (offset >= length)
+                {
+                    throw new System.ArgumentOutOfRangeException("VInt out of range");
+                } 
+                
+                b = ((byte*)buf)[offset];
+
+                offset++;
+
+                if (b < 128 && zeroBits == 0)
+                {
+                    return b;
+                }
+
+                value |= (int)((b & 0x7f) << zeroBits);
+
+                zeroBits += 7;
+            }
+            while (b >= 128);
+
+            return value;
+        }
     }
 }

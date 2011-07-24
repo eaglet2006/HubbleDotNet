@@ -268,15 +268,9 @@ namespace Hubble.Core.Service
 
         private void DoGetDocumentsForInsertAsync(object dbAdapter)
         {
-            do
+            try
             {
-                if (_TableSync.Stopping)
-                {
-                    _DocForInsertResult = new List<Document>();
-                    return;
-                }
-
-                while (!AlreadyGet)
+                do
                 {
                     if (_TableSync.Stopping)
                     {
@@ -284,20 +278,34 @@ namespace Hubble.Core.Service
                         return;
                     }
 
-                    System.Threading.Thread.Sleep(50);
-                }
+                    while (!AlreadyGet)
+                    {
+                        if (_TableSync.Stopping)
+                        {
+                            _DocForInsertResult = new List<Document>();
+                            return;
+                        }
 
-                try
-                {
-                    _DocForInsertResult = GetDocumentsForInsert((IDBAdapter)dbAdapter, ref _LastFrom);
-                }
-                catch(Exception e)
-                {
-                    Global.Report.WriteErrorLog("Get documents for insert fail!" ,e);
-                }
+                        System.Threading.Thread.Sleep(50);
+                    }
+
+                    try
+                    {
+                        _DocForInsertResult = GetDocumentsForInsert((IDBAdapter)dbAdapter, ref _LastFrom);
+                    }
+                    catch (Exception e)
+                    {
+                        Global.Report.WriteErrorLog("Get documents for insert fail!", e);
+                    }
+                    ReadyToGet = true;
+
+                } while (_DocForInsertResult.Count > 0);
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog("Get documents for insert fail!", e);
                 ReadyToGet = true;
-
-            } while (_DocForInsertResult.Count > 0);
+            }
         }
 
         private List<Document> GetDocumentsForInsertInvoke(IDBAdapter dbAdapter, ref long from)

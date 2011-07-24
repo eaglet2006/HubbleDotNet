@@ -220,6 +220,55 @@ namespace Hubble.Framework.Net
             Connect();
         }
 
+        /// <summary>
+        /// Connect with timeout
+        /// </summary>
+        /// <param name="connectTimeout">connect timeout. In millisecond</param>
+        public void Connect(int connectTimeout)
+        {
+            if (connectTimeout > 30000)
+            {
+                Connect();
+                return;
+            }
+
+            if (_Client == null)
+            {
+                _Client = new System.Net.Sockets.TcpClient();
+            }
+
+            IPEndPoint serverEndPoint =
+               new IPEndPoint(RemoteAddress, Port);
+
+            IAsyncResult ar = _Client.BeginConnect(serverEndPoint.Address, 
+                serverEndPoint.Port, null, null);
+            System.Threading.WaitHandle wh = ar.AsyncWaitHandle;
+
+            try
+            {
+                if (!ar.AsyncWaitHandle.WaitOne(connectTimeout, false))
+                {
+                    _Client.Close();
+                    throw new TimeoutException(string.Format("Try to connect {0} timeout", serverEndPoint));
+                }
+
+                _Client.EndConnect(ar);
+            }
+            finally
+            {
+                wh.Close();
+            } 
+
+            _ClientStream = _Client.GetStream();
+
+            if (_Async)
+            {
+                _Thread = new Thread(AsyncMessageRecv);
+                _Thread.IsBackground = true;
+                _Thread.Start();
+            }
+        }
+
         public void Connect()
         {
             if (_Client == null)
@@ -380,6 +429,11 @@ namespace Hubble.Framework.Net
 
         public void SendASyncMessage(short evt, ref ASyncPackage package)
         {
+            SendASyncMessage(evt, ref package, false);
+        }
+
+        public void SendASyncMessage(short evt, ref ASyncPackage package, bool priorMessage)
+        {
             //if (_Client == null)
             //{
             //    Connect();
@@ -407,6 +461,11 @@ namespace Hubble.Framework.Net
                     MessageHead head = new MessageHead(evt);
                     
                     head.Flag |= MessageFlag.ASyncMessage;
+
+                    if (priorMessage)
+                    {
+                        head.Flag |= MessageFlag.Prior;
+                    }
 
                     if (msg == null)
                     {

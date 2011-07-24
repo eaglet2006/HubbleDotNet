@@ -21,6 +21,7 @@ using System.Text;
 using System.Diagnostics;
 
 using Hubble.Core.Data;
+using Hubble.Core.Entity;
 
 namespace Hubble.Core.StoredProcedure
 {
@@ -36,7 +37,54 @@ namespace Hubble.Core.StoredProcedure
             }
         }
 
-        private void TestGetDocIdReplaceFieldValue(string tableName)
+        unsafe private void TestFillPayloadRank(string tableName)
+        {
+            OutputMessage("TestGetDocIdReplaceFieldValue");
+
+            AddColumn("Times");
+            AddColumn("Elapse(ms)");
+            AddColumn("ElapseOneTime(ms)");
+
+            Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0], false);
+
+            if (dbProvider == null)
+            {
+                throw new DataException(string.Format("Table name {0} does not exist!", Parameters[0]));
+            }
+
+            Random rand = new Random();
+            int count = 1000000;
+            int lastDocId = dbProvider.LastDocId;
+            OriginalDocumentPositionList[] payloads = new OriginalDocumentPositionList[count];
+
+            for (int i = 0; i < payloads.Length; i++)
+            {
+                payloads[i] = new OriginalDocumentPositionList(i * 10);
+                payloads[i].CountAndWordCount = 1;
+            }
+
+            payloads[0].DocumentId = 8 * payloads.Length;
+
+            Data.Field rankField = dbProvider.GetField("Rank");
+            int tab = rankField.TabIndex;
+
+            Stopwatch sw = new Stopwatch();
+            //int docid = rand.Next(lastDocId);
+            int data;
+            sw.Start();
+
+            for (int j = 0; j < count / payloads.Length; j++)
+            {
+                dbProvider.FillPayloadRank(tab, count, payloads);
+            }
+            sw.Stop();
+
+            OutputValue("Times", count);
+            OutputValue("Elapse(ms)", sw.ElapsedMilliseconds);
+            OutputValue("ElapseOneTime(ms)", (double)sw.ElapsedMilliseconds / count);
+        }
+
+        unsafe private void TestGetDocIdReplaceFieldValue(string tableName)
         {
             OutputMessage("TestGetDocIdReplaceFieldValue");
 
@@ -56,13 +104,17 @@ namespace Hubble.Core.StoredProcedure
             int lastDocId = dbProvider.LastDocId;
 
             Stopwatch sw = new Stopwatch();
-            int docid = rand.Next(lastDocId);
-
+            //int docid = rand.Next(lastDocId);
+            //int data;
             sw.Start();
 
             for (int i = 0; i < count; i++)
             {
-                dbProvider.GetDocIdReplaceFieldValue(docid);
+                int* pData = dbProvider.TestGetPayloadData(i * 10);
+                //if (pData != null)
+                //{
+                //    data = *(pData + 1);
+                //}
             }
 
             sw.Stop();
@@ -83,6 +135,7 @@ namespace Hubble.Core.StoredProcedure
 
             string tableName = Parameters[0];
             //TestGetDocIdReplaceFieldValue(tableName);
+            //TestFillPayloadRank(tableName);
 
         }
 

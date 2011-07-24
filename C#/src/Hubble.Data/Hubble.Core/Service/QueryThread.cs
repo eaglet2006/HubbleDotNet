@@ -29,12 +29,16 @@ namespace Hubble.Core.Service
         MessageReceiveEventArgs _Args = null;
         int _ManagedThreadId = -1;
 
+        QueryThreadPool _Pool;
+
         private void ReceiveError(Exception e)
         {
             if (e is Hubble.Framework.Threading.MQAbortException)
             {
                 if (_Args != null)
                 {
+                    _Pool.ExecuteFinished(this);
+
                     _Args.ReturnMsg = e;
                     CurrentConnection.Disconnect(_ManagedThreadId);
                     TcpServer.ReturnMessage(_Args);
@@ -46,26 +50,39 @@ namespace Hubble.Core.Service
         {
             if (evt == (int)SQLClient.ConnectEvent.ExcuteSql)
             {
-                _Args = data as MessageReceiveEventArgs;
-                CurrentConnection currentConnection = new CurrentConnection(
-                    _Args.ConnectionInfo as ConnectionInformation);
+                try
+                {
+                    _Args = data as MessageReceiveEventArgs;
+                    CurrentConnection currentConnection = new CurrentConnection(
+                        _Args.ConnectionInfo as ConnectionInformation);
 
-                CurrentConnection.ConnectionInfo.QueryThread = this;
-                _ManagedThreadId = this.ManagedThreadId;
+                    CurrentConnection.ConnectionInfo.QueryThread = this;
+                    _ManagedThreadId = this.ManagedThreadId;
 
-                HubbleTask.ExcuteSqlMessageProcess(_Args);
+                    HubbleTask.ExcuteSqlMessageProcess(_Args);
 
-                _Args = null;
-
-                CurrentConnection.Disconnect();
+                    _Args = null;
+                }
+                catch(Exception e)
+                {
+                    _Args.ReturnMsg = e;
+                    TcpServer.ReturnMessage(_Args);
+                }
+                finally
+                {
+                    _Pool.ExecuteFinished(this);
+                    CurrentConnection.Disconnect();
+                }
             }
 
             return null;
+
         }
 
-        public QueryThread(bool closeWhenEmpty)
+        public QueryThread(bool closeWhenEmpty, QueryThreadPool pool)
             : base(closeWhenEmpty, false)
         {
+            _Pool = pool;
             OnMessageEvent = ReceiveMessage;
             OnErrorEvent = ReceiveError;
         }

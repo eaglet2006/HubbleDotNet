@@ -39,6 +39,11 @@ namespace Hubble.Core.Data
             }
         }
 
+        internal void AddOrUpdate(int value, int docId)
+        {
+            _ReplaceFieldValueIntToDocId.AddOrUpdate(value, docId);
+        }
+
         internal void Add(int value, int docId)
         {
             _ReplaceFieldValueIntToDocId.Add(value, docId);

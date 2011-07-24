@@ -22,6 +22,7 @@ using System.Diagnostics;
 
 using Hubble.Core.Index;
 using Hubble.Core.Global;
+using Hubble.Core.Entity;
 using Hubble.Core.StoredProcedure;
 using Hubble.Framework.Reflection;
 using Hubble.Framework.Threading;
@@ -552,7 +553,7 @@ namespace Hubble.Core.Data
             }
             finally
             {
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Mutex);
             }
         }
 
@@ -580,7 +581,7 @@ namespace Hubble.Core.Data
             }
             finally
             {
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Mutex);
             }
         }
 
@@ -597,7 +598,7 @@ namespace Hubble.Core.Data
             }
             finally
             {
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Mutex);
             }
         }
 
@@ -1549,6 +1550,14 @@ namespace Hubble.Core.Data
 
         }
 
+        internal unsafe void FillPayloadRank(int rankTabIndex, int count, OriginalDocumentPositionList[] docPayloads)
+        {
+            lock (this)
+            {
+                _DocPayload.FillRank(rankTabIndex, count, docPayloads);
+            }
+        }
+
         internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults)
         {
             lock (this)
@@ -1567,6 +1576,19 @@ namespace Hubble.Core.Data
                     }
                 }
 
+            }
+        }
+
+        internal unsafe int* TestGetPayloadData(int docId)
+        {
+            int* payloadData;
+            if (_DocPayload.TestTryGetValue(docId, out payloadData))
+            {
+                return payloadData;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -2221,7 +2243,7 @@ namespace Hubble.Core.Data
                     _BusyCount--;
                 }
 
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Share);
             }
 
         }
@@ -2305,7 +2327,7 @@ namespace Hubble.Core.Data
                     _BusyCount--;
                 }
 
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Share);
             }
         }
 
@@ -2821,6 +2843,7 @@ namespace Hubble.Core.Data
                                         for (int i = 0; i < ps.Data.Length; i++)
                                         {
                                             payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                            _DocPayload.UpdateRankIndex(docId, ps.TabIndex, ps.Data[i]);
                                         }
                                     }
                                     //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
@@ -2943,7 +2966,7 @@ namespace Hubble.Core.Data
                     _BusyCount--;
                 }
 
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Share);
             }
         }
 
@@ -2985,7 +3008,7 @@ namespace Hubble.Core.Data
             }
             finally
             {
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Share);
             }
         }
 
@@ -3007,7 +3030,7 @@ namespace Hubble.Core.Data
             }
             finally
             {
-                _TableLock.Leave();
+                _TableLock.Leave(Lock.Mode.Share);
             }
         }
 

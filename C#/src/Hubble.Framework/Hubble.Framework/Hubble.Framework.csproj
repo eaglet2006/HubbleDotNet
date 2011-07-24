@@ -14,6 +14,7 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,7 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'PerformanceTest|AnyCPU' ">
     <OutputPath>..\..\..\Bin\Release\</OutputPath>
@@ -62,9 +63,13 @@
     <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
     <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
     <ErrorReport>prompt</ErrorReport>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
@@ -85,6 +90,7 @@
     <Compile Include="DataStructure\IntDictionaryBTree.cs" />
     <Compile Include="DataStructure\AppendList.cs" />
     <Compile Include="DataStructure\LinkedTable.cs" />
+    <Compile Include="DataStructure\PriorQueue.cs" />
     <Compile Include="DataStructure\QuickSort.cs" />
     <Compile Include="DataStructure\SingleSortedLinkedTable.cs" />
     <Compile Include="DataStructure\SortDictionary.cs" />
@@ -92,7 +98,9 @@
     <Compile Include="DataStructure\SuperList.cs" />
     <Compile Include="Data\OLEDataProvider.cs" />
     <Compile Include="Data\SQLiteDataProvider.cs" />
+    <Compile Include="Entity\DocIdPayloadRank.cs" />
     <Compile Include="HubbleException.cs" />
+    <Compile Include="IO\BufferMemory.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />
@@ -140,6 +148,7 @@
     <Compile Include="Text\UnicodeString.cs" />
     <Compile Include="Threading\HBMonitor.cs" />
     <Compile Include="Threading\Lock.cs" />
+    <Compile Include="Threading\LockOld.cs" />
     <Compile Include="Threading\MessageQueue.cs" />
     <Compile Include="Threading\MQAbortException.cs" />
     <Compile Include="Threading\MultiThreadCalculate.cs" />

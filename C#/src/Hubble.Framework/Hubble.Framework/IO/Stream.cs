@@ -30,6 +30,51 @@ namespace Hubble.Framework.IO
         /// <param name="s"></param>
         /// <param name="buf"></param>
         /// <param name="offset"></param>
+        /// <param name="count">input count want to read. output actual read count</param>
+        /// <returns>if it is not get enough data, return false</returns>
+        static public bool ReadToBuf(System.IO.Stream s, byte[] buf, int offset, ref int count)
+        {
+            int read_offset = offset;
+
+            int readCount = 0;
+
+            int len = s.Read(buf, read_offset, count - (read_offset - offset));
+
+            readCount += len;
+
+            if (len == 0)
+            {
+                count = readCount;
+                return false;
+            }
+
+            read_offset += len;
+
+            while (read_offset < offset + count && len > 0)
+            {
+                len = s.Read(buf, read_offset, count - (read_offset - offset));
+
+                if (len == 0)
+                {
+                    count = readCount;
+                    return false;
+                }
+
+                read_offset += len;
+                readCount += len;
+            }
+
+            count = readCount;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Read from stream to buf. 
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="buf"></param>
+        /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns>if can't fill the buf, return false</returns>
         static public bool ReadToBuf(System.IO.Stream s, byte[] buf, int offset, int count)

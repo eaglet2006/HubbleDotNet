@@ -401,7 +401,7 @@ namespace Hubble.Core.Global
                 Config = new Setting();
             }
 
-            Hubble.Core.Service.QueryThreadPool.Init(Config.QueryThreadNum);
+            Hubble.Core.Service.QueryThreadManager.Init(Config.QueryThreadNum);
         }
 
         #endregion

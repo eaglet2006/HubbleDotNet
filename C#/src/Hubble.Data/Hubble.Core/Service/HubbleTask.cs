@@ -87,7 +87,7 @@ namespace Hubble.Core.Service
 
         static void UnhandledExceptionEventHandler(object sender, UnhandledExceptionEventArgs e)
         {
-            Global.Report.WriteErrorLog(e.ExceptionObject.ToString());
+            Global.Report.WriteErrorLog(string.Format("Unhandled Exception:{0}", e.ExceptionObject.ToString()));
             Environment.Exit(0);
         }
 
@@ -110,15 +110,6 @@ namespace Hubble.Core.Service
             sb.AppendLine("Thread Stack:" + args.StackTrace);
 
             Global.Report.WriteErrorLog(sb.ToString());
-
-            //if (Global.Setting.Config.SqlTrace)
-            //{
-            //    if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
-            //    {
-            //        _ThreadMonitor.UnRegister(args.Thread);
-            //        args.Thread.Abort();
-            //    }
-            //}
         }
 
         internal static void ExcuteSqlMessageProcess(MessageReceiveEventArgs args)
@@ -259,7 +250,7 @@ namespace Hubble.Core.Service
                     if ((args.MsgHead.Flag & MessageFlag.ASyncMessage) != 0)
                     {
                         args.ConnectionInfo = CurrentConnection.ConnectionInfo.Clone();
-                        QueryThreadPool.ExcuteSql(args);
+                        QueryThreadManager.ExcuteSql(args);
                     }
                     else
                     {

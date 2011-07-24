@@ -34,19 +34,19 @@ namespace Hubble.Framework.Threading
             Mutex = 1,
         }
 
-        enum State
-        {
-            Share = 0,
-            Mutex = 1,
-        }
-
-        State _State = State.Share;
-
-        int _ShareCounter = 0;
+        ReaderWriterLockSlim _RWL = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         public bool Enter(Mode mode)
         {
-            return Enter(mode, -1);
+            switch (mode)
+            {
+                case Mode.Share:
+                    return _RWL.TryEnterReadLock(-1);
+                case Mode.Mutex:
+                    return _RWL.TryEnterWriteLock(-1);
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -56,163 +56,28 @@ namespace Hubble.Framework.Threading
         /// <param name="timeout">how many milliseconds waitting for. If timeout less then 0, wait until enter lock</param>
         public bool Enter(Mode mode, int timeout)
         {
-            bool waitShareCounterZero = false;
-            bool waitForShareState = false;
-            Stopwatch sw = null;
-        Loop:
-            lock (this)
+            switch (mode)
             {
-                switch (mode)
-                {
-                    case Mode.Share:
-                        switch (_State)
-                        {
-                            case State.Share:
-                                _ShareCounter++;
-                                return true;
-                            case State.Mutex:
-                                waitForShareState = true;
-                                break;
-                        }
-                        break;
-
-                    case Mode.Mutex:
-                        switch (_State)
-                        {
-                            case State.Share:
-                                waitShareCounterZero = true;
-                                _State = State.Mutex;
-                                break;
-                            case State.Mutex:
-                                waitForShareState = true;
-                                break;
-                        }
-                        break;
-                }
+                case Mode.Share:
+                    return _RWL.TryEnterReadLock(timeout);
+                case Mode.Mutex:
+                    return _RWL.TryEnterWriteLock(timeout);
             }
 
-            if (sw == null && timeout >= 0)
-            {
-                sw = new Stopwatch();
-            }
-
-            if (waitShareCounterZero)
-            {
-                if (sw != null)
-                {
-                    sw.Start();
-                }
-
-                int counter;
-                int times = 0;
-                do
-                {
-                    lock (this)
-                    {
-                        counter = _ShareCounter;
-                    }
-
-                    if (counter > 0)
-                    {
-                        if (times++ < 10)
-                        {
-                            Thread.Sleep(0);
-                        }
-                        else
-                        {
-                            Thread.Sleep(1);
-                        }
-                    }
-
-                    if (timeout >= 0)
-                    {
-                        if (sw.ElapsedMilliseconds > timeout)
-                        {
-                            sw.Stop();
-
-                            lock (this)
-                            {
-                                _State = State.Share;
-                            }
-
-                            return false;
-                        }
-                    }
-
-                } while (counter > 0);
-
-                if (sw != null)
-                {
-                    sw.Stop();
-                }
-            }
-            else if (waitForShareState)
-            {
-                if (sw != null)
-                {
-                    sw.Start();
-                }
-
-                int times = 0;
-                State state;
-
-                do
-                {
-                    lock (this)
-                    {
-                        state = _State;
-                    }
-
-                    if (state != State.Share)
-                    {
-                        if (times++ < 10)
-                        {
-                            Thread.Sleep(0);
-                        }
-                        else
-                        {
-                            Thread.Sleep(1);
-                        }
-                    }
-
-                    if (timeout >= 0)
-                    {
-                        if (sw.ElapsedMilliseconds > timeout)
-                        {
-                            sw.Stop();
-                            return false;
-                        }
-                    }
-
-                } while (state != State.Share);
-                waitShareCounterZero = false;
-                waitForShareState = false;
-
-                if (sw != null)
-                {
-                    sw.Stop();
-                }
-
-                goto Loop;
-            }
-
-            return true;
+            return false;
+           
         }
 
-        public void Leave()
+        public void Leave(Mode mode)
         {
-            lock (this)
+            switch (mode)
             {
-                if (_ShareCounter > 0)
-                {
-                    _ShareCounter--;
-                    return;
-                }
-
-                if (_State == State.Mutex)
-                {
-                    _State = State.Share;
-                }
+                case Mode.Share:
+                    _RWL.ExitReadLock();
+                    break;
+                case Mode.Mutex:
+                    _RWL.ExitWriteLock();
+                    break;
             }
         }
     }

@@ -35,6 +35,8 @@ namespace QueryAnalyzer
         public string UserName { get; set; }
         public string Password { get; set; }
 
+        public bool AscyncConnection { get; set; }
+
         private string _DatabaseName = "Master";
 
         public bool IsNoneAuthentication
@@ -145,7 +147,15 @@ namespace QueryAnalyzer
                 sqlConnBuilder.UserID = userName;
                 sqlConnBuilder.Password = password;
                 sqlConnBuilder.InitialCatalog = DatabaseName;
-                _Conn = new HubbleConnection(sqlConnBuilder.ConnectionString);
+                if (AscyncConnection)
+                {
+                    _Conn = new HubbleAsyncConnection(sqlConnBuilder.ConnectionString);
+                }
+                else
+                {
+                    _Conn = new HubbleConnection(sqlConnBuilder.ConnectionString);
+                }
+
                 _Conn.TryConnectTimeout = 0;
                 _Conn.Open();
             }

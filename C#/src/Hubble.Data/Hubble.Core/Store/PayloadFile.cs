@@ -30,6 +30,8 @@ namespace Hubble.Core.Store
 
         byte[] _FieldsMD5;
 
+        bool _IsBigEndian = false;
+
         public int[] Version
         {
             get
@@ -56,6 +58,19 @@ namespace Hubble.Core.Store
             }
         }
 
+        public bool IsBigEndian
+        {
+            get
+            {
+                return _IsBigEndian;
+            }
+
+            set
+            {
+                _IsBigEndian = value;
+            }
+        }
+        
         public void Build(List<Data.Field> fields)
         {
             System.Security.Cryptography.MD5CryptoServiceProvider md5 =
@@ -86,6 +101,8 @@ namespace Hubble.Core.Store
             _FieldsMD5 = md5.ComputeHash(b);
             _Version = Hubble.Framework.Reflection.Assembly.GetVersionValue(
                 Hubble.Framework.Reflection.Assembly.GetCallingAssemblyVersion());
+
+            _IsBigEndian = !BitConverter.IsLittleEndian;
         }
 
     }
@@ -351,6 +368,17 @@ namespace Hubble.Core.Store
             }
         }
 
+        /// <summary>
+        /// Fast load
+        /// </summary>
+        /// <param name="payloadProvider">payload provider</param>
+        /// <param name="fs">file stream has been point to end of header</param>
+        /// <returns>last store docid</returns>
+        private int FastLoad(PayloadProvider payloadProvider, System.IO.FileStream fs, int rankTab)
+        {
+            return payloadProvider.LoadFromFile(fs, _StoreLength, rankTab);
+        }
+
         internal PayloadProvider Open(Field docIdReplaceField, List<Data.Field> fields, int payloadLength, out int lastDocId)
         {
             lastDocId = -1;
@@ -359,11 +387,21 @@ namespace Hubble.Core.Store
 
             long truncateLength = 0;
 
+            int rankTab = -1;
+
             foreach (Data.Field field in fields)
             {
                 if (field.IndexType != Hubble.Core.Data.Field.Index.None)
                 {
                     tmpFields.Add(field);
+                }
+
+                if (field.Name.Equals("Rank", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (field.IndexType == Field.Index.Untokenized && field.DataType == DataType.Int)
+                    {
+                        rankTab = field.TabIndex;
+                    }
                 }
             }
 
@@ -385,6 +423,12 @@ namespace Hubble.Core.Store
 
                 PayloadFileHead fileHead = (PayloadFileHead)obj;
 
+                if (fileHead.IsBigEndian != head.IsBigEndian)
+                {
+                    throw new Data.DataException(string.Format("Index file IsBigEndian = {0} but current system IsBigEndian = {1}. Can't load payload file",
+                        fileHead.IsBigEndian, head.IsBigEndian));
+                }
+
                 if ((fileHead.Version[0] <= 0 && fileHead.Version[1] < 8) || (fileHead.Version[0] <= 0 && fileHead.Version[1] == 8 && fileHead.Version[2] == 0 && fileHead.Version[3] < 4))
                 {
                     throw new Data.DataException("Index file version is less then V0.8.0.4, you have to rebuild the index");
@@ -400,7 +444,19 @@ namespace Hubble.Core.Store
                 }
 
                 fs.Seek(HeadLength, System.IO.SeekOrigin.Begin);
-                bool breakForProctect = false; 
+
+                if (payloadLength > 0 && InsertProtect.InsertProtectInfo == null)
+                {
+                    lastDocId = FastLoad(docPayload, fs, rankTab);
+                    _LastStoredId = lastDocId;
+                    _DocumentsCount = (int)((fs.Length - HeadLength) / _StoreLength);
+                    GC.Collect();
+                    return docPayload;
+                }
+
+                
+                bool breakForProctect = false;
+
 
                 while (fs.Position < fs.Length)
                 {

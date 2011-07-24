@@ -174,7 +174,7 @@ namespace Hubble.Core.Store
 
         }
 
-        public System.IO.MemoryStream GetIndexBuf(long position, long length)
+        private byte[] GetIndexBufToArray(long position, long length)
         {
             _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
 
@@ -182,12 +182,23 @@ namespace Hubble.Core.Store
 
             if (!Hubble.Framework.IO.File.ReadToBuffer(_IndexFile, buf))
             {
-                throw new Hubble.Core.Store.StoreException(string.Format("GetIndex Buf fail! position={0} length={1}", 
+                throw new Hubble.Core.Store.StoreException(string.Format("GetIndex Buf fail! position={0} length={1}",
                     position, length));
-                 
+
             }
 
-            return new MemoryStream(buf);
+            return buf;
+        }
+
+        public Hubble.Framework.IO.BufferMemory GetIndexBufferMemory(long position, long length)
+        {
+            byte[] buf = GetIndexBufToArray(position, length);
+            return new Hubble.Framework.IO.BufferMemory(buf, 0, buf.Length);
+        }
+
+        public System.IO.MemoryStream GetIndexBuf(long position, long length)
+        {
+            return new MemoryStream(GetIndexBufToArray(position, length));
         }
 
         #endregion

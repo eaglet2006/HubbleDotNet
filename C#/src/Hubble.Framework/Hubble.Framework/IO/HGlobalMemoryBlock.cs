@@ -22,6 +22,9 @@ using System.Runtime.InteropServices;
 
 namespace Hubble.Framework.IO
 {
+    /// <summary>
+    /// Alloc memory from HGlobal
+    /// </summary>
     public class HGlobalMemoryBlock : IDisposable
     {
         protected IntPtr Ptr = IntPtr.Zero;

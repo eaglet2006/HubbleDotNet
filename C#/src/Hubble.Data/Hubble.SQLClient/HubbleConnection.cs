@@ -144,6 +144,15 @@ namespace Hubble.SQLClient
             }
         }
 
+        /// <summary>
+        /// Set the timeout for connection
+        /// </summary>
+        /// <param name="timeout">in second</param>
+        public void SetConnectionTimeoutOnly(int timeout)
+        {
+            _ConnectionTimeout = timeout;
+        }
+
         public static long MaxDataCacheMemorySize
         {
             get
@@ -368,7 +377,7 @@ namespace Hubble.SQLClient
             }
             else
             {
-                SetConnectionTimeout(tcpClient, 300);
+                SetConnectionTimeout(tcpClient, ConnectionTimeout);
             }
         }
 
@@ -406,7 +415,7 @@ namespace Hubble.SQLClient
 
             while (elapseConnectTime < this.ConnectionTimeout * 1000)
             {
-                tcpClient.Connect();
+                tcpClient.Connect(this.ConnectionTimeout * 1000);
 
                 try
                 {

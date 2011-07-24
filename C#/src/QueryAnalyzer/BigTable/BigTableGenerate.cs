@@ -126,6 +126,9 @@ namespace QueryAnalyzer.BigTable
             {
                 labelLastUpdateTime.Text = string.Format("Last Update Time:{0}", 
                     BigTableInfo.TimeStamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss"));
+
+                checkBoxKeepDataIntegrity.Checked = BigTableInfo.KeepDataIntegrity;
+                numericUpDownExecuteTimeout.Value = BigTableInfo.ExecuteTimeout;
             }
             RefreshServerGUI();
             RefreshTabletGUI();
@@ -260,6 +263,8 @@ namespace QueryAnalyzer.BigTable
                 _ParentForm.TableName = this.TableName;
                 _ParentForm.IndexFolder = this.IndexFolder;
                 _ParentForm.BigTable = BigTableInfo;
+                _ParentForm.BigTable.KeepDataIntegrity = checkBoxKeepDataIntegrity.Checked;
+                _ParentForm.BigTable.ExecuteTimeout = (int)numericUpDownExecuteTimeout.Value;
                 _ParentForm._Result = DialogResult.OK;
                 _ParentForm.Close();
             }

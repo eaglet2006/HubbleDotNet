@@ -24,66 +24,56 @@ using Hubble.Framework.Threading;
 
 namespace Hubble.Core.Service
 {
-    static class QueryThreadPool
+    class QueryThreadPool
     {
-        static object _LockObj = new object();
-        static QueryThread[] _PrimaryPool; //Primary pool used to query store procedure
-        static QueryThread[] _SecondaryPool;
-        static Random _Rand = new Random();
+        Stack<QueryThread> _Pool;
 
-        internal static void Init(int queryThreadNum)
+        Queue<MessageReceiveEventArgs> _Queue;
+
+        object _LockObj = new object();
+
+        internal QueryThreadPool(int capability)
         {
-            _PrimaryPool = new QueryThread[16];
+            _Pool = new Stack<QueryThread>(capability);
 
-            for (int i = 0; i < _PrimaryPool.Length; i++)
+            for (int i = 0; i < capability; i++)
             {
-                _PrimaryPool[i] = new QueryThread(false);
+                _Pool.Push(new QueryThread(false, this));
             }
 
-            int secondaryPoolCount = Math.Max(1, queryThreadNum);
-
-            _SecondaryPool = new QueryThread[secondaryPoolCount];
-
-            for (int i = 0; i < _SecondaryPool.Length; i++)
-            {
-                _SecondaryPool[i] = new QueryThread(false);
-            }
+            _Queue = new Queue<MessageReceiveEventArgs>();
         }
 
-        internal static void ExcuteSql(MessageReceiveEventArgs args)
+        internal void ExecuteSql(MessageReceiveEventArgs args)
         {
-            QueryThread queryThread = null;
-
             lock (_LockObj)
             {
-                queryThread = _SecondaryPool[_Rand.Next(_SecondaryPool.Length)];
-
-                bool queryStoreProcedure = false;
-
-                if (args.InMessage is string)
+                if (_Pool.Count > 0)
                 {
-                    string sql = args.InMessage as string;
-
-                    if (sql.StartsWith("exec", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        if (sql.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) < 0)
-                        {
-                            queryStoreProcedure = true;
-                        }
-                    }
-                }
-
-                if (queryStoreProcedure)
-                {
-                    queryThread = _PrimaryPool[_Rand.Next(_PrimaryPool.Length)];
+                    QueryThread qThread = _Pool.Pop();
+                    qThread.ASendMessage((int)SQLClient.ConnectEvent.ExcuteSql, args);
                 }
                 else
                 {
-                    queryThread = _SecondaryPool[_Rand.Next(_SecondaryPool.Length)];
+                    _Queue.Enqueue(args);
                 }
             }
+        }
 
-            queryThread.ASendMessage((int)SQLClient.ConnectEvent.ExcuteSql, args);
+        internal void ExecuteFinished(QueryThread qThread)
+        {
+            lock (_LockObj)
+            {
+                if (_Queue.Count > 0)
+                {
+                    MessageReceiveEventArgs args = _Queue.Dequeue();
+                    qThread.ASendMessage((int)SQLClient.ConnectEvent.ExcuteSql, args);
+                }
+                else
+                {
+                    _Pool.Push(qThread);
+                }
+            }
         }
     }
 }

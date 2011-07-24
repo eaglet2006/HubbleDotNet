@@ -31,63 +31,6 @@ namespace Hubble.Core.Query
     /// </summary>
     public class Match1Query : IQuery, INamedExternalReference
     {
-        class WordIndexForQuery : IComparable<WordIndexForQuery>
-        {
-            public int CurDocIdIndex;
-            public int WordIndexesLength;
-            public int Sum_d_t;
-            public int Idf_t;
-            public int WordRank;
-            public int FieldRank;
-            public int RelTotalCount;
-
-            public int QueryCount; //How many time is this word in query string.
-            public int FirstPosition; //First position in query string.
-
-            private Index.WordIndexReader _WordIndex;
-
-            public Index.WordIndexReader WordIndex
-            {
-                get
-                {
-                    return _WordIndex;
-                }
-            }
-
-            public WordIndexForQuery(Index.WordIndexReader wordIndex, 
-                int totalDocuments, int wordRank, int fieldRank)
-            {
-                FieldRank = fieldRank;
-                WordRank = wordRank;
-                RelTotalCount = wordIndex.RelDocCount;
-
-                if (FieldRank <= 0)
-                {
-                    FieldRank = 1;
-                }
-
-                if (WordRank <= 0)
-                {
-                    WordRank = 1;
-                }
-
-                _WordIndex = wordIndex;
-
-                Sum_d_t = (int)Math.Sqrt(_WordIndex.WordCount);
-                Idf_t = (int)Math.Log10((double)totalDocuments / (double)_WordIndex.RelDocCount + 1) + 1;
-                CurDocIdIndex = 0;
-                WordIndexesLength = _WordIndex.Count;
-            }
-
-            #region IComparable<WordIndexForQuery> Members
-
-            public int CompareTo(WordIndexForQuery other)
-            {
-                return this.RelTotalCount.CompareTo(other.RelTotalCount);
-            }
-
-            #endregion
-        }
 
         #region Private fields
         int MinResultCount = 32768;

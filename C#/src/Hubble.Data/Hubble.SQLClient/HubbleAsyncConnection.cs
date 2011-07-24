@@ -96,6 +96,8 @@ namespace Hubble.SQLClient
                             tcpItem.Enter();
                             Hubble.Framework.Net.TcpClient tcpClient;
                             InitTcpClient(out tcpClient);
+                            tcpClient.ReceiveTimeout = 0;
+
                             base.Open(tcpClient);
                             tcpClient.SetToAsync();
                             tcpItem.TcpClient = tcpClient;
@@ -135,8 +137,13 @@ namespace Hubble.SQLClient
             }
         }
 
-
         internal void BeginAsyncQuerySql(string sql, HubbleCommand command, ref int classId)
+        {
+            BeginAsyncQuerySql(sql, command, ref classId, false);
+        }
+
+        internal void BeginAsyncQuerySql(string sql, HubbleCommand command, ref int classId, 
+            bool priorMessage)
         {
             TcpItem tcpItem;
 
@@ -160,7 +167,7 @@ namespace Hubble.SQLClient
                     classId, sql);
 
                 tcpItem.TcpClient.SendASyncMessage((short)ConnectEvent.ExcuteSql,
-                    ref package);
+                    ref package, priorMessage);
             }
         }
 
@@ -182,10 +189,10 @@ namespace Hubble.SQLClient
             return base.GetConnectionTimeout();
         }
 
-        internal override void SetConnectionTimeout(int timeout)
-        {
-            base.SetConnectionTimeout(timeout);
-        }
+        //internal override void SetConnectionTimeout(int timeout)
+        //{
+        //    base.SetConnectionTimeout(timeout);
+        //}
 
         public override bool Connected
         {

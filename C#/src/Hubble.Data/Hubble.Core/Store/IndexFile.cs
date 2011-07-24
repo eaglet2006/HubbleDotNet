@@ -772,6 +772,19 @@ namespace Hubble.Core.Store
 
         }
 
+        internal BufferMemory GetIndexBufferMemory(int serial, long position, long length)
+        {
+            IDXFile idxFile = GetIDXFile(serial);
+
+            if (idxFile == null)
+            {
+                throw new Hubble.Core.Store.StoreException(string.Format("GetIndex Buf fail! serial={0} does not exist",
+                    serial));
+            }
+
+            return idxFile.GetIndexBufferMemory(position, length);
+        }
+
         internal System.IO.MemoryStream GetIndexBuf(int serial, long position, long length)
         {
             IDXFile idxFile = GetIDXFile(serial);

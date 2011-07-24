@@ -107,6 +107,8 @@ namespace QueryAnalyzer
 
             try
             {
+                dbAccess.AscyncConnection = checkBoxAsyncConnect.Checked;
+
                 if (comboBoxAuthentication.SelectedIndex == 0)
                 {
                     dbAccess.Connect(comboBoxServerName.Text.Trim());

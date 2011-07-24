@@ -138,7 +138,16 @@ namespace Hubble.SQLClient
                 //Release all classes
                 lock (_ClassIdLock)
                 {
-                    foreach (IAsyncClass aClass in _ClassDict.Values)
+                    IAsyncClass[] iAsyncClass;
+                    
+                    lock (_LockObj)
+                    {
+                        iAsyncClass = new IAsyncClass[_ClassDict.Count];
+                        _ClassDict.Values.CopyTo(iAsyncClass, 0);
+                    }
+
+
+                    foreach (IAsyncClass aClass in iAsyncClass)
                     {
                         try
                         {
@@ -149,7 +158,10 @@ namespace Hubble.SQLClient
                         }
                     }
 
-                    _ClassDict.Clear();
+                    lock (_LockObj)
+                    {
+                        _ClassDict.Clear();
+                    }
                 }
                 return;
             }

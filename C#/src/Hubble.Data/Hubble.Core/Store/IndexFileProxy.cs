@@ -1208,7 +1208,7 @@ namespace Hubble.Core.Store
             }
             finally
             {
-                _DBProvider.MergeLock.Leave();
+                _DBProvider.MergeLock.Leave(Lock.Mode.Mutex);
             }
 
             return true;
@@ -1409,6 +1409,28 @@ MergeAckLoop:
             }
 
             //ASendMessage((int)Event.Add, new WordDocList(word, docList));
+        }
+
+        public BufferMemory GetIndexBufferMemory(int serial, long position, long length)
+        {
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return null;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                return _IndexFile.GetIndexBufferMemory(serial, position, length);
+            }
+            finally
+            {
+                HBMonitor.Exit(_LockObj);
+            }
         }
 
         public System.IO.MemoryStream GetIndexBuf(int serial, long position, long length)

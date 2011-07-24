@@ -39,7 +39,7 @@ namespace Hubble.Core.Store
         private int _CurrentFileIndex = -1; //Current file index. it is the index of StepDocIndexList and WordFilePositionList
         private int _CurrentDocId = -1;
         private int _CurrentStepDocIndex = -1;
-        private System.IO.MemoryStream _CurrentIndexBuf = null;
+        private BufferMemory _CurrentIndexBuf = null;
         private bool _End = false;
         private DocumentPositionList _NextDocPositionList = new DocumentPositionList(-1);
 
@@ -160,7 +160,7 @@ namespace Hubble.Core.Store
                 length = fp.Length - positionInIndex;
             }
 
-            _CurrentIndexBuf = _IndexFileProxy.GetIndexBuf(fp.Serial, fp.Position + positionInIndex, length);
+            _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position + positionInIndex, length);
 
             return true;
         }
@@ -180,7 +180,7 @@ namespace Hubble.Core.Store
 
             if (_WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex == null)
             {
-                _CurrentIndexBuf = _IndexFileProxy.GetIndexBuf(fp.Serial, fp.Position, fp.Length);
+                _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position, fp.Length);
                 _CurrentDocId = -1;
             }
             else
@@ -189,16 +189,60 @@ namespace Hubble.Core.Store
                 _CurrentDocId = -1;
                 int length = _WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex[0].Position;
 
-                _CurrentIndexBuf = _IndexFileProxy.GetIndexBuf(fp.Serial, fp.Position, length);
+                _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position, length);
 
             }
             return true;
         }
 
         /// <summary>
+        /// Get next original document position list
+        /// </summary>
+        /// <returns>if end of the index, docid of result is -1</returns>
+        public bool GetNextOriginal(ref OriginalDocumentPositionList odpl)
+        {
+            if (_End)
+            {
+                odpl.DocumentId = -1;
+                return false;
+                //return new OriginalDocumentPositionList(-1);
+            }
+
+            if (_CurrentDocId < 0)
+            {
+                if (!NextFileIndex())
+                {
+                    //End of the index
+                    odpl.DocumentId = -1;
+                    return false;
+                    //return new OriginalDocumentPositionList(-1);
+                }
+            }
+
+            if (_CurrentIndexBuf.Position < _CurrentIndexBuf.Start + _CurrentIndexBuf.Length)
+            {
+                DocumentPositionList.GetNextOriginalDocumentPositionList(ref odpl, ref _CurrentDocId,
+                    _CurrentIndexBuf, _WordStepDocIndex.SimpleMode);
+                return true;
+            }
+            else
+            {
+                if (!NextFileIndexBuf())
+                {
+                    odpl.DocumentId = -1;
+                    return false;
+                    //return new OriginalDocumentPositionList(-1);
+                }
+
+                DocumentPositionList.GetNextOriginalDocumentPositionList(ref odpl, ref _CurrentDocId,
+                    _CurrentIndexBuf, _WordStepDocIndex.SimpleMode);
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Get next document position list
         /// </summary>
-        /// <param name="docPositionList">output next document position list</param>
         /// <returns>if end of the index, docid of result is -1</returns>
         public DocumentPositionList GetNext()
         {
@@ -216,7 +260,7 @@ namespace Hubble.Core.Store
                 }
             }
 
-            if (_CurrentIndexBuf.Position < _CurrentIndexBuf.Length)
+            if (_CurrentIndexBuf.Position < _CurrentIndexBuf.Start + _CurrentIndexBuf.Length)
             {
                 return DocumentPositionList.GetNextDocumentPositionList(ref _CurrentDocId,
                     _CurrentIndexBuf, _WordStepDocIndex.SimpleMode);
@@ -288,7 +332,7 @@ namespace Hubble.Core.Store
                             length = fp.Length - positionInIndex;
                         }
 
-                        _CurrentIndexBuf = _IndexFileProxy.GetIndexBuf(fp.Serial, fp.Position + positionInIndex, length);
+                        _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position + positionInIndex, length);
 
                         return true;
                     }
