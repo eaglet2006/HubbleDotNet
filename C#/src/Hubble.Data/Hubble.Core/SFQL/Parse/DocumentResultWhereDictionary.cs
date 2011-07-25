@@ -84,12 +84,29 @@ namespace Hubble.Core.SFQL.Parse
         {
         }
 
+        private unsafe IntPtr Alloc(int capacity)
+        {
+            IntPtr result = Marshal.AllocHGlobal(capacity * sizeof(Query.DocumentResult));
+
+            Query.DocumentResult* p = (Query.DocumentResult*)result;
+
+            Query.DocumentResult zero = new Hubble.Core.Query.DocumentResult();
+
+            for (int i = 0; i < capacity; i++)
+            {
+                *p = zero;
+                p++;
+            }
+
+            return result;
+        }
+
         unsafe public DocumentResultWhereDictionary(int capacity)
             : base(capacity)
         {
             _MemList = new List<IntPtr>();
 
-            _MemList.Add(Marshal.AllocHGlobal(capacity * sizeof(Query.DocumentResult)));
+            _MemList.Add(Alloc(capacity));
 
             _UnitSize = capacity;
             _UnitIndex = 0;
@@ -140,7 +157,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (_UnitIndex >= _UnitSize)
             {
-                _MemList.Add(Marshal.AllocHGlobal(_UnitSize * sizeof(Query.DocumentResult)));
+                _MemList.Add(Alloc(_UnitSize));
                 _UnitIndex = 0;
                 _Cur = (Query.DocumentResult*)_MemList[_MemList.Count - 1];
             }
@@ -165,7 +182,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (_UnitIndex >= _UnitSize)
             {
-                _MemList.Add(Marshal.AllocHGlobal(_UnitSize * sizeof(Query.DocumentResult)));
+                _MemList.Add(Alloc(_UnitSize));
                 _UnitIndex = 0;
                 _Cur = (Query.DocumentResult*)_MemList[_MemList.Count - 1];
             }

@@ -506,7 +506,9 @@ namespace Hubble.Core.Query
 
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
-            bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
+            bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression
+                && wordIndexes.Length == 1 && _NotInDict == null & End >= 0;
+
             if (oneWordOptimize)
             {
                 IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize), DBProvider, End, OrderBy, NeedGroupBy);
