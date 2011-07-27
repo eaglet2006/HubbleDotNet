@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.SQLClient", "Hubble.
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebDemo", "Demo\WebDemo\", "{62D5214B-DF4D-4B8C-9041-4CF39D6DC2C3}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFramework = "2.0"
+		TargetFramework = "3.5"
 		ProjectReferences = "{C745CE71-0DBE-46B0-BF50-B33923F48D2F}|AspDotNetPager.dll;{21D12CAB-9917-432E-A54E-E432DA0F432A}|Hubble.Framework.dll;{DA77CD74-7A29-4772-BF49-4A1DF146B1D1}|Hubble.SQLClient.dll;{D94FD044-AC5D-4EF0-891B-019491461A16}|Hubble.Analyzer.dll;"
 		Debug.AspNetCompiler.VirtualPath = "/WebDemo"
 		Debug.AspNetCompiler.PhysicalPath = "Demo\WebDemo\"

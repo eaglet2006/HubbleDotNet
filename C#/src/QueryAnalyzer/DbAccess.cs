@@ -39,6 +39,17 @@ namespace QueryAnalyzer
 
         private string _DatabaseName = "Master";
 
+        private int _CommandTimeout = -1;
+        /// <summary>
+        /// Set command timeout.
+        /// In second
+        /// </summary>
+        /// <param name="timeout"></param>
+        public void SetCommandTimeout(int timeout)
+        {
+            _CommandTimeout = timeout;
+        }
+
         public bool IsNoneAuthentication
         {
             get
@@ -199,6 +210,12 @@ namespace QueryAnalyzer
             else
             {
                 HubbleCommand cmd = new HubbleCommand(sql, _Conn, parameters);
+
+                if (_CommandTimeout > 0)
+                {
+                    cmd.CommandTimeout = _CommandTimeout;
+                }
+
                 cmd.ResetDataCacheAfterTimeout = this.ResetDataCacheAfterTimeout;
                 cmd.Query(cacheTimeout);
                 return cmd.Result;

@@ -30,6 +30,10 @@
         {
             this.tabControl = new System.Windows.Forms.TabControl();
             this.tabPageGlobal = new System.Windows.Forms.TabPage();
+            this.checkBoxKeepDataIntegrity = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.numericUpDownExecuteTimeout = new System.Windows.Forms.NumericUpDown();
+            this.label2 = new System.Windows.Forms.Label();
             this.labelLastUpdateTime = new System.Windows.Forms.Label();
             this.buttonCancel = new System.Windows.Forms.Button();
             this.buttonSave = new System.Windows.Forms.Button();
@@ -39,6 +43,7 @@
             this.textBoxIndexFolder = new System.Windows.Forms.TextBox();
             this.tabPageServers = new System.Windows.Forms.TabPage();
             this.panelServers = new System.Windows.Forms.Panel();
+            this.buttonUpdateServer = new System.Windows.Forms.Button();
             this.listViewServers = new System.Windows.Forms.ListView();
             this.buttonDeleteServer = new System.Windows.Forms.Button();
             this.buttonAddServer = new System.Windows.Forms.Button();
@@ -58,19 +63,15 @@
             this.buttonAdd = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.listBoxTablets = new System.Windows.Forms.ListBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.numericUpDownExecuteTimeout = new System.Windows.Forms.NumericUpDown();
-            this.label3 = new System.Windows.Forms.Label();
-            this.checkBoxKeepDataIntegrity = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPageGlobal.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownExecuteTimeout)).BeginInit();
             this.tabPageServers.SuspendLayout();
             this.panelServers.SuspendLayout();
             this.tabPageTables.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBoxFailoverServers.SuspendLayout();
             this.groupBoxBalanceServers.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownExecuteTimeout)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl
@@ -105,6 +106,58 @@
             this.tabPageGlobal.TabIndex = 0;
             this.tabPageGlobal.Text = "Global Setting";
             this.tabPageGlobal.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxKeepDataIntegrity
+            // 
+            this.checkBoxKeepDataIntegrity.AutoSize = true;
+            this.checkBoxKeepDataIntegrity.Checked = true;
+            this.checkBoxKeepDataIntegrity.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxKeepDataIntegrity.Location = new System.Drawing.Point(19, 152);
+            this.checkBoxKeepDataIntegrity.Name = "checkBoxKeepDataIntegrity";
+            this.checkBoxKeepDataIntegrity.Size = new System.Drawing.Size(117, 17);
+            this.checkBoxKeepDataIntegrity.TabIndex = 39;
+            this.checkBoxKeepDataIntegrity.Text = "Keep Data Integrity";
+            this.checkBoxKeepDataIntegrity.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(217, 108);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(20, 13);
+            this.label3.TabIndex = 38;
+            this.label3.Text = "ms";
+            // 
+            // numericUpDownExecuteTimeout
+            // 
+            this.numericUpDownExecuteTimeout.Location = new System.Drawing.Point(118, 105);
+            this.numericUpDownExecuteTimeout.Maximum = new decimal(new int[] {
+            10000000,
+            0,
+            0,
+            0});
+            this.numericUpDownExecuteTimeout.Minimum = new decimal(new int[] {
+            20,
+            0,
+            0,
+            0});
+            this.numericUpDownExecuteTimeout.Name = "numericUpDownExecuteTimeout";
+            this.numericUpDownExecuteTimeout.Size = new System.Drawing.Size(80, 20);
+            this.numericUpDownExecuteTimeout.TabIndex = 37;
+            this.numericUpDownExecuteTimeout.Value = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(16, 108);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(87, 13);
+            this.label2.TabIndex = 36;
+            this.label2.Text = "Execute Timeout";
             // 
             // labelLastUpdateTime
             // 
@@ -182,6 +235,7 @@
             // 
             // panelServers
             // 
+            this.panelServers.Controls.Add(this.buttonUpdateServer);
             this.panelServers.Controls.Add(this.listViewServers);
             this.panelServers.Controls.Add(this.buttonDeleteServer);
             this.panelServers.Controls.Add(this.buttonAddServer);
@@ -191,6 +245,16 @@
             this.panelServers.Size = new System.Drawing.Size(734, 469);
             this.panelServers.TabIndex = 6;
             // 
+            // buttonUpdateServer
+            // 
+            this.buttonUpdateServer.Location = new System.Drawing.Point(165, 355);
+            this.buttonUpdateServer.Name = "buttonUpdateServer";
+            this.buttonUpdateServer.Size = new System.Drawing.Size(75, 23);
+            this.buttonUpdateServer.TabIndex = 6;
+            this.buttonUpdateServer.Text = "Update";
+            this.buttonUpdateServer.UseVisualStyleBackColor = true;
+            this.buttonUpdateServer.Click += new System.EventHandler(this.buttonUpdateServer_Click);
+            // 
             // listViewServers
             // 
             this.listViewServers.Dock = System.Windows.Forms.DockStyle.Top;
@@ -199,6 +263,7 @@
             this.listViewServers.Size = new System.Drawing.Size(734, 349);
             this.listViewServers.TabIndex = 5;
             this.listViewServers.UseCompatibleStateImageBehavior = false;
+            this.listViewServers.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.listViewServers_MouseDoubleClick);
             // 
             // buttonDeleteServer
             // 
@@ -383,58 +448,6 @@
             this.listBoxTablets.TabIndex = 0;
             this.listBoxTablets.SelectedIndexChanged += new System.EventHandler(this.listBoxTablets_SelectedIndexChanged);
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 108);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(87, 13);
-            this.label2.TabIndex = 36;
-            this.label2.Text = "Execute Timeout";
-            // 
-            // numericUpDownExecuteTimeout
-            // 
-            this.numericUpDownExecuteTimeout.Location = new System.Drawing.Point(118, 105);
-            this.numericUpDownExecuteTimeout.Maximum = new decimal(new int[] {
-            10000000,
-            0,
-            0,
-            0});
-            this.numericUpDownExecuteTimeout.Minimum = new decimal(new int[] {
-            20,
-            0,
-            0,
-            0});
-            this.numericUpDownExecuteTimeout.Name = "numericUpDownExecuteTimeout";
-            this.numericUpDownExecuteTimeout.Size = new System.Drawing.Size(80, 20);
-            this.numericUpDownExecuteTimeout.TabIndex = 37;
-            this.numericUpDownExecuteTimeout.Value = new decimal(new int[] {
-            5000,
-            0,
-            0,
-            0});
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(217, 108);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(20, 13);
-            this.label3.TabIndex = 38;
-            this.label3.Text = "ms";
-            // 
-            // checkBoxKeepDataIntegrity
-            // 
-            this.checkBoxKeepDataIntegrity.AutoSize = true;
-            this.checkBoxKeepDataIntegrity.Checked = true;
-            this.checkBoxKeepDataIntegrity.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.checkBoxKeepDataIntegrity.Location = new System.Drawing.Point(19, 152);
-            this.checkBoxKeepDataIntegrity.Name = "checkBoxKeepDataIntegrity";
-            this.checkBoxKeepDataIntegrity.Size = new System.Drawing.Size(117, 17);
-            this.checkBoxKeepDataIntegrity.TabIndex = 39;
-            this.checkBoxKeepDataIntegrity.Text = "Keep Data Integrity";
-            this.checkBoxKeepDataIntegrity.UseVisualStyleBackColor = true;
-            // 
             // BigTableGenerate
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -446,13 +459,13 @@
             this.tabControl.ResumeLayout(false);
             this.tabPageGlobal.ResumeLayout(false);
             this.tabPageGlobal.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownExecuteTimeout)).EndInit();
             this.tabPageServers.ResumeLayout(false);
             this.panelServers.ResumeLayout(false);
             this.tabPageTables.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.groupBoxFailoverServers.ResumeLayout(false);
             this.groupBoxBalanceServers.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownExecuteTimeout)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -493,5 +506,6 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.CheckBox checkBoxKeepDataIntegrity;
+        private System.Windows.Forms.Button buttonUpdateServer;
     }
 }

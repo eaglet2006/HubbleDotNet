@@ -547,5 +547,41 @@ namespace QueryAnalyzer.BigTable
                 //CheckServerList();
             }
         }
+
+        private void buttonUpdateServer_Click(object sender, EventArgs e)
+        {
+            if (listViewServers.SelectedItems.Count > 0)
+            {
+                string serverName = listViewServers.SelectedItems[0].SubItems[0].Text;
+                string connectionString = listViewServers.SelectedItems[0].SubItems[1].Text;
+
+                if (QAMessageBox.ShowInputBox(string.Format("Update Connection String of Server : {0}", serverName), 
+                    "Please input Connection String", ref connectionString) == DialogResult.OK)
+                {
+                    Hubble.Core.BigTable.ServerInfo serverInfo =
+                        new Hubble.Core.BigTable.ServerInfo(serverName,
+                        connectionString);
+
+                    for (int i = 0; i < BigTableInfo.ServerList.Count; i++)
+                    {
+                        if (BigTableInfo.ServerList[i].Equals(serverInfo))
+                        {
+                            BigTableInfo.ServerList[i].ConnectionString = connectionString;
+                            break;
+                        }
+                    }
+
+                    listViewServers.SelectedItems[0].SubItems[1].Text = connectionString;
+
+                    RefreshServersComboBox();
+                }
+
+            }
+        }
+
+        private void listViewServers_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            buttonUpdateServer_Click(sender, e);
+        }
     }
 }

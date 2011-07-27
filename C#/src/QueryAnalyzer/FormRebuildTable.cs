@@ -675,6 +675,7 @@ namespace QueryAnalyzer
         {
             try
             {
+                DataAccess.SetCommandTimeout(3600);
                 DataAccess.Excute("exec SP_TableIndexOnly {0}, {1}",
                     TableName, "True");
 
