@@ -863,69 +863,6 @@ namespace Hubble.Core.Store
             return new WordIndexReader(word, docList, totalDocs, dbProvider);
         }
 
-        internal Hubble.Core.Index.WordIndexReader GetWordIndex08(string word,
-            WordFilePositionList filePositionList, int totalDocs, Data.DBProvider dbProvider, int maxReturnCount)
-        {
-            WordDocumentsList docList = new WordDocumentsList();
-
-            if (maxReturnCount < 0)
-            {
-                foreach (FilePosition filePosition in filePositionList.FPList)
-                {
-                    using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
-                    {
-                        WordDocumentsList wdl = ir.GetDocList(filePosition.Position, filePosition.Length, -1);
-
-                        if (filePositionList.Count == 1)
-                        {
-                            docList = wdl;
-                        }
-                        else
-                        {
-                            docList.AddRange(wdl);
-                            docList.WordCountSum += wdl.WordCountSum;
-                        }
-
-                        //foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
-                        //{
-                        //    docList.Add(dList);
-                        //}
-                    }
-                }
-            }
-            else
-            {
-                int remain = maxReturnCount;
-
-                foreach (FilePosition filePosition in filePositionList.FPList)
-                {
-                    using (IndexReader ir = new IndexReader(filePosition.Serial, _Path, FieldName, _IndexMode, false))
-                    {
-                        WordDocumentsList wdl = ir.GetDocList(filePosition.Position, filePosition.Length, remain);
-
-                        if (filePositionList.Count == 1)
-                        {
-                            docList = wdl;
-                        }
-                        else
-                        {
-                            docList.AddRange(wdl);
-                            docList.WordCountSum += wdl.WordCountSum;
-                            docList.RelDocCount += wdl.RelDocCount;
-                        }
-
-                        remain -= wdl.Count;
-
-                        //foreach (Entity.DocumentPositionList dList in ir.GetDocList(filePosition.Position, filePosition.Length))
-                        //{
-                        //    docList.Add(dList);
-                        //}
-                    }
-                }
-            }
-
-            return new WordIndexReader(word, docList, totalDocs, dbProvider);
-        }
 
         /// <summary>
         /// Collect forcedly

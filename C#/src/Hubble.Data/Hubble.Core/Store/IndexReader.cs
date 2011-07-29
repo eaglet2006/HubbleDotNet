@@ -47,7 +47,6 @@ namespace Hubble.Core.Store
 
         //System.IO.FileStream _HeadFile;
 
-        System.IO.Stream _IndexFile;
         //System.IO.FileStream _IndexFile;
 
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
@@ -115,8 +114,6 @@ namespace Hubble.Core.Store
             //    IndexFileStreamCache.AddIndexFile(_IndexFilePath, _IndexFile);
             //}
 
-            _IndexFile = new System.IO.FileStream(_IndexFilePath, System.IO.FileMode.Open,
-                 System.IO.FileAccess.Read, System.IO.FileShare.Read);
 
         }
 
@@ -430,39 +427,6 @@ namespace Hubble.Core.Store
         //}
 
 
-        public WordDocumentsList GetDocList(long position, long length, int count)
-        {
-
-            Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
-
-            _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
-            
-            //byte[] buf = new byte[length];
-            //System.IO.MemoryStream ms = new System.IO.MemoryStream(buf);
-            //Hubble.Framework.IO.Stream.ReadToBuf(_IndexFile, buf, 0, buf.Length);
-            //ms.Position = 0;
-
-            WordDocumentsList result = new WordDocumentsList();
-            bool simple = _IndexMode == Hubble.Core.Data.Field.IndexMode.Simple;
-
-            if (count >= 0)
-            {
-                result.AddRange(Entity.DocumentPositionList.Deserialize(_IndexFile, ref count, simple, out result.WordCountSum));
-                result.RelDocCount = count;
-            }
-            else
-            {
-                result.AddRange(Entity.DocumentPositionList.Deserialize(_IndexFile, simple, out result.WordCountSum));
-                result.RelDocCount = result.Count;
-            }
-
-            performanceReport.Stop(string.Format("Read index file: len={0}, {1} results. ", _IndexFile.Position - position,
-                result.Count));
-
-            return result;
-
-        }
-
         public void Close()
         {
             if (_ReadHead)
@@ -471,12 +435,6 @@ namespace Hubble.Core.Store
                 //_HeadFile = null;
             }
 
-            if (_IndexFile != null)
-            {
-                _IndexFile.Close();
-
-                _IndexFile = null;
-            }
         }
 
         #region IDisposable Members
@@ -485,10 +443,7 @@ namespace Hubble.Core.Store
         {
             try
             {
-                if (_IndexFile != null)
-                {
-                    Close();
-                }
+                Close();
             }
             catch
             {

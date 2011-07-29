@@ -57,7 +57,8 @@ namespace Hubble.Core.Store
         const int UnitBlockSize = 256;
         const int MaxWordLength = 108;
         string _FilePath;
-        FileStream _File;
+        //FileStream _File;
+        Hubble.Framework.IO.CachedFileStream _File;
         Mode _Mode = Mode.Read;
 
         public string FilePath
@@ -113,15 +114,18 @@ namespace Hubble.Core.Store
                 _TempMem = new MemoryStream(256);
                 _UnitBlock = new byte[UnitBlockSize];
                 _Segment = new byte[SegmentSize]; //One segment include 32 unit blocks .
-                _File = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+                //_File = new FileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
+                _File = new Hubble.Framework.IO.CachedFileStream(filePath, FileMode.Create, FileAccess.ReadWrite);
             }
             else if (_Mode == Mode.Enum)
             {
-                _File = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                //_File = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                _File = new Hubble.Framework.IO.CachedFileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
             else if (_Mode == Mode.Read)
             {
-                _File = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                //_File = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                _File = new Hubble.Framework.IO.CachedFileStream(Hubble.Framework.IO.CachedFileStream.CachedType.NoCache, filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                 GetSegmentStartStrings();
             }
         }
@@ -347,39 +351,41 @@ namespace Hubble.Core.Store
 
         }
 
-        public void LoadDDXToMemory()
-        {
-            lock (_ReadLockObj)
-            {
-                if (_DDXFileBuffer == null)
-                {
-                    _DDXFileBuffer = new byte[_File.Length];
-                    _File.Seek(0, SeekOrigin.Begin);
-                    if (!Hubble.Framework.IO.File.ReadToBuffer(_File, _DDXFileBuffer))
-                    {
-                        _DDXFileBuffer = null;
-                        throw new StoreException("Can't load DDX file");
-                    }
+        //public void LoadDDXToMemory()
+        //{
+        //    lock (_ReadLockObj)
+        //    {
+        //        if (_DDXFileBuffer == null)
+        //        {
+        //            _DDXFileBuffer = new byte[_File.Length];
+        //            _File.Seek(0, SeekOrigin.Begin);
+        //            if (!Hubble.Framework.IO.File.ReadToBuffer(_File, _DDXFileBuffer))
+        //            {
+        //                _DDXFileBuffer = null;
+        //                throw new StoreException("Can't load DDX file");
+        //            }
 
-                    _File.Close();
-                    _File = null;
-                }
+        //            _File.Close();
+        //            _File = null;
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
-        public void UnLoadDDXFromMemory()
-        {
-            lock (_ReadLockObj)
-            {
-                if (_DDXFileBuffer != null)
-                {
-                    _DDXFileBuffer = null;
-                    _File = new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                }
+        //public void UnLoadDDXFromMemory()
+        //{
+        //    lock (_ReadLockObj)
+        //    {
+        //        if (_DDXFileBuffer != null)
+        //        {
+        //            _DDXFileBuffer = null;
+                    
+        //            //_File = new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        //            _File = new Hubble.Framework.IO.CachedFileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        //        }
 
-            }
-        }
+        //    }
+        //}
 
         /// <summary>
         /// Get total words count in this file.

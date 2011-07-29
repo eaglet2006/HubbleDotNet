@@ -34,7 +34,7 @@ namespace Hubble.Framework.Threading
             Mutex = 1,
         }
 
-        ReaderWriterLockSlim _RWL = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        ReaderWriterLockSlim _RWL = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
         public bool Enter(Mode mode)
         {

@@ -37,7 +37,8 @@ namespace Hubble.Core.Store
 
         private Mode _Mode;
         private string _FilePath;
-        private FileStream _IndexFile = null;
+        //private FileStream _IndexFile = null;
+        private Hubble.Framework.IO.CachedFileStream _IndexFile = null;
 
         /// <summary>
         /// file path of .idx file
@@ -63,11 +64,14 @@ namespace Hubble.Core.Store
             switch (mode)
             {
                 case Mode.Read:
-                    _IndexFile = new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    //_IndexFile = new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    _IndexFile = new Hubble.Framework.IO.CachedFileStream(Hubble.Framework.IO.CachedFileStream.CachedType.NoCache, _FilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
                     break;
 
                 case Mode.Write:
-                    _IndexFile = new FileStream(_FilePath, FileMode.Create, FileAccess.ReadWrite);
+                    //_IndexFile = new FileStream(_FilePath, FileMode.Create, FileAccess.ReadWrite);
+                    _IndexFile = new Hubble.Framework.IO.CachedFileStream(_FilePath, FileMode.Create, FileAccess.ReadWrite);
                     break;
             }
         }

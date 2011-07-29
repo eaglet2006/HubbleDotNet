@@ -101,6 +101,7 @@
     <Compile Include="Entity\DocIdPayloadRank.cs" />
     <Compile Include="HubbleException.cs" />
     <Compile Include="IO\BufferMemory.cs" />
+    <Compile Include="IO\CachedFileBufferManager.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />
