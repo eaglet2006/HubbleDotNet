@@ -83,6 +83,15 @@ namespace Hubble.Core.Store
 
         #region Public methods
 
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            if (_Mode == Mode.Read)
+            {
+                _IndexFile.ChangeCachedType(type);
+                _IndexFile.MinCacheLength = minLoadSize * 1024;
+            }
+        }
+
         /// <summary>
         /// Close .idx file
         /// </summary>
@@ -196,8 +205,20 @@ namespace Hubble.Core.Store
 
         public Hubble.Framework.IO.BufferMemory GetIndexBufferMemory(long position, long length)
         {
-            byte[] buf = GetIndexBufToArray(position, length);
-            return new Hubble.Framework.IO.BufferMemory(buf, 0, buf.Length);
+            _IndexFile.Seek(position, System.IO.SeekOrigin.Begin);
+
+            byte[] buf;
+            int offsetInBuf;
+
+            int count = _IndexFile.Read(out buf, out offsetInBuf, (int)length);
+
+            if (count != length)
+            {
+                throw new Hubble.Core.Store.StoreException(string.Format("GetIndex Buf fail! position={0} length={1}",
+                    position, length));
+            }
+
+            return new Hubble.Framework.IO.BufferMemory(buf, offsetInBuf, count);
         }
 
         public System.IO.MemoryStream GetIndexBuf(long position, long length)

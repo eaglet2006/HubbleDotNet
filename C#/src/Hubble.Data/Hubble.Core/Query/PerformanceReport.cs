@@ -37,6 +37,14 @@ namespace Hubble.Core.Query
             Dispose();
         }
 
+        public void Report(string message)
+        {
+            if (_SW != null)
+            {
+                Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.WritePerformanceReportText(message);
+            }
+        }
+
         public void Stop(string title)
         {
             if (_SW != null)

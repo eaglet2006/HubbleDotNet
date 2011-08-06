@@ -516,6 +516,32 @@ namespace Hubble.Core.Data
             }
         }
 
+        private void ChangeInvertedIndexRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            foreach (InvertedIndex index in _FieldInvertedIndex.Values)
+            {
+                index.SetRamIndex(type, minLoadSize);
+            }
+        }
+
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            _Table.RamIndexType = type;
+
+            if (minLoadSize > Hubble.Framework.IO.CachedFileBufferManager.BufferUnitSize /1024)
+            {
+                minLoadSize = Hubble.Framework.IO.CachedFileBufferManager.BufferUnitSize / 1024;
+            }
+            else if (minLoadSize < 0)
+            {
+                minLoadSize = 0;
+            }
+
+            _Table.RamIndexMinLoadSize = minLoadSize;
+
+            ChangeInvertedIndexRamIndex(type, minLoadSize);
+        }
+
         internal void SetCacheQuery(bool value, int timeout)
         {
             _Table.QueryCacheEnabled = value;
@@ -1226,6 +1252,8 @@ namespace Hubble.Core.Data
                             InvertedIndex invertedIndex = new InvertedIndex(_Directory,
                                 field.Name.Trim(), field.Mode, false, this, documentsCount);
                             AddFieldInvertedIndex(field.Name, invertedIndex);
+                            invertedIndex.SetRamIndex((Hubble.Framework.IO.CachedFileStream.CachedType)Table.RamIndexType,
+                                Table.RamIndexMinLoadSize);
                         }
 
                         AddFieldIndex(field.Name, field);

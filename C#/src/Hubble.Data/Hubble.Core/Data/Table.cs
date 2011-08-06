@@ -68,6 +68,10 @@ namespace Hubble.Core.Data
 
         private bool _IgnoreReduplicateDocIdReplaceFieldAtInsert = true;
 
+        private CachedFileStream.CachedType _RamIndexType = 0;
+
+        private int _RamIndexMinLoadSize = 80; //In KB
+
         bool _QueryCacheEnabled = true;
 
         int _QueryCacheTimeout = 0; //In seconds
@@ -87,6 +91,8 @@ namespace Hubble.Core.Data
         bool _IsBigTable = false;
 
         private BigTable.BigTable _BigTable = new Hubble.Core.BigTable.BigTable();
+
+
 
         int _SelectTimeout = -1;
         #endregion
@@ -467,6 +473,56 @@ namespace Hubble.Core.Data
                     {
                         _GroupByLimit = value;
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        ///    Ram index type.
+        ///    NoCache = 0,
+        ///    Full = 1, //Cache all the data
+        ///    Dynamic = 2, //Cache dynamicly
+        ///    Small = 3, //Only cache small file
+        /// </summary>
+        public CachedFileStream.CachedType RamIndexType
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _RamIndexType;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _RamIndexType = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Min load size.
+        /// Avaliable in Dynamic type
+        /// In KB
+        /// </summary>
+        public int RamIndexMinLoadSize 
+        {
+            get
+            {
+                lock (this)
+                {
+                    return _RamIndexMinLoadSize;
+                }
+            }
+
+            set
+            {
+                lock (this)
+                {
+                    _RamIndexMinLoadSize = value;
                 }
             }
         }

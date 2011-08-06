@@ -661,6 +661,7 @@ namespace Hubble.Core.Store
 
         #endregion
 
+
         private WordFilePositionList GetFilePositionListByWord(string word)
         {
             List<IndexFile.FilePosition> fpList = _IndexFile.GetFilePositionListByWord(word);
@@ -721,7 +722,6 @@ namespace Hubble.Core.Store
         //    GC.Collect();
 
         //}
-
 
         internal const int MaxIndexFilesNeedMerge = 64;
         internal const int MinIndexFilesNeedMerge = 32;
@@ -1305,6 +1305,28 @@ namespace Hubble.Core.Store
         //public void AddDocInfos(List<IndexFile.DocInfo> docInfos)
         //{
         //}
+
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                _IndexFile.SetRamIndex(type, minLoadSize);
+            }
+            finally
+            {
+                HBMonitor.Exit(_LockObj);
+            }
+        }
 
         public MergeInfos GetMergeInfos(Data.OptimizationOption option)
         {

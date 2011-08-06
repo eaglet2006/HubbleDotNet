@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Hubble.Framework.IO;
 
 namespace Hubble.Core.StoredProcedure
 {
@@ -85,6 +86,15 @@ namespace Hubble.Core.StoredProcedure
             NewRow();
             OutputValue("Attribute", "InitImmediatelyAfterStartup");
             OutputValue("Value", dbProvider.Table.InitImmediatelyAfterStartup.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "RamIndexType");
+            OutputValue("Value", dbProvider.Table.RamIndexType.ToString());
+
+            NewRow();
+            OutputValue("Attribute", "RamIndexMinLoadSize");
+            OutputValue("Value", dbProvider.Table.RamIndexMinLoadSize.ToString());
+
 
             NewRow();
             OutputValue("Attribute", "QueryCacheEnabled");

@@ -138,6 +138,15 @@ namespace Hubble.Core.Store
             }
         }
 
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            if (_Mode == Mode.Read)
+            {
+                _File.ChangeCachedType(type);
+                _File.MinCacheLength = minLoadSize * 1024;
+            }
+        }
+
         public void Close()
         {
             if (_File == null)

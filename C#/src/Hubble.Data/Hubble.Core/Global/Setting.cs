@@ -488,15 +488,19 @@ namespace Hubble.Core.Global
         }
 
 
-        long _MemoryLimited = 800 * 1024 * 1024;
+        int _RamIndexMemoryLimited = 64 * 1024;
 
-        public long MemoryLimited
+        /// <summary>
+        /// Ram index memory limited. 
+        /// In MB.
+        /// </summary>
+        public int RamIndexMemoryLimited
         {
             get
             {
                 lock (_LockObj)
                 {
-                    return _MemoryLimited;
+                    return _RamIndexMemoryLimited;
                 }
             }
 
@@ -504,11 +508,11 @@ namespace Hubble.Core.Global
             {
                 lock (_LockObj)
                 {
-                    _MemoryLimited = value;
+                    _RamIndexMemoryLimited = value;
 
-                    if (_MemoryLimited < 1 * 1024 * 1024)
+                    if (_RamIndexMemoryLimited < 64)
                     {
-                        _MemoryLimited = 1 * 1024 * 1024;
+                        _RamIndexMemoryLimited = 64;
                     }
                 }
             }
@@ -534,7 +538,7 @@ namespace Hubble.Core.Global
 
                     if (_QueryCacheMemoryLimited < 64 * 1024 )
                     {
-                        _MemoryLimited = 1 * 1024 * 1024;
+                        _RamIndexMemoryLimited = 1 * 1024 * 1024;
                     }
                 }
             }

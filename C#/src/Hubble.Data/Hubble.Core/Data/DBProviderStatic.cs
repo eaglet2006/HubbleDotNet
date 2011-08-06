@@ -577,6 +577,19 @@ namespace Hubble.Core.Data
                 Global.Report.WriteErrorLog("Load user right db fail!", e);
             }
 
+            //Set Ram Index Cache Max Memory
+            try
+            {
+                Hubble.Framework.IO.CachedFileBufferManager.SetMaxMemorySize(
+                    Global.Setting.Config.RamIndexMemoryLimited);
+                
+            }
+            catch (Exception e)
+            {
+                Global.Report.WriteErrorLog("Set RamIndexMemoryLimited fail!", e);
+            }
+
+
             //Build QueryTable
 
             System.Reflection.Assembly asm = System.Reflection.Assembly.GetExecutingAssembly();

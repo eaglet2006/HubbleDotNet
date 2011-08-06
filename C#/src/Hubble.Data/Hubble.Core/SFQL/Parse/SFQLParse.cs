@@ -1094,7 +1094,7 @@ namespace Hubble.Core.SFQL.Parse
                     result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount, out groupByCollection, out sorted);
                 }
 
-                //Sort
+                 //Sort
                 //Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(select.SelectFroms[0].Name);
 
                 //Document rank
@@ -2118,6 +2118,8 @@ namespace Hubble.Core.SFQL.Parse
             SyntaxAnalyse(sql);
             int tableNum = 0;
 
+            bool needPerformanceReport = false;
+
             if (_SFQLSentenceList.Count > 0)
             {
                 TSFQLSentence sentence = _SFQLSentenceList[0];
@@ -2125,6 +2127,7 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     if (sentence.Attributes.Contains(new TSFQLAttribute("PerformanceReport")))
                     {
+                        needPerformanceReport = true;
                         Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport = true;
                     }
                     else
@@ -2136,12 +2139,10 @@ namespace Hubble.Core.SFQL.Parse
 
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("SFQLParase.Query");
 
-#if PerformanceTest
-            System.Diagnostics.Stopwatch sw = null;
             long totalMem = 0;
             int[] gcCounts = null;
 
-            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
+            if (needPerformanceReport)
             {
                 totalMem = GC.GetTotalMemory(false);
 
@@ -2150,11 +2151,7 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     gcCounts[i] = GC.CollectionCount(i);
                 }
-
-                sw = new System.Diagnostics.Stopwatch();
-                sw.Start();
             }
-#endif
 
             foreach (TSFQLSentence sentence in _SFQLSentenceList)
             {
@@ -2212,29 +2209,26 @@ namespace Hubble.Core.SFQL.Parse
                 AppendQueryResult(queryResult, ref tableNum, ref result);
             }
 
-            performanceReport.Stop();
-
-#if PerformanceTest
-            if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
+            if (needPerformanceReport)
             {
-                sw.Stop();
+                StringBuilder pReport = new StringBuilder();
 
-                result.AddPrintMessage("PerformanceReport", string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
-                result.AddPrintMessage("PerformanceReport", string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
-
-                Console.WriteLine(string.Format("SFQLParase.Query time={0} ms", sw.ElapsedMilliseconds));
-
-                Console.WriteLine(string.Format("{0} bytes memory alloced.", GC.GetTotalMemory(false) - totalMem));
+                pReport.AppendFormat("{0:.###} KB GC memory alloced.", (double)(GC.GetTotalMemory(false) - totalMem) / 1024);
 
                 for (int i = 0; i <= GC.MaxGeneration; i++)
                 {
                     int count = GC.CollectionCount(i) - gcCounts[i];
-                    result.AddPrintMessage("PerformanceReport", "\tGen " + i + ": \t\t" + count);
 
-                    Console.WriteLine("\tGen " + i + ": \t\t" + count);
+                    pReport.AppendFormat("Gen {0}:{1} ", i, count);
                 }
+
+                pReport.AppendLine();
+
+                performanceReport.Report(pReport.ToString());
             }
-#endif
+
+
+            performanceReport.Stop();
 
             if (Service.CurrentConnection.ConnectionInfo.CurrentCommandContent.PerformanceReport)
             {

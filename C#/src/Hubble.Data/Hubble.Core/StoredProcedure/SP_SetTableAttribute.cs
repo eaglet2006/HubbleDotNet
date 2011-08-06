@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using Hubble.Framework.IO;
+
 namespace Hubble.Core.StoredProcedure
 {
     class SP_SetTableAttribute : StoredProcedure, IStoredProc, IHelper
@@ -70,6 +72,38 @@ namespace Hubble.Core.StoredProcedure
                     }
                     break;
 
+                case "ramindextype":
+                    {
+                        CachedFileStream.CachedType ramindextype = (CachedFileStream.CachedType)Enum.Parse(typeof(CachedFileStream.CachedType), value);
+ 
+                        dbProvider.SetRamIndex(ramindextype, 
+                            dbProvider.Table.RamIndexMinLoadSize);
+                        dbProvider.SaveTable();
+                        OutputMessage(string.Format("Set table {0} RamIndexType to {1} sucessful!",
+                            tableName, ramindextype));
+                    }
+
+                    break;
+
+                case "ramindexminloadsize":
+                    {
+                        int ramindexminloadsize;
+
+                        if (int.TryParse(value, out ramindexminloadsize))
+                        {
+                            dbProvider.SetRamIndex(dbProvider.Table.RamIndexType,
+                                ramindexminloadsize);
+                            dbProvider.SaveTable();
+                            OutputMessage(string.Format("Set table {0} RamIndexMinLoadSize to {1} sucessful!",
+                                tableName, ramindexminloadsize));
+                        }
+                        else
+                        {
+                            throw new StoredProcException("Parameter 3 must be int");
+                        }
+                    }
+
+                    break;
 
                 case "querycacheenabled":
                     {

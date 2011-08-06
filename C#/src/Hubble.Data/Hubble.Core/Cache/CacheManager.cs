@@ -58,28 +58,10 @@ namespace Hubble.Core.Cache
                 if (InsertCount > 1000)
                 {
                     InsertCount = 0;
-                    GC.Collect();
+                    GC.Collect(GC.MaxGeneration);
                 }
 
                 continue;
-                
-                //version 0.8, cancel the index cache,so following code is no usefull.
-                //I will modify index cache in version 0.9 
-                long pageSize = System.Diagnostics.Process.GetCurrentProcess().PagedMemorySize64 ;
-                if (pageSize < Global.Setting.Config.MemoryLimited)
-                {
-                    continue;
-                }
-
-                lock (_LockObj)
-                {
-                    foreach (IManagedCache cache in _CacheToReduceTimes.Keys)
-                    {
-                        cache.ReduceMemory(50);
-                    }
-                }
-
-                GC.Collect();
             }
         }
 

@@ -12,9 +12,19 @@ namespace Hubble.Core.StoredProcedure
             AddColumn("Value");
             AddColumn("Note");
 
-            OutputValue("Name", "MemoryLimited");
-            OutputValue("Value", (Global.Setting.Config.MemoryLimited / (1024*1024)).ToString());
-            OutputValue("Note", "MB, Minimun is 1 MB");
+            OutputValue("Name", "RamIndexMemoryLimited");
+            OutputValue("Value", Global.Setting.Config.RamIndexMemoryLimited.ToString());
+            OutputValue("Note", "MB, Minimun is 64 MB");
+ 
+            NewRow();
+            OutputValue("Name", "RamIndexAllocedMemory");
+            OutputValue("Value", Hubble.Framework.IO.CachedFileBufferManager.GetAllocedMemorySize().ToString());
+            OutputValue("Note", "MB");
+
+            NewRow();
+            OutputValue("Name", "LastSystemAvaliableMemory");
+            OutputValue("Value", Hubble.Framework.IO.CachedFileBufferManager.GetAvaliableRam().ToString());
+            OutputValue("Note", "MB");
 
             NewRow();
             OutputValue("Name", "QueryCacheMemoryLimited");
@@ -47,10 +57,10 @@ namespace Hubble.Core.StoredProcedure
 
             switch (name.ToLower())
             {
-                case "memorylimited":
-                    OutputValue("Name", "MemoryLimited");
-                    OutputValue("Value", (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString());
-                    OutputValue("Note", "MB, Minimun is 1 MB");
+                case "ramindexmemorylimited":
+                    OutputValue("Name", "RamIndexMemoryLimited");
+                    OutputValue("Value", Global.Setting.Config.RamIndexMemoryLimited.ToString());
+                    OutputValue("Note", "MB, Minimun is 64 MB");
                     break;
 
                 case "querycachememorylimited":
@@ -90,22 +100,25 @@ namespace Hubble.Core.StoredProcedure
 
             switch (name.ToLower())
             {
-                case "memorylimited":
+                case "ramindexmemorylimited":
                     {
-                        oldValue = (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString();
-                        long memoryLimited;
+                        oldValue = Global.Setting.Config.RamIndexMemoryLimited.ToString();
+                        int memoryLimited;
 
-                        if (!long.TryParse(value, out memoryLimited))
+                        if (!int.TryParse(value, out memoryLimited))
                         {
                             throw new StoredProcException("Error converting data type varchar to int.");
                         }
 
-                        Global.Setting.Config.MemoryLimited = memoryLimited * 1024 * 1024;
+                        Global.Setting.Config.RamIndexMemoryLimited = memoryLimited;
+
+                        Hubble.Framework.IO.CachedFileBufferManager.SetMaxMemorySize(
+                            Global.Setting.Config.RamIndexMemoryLimited);
 
                         Global.Setting.Save();
 
                         OutputMessage(string.Format("Configuration option '{0}' changed from {1} to {2}.",
-                            name, oldValue, (Global.Setting.Config.MemoryLimited / (1024 * 1024)).ToString()));
+                            name, oldValue, Global.Setting.Config.RamIndexMemoryLimited.ToString()));
                     }
                     break;
                 case "querycachememorylimited":

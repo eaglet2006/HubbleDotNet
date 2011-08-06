@@ -283,6 +283,9 @@ namespace Hubble.Core.Store
         private Hubble.Core.Data.Field.IndexMode _IndexMode;
         IndexFileProxy _IndexFileProxy;
 
+        CachedFileStream.CachedType _CachedType = CachedFileStream.CachedType.NoCache;
+        int _MinLoadSize = 200; //In KB
+
         #endregion
 
         #region Public properties
@@ -546,8 +549,11 @@ namespace Hubble.Core.Store
                             DDXFile iDDXFile = new DDXFile(ddxFile, DDXFile.Mode.Read);
                             IDXFile idxfile = new IDXFile(iFile, IDXFile.Mode.Read);
 
-                            _IndexFileList.Add(new IndexFileInfo(serial, File.GetFileLength(iFile), 
-                                iDDXFile, idxfile));
+                            IndexFileInfo ifi = new IndexFileInfo(serial, File.GetFileLength(iFile),
+                                iDDXFile, idxfile);
+
+                            _IndexFileList.Add(ifi);
+                            SetRamIndex(ifi, _CachedType, _MinLoadSize);
                         }
                     }
                 }
@@ -606,8 +612,35 @@ namespace Hubble.Core.Store
             return null;
         }
 
+        private void SetRamIndex(IndexFileInfo ifi, Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            if (type == CachedFileStream.CachedType.NoCache)
+            {
+                ifi.DDXFile.SetRamIndex(CachedFileStream.CachedType.NoCache, minLoadSize);
+            }
+            else
+            {
+                ifi.DDXFile.SetRamIndex(CachedFileStream.CachedType.Full, minLoadSize);
+            }
+
+            ifi.IDXFile.SetRamIndex(type, minLoadSize);
+        }
+
         #endregion
 
+        #region Internal methods
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            foreach (IndexFileInfo ifi in _IndexFileList)
+            {
+                SetRamIndex(ifi, type, minLoadSize);
+            }
+
+            _CachedType = type;
+            _MinLoadSize = minLoadSize;
+        }
+
+        #endregion
 
         #region Public methods
 
@@ -881,8 +914,12 @@ namespace Hubble.Core.Store
 
             IDXFile idxfile = new IDXFile(iFile, IDXFile.Mode.Read);
 
-            _IndexFileList.Add(new IndexFileInfo(_MaxSerial, File.GetFileLength(_IndexWriter.IndexFilePath),
-                iDDXFile, idxfile));
+            IndexFileInfo ifi = new IndexFileInfo(_MaxSerial, File.GetFileLength(_IndexWriter.IndexFilePath),
+                iDDXFile, idxfile);
+
+            _IndexFileList.Add(ifi);
+
+            SetRamIndex(ifi, _CachedType, _MinLoadSize);
 
             _MaxSerial++;
 
@@ -909,9 +946,14 @@ namespace Hubble.Core.Store
                            GetIndexFileName(mergedSerial);
                         IDXFile idxfile = new IDXFile(iFile, IDXFile.Mode.Read);
 
-                        IndexFileList[i] = new IndexFile.IndexFileInfo(mergedSerial,
+                        IndexFileInfo ifi = new IndexFile.IndexFileInfo(mergedSerial,
                             File.GetFileLength(IndexDir + GetIndexFileName(mergedSerial)),
                             iDDXFile, idxfile);
+
+                        IndexFileList[i] = ifi;
+
+                        SetRamIndex(ifi, _CachedType, _MinLoadSize);
+
                         fst = false;
                         i++;
                     }

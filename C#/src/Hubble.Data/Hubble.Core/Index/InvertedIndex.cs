@@ -142,6 +142,7 @@ namespace Hubble.Core.Index
 
         #endregion
 
+
         #region Public properties
 
         public string FieldName
@@ -305,6 +306,16 @@ namespace Hubble.Core.Index
         }
 
         #endregion
+
+        #region Internal Methods
+
+        internal void SetRamIndex(Hubble.Framework.IO.CachedFileStream.CachedType type, int minLoadSize)
+        {
+            _IndexFileProxy.SetRamIndex(type, minLoadSize);
+        }
+
+        #endregion
+
 
         #region Constructor
 
