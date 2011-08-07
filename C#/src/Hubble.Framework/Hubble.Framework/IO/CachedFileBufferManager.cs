@@ -30,7 +30,12 @@ namespace Hubble.Framework.IO
     /// </summary>
     public class CachedFileBufferManager
     {
-        static internal CachedFileBufferManager CachedFileBufMgr = new CachedFileBufferManager();
+        static internal CachedFileBufferManager CachedFileBufMgr = null;
+
+        static public void Init(int memorySize, DelegateErrorMessage errorMessage)
+        {
+            CachedFileBufMgr = new CachedFileBufferManager(memorySize, errorMessage); 
+        }
 
         /// <summary>
         /// Set new max memory size. (MB)
@@ -340,25 +345,37 @@ namespace Hubble.Framework.IO
 
 
         public CachedFileBufferManager()
-            : this(DefaultMaxMemorySize)
+            : this(DefaultMaxMemorySize, null)
         {
 
         }
 
 
-        public CachedFileBufferManager(long maxSize)
+        public CachedFileBufferManager(long maxSize, DelegateErrorMessage errorMessage)
         {
-            _MaxMemorySize = maxSize;
+            _MaxMemorySize = (long)maxSize * 1024 * 1024;
             _BufferList = new LinkedList<Buffer>();
             _AvaliableRam = 2 * 1024 * 1024;
 
+            ErrorMessage = errorMessage;
+
             _LoadRamCounterThread = new System.Threading.Thread(delegate()
             {
-                PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
-                lock (this)
+                try
                 {
-                    _RamCounter = ramCounter;
-                    _AvaliableRam = _RamCounter.NextValue();
+                    PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+                    lock (this)
+                    {
+                        _RamCounter = ramCounter;
+                        _AvaliableRam = _RamCounter.NextValue();
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (ErrorMessage != null)
+                    {
+                        ErrorMessage("Init PerformanceCounter fail in CachedFileBufferManager", e);
+                    }
                 }
             });
 

@@ -547,6 +547,12 @@ namespace Hubble.Core.Data
             Init();
         }
 
+        public static void ErrorMessageForCachedFileBufferManager(string message, Exception e)
+        {
+            Global.Report.WriteErrorLog(message, e);
+        }
+
+
         public static void Init()
         {
 
@@ -580,9 +586,8 @@ namespace Hubble.Core.Data
             //Set Ram Index Cache Max Memory
             try
             {
-                Hubble.Framework.IO.CachedFileBufferManager.SetMaxMemorySize(
-                    Global.Setting.Config.RamIndexMemoryLimited);
-                
+                Hubble.Framework.IO.CachedFileBufferManager.Init(Global.Setting.Config.RamIndexMemoryLimited,
+                    ErrorMessageForCachedFileBufferManager);
             }
             catch (Exception e)
             {
