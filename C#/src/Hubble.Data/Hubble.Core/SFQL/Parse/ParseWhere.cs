@@ -399,6 +399,10 @@ namespace Hubble.Core.SFQL.Parse
                     {
                         query.UpDict = upDict;
                     }
+                    else
+                    {
+                        upDict.Dispose();
+                    }
                 }
 
                 if (query.UpDict != null)
@@ -985,13 +989,28 @@ namespace Hubble.Core.SFQL.Parse
 
         unsafe private Core.SFQL.Parse.DocumentResultWhereDictionary AndMergeDict(Core.SFQL.Parse.DocumentResultWhereDictionary and, Core.SFQL.Parse.DocumentResultWhereDictionary or)
         {
+            if (and == or)
+            {
+                return and;
+            }
+
             if (and == null)
             {
+                if (or != null)
+                {
+                    or.Dispose();
+                }
+
                 return new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
 
             if (or == null)
             {
+                if (and != null)
+                {
+                    and.Dispose();
+                }
+
                 return new DocumentResultWhereDictionary();
             }
 
@@ -1028,12 +1047,20 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
+            src.Dispose();
+            dest.Dispose();
+
             return result;
         }
 
 
         unsafe private Core.SFQL.Parse.DocumentResultWhereDictionary MergeDict(Core.SFQL.Parse.DocumentResultWhereDictionary and, Core.SFQL.Parse.DocumentResultWhereDictionary or)
         {
+            if (and == or)
+            {
+                return and;
+            }
+
             if (and == null)
             {
                 and = new Core.SFQL.Parse.DocumentResultWhereDictionary();
@@ -1043,6 +1070,7 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (and.Not)
                 {
+                    and.Dispose();
                     return new DocumentResultWhereDictionary();
                 }
                 else
@@ -1055,11 +1083,13 @@ namespace Hubble.Core.SFQL.Parse
 
             if (and.Not)
             {
+                and.Dispose();
                 and = new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
 
             if (or.Not)
             {
+                or.Dispose();
                 or = new Core.SFQL.Parse.DocumentResultWhereDictionary();
             }
 
@@ -1136,6 +1166,11 @@ namespace Hubble.Core.SFQL.Parse
             if (dest.RelTotalCount < or.RelTotalCount)
             {
                 dest.RelTotalCount = or.RelTotalCount;
+            }
+
+            if (src != null)
+            {
+                src.Dispose();
             }
 
             return dest;
@@ -1332,6 +1367,8 @@ namespace Hubble.Core.SFQL.Parse
 
             groupByCollection = dict.GroupByCollection;
             sorted = dict.Sorted;
+
+            dict.Dispose();
 
             return result;
         }

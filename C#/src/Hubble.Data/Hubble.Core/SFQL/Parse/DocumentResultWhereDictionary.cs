@@ -69,19 +69,19 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private Dictionary<int, int> _GroupByDict = new Dictionary<int, int>();
+        private Dictionary<int, int> _GroupByDict = null;
 
         public ICollection<int> GroupByCollection
         {
             get
             {
+                if (_GroupByDict == null)
+                {
+                    _GroupByDict = new Dictionary<int, int>();
+                }
+
                 return _GroupByDict.Keys;
             }
-        }
-
-        unsafe public DocumentResultWhereDictionary()
-            :this(128) //Old version use 32768 at here, it is too big
-        {
         }
 
         private unsafe IntPtr Alloc(int capacity)
@@ -101,16 +101,19 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
+        unsafe public DocumentResultWhereDictionary()
+            : this(128) //Old version use 32768 at here, it is too big
+        {
+        }
+
         unsafe public DocumentResultWhereDictionary(int capacity)
             : base(capacity)
         {
-            _MemList = new List<IntPtr>();
-
-            _MemList.Add(Alloc(capacity));
+            _MemList = null;
 
             _UnitSize = capacity;
             _UnitIndex = 0;
-            _Cur = (Query.DocumentResult*)_MemList[_MemList.Count-1];
+            _Cur = null;
         }
 
         ~DocumentResultWhereDictionary()
@@ -126,21 +129,45 @@ namespace Hubble.Core.SFQL.Parse
 
         public bool GroupByContains(int docId)
         {
+            if (_GroupByDict == null)
+            {
+                return false;
+            }
+
             return _GroupByDict.ContainsKey(docId);
         }
 
         public void AddToGroupByCollection(int docId)
         {
+            if (_GroupByDict == null)
+            {
+                _GroupByDict = new Dictionary<int, int>();
+            }
+
             _GroupByDict.Add(docId, docId);
         }
 
         public bool RemoveFromGroupByCollection(int docId)
         {
+            if (_GroupByDict == null)
+            {
+                return false;
+            }
+
             return _GroupByDict.Remove(docId);
         }
 
         unsafe public void Add(int docId, Query.DocumentResult value)
         {
+            if (_MemList == null)
+            {
+                _MemList = new List<IntPtr>();
+
+                _MemList.Add(Alloc(_UnitSize));
+
+                _Cur = (Query.DocumentResult*)_MemList[_MemList.Count - 1];
+            }
+
             try
             {
                 base.Add(docId, new DocumentResultPoint(_Cur));
@@ -174,6 +201,15 @@ namespace Hubble.Core.SFQL.Parse
 
         unsafe public void Add(int docId, long rank)
         {
+            if (_MemList == null)
+            {
+                _MemList = new List<IntPtr>();
+
+                _MemList.Add(Alloc(_UnitSize));
+
+                _Cur = (Query.DocumentResult*)_MemList[_MemList.Count - 1];
+            }
+
             base.Add(docId, new DocumentResultPoint(_Cur));
             _Cur->DocId = docId;
             _Cur->Score = rank;
