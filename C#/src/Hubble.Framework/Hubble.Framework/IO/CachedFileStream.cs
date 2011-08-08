@@ -566,14 +566,27 @@ namespace Hubble.Framework.IO
                     {
                         Cleanup();
                     }
-                    //else if (type == CachedType.Full ||
-                    //    (type == CachedType.Small && _FileLength < )
-                    //{
-                    //}
+                    else if (type == CachedType.Full ||
+                        (type == CachedType.Small && _FileLength <= CachedFileBufferManager.BufferUnitSize))
+                    {
+                        Cleanup();
+                        CacheAll();
+                    }
+
+                    break;
+                case CachedType.Small:
+                    if (type == CachedType.NoCache)
+                    {
+                        Cleanup();
+                    }
+                    else if (type == CachedType.Full)
+                    {
+                        Cleanup();
+                        CacheAll();
+                    }
 
                     break;
                 case CachedType.Full:
-                case CachedType.Small:
 
                     if (type == CachedType.NoCache)
                     {
