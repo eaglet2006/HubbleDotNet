@@ -38,6 +38,18 @@ namespace Hubble.Framework.IO
             Small = 3, //Only cache small file
         }
 
+        struct OffsetLength
+        {
+            public int Offset;
+            public int Length;
+
+            public OffsetLength(int offset, int length)
+            {
+                Offset = offset;
+                Length = length;
+            }
+        }
+
         private CachedType _Type;
 
         private string _FilePath;
@@ -48,6 +60,7 @@ namespace Hubble.Framework.IO
 
         private CachedFileBufferManager _CachedFileMgr;
         private CachedFileBufferManager.Buffer[] _CacheBufferIndex;
+        private OffsetLength[] _LastOLWithBuffer; //last offset and length inside buffer. because of split of buffer reading.
 
         private long _FileLength;
         private long _CurPosition;
@@ -166,6 +179,7 @@ namespace Hubble.Framework.IO
             else
             {
                 _CacheBufferIndex = null;
+                _LastOLWithBuffer = null;
             }
         }
 
@@ -182,6 +196,8 @@ namespace Hubble.Framework.IO
             }
 
             _CacheBufferIndex = new CachedFileBufferManager.Buffer[indexLength];
+            _LastOLWithBuffer = new OffsetLength[indexLength];
+
             _CachedFileMgr = CachedFileBufferManager.CachedFileBufMgr;
 
             _CurPosition = 0;
@@ -711,7 +727,21 @@ namespace Hubble.Framework.IO
                 if ((_Type == CachedType.Dynamic || _Type == CachedType.Full)
                     && CacheAllFinished)
                 {
-                    if (count >= MinCacheLength)
+                    OffsetLength ol = _LastOLWithBuffer[index];
+
+                    if (offsetInBuffer >= ol.Offset && offsetInBuffer <= ol.Offset + ol.Length)
+                    {
+                        ol.Length += count - (ol.Offset + ol.Length - offsetInBuffer);
+                    }
+                    else
+                    {
+                        ol.Offset = offsetInBuffer;
+                        ol.Length = count;
+                    }
+
+                    _LastOLWithBuffer[index] = ol;
+
+                    if (ol.Length >= MinCacheLength)
                     {
                         //Cached
                         if (LoadToBuffer(count, Position))
@@ -781,7 +811,21 @@ namespace Hubble.Framework.IO
                 if ((_Type == CachedType.Dynamic || _Type == CachedType.Full)
                     && CacheAllFinished)
                 {
-                    if (count >= MinCacheLength)
+                    OffsetLength ol = _LastOLWithBuffer[index];
+
+                    if (offsetInBuffer >= ol.Offset && offsetInBuffer <= ol.Offset + ol.Length)
+                    {
+                        ol.Length += count - (ol.Offset + ol.Length - offsetInBuffer);
+                    }
+                    else
+                    {
+                        ol.Offset = offsetInBuffer;
+                        ol.Length = count;
+                    }
+
+                    _LastOLWithBuffer[index] = ol;
+
+                    if (ol.Length >= MinCacheLength)
                     {
                         //Cached
                         if (LoadToBuffer(count, Position))
