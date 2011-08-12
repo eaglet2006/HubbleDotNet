@@ -247,6 +247,13 @@ namespace Hubble.Core.Query
                             (double)(wifq.QueryCount * drp.pDocumentResult->LastWordIndexQueryCount);
 
                         drp.pDocumentResult->Score = (long)(drp.pDocumentResult->Score * delta);
+                        
+                        //Overflow, if match too much, sometime score would less than zero.
+                        if (drp.pDocumentResult->Score < 0)
+                        {
+                            drp.pDocumentResult->Score = long.MaxValue - 4000000;
+                        }
+
                         drp.pDocumentResult->LastIndex = (UInt16)i;
                         drp.pDocumentResult->LastPosition = docList.FirstPosition;
                         drp.pDocumentResult->LastCount = (UInt16)docList.Count;
@@ -397,6 +404,13 @@ namespace Hubble.Core.Query
                                     (double)(wifq.QueryCount * drp.pDocumentResult->LastWordIndexQueryCount);
 
                                 drp.pDocumentResult->Score = (long)(drp.pDocumentResult->Score * delta);
+
+                                //Overflow, if match too much, sometime score would less than zero.
+                                if (drp.pDocumentResult->Score < 0)
+                                {
+                                    drp.pDocumentResult->Score = long.MaxValue - 4000000;
+                                }
+
                                 drp.pDocumentResult->LastIndex = (UInt16)curWord;
                                 drp.pDocumentResult->LastPosition = docList.FirstPosition;
                                 drp.pDocumentResult->LastCount = (UInt16)docList.Count;
