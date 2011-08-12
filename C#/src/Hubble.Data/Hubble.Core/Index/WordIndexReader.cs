@@ -213,6 +213,18 @@ namespace Hubble.Core.Index
             }
         }
 
+        public bool GetNextOriginalWithDocId(ref OriginalDocumentPositionList odpl, int docId)
+        {
+            if (_IndexReader == null)
+            {
+                odpl.DocumentId = -1;
+                return false;
+            }
+
+            return _IndexReader.GetNextOriginalWithDocId(ref odpl, docId);
+        }
+
+
         public DocumentPositionList Get(int docid)
         {
             if (_IndexReader == null)
@@ -221,6 +233,17 @@ namespace Hubble.Core.Index
             }
 
             return _IndexReader.Get(docid);
+        }
+
+        public bool GetNextOriginal(ref OriginalDocumentPositionList odpl)
+        {
+            if (_IndexReader == null)
+            {
+                odpl.DocumentId = -1;
+                return false;
+            }
+
+            return _IndexReader.GetNextOriginal(ref odpl);
         }
 
         public OriginalDocumentPositionList GetNextOriginal()

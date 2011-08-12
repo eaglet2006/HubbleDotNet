@@ -69,6 +69,9 @@ namespace Hubble.Core.SFQL.Parse
 
         private Dictionary<int, int> _NotInDict = null;
 
+        private SyntaxAnalysis.ExpressionTree _NoneTokenizedAndTree = null; //the first and child is not including full text search operator.
+        private bool _ComplexExpression = false; //is it a complex expression.
+
         /// <summary>
         /// Key is docid
         /// Value is 0
@@ -86,6 +89,100 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <param name="merged">
+        /// if expression hasn't or child, output the merged expression. It means the expression can be 
+        /// merged.
+        /// Like (a match 'xxx' and b match 'yyy') can merged to a match 'xxx' and b match 'yyy'
+        /// else
+        /// output null.
+        /// </param>
+        private void OptimizeReverse(SyntaxAnalysis.IExpression expression,
+            out SyntaxAnalysis.IExpression merged)
+        {
+            merged = null;
+
+            if (expression == null)
+            {
+                return;
+            }
+
+            if (expression is SyntaxAnalysis.ExpressionTree)
+            {
+                SyntaxAnalysis.ExpressionTree tree = expression as SyntaxAnalysis.ExpressionTree;
+                if (tree.OrChild == null && tree.AndChild == null)
+                {
+                    merged = tree.Expression;
+                }
+
+                SyntaxAnalysis.IExpression myMerged;
+                OptimizeReverse(tree.AndChild, out myMerged);
+
+                if (tree.AndChild != null)
+                {
+                    if (!tree.AndChild.NeedTokenize)
+                    {
+                        _ComplexExpression = true;
+                    }
+                }
+
+                OptimizeReverse(tree.Expression, out myMerged);
+
+                if (myMerged != null)
+                {
+                    tree.Expression = myMerged;
+                }
+
+                OptimizeReverse(tree.OrChild, out myMerged);
+            }
+
+            return;
+
+            //if (expression
+        }
+
+        /// <summary>
+        /// This is the entry to optimize the expression.
+        /// </summary>
+        /// <param name="expressionTree">input the expression tree and optimized it.</param>
+        internal void OptimizeExpression(SyntaxAnalysis.ExpressionTree expressionTree)
+        {
+            if (expressionTree == null)
+            {
+                return;
+            }
+
+            SyntaxAnalysis.IExpression merged;
+
+            OptimizeReverse(expressionTree.AndChild, out merged);
+
+            if (expressionTree.AndChild != null)
+            {
+                if (!expressionTree.AndChild.NeedTokenize)
+                {
+                    _NoneTokenizedAndTree = expressionTree.AndChild;
+
+                    //in first and child, have none tokenized tree is not complex expression
+                    if (_ComplexExpression)
+                    {
+                        _ComplexExpression = false;
+                    }
+                }
+            }
+
+            OptimizeReverse(expressionTree.Expression, out merged);
+
+            if (merged != null)
+            {
+                expressionTree.Expression = merged;
+            }
+
+            OptimizeReverse(expressionTree.OrChild, out merged);
+
+        }
 
         public ParseWhere(string tableName, DBProvider dbProvider, bool orderbyScore, string orderBy)
         {
@@ -365,9 +462,9 @@ namespace Hubble.Core.SFQL.Parse
                 query.NeedGroupBy = this.NeedGroupBy;
                 query.FieldRank = fieldRank;
                 query.FieldName = fieldName;
-                query.CanLoadPartOfDocs = OrderByScore;
+                query.CanLoadPartOfDocs = OrderByScore && !_ComplexExpression;
                 query.OrderBy = _OrderBy;
-                query.NoAndExpression = expressionTree.AndChild == null;
+                query.NoAndExpression = expressionTree.AndChild == null && _NoneTokenizedAndTree == null;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
 

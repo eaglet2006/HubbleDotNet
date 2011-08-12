@@ -485,20 +485,29 @@ namespace Hubble.Core.Query
 
                 WordIndexForQuery fstWifq = wordIndexes[0]; //first word
 
-                Entity.DocumentPositionList fstDocList = fstWifq.WordIndex.GetNext();
+                OriginalDocumentPositionList fstODPL = new OriginalDocumentPositionList();
+                fstWifq.WordIndex.GetNextOriginal(ref fstODPL);
+
+                //Entity.DocumentPositionList fstDocList = fstWifq.WordIndex.GetNext();
 
                 Entity.DocumentPositionList[] docListArr = new Hubble.Core.Entity.DocumentPositionList[wordIndexesLen];
 
-                docListArr[0] = fstDocList;
+                //docListArr[0] = fstDocList;
+                fstODPL.ToDocumentPositionList(ref docListArr[0]);
 
-                while (fstDocList.DocumentId >= 0)
+                OriginalDocumentPositionList odpl = new OriginalDocumentPositionList();
+
+                while (fstODPL.DocumentId >= 0)
                 {
                     int curWord = 1;
-                    int firstDocId = fstDocList.DocumentId;
+                    int firstDocId = fstODPL.DocumentId;
 
                     while (curWord < wordIndexesLen)
                     {
-                        docListArr[curWord] = wordIndexes[curWord].WordIndex.Get(firstDocId);
+                        //docListArr[curWord] = wordIndexes[curWord].WordIndex.Get(firstDocId);
+
+                        wordIndexes[curWord].WordIndex.GetNextOriginalWithDocId(ref odpl, firstDocId);
+                        odpl.ToDocumentPositionList(ref docListArr[curWord]);
 
                         if (docListArr[curWord].DocumentId < 0)
                         {
@@ -617,8 +626,12 @@ namespace Hubble.Core.Query
 
                     }//if (curWord >= wordIndexesLen)
 
-                    fstDocList = fstWifq.WordIndex.GetNext();
-                    docListArr[0] = fstDocList;
+                    //fstDocList = fstWifq.WordIndex.GetNext();
+                    //docListArr[0] = fstDocList;
+
+                    fstWifq.WordIndex.GetNextOriginal(ref fstODPL);
+                    fstODPL.ToDocumentPositionList(ref docListArr[0]);
+
                 }
             }
 

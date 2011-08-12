@@ -97,6 +97,11 @@ namespace Hubble.Core.Entity
             this.CountAndWordCount = 0;
             this.FirstPosition = 0;
         }
+
+        public void ToDocumentPositionList(ref DocumentPositionList dpl)
+        {
+            dpl.Set(ref this);
+        }
     }
 
 
@@ -177,6 +182,32 @@ namespace Hubble.Core.Entity
             Count = 0;
             _TotalWordsInThisDocumentIndex = 0;
             FirstPosition = 0;
+            Next = -1;
+        }
+
+        public void Set(ref OriginalDocumentPositionList odpl)
+        {
+            DocumentId = odpl.DocumentId;
+
+            int count = odpl.CountAndWordCount / 8;
+
+            if (count > Int16.MaxValue)
+            {
+                Count = Int16.MaxValue;
+            }
+            else if (count <= 0)
+            {
+                Count = 1;
+            }
+            else
+            {
+                Count = (Int16)count;
+            }
+
+            _TotalWordsInThisDocumentIndex = (Int16)(odpl.CountAndWordCount % 8);
+
+            FirstPosition = odpl.FirstPosition;
+
             Next = -1;
         }
 

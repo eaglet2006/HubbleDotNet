@@ -38,10 +38,12 @@ namespace Hubble.Core.Store
 
         private int _CurrentFileIndex = -1; //Current file index. it is the index of StepDocIndexList and WordFilePositionList
         private int _CurrentDocId = -1;
+        private int _LastDocIdInCurrentStep = -1;
         private int _CurrentStepDocIndex = -1;
         private BufferMemory _CurrentIndexBuf = null;
         private bool _End = false;
         private DocumentPositionList _NextDocPositionList = new DocumentPositionList(-1);
+        private OriginalDocumentPositionList _NextODPL = new OriginalDocumentPositionList(-1);
 
         #endregion
 
@@ -123,9 +125,11 @@ namespace Hubble.Core.Store
             _CurrentFileIndex = -1;
             _CurrentIndexBuf = null;
             _CurrentDocId = -1;
+            _LastDocIdInCurrentStep = -1;
             _CurrentStepDocIndex = -1;
             _End = false;
             _NextDocPositionList = new DocumentPositionList(-1);
+            _NextODPL.DocumentId = -1;
         }
 
         private bool NextFileIndexBuf()
@@ -179,11 +183,13 @@ namespace Hubble.Core.Store
             {
                 _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position, fp.Length);
                 _CurrentDocId = -1;
+                _LastDocIdInCurrentStep = -1;
             }
             else
             {
                 _CurrentStepDocIndex = -1;
                 _CurrentDocId = -1;
+                _LastDocIdInCurrentStep = -1;
                 int length = _WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex[0].Position;
 
                 _CurrentIndexBuf = _IndexFileProxy.GetIndexBufferMemory(fp.Serial, fp.Position, length);
@@ -292,9 +298,13 @@ namespace Hubble.Core.Store
 
                 bool lessThenNextStepDocIndex = false;
 
+                int lastDocIdInCurrentStep = -1; //last docid in current segment of step;
+
                 for (; nextStepDocIndex < _WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex.Count; nextStepDocIndex++)
                 {
-                    if (docid <= _WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex[nextStepDocIndex].DocId)
+                    //StepDocIndex[nextStepDocIndex].DocId is the last docid of the segment of nextStepDocIndex.
+                    lastDocIdInCurrentStep = _WordStepDocIndex.IndexFileInfoList[_CurrentFileIndex].StepDocIndex[nextStepDocIndex].DocId;
+                    if (docid <= lastDocIdInCurrentStep)
                     {
                         lessThenNextStepDocIndex = true;
                         break;
@@ -309,6 +319,7 @@ namespace Hubble.Core.Store
                 {
                     if (_CurrentStepDocIndex + 1 == nextStepDocIndex)
                     {
+                        _LastDocIdInCurrentStep = lastDocIdInCurrentStep;
                         return false;
                     }
                     else
@@ -334,6 +345,82 @@ namespace Hubble.Core.Store
                         return true;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Get next original document position list by DocId.
+        /// </summary>
+        /// <param name="odpl"></param>
+        /// <param name="docId">docid</param>
+        /// <returns>if docid not match, return false</returns>
+        public bool GetNextOriginalWithDocId(ref OriginalDocumentPositionList odpl, int docId)
+        {
+            if (_End)
+            {
+                odpl.DocumentId = -1;
+                return false;
+            }
+
+            if (docId < 0)
+            {
+                throw new StoreException(string.Format("Invalid docid = {0}", docId));
+            }
+
+            if (_NextODPL.DocumentId >= 0)
+            {
+                if (docId == _NextODPL.DocumentId)
+                {
+                    odpl = _NextODPL;
+                    GetNextOriginal(ref _NextODPL);
+                    return true;
+                }
+                else if (docId < _NextODPL.DocumentId)
+                {
+                    odpl.DocumentId = -1;
+                    return false;
+                }
+            }
+
+            if (!GetNextOriginal(ref odpl))
+            {
+                odpl.DocumentId = -1;
+                return false;
+            }
+
+            if (docId < odpl.DocumentId)
+            {
+                _NextODPL = odpl;
+                odpl.DocumentId = -1;
+                return false;
+            }
+
+            if (docId == odpl.DocumentId)
+            {
+                return true;
+            }
+
+            if (docId > _LastDocIdInCurrentStep)
+            {
+                Match(docId); //Get the matched step doc index
+            }
+
+            GetNextOriginal(ref odpl);
+
+            while (odpl.DocumentId < docId && odpl.DocumentId >= 0)
+            {
+                GetNextOriginal(ref odpl);
+            }
+
+            if (docId == odpl.DocumentId)
+            {
+                return true;
+            }
+            else
+            {
+                _NextODPL = odpl;
+                odpl.DocumentId = -1;
+                return false;
             }
         }
 

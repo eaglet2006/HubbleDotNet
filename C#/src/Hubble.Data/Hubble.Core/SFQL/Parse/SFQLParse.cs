@@ -1091,6 +1091,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
+                    parseWhere.OptimizeExpression(select.Where.ExpressionTree);
                     result = parseWhere.Parse(select.Where.ExpressionTree, out relTotalCount, out groupByCollection, out sorted);
                 }
 
