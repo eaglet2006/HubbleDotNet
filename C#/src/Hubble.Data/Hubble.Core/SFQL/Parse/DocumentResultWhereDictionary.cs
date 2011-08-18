@@ -437,6 +437,16 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
                 _MemList = null;
+
+                base.Clear();
+
+                if (_GroupByDict != null)
+                {
+                    _GroupByDict.Clear();
+                }
+
+
+                _RelTotalCount = 0;
             }
         }
 
