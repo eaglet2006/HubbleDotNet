@@ -525,12 +525,13 @@ namespace Hubble.Core.Query
 
             if (oneWordOptimize)
             {
-                IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize), DBProvider, End, OrderBy, NeedGroupBy);
+                IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize), 
+                    DBProvider, End, OrderBy, NeedGroupBy, wordIndexes);
 
 
                 try
                 {
-                    qOptimize.CalculateOneWordOptimize(upDict, ref docIdRank, wordIndexes[0]);
+                    qOptimize.CalculateOptimize(upDict, ref docIdRank);
                     return;
                 }
                 finally

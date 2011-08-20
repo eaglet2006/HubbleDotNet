@@ -452,11 +452,29 @@ namespace Hubble.Core.Query
 
             if (oneWordOptimize)
             {
-                IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize), DBProvider, End, OrderBy, NeedGroupBy);
+                IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize),
+                    DBProvider, End, OrderBy, NeedGroupBy, wordIndexes);
 
                 try
                 {
-                    qOptimize.CalculateOneWordOptimize(upDict, ref docIdRank, wordIndexes[0]);
+                    qOptimize.CalculateOptimize(upDict, ref docIdRank);
+                    return;
+                }
+                finally
+                {
+                    performanceReport.Stop();
+                }
+            }
+
+            if (this.CanLoadPartOfDocs && this.NoAndExpression
+                && _NotInDict == null && End >= 0)
+            {
+                IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(ContainsOptimize),
+                    DBProvider, End, OrderBy, NeedGroupBy, wordIndexes);
+
+                try
+                {
+                    qOptimize.CalculateOptimize(upDict, ref docIdRank);
                     return;
                 }
                 finally

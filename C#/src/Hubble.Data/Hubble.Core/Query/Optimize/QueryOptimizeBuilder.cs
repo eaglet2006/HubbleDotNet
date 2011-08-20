@@ -10,7 +10,8 @@ namespace Hubble.Core.Query.Optimize
     class QueryOptimizeBuilder
     {
         static internal IQueryOptimize Build(Type optimizeType, 
-            DBProvider dbProvider, int end, string orderBy, bool needGroupBy)
+            DBProvider dbProvider, int end, string orderBy, bool needGroupBy,  
+            WordIndexForQuery[] wordIndexes)
         {
             IQueryOptimize result = Hubble.Framework.Reflection.Instance.CreateInstance(optimizeType) as IQueryOptimize;
 
@@ -23,6 +24,7 @@ namespace Hubble.Core.Query.Optimize
             result.DBProvider = dbProvider;
             result.End = end;
             result.OrderBy = orderBy;
+            result.WordIndexes = wordIndexes;
             result.NeedGroupBy = needGroupBy;
 
             return result;

@@ -68,6 +68,21 @@ namespace Hubble.Core.Query.Optimize
             }
         }
 
+        private WordIndexForQuery[] _WordIndexes;
+
+        public WordIndexForQuery[] WordIndexes
+        {
+            get
+            {
+                return _WordIndexes;
+            }
+
+            set
+            {
+                _WordIndexes = value;
+            }
+        }
+
         private Store.IndexReader _IndexReader;
         private bool _HasRandField = false;
         private int _RankTab;
@@ -138,9 +153,10 @@ namespace Hubble.Core.Query.Optimize
             }
         }
 
-        unsafe public void CalculateOneWordOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
-            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery wifq)
+        unsafe public void CalculateOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)
         {
+            WordIndexForQuery wifq = WordIndexes[0];
             _IndexReader = wifq.WordIndex.IndexReader;
 
             Data.Field rankField = DBProvider.GetField("Rank");

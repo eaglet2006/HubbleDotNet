@@ -17,7 +17,9 @@ namespace Hubble.Core.Query.Optimize
 
         bool NeedGroupBy { get; set; }
 
-        unsafe void CalculateOneWordOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
-            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery wifq);
+        WordIndexForQuery[] WordIndexes { get; set; }
+
+        unsafe void CalculateOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank);
     }
 }

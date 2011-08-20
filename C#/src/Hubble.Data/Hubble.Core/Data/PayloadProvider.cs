@@ -100,7 +100,18 @@ namespace Hubble.Core.Data
             }
         }
 
-        object _LockObj = new object();
+        Lock _Lock = new Lock();
+        //object _LockObj = new object();
+
+        internal void EnterShareLock()
+        {
+            _Lock.Enter(Lock.Mode.Share);
+        }
+
+        internal void LeaveShareLock()
+        {
+            _Lock.Leave(Lock.Mode.Share);
+        }
 
         unsafe public bool TestTryGetValue(int docId, out int* pFileIndex)
         {
@@ -229,59 +240,82 @@ namespace Hubble.Core.Data
 
         internal void RemoveDocIdReplaceFieldValue(long value)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Mutex))
             {
-                if (_DocIdReplaceField == null)
+                try
                 {
-                    return;
-                }
+                    if (_DocIdReplaceField == null)
+                    {
+                        return;
+                    }
 
-                if (_DocIdReplaceField.DataType == DataType.BigInt)
-                {
-                    _ReplaceFieldValueToDocId.Remove(value);
-                }
-                else
-                {
-                    _ReplaceFieldValueToDocId.Remove((int)value);
-                }
+                    if (_DocIdReplaceField.DataType == DataType.BigInt)
+                    {
+                        _ReplaceFieldValueToDocId.Remove(value);
+                    }
+                    else
+                    {
+                        _ReplaceFieldValueToDocId.Remove((int)value);
+                    }
 
+                }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Mutex);
+                }
             }
         }
 
         public int GetDocIdByDocIdReplaceFieldValue(long value)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                int docId = int.MinValue;
-
-                if (_DocIdReplaceField == null)
+                try
                 {
-                    throw new DataException("Can't get docid for the table that has not DocId Replace Field attribute.");
-                }
+                    int docId = int.MinValue;
 
-                if (_DocIdReplaceField.DataType == DataType.BigInt)
-                {
-                    if (_ReplaceFieldValueToDocId.TryGetValue(value, out docId))
+                    if (_DocIdReplaceField == null)
                     {
-                        return docId;
+                        throw new DataException("Can't get docid for the table that has not DocId Replace Field attribute.");
+                    }
+
+                    if (_DocIdReplaceField.DataType == DataType.BigInt)
+                    {
+                        if (_ReplaceFieldValueToDocId.TryGetValue(value, out docId))
+                        {
+                            return docId;
+                        }
+                        else
+                        {
+                            return int.MinValue;
+                        }
                     }
                     else
                     {
-                        return int.MinValue;
+                        if (_ReplaceFieldValueToDocId.TryGetValue((int)value, out docId))
+                        {
+                            return docId;
+                        }
+                        else
+                        {
+                            return int.MinValue;
+                        }
                     }
                 }
-                else
+                finally
                 {
-                    if (_ReplaceFieldValueToDocId.TryGetValue((int)value, out docId))
-                    {
-                        return docId;
-                    }
-                    else
-                    {
-                        return int.MinValue;
-                    }
+                    _Lock.Leave(Lock.Mode.Share);
                 }
             }
+            else
+            {
+                return int.MinValue;
+            }
+        }
+
+        internal bool InnerTryGetRank(int docid, out UInt16 rank)
+        {
+            return _DocIdToRank.TryGetValue(docid, out rank);
         }
 
         /// <summary>
@@ -292,120 +326,184 @@ namespace Hubble.Core.Data
         /// <param name="docidPayloads"></param>
         internal unsafe void FillRank(int rankTabIndex, int count, OriginalDocumentPositionList[] docidPayloads)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                if (count > docidPayloads.Length)
+                try
                 {
-                    count = docidPayloads.Length;
-                }
-                
-                //int rank;
-                //int* pFileIndex;
-                UInt16 urank;
-
-                for (int i = 0; i < count; i++)
-                {
-                    if (_DocIdToRank.TryGetValue(docidPayloads[i].DocumentId, out urank))
+                    if (count > docidPayloads.Length)
                     {
-                        docidPayloads[i].CountAndWordCount *= urank;
+                        count = docidPayloads.Length;
                     }
 
-                    //if (InnerTryGetValue(docidPayloads[i].DocumentId, out pFileIndex))
-                    //{
-                    //    rank = *(pFileIndex + 1 + rankTabIndex);
-                    //    docidPayloads[i].CountAndWordCount *= rank;
-                    //}
+                    //int rank;
+                    //int* pFileIndex;
+                    UInt16 urank;
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (_DocIdToRank.TryGetValue(docidPayloads[i].DocumentId, out urank))
+                        {
+                            docidPayloads[i].CountAndWordCount *= urank;
+                        }
+
+                        //if (InnerTryGetValue(docidPayloads[i].DocumentId, out pFileIndex))
+                        //{
+                        //    rank = *(pFileIndex + 1 + rankTabIndex);
+                        //    docidPayloads[i].CountAndWordCount *= rank;
+                        //}
+                    }
+                }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Share);
                 }
             }
         }
 
         unsafe public void SetFileIndex(int docId, int fileIndex)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Mutex))
             {
-                int* pFileIndex;
-                if (InnerTryGetValue(docId, out pFileIndex))
+                try
                 {
-                    *pFileIndex = fileIndex;
+                    int* pFileIndex;
+                    if (InnerTryGetValue(docId, out pFileIndex))
+                    {
+                        *pFileIndex = fileIndex;
+                    }
+                }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Mutex);
                 }
             }
         }
 
         unsafe public bool TryGetWordCount(int docId, int tabIndex, ref int count)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                int* pFileIndex;
+                try
+                {
+                    int* pFileIndex;
 
-                if (InnerTryGetValue(docId, out pFileIndex))
-                {
-                    int* pData = pFileIndex + 1;
-                    count = pData[tabIndex];
-                    return true;
+                    if (InnerTryGetValue(docId, out pFileIndex))
+                    {
+                        int* pData = pFileIndex + 1;
+                        count = pData[tabIndex];
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
                 }
-                else
+                finally
                 {
-                    return false;
+                    _Lock.Leave(Lock.Mode.Share);
                 }
+            }
+            else
+            {
+                return false;
             }
         }
 
         unsafe public bool TryGetFileIndex(int docId, out int fileIndex)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                int* pFileIndex;
-                if (!InnerTryGetValue(docId, out pFileIndex))
+                try
                 {
-                    fileIndex = -1;
-                    return false;
+                    int* pFileIndex;
+                    if (!InnerTryGetValue(docId, out pFileIndex))
+                    {
+                        fileIndex = -1;
+                        return false;
+                    }
+                    else
+                    {
+                        fileIndex = *pFileIndex;
+                        return true;
+                    }
                 }
-                else
+                finally
                 {
-                    fileIndex = *pFileIndex;
-                    return true;
+                    _Lock.Leave(Lock.Mode.Share);
                 }
+            }
+            else
+            {
+                fileIndex = 0;
+                return false;
             }
         }
 
         unsafe public bool TryGetDataAndFileIndex(int docId, out int fileIndex, out int* data, out int payloadLength)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                payloadLength = _PayloadSize;
-
-                int* pFileIndex;
-
-                if (!InnerTryGetValue(docId, out pFileIndex))
+                try
                 {
-                    data = null;
-                    fileIndex = -1;
-                    return false;
+                    payloadLength = _PayloadSize;
+
+                    int* pFileIndex;
+
+                    if (!InnerTryGetValue(docId, out pFileIndex))
+                    {
+                        data = null;
+                        fileIndex = -1;
+                        return false;
+                    }
+                    else
+                    {
+                        fileIndex = *pFileIndex;
+                        data = pFileIndex + 1;
+                        return true;
+                    }
                 }
-                else
+                finally
                 {
-                    fileIndex = *pFileIndex;
-                    data = pFileIndex + 1;
-                    return true;
+                    _Lock.Leave(Lock.Mode.Share);
                 }
+            }
+            else
+            {
+                payloadLength = 0;
+                fileIndex = 0;
+                data = null;
+                return false;
             }
         }
 
         unsafe public bool TryGetData(int docId, out int* data)
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Share))
             {
-                int* pFileIndex;
-                if (!InnerTryGetValue(docId, out pFileIndex))
+                try
                 {
-                    data = null;
-                    return false;
+                    int* pFileIndex;
+                    if (!InnerTryGetValue(docId, out pFileIndex))
+                    {
+                        data = null;
+                        return false;
+                    }
+                    else
+                    {
+                        data = pFileIndex + 1;
+                        return true;
+                    }
                 }
-                else
+                finally
                 {
-                    data = pFileIndex + 1;
-                    return true;
+                    _Lock.Leave(Lock.Mode.Share);
                 }
+
+            }
+            else
+            {
+                data = null;
+                return false;
             }
         }
 
@@ -555,98 +653,12 @@ namespace Hubble.Core.Data
                 return;
             }
 
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Mutex))
             {
-
-                int rank = value;
-                if (rank < 0)
+                try
                 {
-                    rank = 0;
-                }
-                else if (rank > 65535)
-                {
-                    rank = 65535;
-                }
 
-                _DocIdToRank.AddOrUpdate(docId, (UInt16)rank);
-            }
-        }
-
-        unsafe public void Add(int docId, Payload payload)
-        {
-            lock (_LockObj)
-            {
-                if (payload.Data.Length == 0)
-                {
-                    return;
-                }
-
-
-                if (_DocIdReplaceField != null)
-                {
-                    if (_DocIdReplaceField.DataType == DataType.BigInt)
-                    {
-                        long value = (((long)payload.Data[_DocIdReplaceField.TabIndex]) << 32) +
-                            (uint)payload.Data[_DocIdReplaceField.TabIndex + 1];
-
-                        if (!_ReplaceFieldValueToDocId.ContainsKey(value))
-                        {
-                            _ReplaceFieldValueToDocId.Add(value, docId);
-                        }
-                        else
-                        {
-                            _ReplaceFieldValueToDocId[value] = docId;
-                        }
-                    }
-                    else
-                    {
-                        int value = payload.Data[_DocIdReplaceField.TabIndex];
-
-                        if (!_ReplaceFieldValueToDocId.ContainsKey(value))
-                        {
-                            _ReplaceFieldValueToDocId.Add(value, docId);
-                        }
-                        else
-                        {
-                            _ReplaceFieldValueToDocId[value] = docId;
-                        }
-
-                    }
-                }
-
-                if (_PayloadSize == 0)
-                {
-                    _PayloadSize = payload.Data.Length;
-                }
-
-                int realPayloadSize = (_PayloadSize + 1 + 1) * sizeof(int) ; //DocId + FileIndex + Payload
-
-                IndexElement ie;
-
-                if ((_Count % BufSize) == 0)
-                {
-                    IndexBuf[_IndexCount++] = new IndexElement(docId, realPayloadSize);
-                }
-
-                ie = IndexBuf[_IndexCount - 1];
-                ie.MB.UsedCount++;
-                int* head = (int*)(IntPtr)ie.MB;
-
-                int* documentId = (int*)((byte*)head + (ie.MB.UsedCount-1) * realPayloadSize);
-                int* fileIndex = documentId + 1;
-                int* payloadData = fileIndex + 1;
-
-                *documentId = docId;
-                *fileIndex = payload.FileIndex;
-
-                for (int i = 0; i < payload.Data.Length; i++)
-                {
-                    payloadData[i] = payload.Data[i];
-                }
-
-                if (_RankTab > 0)
-                {
-                    int rank = *(payloadData + _RankTab);
+                    int rank = value;
                     if (rank < 0)
                     {
                         rank = 0;
@@ -656,29 +668,138 @@ namespace Hubble.Core.Data
                         rank = 65535;
                     }
 
-                    _DocIdToRank.Add(docId, (UInt16)rank);
+                    _DocIdToRank.AddOrUpdate(docId, (UInt16)rank);
                 }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Mutex);
+                }
+            }
+        }
 
-                _Count++;
+        unsafe public void Add(int docId, Payload payload)
+        {
+            if (_Lock.Enter(Lock.Mode.Mutex))
+            {
 
+                try
+                {
+                    if (payload.Data.Length == 0)
+                    {
+                        return;
+                    }
+
+
+                    if (_DocIdReplaceField != null)
+                    {
+                        if (_DocIdReplaceField.DataType == DataType.BigInt)
+                        {
+                            long value = (((long)payload.Data[_DocIdReplaceField.TabIndex]) << 32) +
+                                (uint)payload.Data[_DocIdReplaceField.TabIndex + 1];
+
+                            if (!_ReplaceFieldValueToDocId.ContainsKey(value))
+                            {
+                                _ReplaceFieldValueToDocId.Add(value, docId);
+                            }
+                            else
+                            {
+                                _ReplaceFieldValueToDocId[value] = docId;
+                            }
+                        }
+                        else
+                        {
+                            int value = payload.Data[_DocIdReplaceField.TabIndex];
+
+                            if (!_ReplaceFieldValueToDocId.ContainsKey(value))
+                            {
+                                _ReplaceFieldValueToDocId.Add(value, docId);
+                            }
+                            else
+                            {
+                                _ReplaceFieldValueToDocId[value] = docId;
+                            }
+
+                        }
+                    }
+
+                    if (_PayloadSize == 0)
+                    {
+                        _PayloadSize = payload.Data.Length;
+                    }
+
+                    int realPayloadSize = (_PayloadSize + 1 + 1) * sizeof(int); //DocId + FileIndex + Payload
+
+                    IndexElement ie;
+
+                    if ((_Count % BufSize) == 0)
+                    {
+                        IndexBuf[_IndexCount++] = new IndexElement(docId, realPayloadSize);
+                    }
+
+                    ie = IndexBuf[_IndexCount - 1];
+                    ie.MB.UsedCount++;
+                    int* head = (int*)(IntPtr)ie.MB;
+
+                    int* documentId = (int*)((byte*)head + (ie.MB.UsedCount - 1) * realPayloadSize);
+                    int* fileIndex = documentId + 1;
+                    int* payloadData = fileIndex + 1;
+
+                    *documentId = docId;
+                    *fileIndex = payload.FileIndex;
+
+                    for (int i = 0; i < payload.Data.Length; i++)
+                    {
+                        payloadData[i] = payload.Data[i];
+                    }
+
+                    if (_RankTab > 0)
+                    {
+                        int rank = *(payloadData + _RankTab);
+                        if (rank < 0)
+                        {
+                            rank = 0;
+                        }
+                        else if (rank > 65535)
+                        {
+                            rank = 65535;
+                        }
+
+                        _DocIdToRank.Add(docId, (UInt16)rank);
+                    }
+
+                    _Count++;
+
+                }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Mutex);
+                }
             }
         }
 
         public void Clear()
         {
-            lock (_LockObj)
+            if (_Lock.Enter(Lock.Mode.Mutex))
             {
-                for (int i = 0; i < _IndexCount; i++)
-                {
-                    IndexBuf[i].MB.Dispose();
-                }
 
-                IndexBuf = new IndexElement[(512 * 1024 * 1024) / BufSize];
-                _DocIdToRank.Clear();
-                _Count = 0;
-                _IndexCount = 0; //Count of IndexBuf
-                _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
-                //_CurIndex = 0; //Current index of IndexBuf;
+                try
+                {
+                    for (int i = 0; i < _IndexCount; i++)
+                    {
+                        IndexBuf[i].MB.Dispose();
+                    }
+
+                    IndexBuf = new IndexElement[(512 * 1024 * 1024) / BufSize];
+                    _DocIdToRank.Clear();
+                    _Count = 0;
+                    _IndexCount = 0; //Count of IndexBuf
+                    _PayloadSize = 0; //How may elements in one payload data. sizeof(Data).
+                    //_CurIndex = 0; //Current index of IndexBuf;
+                }
+                finally
+                {
+                    _Lock.Leave(Lock.Mode.Mutex);
+                }
             }
         }
     }

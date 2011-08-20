@@ -440,12 +440,6 @@ namespace Hubble.Core.SFQL.Parse
 
                 base.Clear();
 
-                if (_GroupByDict != null)
-                {
-                    _GroupByDict.Clear();
-                }
-
-
                 _RelTotalCount = 0;
             }
         }

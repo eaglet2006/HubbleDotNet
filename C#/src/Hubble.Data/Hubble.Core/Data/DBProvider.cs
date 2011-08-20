@@ -60,6 +60,7 @@ namespace Hubble.Core.Data
         private Dictionary<string, Field> _FieldIndex = new Dictionary<string, Field>();
 
         private PayloadProvider _DocPayload = new PayloadProvider();
+        public SharedPayload SharedPayloadProvider;
 
         private string _Directory;
 
@@ -106,6 +107,7 @@ namespace Hubble.Core.Data
             _FieldIndex = new Dictionary<string, Field>();
 
             _DocPayload = new PayloadProvider();
+            SharedPayloadProvider = new SharedPayload(_DocPayload);
 
             _Directory = null;
 
@@ -1203,6 +1205,8 @@ namespace Hubble.Core.Data
 
                             //Open Payload file
                             _DocPayload = _PayloadFile.Open(_DocIdReplaceField, table.Fields, PayloadLength, out _LastDocId);
+
+                            SharedPayloadProvider = new SharedPayload(_DocPayload);
 
                             //If set docid replace field, remove del docs
                             if (_DocIdReplaceField != null)
