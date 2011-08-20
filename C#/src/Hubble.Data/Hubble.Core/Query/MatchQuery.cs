@@ -405,6 +405,8 @@ namespace Hubble.Core.Query
 
                                 drp.pDocumentResult->Score = (long)(drp.pDocumentResult->Score * delta);
 
+                      
+
                                 //Overflow, if match too much, sometime score would less than zero.
                                 if (drp.pDocumentResult->Score < 0)
                                 {
@@ -442,6 +444,11 @@ namespace Hubble.Core.Query
                 if (docResult.pDocumentResult->HitCount == wordIndexesLen)
                 {
                     docResult.pDocumentResult->Score += maxScoreValue;
+
+                    if (docResult.pDocumentResult->Score < 0)
+                    {
+                        docResult.pDocumentResult->Score = long.MaxValue;
+                    }
                 }
             }
 
