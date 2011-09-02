@@ -121,6 +121,7 @@ namespace Hubble.Core.Query
 
                 int groupbyContainsCount = 0;
                 int groupbyLimit = _DBProvider.Table.GroupByLimit;
+                BitSet bitSet = new BitSet();
 
                 for (int i = 0; i < wordIndexes.Length; i++)
                 {
@@ -129,17 +130,15 @@ namespace Hubble.Core.Query
 
                     while (docList.DocumentId >= 0)
                     {
-                        if (!docIdRank.GroupByContains(docList.DocumentId))
+                        if (bitSet.ForceAdd(docList.DocumentId))
                         {
-                            docIdRank.AddToGroupByCollection(docList.DocumentId);
-                            
                             groupbyContainsCount++;
+                        }
 
-                            if (groupbyContainsCount >= groupbyLimit)
-                            {
-                                groupbyScanAll = false;
-                                break;
-                            }
+                        if (groupbyContainsCount >= groupbyLimit)
+                        {
+                            groupbyScanAll = false;
+                            break;
                         }
 
                         docList = wifq.WordIndex.GetNext();
@@ -152,6 +151,9 @@ namespace Hubble.Core.Query
                         break;
                     }
                 }
+
+                AscIntList groupByCollect = new AscIntList();
+                groupByCollect.AddRange(bitSet);
             }
 
             //Merge

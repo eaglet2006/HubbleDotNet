@@ -182,6 +182,20 @@ namespace Hubble.Core.Query.Optimize
                 int[] delDocs = null;
                 int curDelIndex = 0;
                 int curDelDocid = 0;
+                int groupByCount = 0;
+                int groupByLen = _DBProvider.Table.GroupByLimit;
+                int groupByStep = 1;
+                int groupByIndex = 0;
+
+                if (_NeedGroupBy)
+                {
+                    groupByStep = wifq.RelTotalCount / groupByLen;
+
+                    if (groupByStep <= 0)
+                    {
+                        groupByStep = 1;
+                    }
+                }
 
                 if (haveRecordsDeleted)
                 {
@@ -265,7 +279,21 @@ namespace Hubble.Core.Query.Optimize
 
                         if (_NeedGroupBy)
                         {
-                            docIdRank.AddToGroupByCollection(docList.DocumentId);
+                            if (groupByCount < groupByLen)
+                            {
+                                if (groupByIndex >= groupByStep)
+                                {
+                                    groupByIndex = 0;
+                                }
+
+                                if (groupByIndex == 0)
+                                {
+                                    docIdRank.AddToGroupByCollection(docList.DocumentId);
+                                    groupByCount++;
+                                }
+
+                                groupByIndex++;
+                            }
                         }
 
                         relCount++;

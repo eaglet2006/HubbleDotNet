@@ -1208,34 +1208,37 @@ namespace Hubble.Core.SFQL.Parse
             {
                 //Merge group by collection
 
-                if (src.GroupByCollection.Count > 0 || dest.GroupByCollection.Count > 0)
-                {
-                    //Init group by collection
+                dest.GroupByCollection = DocumentResultWhereDictionary.MergeOr(
+                    src.GroupByCollection, dest.GroupByCollection);
 
-                    if (src.GroupByCollection.Count <= 0)
-                    {
-                        foreach (int docid in src.Keys)
-                        {
-                            src.AddToGroupByCollection(docid);
-                        }
-                    }
+                //if (src.GroupByCollection.Count > 0 || dest.GroupByCollection.Count > 0)
+                //{
+                //    //Init group by collection
 
-                    if (dest.GroupByCollection.Count <= 0)
-                    {
-                        foreach (int docid in dest.Keys)
-                        {
-                            dest.AddToGroupByCollection(docid);
-                        }
-                    }
+                //    if (src.GroupByCollection.Count <= 0)
+                //    {
+                //        foreach (int docid in src.Keys)
+                //        {
+                //            src.AddToGroupByCollection(docid);
+                //        }
+                //    }
 
-                    foreach (int docid in src.GroupByCollection)
-                    {
-                        if (!dest.GroupByContains(docid))
-                        {
-                            dest.AddToGroupByCollection(docid);
-                        }
-                    }
-                }
+                //    if (dest.GroupByCollection.Count <= 0)
+                //    {
+                //        foreach (int docid in dest.Keys)
+                //        {
+                //            dest.AddToGroupByCollection(docid);
+                //        }
+                //    }
+
+                //    foreach (int docid in src.GroupByCollection)
+                //    {
+                //        if (!dest.GroupByContains(docid))
+                //        {
+                //            dest.AddToGroupByCollection(docid);
+                //        }
+                //    }
+                //}
             }
 
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in src.Values)
@@ -1379,14 +1382,14 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out ICollection<int> groupByCollection, out bool sorted)
+        public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, out IList<int> groupByCollection, out bool sorted)
         {
             int relTotalCount;
             return Parse(expressionTree, out relTotalCount, out groupByCollection, out sorted);
         }
 
         unsafe public Query.DocumentResultForSort[] Parse(SyntaxAnalysis.ExpressionTree expressionTree, 
-            out int relTotalCount, out ICollection<int> groupByCollection, out bool sorted)
+            out int relTotalCount, out IList<int> groupByCollection, out bool sorted)
         {
             Core.SFQL.Parse.DocumentResultWhereDictionary dict;
 

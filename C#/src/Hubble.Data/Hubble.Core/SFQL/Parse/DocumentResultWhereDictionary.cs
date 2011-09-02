@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 
+using Hubble.Framework.DataStructure;
+
 namespace Hubble.Core.SFQL.Parse
 {
     public unsafe struct DocumentResultPoint
@@ -69,18 +71,23 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        private Dictionary<int, int> _GroupByDict = null;
+        private AscIntList _GroupByDict = null;
 
-        public ICollection<int> GroupByCollection
+        public IList<int> GroupByCollection
         {
             get
             {
                 if (_GroupByDict == null)
                 {
-                    _GroupByDict = new Dictionary<int, int>();
+                    _GroupByDict = new AscIntList();
                 }
 
-                return _GroupByDict.Keys;
+                return _GroupByDict;
+            }
+
+            set
+            {
+                _GroupByDict = (AscIntList)value;
             }
         }
 
@@ -127,24 +134,40 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public bool GroupByContains(int docId)
-        {
-            if (_GroupByDict == null)
-            {
-                return false;
-            }
+        //public bool GroupByContains(int docId)
+        //{
+        //    if (_GroupByDict == null)
+        //    {
+        //        return false;
+        //    }
 
-            return _GroupByDict.ContainsKey(docId);
+        //    return _GroupByDict.Contains(docId);
+        //}
+
+        static public IList<int> MergeOr(IList<int> src, IList<int> dest)
+        {
+            AscIntList aSrc = (AscIntList)src;
+            AscIntList aDest = (AscIntList)dest;
+
+            return AscIntList.MergeOr(aSrc, aDest);
         }
 
         public void AddToGroupByCollection(int docId)
         {
             if (_GroupByDict == null)
             {
-                _GroupByDict = new Dictionary<int, int>();
+                _GroupByDict = new AscIntList();
             }
 
-            _GroupByDict.Add(docId, docId);
+            _GroupByDict.Add(docId);
+        }
+
+        public void CompreassGroupByCollection()
+        {
+            if (_GroupByDict != null)
+            {
+                _GroupByDict.Compress();
+            }
         }
 
         public bool RemoveFromGroupByCollection(int docId)

@@ -120,6 +120,7 @@
     <Compile Include="Index\WordIndexWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\ContainsQuery.cs" />
+    <Compile Include="Query\DocIdPayloadData.cs" />
     <Compile Include="Query\Match1Query.cs" />
     <Compile Include="Query\DocumentRank.cs" />
     <Compile Include="Query\DocumentResult.cs" />

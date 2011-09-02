@@ -1590,11 +1590,41 @@ namespace Hubble.Core.Data
             }
         }
 
-        internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults)
+        internal unsafe void FillDocIdPayloadData(Query.DocIdPayloadData[] docidPayloads,
+            int count)
         {
             lock (this)
             {
-                for (int i = 0; i < docResults.Length; i++)
+                int len = Math.Min(docidPayloads.Length, count);
+
+                for (int i = 0; i < len; i++)
+                {
+                    if (docidPayloads[i].PayloadData != null)
+                    {
+                        continue;
+                    }
+
+                    int* payloadData;
+                    if (_DocPayload.TryGetData(docidPayloads[i].DocId, out payloadData))
+                    {
+                        docidPayloads[i].PayloadData = payloadData;
+                    }
+                }
+            }
+        }
+
+        internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults)
+        {
+            FillPayloadData(docResults, int.MaxValue);
+        }
+
+        internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults, int count)
+        {
+            lock (this)
+            {
+                int len = Math.Min(docResults.Length, count);
+
+                for (int i = 0; i < len; i++)
                 {
                     if (docResults[i].PayloadData != null)
                     {

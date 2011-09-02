@@ -192,11 +192,18 @@ namespace Hubble.Core.Data
 
                         if (hasGroupByRecords)
                         {
-                            if (docIdResult.GroupByContains(docid))
-                            {
-                                docIdResult.RemoveFromGroupByCollection(docid);
-                            }
+                            docIdResult.RemoveFromGroupByCollection(docid);
+
+                            //if (docIdResult.GroupByContains(docid))
+                            //{
+                            //    docIdResult.RemoveFromGroupByCollection(docid);
+                            //}
                         }
+                    }
+
+                    if (hasGroupByRecords)
+                    {
+                        docIdResult.CompreassGroupByCollection();
                     }
                 }
                 else
@@ -222,6 +229,11 @@ namespace Hubble.Core.Data
                         {
                             docIdResult.RemoveFromGroupByCollection(docid);
                         }
+                    }
+
+                    if (hasGroupByRecords)
+                    {
+                        docIdResult.CompreassGroupByCollection();
                     }
 
                     deleDocIdList = null;

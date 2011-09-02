@@ -23,6 +23,6 @@ namespace Hubble.Core.SFQL.Parse
 {
     interface IGroupBy
     {
-        System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit);
+        System.Data.DataTable GroupBy(Query.DocIdPayloadData[] result, int limit, int relCount);
     }
 }

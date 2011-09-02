@@ -181,7 +181,7 @@ namespace Hubble.Core.SFQL.Parse
             parseWhere.End = update.End;
             Query.DocumentResultForSort[] result;
 
-            ICollection<int> groupByCollection;
+            IList<int> groupByCollection;
 
             bool sorted;
 
@@ -254,7 +254,7 @@ namespace Hubble.Core.SFQL.Parse
             parseWhere.End = delete.End;
             Query.DocumentResultForSort[] result;
 
-            ICollection<int> groupByCollection;
+            IList<int> groupByCollection;
 
             bool sorted;
 
@@ -903,29 +903,24 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
-        unsafe private Hubble.Core.Query.DocumentResultForSort[] GetGroupByResult(DBProvider dbProvider, ICollection<int> groupByCollection)
+        unsafe private Hubble.Core.Query.DocIdPayloadData[] GetGroupByResult(DBProvider dbProvider, ICollection<int> groupByCollection)
         {
             int len = Math.Min(dbProvider.Table.GroupByLimit, groupByCollection.Count);
-            Hubble.Core.Query.DocumentResultForSort[] result = new Hubble.Core.Query.DocumentResultForSort[len];
+            Hubble.Core.Query.DocIdPayloadData[] result = new Hubble.Core.Query.DocIdPayloadData[len];
 
             int i = 0;
 
             foreach (int docid in groupByCollection)
             {
-                int* payload = dbProvider.GetPayloadData(docid);
-
-                if (payload != null)
-                {
-                    result[i] = new Hubble.Core.Query.DocumentResultForSort(
-                        docid, 0, payload);
-                    i++;
-                }
+                result[i++].DocId = docid;
 
                 if (i >= len)
                 {
                     break;
                 }
             }
+
+            dbProvider.FillDocIdPayloadData(result, len);
 
             return result;
 
@@ -1077,7 +1072,7 @@ namespace Hubble.Core.SFQL.Parse
 
             int relTotalCount = 0;
 
-            ICollection<int> groupByCollection = null;
+            IList<int> groupByCollection = null;
 
             bool sorted = false;
 
@@ -1252,19 +1247,45 @@ namespace Hubble.Core.SFQL.Parse
 
             qResult.DataSet = ds;
 
-            Hubble.Core.Query.DocumentResultForSort[] groupByResult = result;
+            Hubble.Core.Query.DocIdPayloadData[] groupByResult = null;
 
-            if (groupByCollection != null)
+            if (groupByList.Count > 0)
             {
-                if (groupByCollection.Count > 0)
+                Query.PerformanceReport performanceReport;
+
+                if (groupByCollection != null)
                 {
-                    groupByResult = GetGroupByResult(dbProvider, groupByCollection);
-                }
-            }
+                    if (groupByCollection.Count > 0)
+                    {
+                        performanceReport = new Hubble.Core.Query.PerformanceReport();
 
-            foreach (IGroupBy groupBy in groupByList)
-            {
-                qResult.AddDataTable(groupBy.GroupBy(groupByResult, dbProvider.Table.GroupByLimit));
+                        groupByResult = GetGroupByResult(dbProvider, groupByCollection);
+
+                        performanceReport.Stop(string.Format("Get Groupby Payload len={0}", groupByResult.Length));
+                    }
+                }
+
+                if (groupByResult == null)
+                {
+                    groupByResult = new Hubble.Core.Query.DocIdPayloadData[result.Length];
+
+                    for(int i = 0; i < result.Length; i++)
+                    {
+                        groupByResult[i].DocId = result[i].DocId;
+                    }
+
+                    dbProvider.FillDocIdPayloadData(groupByResult, result.Length); 
+                }
+
+                performanceReport = new Hubble.Core.Query.PerformanceReport();
+
+                foreach (IGroupBy groupBy in groupByList)
+                {
+                    qResult.AddDataTable(groupBy.GroupBy(groupByResult,
+                        dbProvider.Table.GroupByLimit, ds.Tables[0].MinimumCapacity));
+                }
+
+                performanceReport.Stop("Get GroupBy Result");
             }
 
             qResult.AddPrintMessage(string.Format("TotalDocuments:{0}",

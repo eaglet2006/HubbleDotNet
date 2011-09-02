@@ -79,7 +79,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataStructure\AscIntList.cs" />
     <Compile Include="DataStructure\BinarySearch.cs" />
+    <Compile Include="DataStructure\BitSet.cs" />
     <Compile Include="DataStructure\BlockedAppendList.cs" />
     <Compile Include="DataStructure\Cache.cs" />
     <Compile Include="DataStructure\CacheManage.cs" />

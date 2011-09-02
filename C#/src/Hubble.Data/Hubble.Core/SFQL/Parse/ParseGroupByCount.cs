@@ -64,12 +64,133 @@ namespace Hubble.Core.SFQL.Parse
         string _GroupByFieldsString;
         SyntaxAnalysis.ExpressionTree _ExpressionTree;
 
+        unsafe private ulong[] GetTinyIntFieldKeyList(Query.DocIdPayloadData[] result,
+            int limit, DataType dataType, int tabIndex, int subTabIndex, int dataLength)
+        {
+            ulong[] keyList = new ulong[limit];
+
+            for (int i = 0; i < keyList.Length; i++)
+            {
+                int* payloadData = result[i].PayloadData;
+                int docid = result[i].DocId;
+
+                if (payloadData == null)
+                {
+                    payloadData = _DBProvider.GetPayloadData(docid);
+                    result[i].PayloadData = payloadData;
+                }
+
+                if (payloadData == null)
+                {
+                    throw new ParseException(string.Format("docid={0} does not exist",
+                        docid));
+                }
+
+                sbyte data = DataTypeConvert.GetSByte(dataType,
+                    payloadData, tabIndex, subTabIndex, dataLength);
+
+                keyList[i] = (byte)data;
+            }
+
+            return keyList;
+        }
+
+        unsafe private ulong[] GetSmallIntFieldKeyList(Query.DocIdPayloadData[] result,
+            int limit, DataType dataType, int tabIndex, int subTabIndex, int dataLength)
+        {
+            ulong[] keyList = new ulong[limit];
+
+            for (int i = 0; i < keyList.Length; i++)
+            {
+                int* payloadData = result[i].PayloadData;
+                int docid = result[i].DocId;
+
+                if (payloadData == null)
+                {
+                    payloadData = _DBProvider.GetPayloadData(docid);
+                    result[i].PayloadData = payloadData;
+                }
+
+                if (payloadData == null)
+                {
+                    throw new ParseException(string.Format("docid={0} does not exist",
+                        docid));
+                }
+
+                short data = DataTypeConvert.GetShort(dataType,
+                      payloadData, tabIndex, subTabIndex, dataLength);
+
+                keyList[i] = (ushort)data;
+            }
+
+            return keyList;
+        }
+
+        unsafe private ulong[] GetIntFieldKeyList(Query.DocIdPayloadData[] result,
+            int limit, DataType dataType, int tabIndex, int subTabIndex, int dataLength)
+        {
+            ulong[] keyList = new ulong[limit];
+
+            for (int i = 0; i < keyList.Length; i++)
+            {
+                int* payloadData = result[i].PayloadData;
+                int docid = result[i].DocId;
+
+                if (payloadData == null)
+                {
+                    payloadData = _DBProvider.GetPayloadData(docid);
+                    result[i].PayloadData = payloadData;
+                }
+
+                if (payloadData == null)
+                {
+                    throw new ParseException(string.Format("docid={0} does not exist",
+                        docid));
+                }
+
+                keyList[i] = (uint)payloadData[tabIndex];
+            }
+
+            return keyList;
+        }
+
+        unsafe private ulong[] GetLongFieldKeyList(Query.DocIdPayloadData[] result,
+            int limit, DataType dataType, int tabIndex, int subTabIndex, int dataLength)
+        {
+            ulong[] keyList = new ulong[limit];
+
+            for (int i = 0; i < keyList.Length; i++)
+            {
+                int* payloadData = result[i].PayloadData;
+                int docid = result[i].DocId;
+
+                if (payloadData == null)
+                {
+                    payloadData = _DBProvider.GetPayloadData(docid);
+                    result[i].PayloadData = payloadData;
+                }
+
+                if (payloadData == null)
+                {
+                    throw new ParseException(string.Format("docid={0} does not exist",
+                        docid));
+                }
+
+                long data = DataTypeConvert.GetLong(dataType,
+                      payloadData, tabIndex, subTabIndex, dataLength);
+
+                keyList[i] = (ulong)data;
+            }
+
+            return keyList;
+        }
+
         /// <summary>
         /// Get key for the values of group by feilds
         /// </summary>
         /// <param name="docid"></param>
         /// <returns></returns>
-        unsafe private ulong GetKey(ref Query.DocumentResultForSort result)
+        unsafe private ulong GetKey(ref Query.DocIdPayloadData result)
         {
             int* payloadData = result.PayloadData;
             int docid = result.DocId;
@@ -185,16 +306,17 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        unsafe private System.Data.DataTable GetTable(Dictionary<ulong, int> groupByDict)
+        unsafe private System.Data.DataTable GetTable(ulong[] keyList, int relCount)
         {
-            GroupByPair[] groupByPair = new GroupByPair[groupByDict.Count];
+            GroupByPair[] groupByPair = GetGroupByPairs(keyList, relCount);
+            //GroupByPair[] groupByPair = new GroupByPair[groupByDict.Count];
 
-            int i = 0;
+            //int i = 0;
 
-            foreach(ulong key in groupByDict.Keys)
-            {
-                groupByPair[i++] = new GroupByPair(key, groupByDict[key]);
-            }
+            //foreach(ulong key in groupByDict.Keys)
+            //{
+            //    groupByPair[i++] = new GroupByPair(key, groupByDict[key]);
+            //}
 
             Array.Sort(groupByPair);
 
@@ -233,7 +355,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             table.TableName = "GroupByCount_" + _GroupByFieldsString;
-            table.MinimumCapacity = groupByDict.Count;
+            table.MinimumCapacity = groupByPair.Length;
 
             return table;
         }
@@ -400,12 +522,80 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
+        private GroupByPair[] GetGroupByPairs(ulong[] keyList, int relCount)
+        {
+            List<GroupByPair> groupByPairs = new List<GroupByPair>();
+
+            Dictionary<ulong, int> groupByDict = new Dictionary<ulong, int>();
+
+            foreach (ulong key in keyList)
+            {
+                int count;
+                if (groupByDict.TryGetValue(key, out count))
+                {
+                    groupByDict[key] = count + 1;
+                }
+                else
+                {
+                    groupByDict.Add(key, 1);
+                }
+            }
+
+            foreach (ulong key in groupByDict.Keys)
+            {
+                groupByPairs.Add(new GroupByPair(key, groupByDict[key]));
+            }
+
+            GroupByPair[] result = groupByPairs.ToArray();
+
+            double ratio = (double)relCount / keyList.Length;
+
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i].Count = (int)(ratio * result[i].Count);
+            }
+
+            return result;
+        }
+
+        private ulong[] GetOneFieldKeyList(Query.DocIdPayloadData[] result,
+            int limit)
+        {
+            Field field = _GroupByFields[0];
+            switch (field.DataType)
+            {
+                case DataType.TinyInt:
+                    {
+                        return GetTinyIntFieldKeyList(result, limit, field.DataType, field.TabIndex, field.SubTabIndex, field.DataLength);
+                    }
+                case DataType.SmallInt:
+                    {
+                        return GetSmallIntFieldKeyList(result, limit, field.DataType, field.TabIndex, field.SubTabIndex, field.DataLength);
+                    }
+                case DataType.Int:
+                case DataType.Date:
+                case DataType.SmallDateTime:
+                    {
+                        return GetIntFieldKeyList(result, limit, field.DataType, field.TabIndex, field.SubTabIndex, field.DataLength);
+                    }
+                case DataType.BigInt:
+                case DataType.DateTime:
+                    {
+                        return GetLongFieldKeyList(result, limit, field.DataType, field.TabIndex, field.SubTabIndex, field.DataLength);
+                    }
+                default:
+                    throw new ParseException(string.Format("field:{0}'s data type is not integer or time data type",
+                        field.Name));
+            }
+        }
+
         /// <summary>
         /// Do Group By
         /// </summary>
         /// <param name="result">result of the query</param>
         /// <param name="limit">limit count to group by. only group by limit number of records</param>
-        unsafe public System.Data.DataTable GroupBy(Query.DocumentResultForSort[] result, int limit)
+        unsafe public System.Data.DataTable GroupBy(Query.DocIdPayloadData[] result, 
+            int limit, int relCount)
         {
             if (_ExpressionTree == null)
             {
@@ -418,25 +608,26 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             limit = Math.Min(result.Length, limit);
-            Dictionary<ulong, int>  groupByDict = new Dictionary<ulong, int>(limit);
 
-            for (int i = 0; i < limit; i++)
+            ulong[] keyList;
+
+            if (_GroupByFields.Count == 1)
             {
-                ulong key = GetKey(ref result[i]);
+                keyList = GetOneFieldKeyList(result, limit);
+            }
+            else
+            {
+                keyList = new ulong[limit];
 
-                int count;
+                for (int i = 0; i < limit; i++)
+                {
+                    ulong key = GetKey(ref result[i]);
 
-                if (groupByDict.TryGetValue(key, out count))
-                {
-                    groupByDict[key] = count + 1;
-                }
-                else
-                {
-                    groupByDict.Add(key, 1);
+                    keyList[i] = key;
                 }
             }
 
-            return GetTable(groupByDict);
+            return GetTable(keyList, relCount);
         }
     }
 }
