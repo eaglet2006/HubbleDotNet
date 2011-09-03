@@ -205,7 +205,7 @@ namespace Hubble.Core.Query
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
-            bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
+            bool oneWordOptimize = this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && wordIndexes.Length == 1;
             int oneWordMaxCount = 0;
 
             if (oneWordOptimize)
@@ -422,7 +422,7 @@ namespace Hubble.Core.Query
             DeleteProvider delProvider = _DBProvider.DelProvider;
             int delCount = delProvider.Filter(docIdRank);
 
-            if (oneWordOptimize && CanLoadPartOfDocs && upDict == null)
+            if (oneWordOptimize && _QueryParameter.CanLoadPartOfDocs && upDict == null)
             {
                 docIdRank.RelTotalCount = wordIndexes[0].RelTotalCount - delCount;
             }
@@ -462,7 +462,7 @@ namespace Hubble.Core.Query
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
             //Merge
-            bool oneWordOptimize = this.CanLoadPartOfDocs && this.NoAndExpression && wordIndexes.Length == 1;
+            bool oneWordOptimize = this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && wordIndexes.Length == 1;
             int oneWordMaxCount = 0;
 
             if (oneWordOptimize)
@@ -636,7 +636,7 @@ namespace Hubble.Core.Query
             DeleteProvider delProvider = _DBProvider.DelProvider;
             int delCount = delProvider.Filter(docIdRank);
 
-            if (oneWordOptimize && CanLoadPartOfDocs && upDict == null)
+            if (oneWordOptimize && _QueryParameter.CanLoadPartOfDocs && upDict == null)
             {
                 docIdRank.RelTotalCount = wordIndexes[0].RelTotalCount - delCount;
             }
@@ -680,9 +680,9 @@ namespace Hubble.Core.Query
 
             int sortLen = MinResultCount;
 
-            if (CanLoadPartOfDocs)
+            if (_QueryParameter.CanLoadPartOfDocs)
             {
-                sortLen = End + 1 + 10;
+                sortLen = _QueryParameter.End + 1 + 10;
             }
 
             if (sortLen > 0)
@@ -763,7 +763,7 @@ namespace Hubble.Core.Query
                 result.RelTotalCount = docIdRank.RelTotalCount;
             }
 
-            if (result.Count < docIdRank.Count && this.NeedGroupBy)
+            if (result.Count < docIdRank.Count && this._QueryParameter.NeedGroupBy)
             {
                 //if result count less then total count
                 //and need group by
@@ -813,6 +813,16 @@ namespace Hubble.Core.Query
             }
         }
 
+        QueryParameter _QueryParameter = new QueryParameter();
+
+        public QueryParameter QueryParameter
+        {
+            get
+            {
+                return _QueryParameter;
+            }
+        }
+      
         public DBProvider DBProvider
         {
             get
@@ -822,65 +832,6 @@ namespace Hubble.Core.Query
             set
             {
                 _DBProvider = value;
-            }
-        }
-
-        private int _FieldRank = 1;
-        public int FieldRank
-        {
-            get
-            {
-                return _FieldRank;
-            }
-            set
-            {
-                _FieldRank = value;
-                if (_FieldRank <= 0)
-                {
-                    _FieldRank = 1;
-                }
-            }
-        }
-
-        private int _End = -1;
-
-        public int End
-        {
-            get
-            {
-                return _End;
-            }
-            set
-            {
-                _End = value;
-            }
-        }
-
-        private string _OrderBy = null;
-
-        public string OrderBy
-        {
-            get
-            {
-                return _OrderBy;
-            }
-            set
-            {
-                _OrderBy = value;
-            }
-        }
-
-        private bool _NeedGroupBy;
-
-        public bool NeedGroupBy
-        {
-            get
-            {
-                return _NeedGroupBy;
-            }
-            set
-            {
-                _NeedGroupBy = value;
             }
         }
 
@@ -959,7 +910,7 @@ namespace Hubble.Core.Query
                             if (value.Count == 1)
                             {
                                 //wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word, CanLoadPartOfDocs);
-                                wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word, CanLoadPartOfDocs, true);
+                                wordIndex = InvertedIndex.GetWordIndex(wordInfo.Word, _QueryParameter.CanLoadPartOfDocs, true);
 
                             }
                             else
@@ -976,7 +927,7 @@ namespace Hubble.Core.Query
                             }
 
                             wifq = new WordIndexForQuery(wordIndex,
-                                InvertedIndex.DocumentCount, wordInfo.Rank, this.FieldRank);
+                                InvertedIndex.DocumentCount, wordInfo.Rank, this._QueryParameter.FieldRank);
                             wifq.QueryCount = 1;
                             wifq.FirstPosition = wordInfo.Position;
                             wordIndexList.Add(wifq);
@@ -1005,7 +956,7 @@ namespace Hubble.Core.Query
 
             if (_QueryWords.Count <= 0 || wordIndexes.Length <= 0)
             {
-                if (Not && UpDict != null)
+                if (_QueryParameter.Not && UpDict != null)
                 {
                     return UpDict;
                 }
@@ -1015,7 +966,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            if (this.Not)
+            if (this._QueryParameter.Not)
             {
                 if (_InvertedIndex.IndexMode == Field.IndexMode.Simple)
                 {
@@ -1132,7 +1083,6 @@ namespace Hubble.Core.Query
             return result;
         }
 
-
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Search of Like");
@@ -1140,7 +1090,7 @@ namespace Hubble.Core.Query
 
             if (_QueryThroughDB)
             {
-                string orderBy = OrderBy;
+                string orderBy = _QueryParameter.OrderBy;
 
                 if (orderBy != null)
                 {
@@ -1155,7 +1105,7 @@ namespace Hubble.Core.Query
                     }
                 }
 
-                if (!NoAndExpression || UpDict != null)
+                if (!_QueryParameter.NoAndExpression || UpDict != null)
                 {
                     if (_DBProvider.Table.IndexOnly && _DBProvider.Table.DocIdReplaceField != null)
                     {
@@ -1166,10 +1116,10 @@ namespace Hubble.Core.Query
                         orderBy = "docid";
                     }
 
-                    End = -1;
+                    _QueryParameter.End = -1;
                 }
 
-                result = _DBProvider.DBAdapter.GetDocumentResults(End,
+                result = _DBProvider.DBAdapter.GetDocumentResults(_QueryParameter.End,
                     string.Format("{0} like '{1}'", _FieldName, _LikeString), orderBy);
 
                 if (UpDict != null)
@@ -1215,7 +1165,7 @@ namespace Hubble.Core.Query
                 }
             }
 
-            if (this.Not)
+            if (this._QueryParameter.Not)
             {
                 result.Not = true;
 
@@ -1235,7 +1185,7 @@ namespace Hubble.Core.Query
             return result;
         }
 
-        Core.SFQL.Parse.DocumentResultWhereDictionary _UpDict;
+        private Core.SFQL.Parse.DocumentResultWhereDictionary _UpDict;
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary UpDict
         {
@@ -1268,47 +1218,6 @@ namespace Hubble.Core.Query
             }
         }
 
-        bool _Not = false;
-
-        public bool Not
-        {
-            get
-            {
-                return _Not;
-            }
-            set
-            {
-                _Not = value;
-            }
-        }
-
-        bool _CanLoadPartOfDocs;
-
-        public bool CanLoadPartOfDocs
-        {
-            get
-            {
-                return _CanLoadPartOfDocs;
-            }
-            set
-            {
-                _CanLoadPartOfDocs = value;
-            }
-        }
-
-        bool _NoAndExpression = false;
-
-        public bool NoAndExpression
-        {
-            get
-            {
-                return _NoAndExpression;
-            }
-            set
-            {
-                _NoAndExpression = value;
-            }
-        }
         #endregion
 
 

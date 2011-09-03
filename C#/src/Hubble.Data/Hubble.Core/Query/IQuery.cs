@@ -23,26 +23,79 @@ using Hubble.Core.SFQL.Parse;
 
 namespace Hubble.Core.Query
 {
+    public class QueryParameter
+    {
+        /// <summary>
+        /// Between begin to end
+        /// </summary>
+        public int End = -1;
+
+        /// <summary>
+        /// Order by fields
+        /// </summary>
+        public string OrderBy = null;
+
+        /// <summary>
+        /// Need do group by
+        /// </summary>
+        public bool NeedGroupBy = false;
+
+        /// <summary>
+        /// Need do distinct
+        /// </summary>
+        public bool NeedDistinct = false;
+
+        private int _FieldRank = 1;
+
+        /// <summary>
+        /// Rank of this field
+        /// </summary>
+        public int FieldRank
+        {
+            get
+            {
+                return _FieldRank;
+            }
+            set
+            {
+                _FieldRank = value;
+                if (_FieldRank <= 0)
+                {
+                    _FieldRank = 1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// If this query need output not match result set it to true.
+        /// </summary>
+        public bool Not = false;
+
+        /// <summary>
+        /// Can load part of docs for file that configure by 
+        /// max doc count
+        /// </summary>
+        public bool CanLoadPartOfDocs = false;
+
+        /// <summary>
+        /// No and expression
+        /// </summary>
+        public bool NoAndExpression = false;
+
+    }
+
     public interface IQuery
     {
         //Input parameters
         string FieldName { get; set;}
+
         int TabIndex { get; set; }
 
         string Command { get; }
 
+        QueryParameter QueryParameter { get; }
+        
         DBProvider DBProvider { get; set; }
-
-        /// <summary>
-        /// Between begin to end
-        /// </summary>
-        int End { get; set; }
-
-        string OrderBy { get; set; }
-
-        bool NeedGroupBy { get; set; }
-
-        int FieldRank { get; set; }
 
         IList<Entity.WordInfo> QueryWords { get; set; }
 
@@ -61,19 +114,6 @@ namespace Hubble.Core.Query
         /// For Attribute(NotIn)
         /// </summary>
         Dictionary<int, int> NotInDict { get; set; }
-
-        /// <summary>
-        /// If this query need output not match result set it to true.
-        /// </summary>
-        bool Not { get; set; }
-
-        /// <summary>
-        /// Can load part of docs for file that configure by 
-        /// max doc count
-        /// </summary>
-        bool CanLoadPartOfDocs { get; set; }
-
-        bool NoAndExpression { get; set; }
 
         //output
         Core.SFQL.Parse.DocumentResultWhereDictionary Search();

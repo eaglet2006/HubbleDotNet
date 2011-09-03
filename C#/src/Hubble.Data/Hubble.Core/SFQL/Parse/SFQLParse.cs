@@ -1030,6 +1030,7 @@ namespace Hubble.Core.SFQL.Parse
             }
 
             parseWhere.NeedGroupBy = groupByList.Count > 0 || distinct != null;
+            parseWhere.NeedDistinct = distinct != null;
             parseWhere.NotInDict = notIn.NotInDict;
 
             Query.DocumentResultForSort[] result;

@@ -65,6 +65,21 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        private bool _NeedDistinct;
+
+        public bool NeedDistinct
+        {
+            get
+            {
+                return _NeedDistinct;
+            }
+
+            set
+            {
+                _NeedDistinct = value;
+            }
+        }
+
         private string _OrderBy;
 
         private Dictionary<int, int> _NotInDict = null;
@@ -454,17 +469,18 @@ namespace Hubble.Core.SFQL.Parse
                     //not match, not like, not contain eg.
                     if (cur.Left[1].SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.NOT)
                     {
-                        query.Not = true;
+                        query.QueryParameter.Not = true;
                     }
                 }
 
-                query.End = this.End;
-                query.NeedGroupBy = this.NeedGroupBy;
-                query.FieldRank = fieldRank;
+                query.QueryParameter.End = this.End;
+                query.QueryParameter.NeedGroupBy = this.NeedGroupBy;
+                query.QueryParameter.NeedDistinct = this.NeedDistinct;
+                query.QueryParameter.FieldRank = fieldRank;
                 query.FieldName = fieldName;
-                query.CanLoadPartOfDocs = OrderByScore && !_ComplexExpression;
-                query.OrderBy = _OrderBy;
-                query.NoAndExpression = expressionTree.AndChild == null && _NoneTokenizedAndTree == null;
+                query.QueryParameter.CanLoadPartOfDocs = OrderByScore && !_ComplexExpression;
+                query.QueryParameter.OrderBy = _OrderBy;
+                query.QueryParameter.NoAndExpression = expressionTree.AndChild == null && _NoneTokenizedAndTree == null;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
 
@@ -504,7 +520,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 if (query.UpDict != null)
                 {
-                    query.CanLoadPartOfDocs = false;
+                    query.QueryParameter.CanLoadPartOfDocs = false;
                 }
 
                 query.NotInDict = NotInDict;
