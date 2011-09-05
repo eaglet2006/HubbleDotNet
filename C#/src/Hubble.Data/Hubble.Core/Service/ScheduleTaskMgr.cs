@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 
 using TaskManage;
+using Hubble.Framework.Net;
 
 namespace Hubble.Core.Service
 {
@@ -64,7 +65,7 @@ namespace Hubble.Core.Service
                 System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
                 sqlConnBuilder.DataSource = "127.0.0.1";
                 sqlConnBuilder.UserID = Schema.UserName.Trim();
-                sqlConnBuilder.Password = Hubble.Framework.Security.DesEncryption.Decrypt(new byte[] { 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, Schema.Password); 
+                sqlConnBuilder.Password = Hubble.Framework.Security.DesEncryption.Decrypt(new byte[] { 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, Schema.Password);
                 sqlConnBuilder.InitialCatalog = Schema.Database.Trim();
 
                 using (Hubble.SQLClient.HubbleConnection conn = new Hubble.SQLClient.HubbleConnection(sqlConnBuilder.ConnectionString))
@@ -73,6 +74,11 @@ namespace Hubble.Core.Service
                     Hubble.SQLClient.HubbleCommand cmd = new Hubble.SQLClient.HubbleCommand(Schema.Sql, conn);
                     cmd.ExecuteNonQuery();
                 }
+            }
+            catch (ServerException e)
+            {
+                Global.Report.WriteErrorLog(string.Format("Run task scheduler:{0} id = {1} fail, task hasn't finished. \r\nException:{2} \r\n:Stack:{3}",
+                    Schema.Name, SchemaId, e.Message, e.InnerStackTrace));
             }
             catch (Exception e)
             {
