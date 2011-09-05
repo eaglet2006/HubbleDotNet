@@ -600,7 +600,7 @@ namespace Hubble.Core.SFQL.Parse
                         else if (cur.DataType == DataType.SmallInt)
                         {
                             sbyte* sbyteP = (sbyte*)&payloadInt + cur.SubTabIndex;
-                            short al = *sbyteP;
+                            short al = (byte)(*sbyteP);
                             short ah = *(sbyteP + 1);
                             ah <<= 8;
                             payloadInt = al | ah;

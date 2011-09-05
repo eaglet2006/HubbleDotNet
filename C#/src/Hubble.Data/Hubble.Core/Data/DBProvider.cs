@@ -1380,7 +1380,7 @@ namespace Hubble.Core.Data
                     return (long)(((sbyte*)(&payloadData[_DocIdReplaceField.TabIndex]))[_DocIdReplaceField.SubTabIndex]);
                 case DataType.SmallInt:
                     sbyte* sbyteP = (sbyte*)&payloadData[_DocIdReplaceField.TabIndex] + _DocIdReplaceField.SubTabIndex;
-                    short l = *sbyteP;
+                    short l = (byte)(*sbyteP);
                     short h = *(sbyteP + 1);
                     h <<= 8;
                     return l | h;

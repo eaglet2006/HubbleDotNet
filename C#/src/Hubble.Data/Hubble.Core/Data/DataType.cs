@@ -127,7 +127,7 @@ namespace Hubble.Core.Data
                     {
                         int v = buf[from];
                         sbyte* sbyteP = (sbyte*)&v + subTabIndex;
-                        short l = *sbyteP;
+                        short l = (byte)(*sbyteP);
                         short h = *(sbyteP + 1);
                         h <<= 8;
                         return new Hubble.Core.Query.SortInfo(asc, Hubble.Core.Query.SortType.Int, l | h);
@@ -182,7 +182,7 @@ namespace Hubble.Core.Data
                 case DataType.SmallInt:
                     {
                         sbyte* sbyteP = (sbyte*)(&buf[from]) + subTabIndex;
-                        short l = *sbyteP;
+                        short l = (byte)(*sbyteP);
                         short h = *(sbyteP + 1);
                         h <<= 8;
                         return (short)(l | h);
@@ -277,100 +277,11 @@ namespace Hubble.Core.Data
                 case DataType.SmallInt:
                     {
                         sbyte* sbyteP = (sbyte*)(&buf[from]) + subTabIndex;
-                        short l = *sbyteP;
+                        short l = (byte)(*sbyteP);
                         short h = *(sbyteP + 1);
                         h <<= 8;
                         return (l | h).ToString();
                     }
-                case DataType.Int:
-                    return buf[from].ToString();
-
-                case DataType.BigInt:
-                    {
-                        long l;
-                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
-                        return l.ToString();
-                    }
-
-                case DataType.DateTime:
-                    {
-                        long l;
-                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
-                        DateTime date = LongToDateTime(l);
-                        return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
-                    }
-
-                case DataType.Float:
-                    {
-                        long l;
-                        l = (((long)buf[from]) << 32) | (uint)buf[from + 1];
-
-                        float f = l;
-                        l = (((long)buf[from + 2]) << 32) + buf[from + 3];
-
-                        f += (float)l / 1000000000000000000;
-
-                        return f.ToString();
-                    }
-                default:
-                    throw new ArgumentException(string.Format("Invalid type:{0}", type));
-            }
-        }
-
-
-        static public string GetString(DataType type, int[] buf, int from, int subIndex, int len)
-        {
-            switch (type)
-            {
-                case DataType.Data:
-
-                    throw new Exception("Not finished!");
-
-                case DataType.Varchar:
-                case DataType.NVarchar:
-                case DataType.Char:
-                case DataType.NChar:
-
-                    StringBuilder str = new StringBuilder();
-
-                    int strDataLen = (len % 2) == 0 ? len /2 : len / 2 + 1;
-
-                    for (int i = from; i < from + strDataLen; i++)
-                    {
-                        char c;
-
-                        c = (char)(buf[i] >> 16);
-
-                        if (c == 0)
-                        {
-                            break;
-                        }
-
-                        str.Append(c);
-
-                        c = (char)(buf[i] % 65536);
-
-                        if (c == 0)
-                        {
-                            break;
-                        }
-
-                        str.Append(c);
-                    }
-
-                    return str.ToString();
-                case DataType.Date:
-                    {
-                        DateTime date = IntToDate(buf[from]);
-                        return date.ToString("yyyy-MM-dd");
-                    }
-                case DataType.SmallDateTime:
-                    {
-                        DateTime date = IntToSmallDatetime(buf[from]);
-                        return date.ToString("yyyy-MM-dd HH:mm:ss") + "." + date.Millisecond.ToString();
-                    }
-                case DataType.TinyInt:
-                case DataType.SmallInt:
                 case DataType.Int:
                     return buf[from].ToString();
 
@@ -418,7 +329,7 @@ namespace Hubble.Core.Data
                 case DataType.SmallInt:
                     {
                         sbyte* sbyteP = (sbyte*)&value + subTabIndex;
-                        short l = *sbyteP;
+                        short l = (byte)(*sbyteP);
                         short h = *(sbyteP + 1);
                         h <<= 8;
                         return l | h;
