@@ -119,7 +119,10 @@ namespace Hubble.Core.Service
             {
                 try
                 {
-                    _Thread.Abort();
+                    if (_Thread != null)
+                    {
+                        _Thread.Abort();
+                    }
                 }
                 catch (Exception e)
                 {
