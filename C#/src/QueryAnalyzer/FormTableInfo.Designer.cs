@@ -41,6 +41,11 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tabPageAttributes = new System.Windows.Forms.TabPage();
+            this.label16 = new System.Windows.Forms.Label();
+            this.numericUpDownRamIndexMinLoadSize = new System.Windows.Forms.NumericUpDown();
+            this.label17 = new System.Windows.Forms.Label();
+            this.comboBoxRamIndexType = new System.Windows.Forms.ComboBox();
+            this.label21 = new System.Windows.Forms.Label();
             this.label31 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.label30 = new System.Windows.Forms.Label();
@@ -81,22 +86,17 @@
             this.label10 = new System.Windows.Forms.Label();
             this.textBoxDirectory = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.numericUpDownRamIndexMinLoadSize = new System.Windows.Forms.NumericUpDown();
-            this.label17 = new System.Windows.Forms.Label();
-            this.comboBoxRamIndexType = new System.Windows.Forms.ComboBox();
-            this.label21 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabPageFields.SuspendLayout();
             this.panelHead.SuspendLayout();
             this.tabPageAttributes.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRamIndexMinLoadSize)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownGroupByLimit)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRamIndexMinLoadSize)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -273,6 +273,61 @@
             this.tabPageAttributes.TabIndex = 1;
             this.tabPageAttributes.Text = "Attributes";
             this.tabPageAttributes.UseVisualStyleBackColor = true;
+            // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(624, 240);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(21, 13);
+            this.label16.TabIndex = 52;
+            this.label16.Text = "KB";
+            // 
+            // numericUpDownRamIndexMinLoadSize
+            // 
+            this.numericUpDownRamIndexMinLoadSize.Location = new System.Drawing.Point(514, 235);
+            this.numericUpDownRamIndexMinLoadSize.Maximum = new decimal(new int[] {
+            8192,
+            0,
+            0,
+            0});
+            this.numericUpDownRamIndexMinLoadSize.Name = "numericUpDownRamIndexMinLoadSize";
+            this.numericUpDownRamIndexMinLoadSize.Size = new System.Drawing.Size(95, 20);
+            this.numericUpDownRamIndexMinLoadSize.TabIndex = 10;
+            this.numericUpDownRamIndexMinLoadSize.Tag = "RamIndexMinLoadSize";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(348, 240);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(125, 13);
+            this.label17.TabIndex = 51;
+            this.label17.Text = "RamIndex Min Load Size";
+            // 
+            // comboBoxRamIndexType
+            // 
+            this.comboBoxRamIndexType.FormattingEnabled = true;
+            this.comboBoxRamIndexType.Items.AddRange(new object[] {
+            "NoCache",
+            "Full",
+            "Dynamic",
+            "Small"});
+            this.comboBoxRamIndexType.Location = new System.Drawing.Point(514, 200);
+            this.comboBoxRamIndexType.Name = "comboBoxRamIndexType";
+            this.comboBoxRamIndexType.Size = new System.Drawing.Size(96, 21);
+            this.comboBoxRamIndexType.TabIndex = 48;
+            this.comboBoxRamIndexType.Tag = "RamIndexType";
+            this.comboBoxRamIndexType.Text = "NoCache";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(348, 203);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(79, 13);
+            this.label21.TabIndex = 50;
+            this.label21.Text = "RamIndexType";
             // 
             // label31
             // 
@@ -507,9 +562,9 @@
             this.label20.AutoSize = true;
             this.label20.Location = new System.Drawing.Point(624, 308);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(20, 13);
+            this.label20.Size = new System.Drawing.Size(12, 13);
             this.label20.TabIndex = 28;
-            this.label20.Text = "ms";
+            this.label20.Text = "s";
             // 
             // numericUpDownQueryCacheTimeout
             // 
@@ -725,61 +780,6 @@
             this.label9.TabIndex = 0;
             this.label9.Text = "Index Directory";
             // 
-            // label16
-            // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(624, 240);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(21, 13);
-            this.label16.TabIndex = 52;
-            this.label16.Text = "KB";
-            // 
-            // numericUpDownRamIndexMinLoadSize
-            // 
-            this.numericUpDownRamIndexMinLoadSize.Location = new System.Drawing.Point(514, 235);
-            this.numericUpDownRamIndexMinLoadSize.Maximum = new decimal(new int[] {
-            8192,
-            0,
-            0,
-            0});
-            this.numericUpDownRamIndexMinLoadSize.Name = "numericUpDownRamIndexMinLoadSize";
-            this.numericUpDownRamIndexMinLoadSize.Size = new System.Drawing.Size(95, 20);
-            this.numericUpDownRamIndexMinLoadSize.TabIndex = 10;
-            this.numericUpDownRamIndexMinLoadSize.Tag = "RamIndexMinLoadSize";
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(348, 240);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(125, 13);
-            this.label17.TabIndex = 51;
-            this.label17.Text = "RamIndex Min Load Size";
-            // 
-            // comboBoxRamIndexType
-            // 
-            this.comboBoxRamIndexType.FormattingEnabled = true;
-            this.comboBoxRamIndexType.Items.AddRange(new object[] {
-            "NoCache",
-            "Full",
-            "Dynamic",
-            "Small"});
-            this.comboBoxRamIndexType.Location = new System.Drawing.Point(514, 200);
-            this.comboBoxRamIndexType.Name = "comboBoxRamIndexType";
-            this.comboBoxRamIndexType.Size = new System.Drawing.Size(96, 21);
-            this.comboBoxRamIndexType.TabIndex = 48;
-            this.comboBoxRamIndexType.Tag = "RamIndexType";
-            this.comboBoxRamIndexType.Text = "NoCache";
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(348, 203);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(79, 13);
-            this.label21.TabIndex = 50;
-            this.label21.Text = "RamIndexType";
-            // 
             // FormTableInfo
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -796,13 +796,13 @@
             this.panelHead.PerformLayout();
             this.tabPageAttributes.ResumeLayout(false);
             this.tabPageAttributes.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRamIndexMinLoadSize)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownGroupByLimit)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownIndexThread)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownQueryCacheTimeout)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownMaxReturnCount)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownLastDocId)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDownRamIndexMinLoadSize)).EndInit();
             this.ResumeLayout(false);
 
         }
