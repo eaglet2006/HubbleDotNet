@@ -1136,49 +1136,53 @@ namespace Hubble.Core.SFQL.Parse
                     sortLen = -1;
                 }
 
-                if (OrderByFromDatabase(select, dbProvider))
+                //Sort
+                if (!sorted && distinct == null)
                 {
-                    Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResultForSortList from DB");
-
-                    IList<Query.DocumentResultForSort> dbResult = dbProvider.DBAdapter.GetDocumentResultForSortList(sortLen - 1, result, GetOrderByString(select));
-
-                    performanceReport.Stop();
-
-                    for (int i= 0; i < dbResult.Count; i++)
+                    if (OrderByFromDatabase(select, dbProvider))
                     {
-                        result[i] = dbResult[i];
-                        result[i].PayloadData = dbProvider.GetPayloadData(result[i].DocId);
-                    }
+                        Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResultForSortList from DB");
 
-                }
-                else
-                {
-                    Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
+                        IList<Query.DocumentResultForSort> dbResult = dbProvider.DBAdapter.GetDocumentResultForSortList(sortLen - 1, result, GetOrderByString(select));
 
-                    QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
-                    int sortLen4Report;
+                        performanceReport.Stop();
 
-                    //qSort.Sort(result);
+                        for (int i = 0; i < dbResult.Count; i++)
+                        {
+                            result[i] = dbResult[i];
+                            result[i].PayloadData = dbProvider.GetPayloadData(result[i].DocId);
+                        }
 
-                    if (distinct == null)
-                    {
-                        sortLen4Report = sortLen;
-                        qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
                     }
                     else
                     {
-                        //Do distinct
-                        sortLen4Report = result.Length;
+                        Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport();
 
-                        //Sort before distinct because I want to display results that have the high order then other results.
-                        //For example. Order by time desc, I want the 2010 display not 2009 when the results will be distincted.
-                        qSort.Sort(result); 
-                        System.Data.DataTable distinctTable;
-                        result = distinct.Distinct(result, out distinctTable);
-                        relTotalCount = result.Length;
+                        QueryResultSort qSort = new QueryResultSort(select.OrderBys, dbProvider);
+                        int sortLen4Report;
+
+                        //qSort.Sort(result);
+
+                        if (distinct == null)
+                        {
+                            sortLen4Report = sortLen;
+                            qSort.Sort(result, sortLen); // using part quick sort can reduce 40% time
+                        }
+                        else
+                        {
+                            //Do distinct
+                            sortLen4Report = result.Length;
+
+                            //Sort before distinct because I want to display results that have the high order then other results.
+                            //For example. Order by time desc, I want the 2010 display not 2009 when the results will be distincted.
+                            qSort.Sort(result);
+                            System.Data.DataTable distinctTable;
+                            result = distinct.Distinct(result, out distinctTable);
+                            relTotalCount = result.Length;
+                        }
+
+                        performanceReport.Stop(string.Format("Sort result.length={0}, sort len = {1}", result.Length, sortLen4Report));
                     }
-
-                    performanceReport.Stop(string.Format("Sort result.length={0}, sort len = {1}", result.Length, sortLen4Report));
                 }
 
                 if (queryCache != null)
