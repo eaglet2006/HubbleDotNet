@@ -419,6 +419,7 @@ namespace Hubble.Core.SFQL.Parse
                     }
                 }
 
+                sec.RelTotalCount = sec.Count;
                 return sec;
             }
             else
@@ -442,8 +443,8 @@ namespace Hubble.Core.SFQL.Parse
                     yes.Remove(key);
                 }
 
+                yes.RelTotalCount = yes.Count;
                 return yes;
-
             }
         }
 

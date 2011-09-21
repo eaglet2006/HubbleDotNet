@@ -36,16 +36,19 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.6.8")]
-[assembly: AssemblyFileVersion("1.1.6.8")]
+[assembly: AssemblyVersion("1.1.6.9")]
+[assembly: AssemblyFileVersion("1.1.6.9")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
  * ***************************************************************************************
  * 1.1.6.8 Bo Xiao
  * If sorted, don't sort again.
- * 
- * 
+ * 1.1.6.9 Bo Xiao
+ * Modify AndMergeForNot. Set the RelCount = Count;
+ * When we execute sql with the condition looks like:
+ * title match 'abc news' and title not contains 'new' order by score 
+ * Wrong count returned.
  * 
  * 
  * 
