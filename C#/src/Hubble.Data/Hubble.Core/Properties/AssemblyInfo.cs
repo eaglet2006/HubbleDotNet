@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.6.9")]
-[assembly: AssemblyFileVersion("1.1.6.9")]
+[assembly: AssemblyVersion("1.1.7.0")]
+[assembly: AssemblyFileVersion("1.1.7.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -49,7 +49,8 @@ using System.Runtime.InteropServices;
  * When we execute sql with the condition looks like:
  * title match 'abc news' and title not contains 'new' order by score 
  * Wrong count returned.
- * 
+ * 1.1.7.0 Bo Xiao
+ * Fix a bug of distinct. This bug is the cause of modification of 1.1.6.8
  * 
  * 
  *****************************************************************************************/

@@ -1137,8 +1137,9 @@ namespace Hubble.Core.SFQL.Parse
                 }
 
                 //Sort
-                if (!sorted && distinct == null)
+                if (!sorted || distinct != null)
                 {
+                    //not sorted or disctinct 
                     if (OrderByFromDatabase(select, dbProvider))
                     {
                         Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("GetDocumentResultForSortList from DB");
