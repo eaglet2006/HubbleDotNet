@@ -1430,6 +1430,7 @@ namespace Hubble.Core.SFQL.Parse
                             {
                                 if (expression.Left.Count == 1)
                                 {
+                                    //if the expression like: Docid = 000
                                     if (expression.Left[0].Text.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
                                     {
                                         if (expression.Operator.SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Equal)
@@ -1454,6 +1455,31 @@ namespace Hubble.Core.SFQL.Parse
                                                 return new Query.DocumentResultForSort[0];
                                             }
                                         }
+                                    }
+                                    else if (expression.Left[0].Text.Equals(_DBProvider.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        //if the expression like: id = 000
+
+                                        int id = int.Parse(expression.Right[0].Text);
+                                        int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
+
+                                        if (docid != int.MinValue)
+                                        {
+                                            if (!_DBProvider.DelProvider.DocIdDeleted(docid))
+                                            {
+                                                Query.DocumentResultForSort[] dresult = new Hubble.Core.Query.DocumentResultForSort[1];
+                                                dresult[0] = new Hubble.Core.Query.DocumentResultForSort(docid);
+                                                relTotalCount = 1;
+                                                groupByCollection = null;
+                                                sorted = false;
+                                                return dresult;
+                                            }
+                                        }
+
+                                        relTotalCount = 0;
+                                        groupByCollection = null;
+                                        sorted = false;
+                                        return new Query.DocumentResultForSort[0];
                                     }
                                 }
                             }

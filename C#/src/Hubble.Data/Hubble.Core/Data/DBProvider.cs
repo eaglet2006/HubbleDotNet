@@ -1348,6 +1348,12 @@ namespace Hubble.Core.Data
             return Query(selectFields, docs, 0, docs.Count - 1);
         }
 
+        /// <summary>
+        /// Get docid from id.
+        /// If does not exist, return int.MinValue
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public int GetDocIdFromDocIdReplaceFieldValue(long value)
         {
             return _DocPayload.GetDocIdByDocIdReplaceFieldValue(value);

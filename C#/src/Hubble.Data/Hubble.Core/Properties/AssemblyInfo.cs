@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.0")]
-[assembly: AssemblyFileVersion("1.1.7.0")]
+[assembly: AssemblyVersion("1.1.7.1")]
+[assembly: AssemblyFileVersion("1.1.7.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -51,6 +51,12 @@ using System.Runtime.InteropServices;
  * Wrong count returned.
  * 1.1.7.0 Bo Xiao
  * Fix a bug of distinct. This bug is the cause of modification of 1.1.6.8
+ * 1.1.7.1 Bo Xiao
+ * if the condition of select statement looks like id = xxx, don't query database and get the data
+ * from hubble index directly.
+ * This modification can improve the performance of the sql statement such as following:
+ * select * from table where id = 1
+ * update table set price = 1 where id = 1;
  * 
  * 
  *****************************************************************************************/
