@@ -14,7 +14,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
 #else
 [assembly: AssemblyProduct("HubbleDotNet Community Edition")]
-[assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2009-2011")]
 #endif
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.1")]
-[assembly: AssemblyFileVersion("1.1.7.1")]
+[assembly: AssemblyVersion("1.1.7.2")]
+[assembly: AssemblyFileVersion("1.1.7.2")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -57,6 +57,7 @@ using System.Runtime.InteropServices;
  * This modification can improve the performance of the sql statement such as following:
  * select * from table where id = 1
  * update table set price = 1 where id = 1;
- * 
+ * 1.1.7.2 Bo Xiao
+ * Add a store produce: SP_GetTFIDF.
  * 
  *****************************************************************************************/

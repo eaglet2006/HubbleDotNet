@@ -299,7 +299,7 @@ namespace Hubble.Core.SFQL.Parse
             return result;
         }
 
-        private List<Entity.WordInfo> GetWordInfoList(string queryStr)
+        internal static List<Entity.WordInfo> GetWordInfoList(string queryStr)
         {
             List<Entity.WordInfo> result = new List<Hubble.Core.Entity.WordInfo>();
 
