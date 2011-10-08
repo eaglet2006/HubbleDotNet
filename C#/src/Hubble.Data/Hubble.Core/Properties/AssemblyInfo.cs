@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.2")]
-[assembly: AssemblyFileVersion("1.1.7.2")]
+[assembly: AssemblyVersion("1.1.7.3")]
+[assembly: AssemblyFileVersion("1.1.7.3")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -59,5 +59,8 @@ using System.Runtime.InteropServices;
  * update table set price = 1 where id = 1;
  * 1.1.7.2 Bo Xiao
  * Add a store produce: SP_GetTFIDF.
- * 
+ * 1.1.7.3 Bo Xiao
+ * Add the framework of Linq for hubble (Hubble.SQLClient.Linq)
+ * Add some store procedure for linq.
+ * We will improve it in the latter version.
  *****************************************************************************************/
