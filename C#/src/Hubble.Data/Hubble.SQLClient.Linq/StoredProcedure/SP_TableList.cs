@@ -26,7 +26,7 @@ namespace Hubble.SQLClient.Linq.StoredProcedure
     public partial class SPDataContext : DataContext
     {
         /// <summary>
-        /// List all the tables in current database
+        /// List all the tables in all the database
         /// </summary>
         /// <returns></returns>
         public HashSet<TableInfo> SP_TableList()
@@ -35,5 +35,22 @@ namespace Hubble.SQLClient.Linq.StoredProcedure
 
             return spExecutor.ReturnAsHashSet("exec SP_TableList", null);
         }
+
+
+        public HashSet<TableInfo> SP_TableList(string databaseName)
+        {
+            SPExecutor<TableInfo> spExecutor = new SPExecutor<TableInfo>(this);
+
+            HashSet<TableInfo> result = spExecutor.ReturnAsHashSet("exec SP_TableList {0}", databaseName);
+
+            foreach (TableInfo tableInfo in result)
+            {
+                tableInfo.TableName = tableInfo.TableName.Substring(databaseName.Trim().Length + 1,
+                    tableInfo.TableName.Length - (databaseName.Trim().Length + 1));
+            }
+
+            return result;
+        }
+
     }
 }
