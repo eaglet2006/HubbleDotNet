@@ -37,13 +37,13 @@ namespace Hubble.SQLClient.Linq.Entities
         /// Term frequency
         /// </summary>
         [Column("TF")]
-        public double? TF { get; set; }
+        public double TF { get; set; }
 
         /// <summary>
         /// inverse document frequency
         /// </summary>
         [Column("IDF")]
-        public double? IDF { get; set; }
+        public double IDF { get; set; }
 
         /// <summary>
         /// number of documents where the term t appears 
@@ -61,7 +61,7 @@ namespace Hubble.SQLClient.Linq.Entities
         /// TF * IDF
         /// </summary>
         [Column("TF_IDF")]
-        public double? TF_IDF { get; set; }
+        public double TF_IDF { get; set; }
 
         public override bool Equals(object obj)
         {

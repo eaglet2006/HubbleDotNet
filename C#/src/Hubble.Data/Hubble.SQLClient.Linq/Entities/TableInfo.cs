@@ -44,7 +44,7 @@ namespace Hubble.SQLClient.Linq.Entities
         /// Is this table bigtable
         /// </summary>
         [Column("IsBigTable")]
-        public bool? IsBigTable { get; set; }
+        public bool IsBigTable { get; set; }
 
         public override bool Equals(object obj)
         {

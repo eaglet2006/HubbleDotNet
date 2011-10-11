@@ -43,7 +43,7 @@ namespace Hubble.SQLClient.Linq.Entities
         /// Data length
         /// </summary>
         [Column("DataLength")]
-        public int? DataLength { get; set; }
+        public int DataLength { get; set; }
 
         /// <summary>
         /// Index type. 
@@ -66,13 +66,13 @@ namespace Hubble.SQLClient.Linq.Entities
         /// Can NULL
         /// </summary>
         [Column("IsNull")]
-        public bool? CanNull { get; set; }
+        public bool CanNull { get; set; }
 
         /// <summary>
         /// Is Primary key
         /// </summary>
         [Column("IsPrimaryKey")]
-        public bool? IsPrimaryKey { get; set; }
+        public bool IsPrimaryKey { get; set; }
 
         /// <summary>
         /// Default value

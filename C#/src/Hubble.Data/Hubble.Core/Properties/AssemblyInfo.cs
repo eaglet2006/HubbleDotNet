@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.4")]
-[assembly: AssemblyFileVersion("1.1.7.4")]
+[assembly: AssemblyVersion("1.1.7.5")]
+[assembly: AssemblyFileVersion("1.1.7.5")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -65,4 +65,5 @@ using System.Runtime.InteropServices;
  * We will improve it in the latter version.
  * 1.1.7.4 Bo Xiao
  * Modify SP_TableList store procedure in Linq
+ * 1.1.7.5 Modify some data type of the store procedures in Linq
  *****************************************************************************************/

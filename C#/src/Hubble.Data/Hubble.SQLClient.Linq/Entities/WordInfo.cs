@@ -37,13 +37,13 @@ namespace Hubble.SQLClient.Linq.Entities
         /// Position of the first character of the word in the input text
         /// </summary>
         [Column("Position")]
-        public int? Position { get; set; }
+        public int Position { get; set; }
 
         /// <summary>
         /// Rank for the word
         /// </summary>
         [Column("Rank")]
-        public int? Rank { get; set; }
+        public int Rank { get; set; }
 
         public override string ToString()
         {
