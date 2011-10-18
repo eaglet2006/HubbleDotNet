@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.5")]
-[assembly: AssemblyFileVersion("1.1.7.5")]
+[assembly: AssemblyVersion("1.1.7.6")]
+[assembly: AssemblyFileVersion("1.1.7.6")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -66,4 +66,6 @@ using System.Runtime.InteropServices;
  * 1.1.7.4 Bo Xiao
  * Modify SP_TableList store procedure in Linq
  * 1.1.7.5 Modify some data type of the store procedures in Linq
+ * 1.1.7.6 Fix a bug when condition is where id = 1000000000000. The old version doesn't support
+ * bigint value here.
  *****************************************************************************************/

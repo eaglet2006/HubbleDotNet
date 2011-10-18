@@ -1460,7 +1460,7 @@ namespace Hubble.Core.SFQL.Parse
                                     {
                                         //if the expression like: id = 000
 
-                                        int id = int.Parse(expression.Right[0].Text);
+                                        long id = long.Parse(expression.Right[0].Text);
                                         int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
 
                                         if (docid != int.MinValue)
