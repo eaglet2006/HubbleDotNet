@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.6")]
-[assembly: AssemblyFileVersion("1.1.7.6")]
+[assembly: AssemblyVersion("1.1.7.7")]
+[assembly: AssemblyFileVersion("1.1.7.7")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -68,4 +68,9 @@ using System.Runtime.InteropServices;
  * 1.1.7.5 Modify some data type of the store procedures in Linq
  * 1.1.7.6 Fix a bug when condition is where id = 1000000000000. The old version doesn't support
  * bigint value here.
+ * 1.1.7.7 Bo Xiao
+ * Improve the performance for one word query normal order by condition.
+ * The old version only optimized the performance for order by score desc.
+ * From this version any order by condition which is less than or equal 3 and query one word will be optimized.
+ * And group by for above condition is also optimized.
  *****************************************************************************************/

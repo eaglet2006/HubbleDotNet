@@ -205,6 +205,58 @@ namespace Hubble.Core.Data
             }
         }
 
+        /// <summary>
+        /// Try to convert any data type to long
+        /// If data type is float. return (long)(value * 1000);
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="buf"></param>
+        /// <param name="from"></param>
+        /// <param name="subTabIndex"></param>
+        /// <param name="len"></param>
+        /// <returns></returns>
+        unsafe static public long GetLongAnyWay(DataType type, int* buf, int from, int subTabIndex, int len)
+        {
+            switch (type)
+            {
+                case DataType.TinyInt:
+                    return (*((sbyte*)(&buf[from]) + subTabIndex));
+                case DataType.SmallInt:
+                    {
+                        sbyte* sbyteP = (sbyte*)(&buf[from]) + subTabIndex;
+                        short l = (byte)(*sbyteP);
+                        short h = *(sbyteP + 1);
+                        h <<= 8;
+                        return (short)(l | h);
+                    }
+                case DataType.Date:
+                case DataType.SmallDateTime:
+                case DataType.Int:
+                    return buf[from];
+                case DataType.BigInt:
+                case DataType.DateTime:
+                    {
+                        long l;
+                        l = (((long)buf[from]) << 32) + (uint)buf[from + 1];
+                        return l;
+                    }
+                case DataType.Float:
+                    {
+                        long l;
+                        l = (((long)buf[from]) << 32) | (uint)buf[from + 1];
+
+                        float f = l;
+                        l = (((long)buf[from + 2]) << 32) + buf[from + 3];
+
+                        f += (float)l / 1000000000000000000;
+
+                        return (long)(f * 1000);
+                    }
+                default:
+                    throw new DataException(string.Format("Invalid type:{0}", type.ToString()));
+            }
+        }
+
         unsafe static public long GetLong(DataType type, int* buf, int from, int subTabIndex, int len)
         {
             switch (type)

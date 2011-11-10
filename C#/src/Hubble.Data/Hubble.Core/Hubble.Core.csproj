@@ -134,6 +134,8 @@
     <Compile Include="Query\Optimize\Docid2Long.cs" />
     <Compile Include="Query\Optimize\IQueryOptimize.cs" />
     <Compile Include="Query\Optimize\OneWordOptimize.cs" />
+    <Compile Include="Query\Optimize\OptimizeArgument.cs" />
+    <Compile Include="Query\Optimize\OptimizeArgumentGenerator.cs" />
     <Compile Include="Query\Optimize\QueryOptimizeBuilder.cs" />
     <Compile Include="Query\PerformanceReport.cs" />
     <Compile Include="Query\Searcher.cs" />

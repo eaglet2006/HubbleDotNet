@@ -11,62 +11,7 @@ namespace Hubble.Core.Query.Optimize
 
     public class OneWordOptimize : IQueryOptimize
     {
-        private DBProvider _DBProvider;
-
-        public DBProvider DBProvider
-        {
-            get
-            {
-                return _DBProvider;
-            }
-            set
-            {
-                _DBProvider = value;
-            }
-        }
-
-        private int _End = -1;
-
-        public int End
-        {
-            get
-            {
-                return _End;
-            }
-
-            set
-            {
-                _End = value;
-            }
-        }
-
-        private string _OrderBy = null;
-
-        public string OrderBy
-        {
-            get
-            {
-                return _OrderBy;
-            }
-            set
-            {
-                _OrderBy = value;
-            }
-        }
-
-        private bool _NeedGroupBy;
-
-        public bool NeedGroupBy
-        {
-            get
-            {
-                return _NeedGroupBy;
-            }
-            set
-            {
-                _NeedGroupBy = value;
-            }
-        }
+        public OptimizeArgument Argument { get; set; }
 
         private WordIndexForQuery[] _WordIndexes;
 
@@ -97,6 +42,9 @@ namespace Hubble.Core.Query.Optimize
         /// <returns>load count</returns>
         private int LoadDocIdPayloads()
         {
+            DBProvider dBProvider = Argument.DBProvider;
+
+
             int count = 0;
             for (; count < _DocidPayloads.Length; count++)
             {
@@ -117,7 +65,7 @@ namespace Hubble.Core.Query.Optimize
 
             if (count > 0)
             {
-                _DBProvider.FillPayloadRank(_RankTab, count, _DocidPayloads);
+                dBProvider.FillPayloadRank(_RankTab, count, _DocidPayloads);
             }
 
             _CurDocidPayloadIndex = 0;
@@ -153,13 +101,16 @@ namespace Hubble.Core.Query.Optimize
             }
         }
 
-        unsafe public void CalculateOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+        unsafe public void CalculateOptimizeOrderByScoreDesc(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
             ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)
         {
+            DBProvider dBProvider = Argument.DBProvider;
+            bool needGroupBy = Argument.NeedGroupBy;
+
             WordIndexForQuery wifq = WordIndexes[0];
             _IndexReader = wifq.WordIndex.IndexReader;
 
-            Data.Field rankField = DBProvider.GetField("Rank");
+            Data.Field rankField = Argument.DBProvider.GetField("Rank");
 
             if (rankField != null)
             {
@@ -168,7 +119,7 @@ namespace Hubble.Core.Query.Optimize
                 {
                     _HasRandField = true;
                     _RankTab = rankField.TabIndex;
-                    _DocidPayloads = new OriginalDocumentPositionList[2*1024];
+                    _DocidPayloads = new OriginalDocumentPositionList[2 * 1024];
                     _CurDocidPayloadIndex = _DocidPayloads.Length;
                 }
             }
@@ -178,16 +129,16 @@ namespace Hubble.Core.Query.Optimize
                 int top;
 
                 //vars for delete
-                bool haveRecordsDeleted = _DBProvider.DelProvider.Count > 0;
+                bool haveRecordsDeleted = dBProvider.DelProvider.Count > 0;
                 int[] delDocs = null;
                 int curDelIndex = 0;
                 int curDelDocid = 0;
                 int groupByCount = 0;
-                int groupByLen = _DBProvider.Table.GroupByLimit;
+                int groupByLen = dBProvider.Table.GroupByLimit;
                 int groupByStep = 1;
                 int groupByIndex = 0;
 
-                if (_NeedGroupBy)
+                if (needGroupBy)
                 {
                     groupByStep = wifq.RelTotalCount / groupByLen;
 
@@ -199,7 +150,7 @@ namespace Hubble.Core.Query.Optimize
 
                 if (haveRecordsDeleted)
                 {
-                    delDocs = _DBProvider.DelProvider.DelDocs;
+                    delDocs = dBProvider.DelProvider.DelDocs;
                     curDelDocid = delDocs[curDelIndex];
                 }
 
@@ -207,16 +158,16 @@ namespace Hubble.Core.Query.Optimize
                 {
                     //calculate top
                     //If less then 100, set to 100
-                    if (this.End >= 0)
+                    if (this.Argument.End >= 0)
                     {
-                        top = (1 + this.End / 100) * 100;
+                        top = (1 + this.Argument.End / 100) * 100;
 
                         if (top <= 0)
                         {
                             top = 100;
                         }
 
-                        if (this.End * 2 > top)
+                        if (this.Argument.End * 2 > top)
                         {
                             top *= 2;
                         }
@@ -277,7 +228,7 @@ namespace Hubble.Core.Query.Optimize
                             }
                         }
 
-                        if (_NeedGroupBy)
+                        if (needGroupBy)
                         {
                             if (groupByCount < groupByLen)
                             {
@@ -342,13 +293,259 @@ namespace Hubble.Core.Query.Optimize
                 }
                 finally
                 {
-                    
+
                 }
-                
+
                 docIdRank.Sorted = true;
             }
         }
 
+        /// <summary>
+        /// order by except only order by score desc.
+        /// </summary>
+        /// <param name="upDict"></param>
+        /// <param name="docIdRank"></param>
+        unsafe public void CalculateOptimizeNormalOrderBy(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)
+        {
+            DBProvider dBProvider = Argument.DBProvider;
+            Argument.DBProvider.SharedPayloadProvider.EnterPayloladShareLock();
+
+            try
+            {
+                Field[] orderByFields;
+
+                DocId2LongComparer comparer = DocId2LongComparer.Generate(
+                    dBProvider, Argument.OrderBys, out orderByFields);
+
+                bool needGroupBy = Argument.NeedGroupBy;
+
+                WordIndexForQuery wifq = WordIndexes[0];
+                _IndexReader = wifq.WordIndex.IndexReader;
+
+                Data.Field rankField = Argument.DBProvider.GetField("Rank");
+
+                if (rankField != null)
+                {
+                    if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
+                        rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
+                    {
+                        _HasRandField = true;
+                        _RankTab = rankField.TabIndex;
+                        _DocidPayloads = new OriginalDocumentPositionList[2 * 1024];
+                        _CurDocidPayloadIndex = _DocidPayloads.Length;
+                    }
+                }
+
+                if (_IndexReader != null)
+                {
+                    int top;
+
+                    //vars for delete
+                    bool haveRecordsDeleted = dBProvider.DelProvider.Count > 0;
+                    int[] delDocs = null;
+                    int curDelIndex = 0;
+                    int curDelDocid = 0;
+                    int groupByCount = 0;
+                    int groupByLen = dBProvider.Table.GroupByLimit;
+                    int groupByStep = 1;
+                    int groupByIndex = 0;
+
+                    if (needGroupBy)
+                    {
+                        groupByStep = wifq.RelTotalCount / groupByLen;
+
+                        if (groupByStep <= 0)
+                        {
+                            groupByStep = 1;
+                        }
+                    }
+
+                    if (haveRecordsDeleted)
+                    {
+                        delDocs = dBProvider.DelProvider.DelDocs;
+                        curDelDocid = delDocs[curDelIndex];
+                    }
+
+                    try
+                    {
+                        //calculate top
+                        //If less then 100, set to 100
+                        if (this.Argument.End >= 0)
+                        {
+                            top = (1 + this.Argument.End / 100) * 100;
+
+                            if (top <= 0)
+                            {
+                                top = 100;
+                            }
+
+                            if (this.Argument.End * 2 > top)
+                            {
+                                top *= 2;
+                            }
+                        }
+                        else
+                        {
+                            top = int.MaxValue;
+                        }
+
+                        PriorQueue<Docid2Long> priorQueue = new PriorQueue<Docid2Long>(top, comparer);
+                        int rows = 0;
+
+                        Entity.OriginalDocumentPositionList docList = new OriginalDocumentPositionList();
+
+                        bool notEOF = GetNext(ref docList);
+
+                        Index.WordIndexReader wordIndexReader = wifq.WordIndex;
+
+                        Docid2Long last = new Docid2Long();
+                        last.DocId = -1;
+
+                        int relCount = 0;
+
+                        while (notEOF)
+                        {
+                            if (haveRecordsDeleted)
+                            {
+                                if (curDelIndex < delDocs.Length)
+                                {
+                                    //If docid deleted, get next
+                                    if (docList.DocumentId == curDelDocid)
+                                    {
+                                        notEOF = GetNext(ref docList);
+                                        continue;
+                                    }
+                                    else if (docList.DocumentId > curDelDocid)
+                                    {
+                                        while (curDelIndex < delDocs.Length && curDelDocid < docList.DocumentId)
+                                        {
+                                            curDelIndex++;
+
+                                            if (curDelIndex >= delDocs.Length)
+                                            {
+                                                haveRecordsDeleted = false;
+                                                break;
+                                            }
+
+                                            curDelDocid = delDocs[curDelIndex];
+                                        }
+
+                                        if (curDelIndex < delDocs.Length)
+                                        {
+                                            if (docList.DocumentId == curDelDocid)
+                                            {
+                                                notEOF = GetNext(ref docList);
+                                                continue;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (needGroupBy)
+                            {
+                                if (groupByCount < groupByLen)
+                                {
+                                    if (groupByIndex >= groupByStep)
+                                    {
+                                        groupByIndex = 0;
+                                    }
+
+                                    if (groupByIndex == 0)
+                                    {
+                                        docIdRank.AddToGroupByCollection(docList.DocumentId);
+                                        groupByCount++;
+                                    }
+
+                                    groupByIndex++;
+                                }
+                            }
+
+                            relCount++;
+
+                            Docid2Long cur = new Docid2Long();
+
+                            if (rows >= top)
+                            {
+                                int score = docList.CountAndWordCount / 8; //one word, score = count
+
+                                cur.DocId = docList.DocumentId;
+                                cur.Rank = docList.TotalWordsInThisDocument;
+
+                                Docid2Long.Generate(ref cur, dBProvider, orderByFields, score);
+
+                                if (comparer.Compare(last, cur) < 0)
+                                {
+                                    priorQueue.Add(cur);
+                                    last = priorQueue.Last;
+                                }
+                            }
+                            else
+                            {
+                                int score = docList.CountAndWordCount / 8; //one word, score = count
+
+                                cur.DocId = docList.DocumentId;
+                                cur.Rank = docList.TotalWordsInThisDocument;
+
+                                Docid2Long.Generate(ref cur, dBProvider, orderByFields, score);
+
+                                priorQueue.Add(cur);
+                                rows++;
+
+                                if (rows == top)
+                                {
+                                    last = priorQueue.Last;
+                                }
+                            }
+
+                            notEOF = GetNext(ref docList);
+                        }
+
+                        docIdRank.RelTotalCount = relCount;
+
+                        foreach (Docid2Long docid2Long in priorQueue.ToArray())
+                        {
+                            //long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * comparer.GetScore(docid2Long) * (long)1000000 /
+                            //    ((long)wifq.Sum_d_t * (long)docid2Long.Rank); //use Rank store TotalWordsInThisDocument
+
+                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * comparer.GetScore(docid2Long); //use Rank store TotalWordsInThisDocument
+
+                            if (score < 0)
+                            {
+                                //Overflow
+                                score = long.MaxValue - 4000000;
+                            }
+
+                            docIdRank.Add(docid2Long.DocId, new DocumentResult(docid2Long.DocId, score));
+                        }
+                    }
+                    finally
+                    {
+
+                    }
+
+                    docIdRank.Sorted = true;
+                }
+            }
+            finally
+            {
+                Argument.DBProvider.SharedPayloadProvider.LeavePayloadShareLock();
+            }
+        }
+
+        unsafe public void CalculateOptimize(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
+            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)
+        {
+            if (Argument.IsOrderByScoreDesc())
+            {
+                CalculateOptimizeOrderByScoreDesc(upDict, ref docIdRank);
+            }
+            else
+            {
+                CalculateOptimizeNormalOrderBy(upDict, ref docIdRank);
+            }
+        }
     }
 
 }

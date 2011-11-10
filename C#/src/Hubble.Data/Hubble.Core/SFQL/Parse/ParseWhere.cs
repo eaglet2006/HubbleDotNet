@@ -21,6 +21,7 @@ using System.Text;
 using Hubble.Core.Data;
 
 using Hubble.Core.Entity;
+using Hubble.Core.SFQL.SyntaxAnalysis.Select;
 
 namespace Hubble.Core.SFQL.Parse
 {
@@ -64,6 +65,8 @@ namespace Hubble.Core.SFQL.Parse
                 _NeedGroupBy = value;
             }
         }
+
+        public List<OrderBy> OrderBys { get; set; }
 
         private bool _NeedDistinct;
 
@@ -480,8 +483,13 @@ namespace Hubble.Core.SFQL.Parse
                 query.QueryParameter.NeedDistinct = this.NeedDistinct;
                 query.QueryParameter.FieldRank = fieldRank;
                 query.FieldName = fieldName;
-                query.QueryParameter.CanLoadPartOfDocs = OrderByScore && !_ComplexExpression;
+                query.QueryParameter.OrderByCanBeOptimized = Hubble.Core.Query.Optimize.OptimizeArgument.GetOrderByCanBeOptimized(
+                    this.OrderBys, _DBProvider);
+
+                query.QueryParameter.CanLoadPartOfDocs = query.QueryParameter.OrderByCanBeOptimized && !_ComplexExpression;
+                //query.QueryParameter.CanLoadPartOfDocs = OrderByScore && !_ComplexExpression;
                 query.QueryParameter.OrderBy = _OrderBy;
+                query.QueryParameter.OrderBys = this.OrderBys;
                 query.QueryParameter.NoAndExpression = expressionTree.AndChild == null && _NoneTokenizedAndTree == null;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);

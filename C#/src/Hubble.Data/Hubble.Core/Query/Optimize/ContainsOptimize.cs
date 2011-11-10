@@ -33,62 +33,7 @@ namespace Hubble.Core.Query.Optimize
 
         #region IQueryOptimize Members
 
-        private DBProvider _DBProvider;
-
-        public DBProvider DBProvider
-        {
-            get
-            {
-                return _DBProvider;
-            }
-            set
-            {
-                _DBProvider = value;
-            }
-        }
-
-        private int _End = -1;
-
-        public int End
-        {
-            get
-            {
-                return _End;
-            }
-
-            set
-            {
-                _End = value;
-            }
-        }
-
-        private string _OrderBy = null;
-
-        public string OrderBy
-        {
-            get
-            {
-                return _OrderBy;
-            }
-            set
-            {
-                _OrderBy = value;
-            }
-        }
-
-        private bool _NeedGroupBy;
-
-        public bool NeedGroupBy
-        {
-            get
-            {
-                return _NeedGroupBy;
-            }
-            set
-            {
-                _NeedGroupBy = value;
-            }
-        }
+        public OptimizeArgument Argument { get; set; }
 
         private WordIndexForQuery[] _WordIndexes;
 
@@ -142,7 +87,7 @@ namespace Hubble.Core.Query.Optimize
 
         private void Init()
         {
-            Data.Field rankField = DBProvider.GetField("Rank");
+            Data.Field rankField = Argument.DBProvider.GetField("Rank");
 
             if (rankField != null)
             {
@@ -156,15 +101,18 @@ namespace Hubble.Core.Query.Optimize
 
         private unsafe void CalculateOrderByScore(Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary upDict, ref Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)
         {
+            DBProvider dBProvider = Argument.DBProvider;
+            bool needGroupBy = Argument.NeedGroupBy;
+
             //vars for delete
-            bool haveRecordsDeleted = _DBProvider.DelProvider.Count > 0;
+            bool haveRecordsDeleted = dBProvider.DelProvider.Count > 0;
             int[] delDocs = null;
             int curDelIndex = 0;
             int curDelDocid = 0;
 
             if (haveRecordsDeleted)
             {
-                delDocs = _DBProvider.DelProvider.DelDocs;
+                delDocs = dBProvider.DelProvider.DelDocs;
                 curDelDocid = delDocs[curDelIndex];
             }
 
@@ -201,16 +149,16 @@ namespace Hubble.Core.Query.Optimize
 
             //calculate top
             //If less then 100, set to 100
-            if (this.End >= 0)
+            if (this.Argument.End >= 0)
             {
-                top = (1 + this.End / 100) * 100;
+                top = (1 + this.Argument.End / 100) * 100;
 
                 if (top <= 0)
                 {
                     top = 100;
                 }
 
-                if (this.End * 2 > top)
+                if (this.Argument.End * 2 > top)
                 {
                     top *= 2;
                 }
@@ -355,14 +303,14 @@ namespace Hubble.Core.Query.Optimize
                         }
                     }
 
-                    if (_NeedGroupBy)
+                    if (needGroupBy)
                     {
                         docIdRank.AddToGroupByCollection(firstDocId);
                     }
 
                     if (_HasRandField)
                     {
-                        int rank = _DBProvider.SharedPayloadProvider.GetPayloadRank(firstDocId);
+                        int rank = dBProvider.SharedPayloadProvider.GetPayloadRank(firstDocId);
                         totalScore *= rank;
                         if (totalScore < 0)
                         {
@@ -423,7 +371,7 @@ namespace Hubble.Core.Query.Optimize
 
             if (_HasRandField)
             {
-                DBProvider.SharedPayloadProvider.EnterPayloladShareLock();
+                Argument.DBProvider.SharedPayloadProvider.EnterPayloladShareLock();
             }
 
             try
@@ -434,7 +382,7 @@ namespace Hubble.Core.Query.Optimize
             {
                 if (_HasRandField)
                 {
-                    DBProvider.SharedPayloadProvider.LeavePayloadShareLock();
+                    Argument.DBProvider.SharedPayloadProvider.LeavePayloadShareLock();
                 }
             }
         }

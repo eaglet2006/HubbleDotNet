@@ -9,13 +9,7 @@ namespace Hubble.Core.Query.Optimize
 {
     unsafe interface IQueryOptimize
     {
-        DBProvider DBProvider { get; set; }
-
-        int End { get; set; }
-
-        string OrderBy { get; set; }
-
-        bool NeedGroupBy { get; set; }
+        OptimizeArgument Argument { get; set; }
 
         WordIndexForQuery[] WordIndexes { get; set; }
 

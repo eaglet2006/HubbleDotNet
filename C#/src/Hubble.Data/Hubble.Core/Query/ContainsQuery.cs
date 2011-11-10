@@ -453,7 +453,8 @@ namespace Hubble.Core.Query
             if (oneWordOptimize)
             {
                 IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize),
-                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy, _QueryParameter.NeedGroupBy, wordIndexes);
+                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
+                    _QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, _QueryParameter.OrderByCanBeOptimized, wordIndexes);
 
                 try
                 {
@@ -470,16 +471,20 @@ namespace Hubble.Core.Query
                 && _NotInDict == null && _QueryParameter.End >= 0 && !_QueryParameter.NeedDistinct)
             {
                 IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(ContainsOptimize),
-                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy, _QueryParameter.NeedGroupBy, wordIndexes);
+                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
+                    _QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, _QueryParameter.OrderByCanBeOptimized, wordIndexes);
 
-                try
+                if (qOptimize.Argument.IsOrderByScoreDesc())
                 {
-                    qOptimize.CalculateOptimize(upDict, ref docIdRank);
-                    return;
-                }
-                finally
-                {
-                    performanceReport.Stop();
+                    try
+                    {
+                        qOptimize.CalculateOptimize(upDict, ref docIdRank);
+                        return;
+                    }
+                    finally
+                    {
+                        performanceReport.Stop();
+                    }
                 }
             }
 

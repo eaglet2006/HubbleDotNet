@@ -4,14 +4,15 @@ using System.Text;
 
 using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
+using Hubble.Core.SFQL.SyntaxAnalysis.Select;
 
 namespace Hubble.Core.Query.Optimize
 {
     class QueryOptimizeBuilder
     {
         static internal IQueryOptimize Build(Type optimizeType, 
-            DBProvider dbProvider, int end, string orderBy, bool needGroupBy,  
-            WordIndexForQuery[] wordIndexes)
+            DBProvider dbProvider, int end, string orderBy, List<OrderBy> orderBys,
+            bool needGroupBy, bool orderByCanBeOptimized, WordIndexForQuery[] wordIndexes)
         {
             IQueryOptimize result = Hubble.Framework.Reflection.Instance.CreateInstance(optimizeType) as IQueryOptimize;
 
@@ -21,11 +22,12 @@ namespace Hubble.Core.Query.Optimize
                     optimizeType.FullName));
             }
 
-            result.DBProvider = dbProvider;
-            result.End = end;
-            result.OrderBy = orderBy;
+            OptimizeArgumentGenerator generator = new OptimizeArgumentGenerator(dbProvider, end,
+                orderBy, orderBys, needGroupBy, orderByCanBeOptimized);
+
+            result.Argument = generator.Argument;
+
             result.WordIndexes = wordIndexes;
-            result.NeedGroupBy = needGroupBy;
 
             return result;
         }

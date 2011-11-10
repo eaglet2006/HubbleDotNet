@@ -1647,7 +1647,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        internal unsafe int* TestGetPayloadData(int docId)
+        internal unsafe int* GetPayloadDataWithShareLock(int docId)
         {
             int* payloadData;
             if (_DocPayload.TestTryGetValue(docId, out payloadData))

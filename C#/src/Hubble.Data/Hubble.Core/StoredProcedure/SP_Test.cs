@@ -108,15 +108,6 @@ namespace Hubble.Core.StoredProcedure
             //int data;
             sw.Start();
 
-            for (int i = 0; i < count; i++)
-            {
-                int* pData = dbProvider.TestGetPayloadData(i * 10);
-                //if (pData != null)
-                //{
-                //    data = *(pData + 1);
-                //}
-            }
-
             sw.Stop();
 
             OutputValue("Times", count);

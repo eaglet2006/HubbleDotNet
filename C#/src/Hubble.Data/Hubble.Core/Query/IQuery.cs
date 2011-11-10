@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
+using Hubble.Core.SFQL.SyntaxAnalysis.Select;
 
 namespace Hubble.Core.Query
 {
@@ -34,6 +35,8 @@ namespace Hubble.Core.Query
         /// Order by fields
         /// </summary>
         public string OrderBy = null;
+
+        public List<OrderBy> OrderBys = null;
 
         /// <summary>
         /// Need do group by
@@ -82,6 +85,10 @@ namespace Hubble.Core.Query
         /// </summary>
         public bool NoAndExpression = false;
 
+        /// <summary>
+        /// Order by can be optimized.
+        /// </summary>
+        public bool OrderByCanBeOptimized = false;
     }
 
     public interface IQuery

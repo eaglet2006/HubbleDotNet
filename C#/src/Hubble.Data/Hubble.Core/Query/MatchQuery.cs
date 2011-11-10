@@ -535,8 +535,8 @@ namespace Hubble.Core.Query
             if (oneWordOptimize)
             {
                 IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize),
-                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy, _QueryParameter.NeedGroupBy, wordIndexes);
-
+                    DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
+                    QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, _QueryParameter.OrderByCanBeOptimized, wordIndexes);
 
                 try
                 {
