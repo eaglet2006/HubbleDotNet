@@ -24,6 +24,7 @@ namespace Hubble.SQLClient
         int _Step;
         OptimizeOption _Option;
         bool _FastestMode;
+        string _Flags = null;
 
         /// <summary>
         /// Constractor
@@ -40,12 +41,34 @@ namespace Hubble.SQLClient
 
         public TableSynchronization(HubbleConnection conn, string tableName, int step,
             OptimizeOption option, bool fastestMode)
+            :this(conn, tableName, step, option, fastestMode, null)
+        {
+        }
+
+
+        public TableSynchronization(HubbleConnection conn, string tableName, int step,
+            OptimizeOption option, bool fastestMode, string flags)
         {
             _Conn = conn;
             _TableName = tableName;
             _Step = step;
             _Option = option;
             _FastestMode = fastestMode;
+            _Flags = flags;
+        }
+
+        public string GetSql()
+        {
+            if (_Flags == null)
+            {
+                return string.Format("exec SP_SynchronizeTable '{0}', {1}, {2}, '{3}'", 
+                    _TableName.Replace("'", "''"), _Step, (int)_Option, _FastestMode);
+            }
+            else
+            {
+                return string.Format("exec SP_SynchronizeTable '{0}', {1}, {2}, '{3}', '{4}'",
+                    _TableName.Replace("'", "''"), _Step, (int)_Option, _FastestMode, _Flags.Replace("'", "''"));
+            }
         }
 
         /// <summary>
@@ -55,8 +78,17 @@ namespace Hubble.SQLClient
         {
             if (GetProgress() >= 100)
             {
-                HubbleCommand cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}, {3}", _Conn,
+                HubbleCommand cmd;
+                if (_Flags == null)
+                {
+                    cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}, {3}", _Conn,
                     _TableName, _Step, (int)_Option, _FastestMode);
+                }
+                else
+                {
+                    cmd = new HubbleCommand("exec SP_SynchronizeTable {0}, {1}, {2}, {3}, {4}", _Conn,
+                    _TableName, _Step, (int)_Option, _FastestMode, _Flags);
+                }
 
                 cmd.ExecuteNonQuery();
                 return true;

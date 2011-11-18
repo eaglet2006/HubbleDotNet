@@ -154,6 +154,7 @@
     <Compile Include="Service\CurrentConnection.cs" />
     <Compile Include="Service\HubbleTask.cs" />
     <Compile Include="Service\SynchronizeAppendOnly.cs" />
+    <Compile Include="Service\Synchronize\GenerateSelectIDSql.cs" />
     <Compile Include="Service\TableSynchronize.cs" />
     <Compile Include="Service\TaskInformation.cs" />
     <Compile Include="Service\ThreadMonitor.cs" />

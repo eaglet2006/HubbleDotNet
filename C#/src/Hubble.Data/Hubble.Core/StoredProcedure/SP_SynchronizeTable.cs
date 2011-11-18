@@ -52,6 +52,9 @@ namespace Hubble.Core.StoredProcedure
             int option = 0;
             int step = 5000;
             bool fastestMode = false;
+            string strFlags = "";
+            Service.SyncFlags flags = Service.SyncFlags.Insert | Service.SyncFlags.Delete 
+                | Service.SyncFlags.Update;
 
             if (Parameters.Count > 1)
             {
@@ -68,6 +71,14 @@ namespace Hubble.Core.StoredProcedure
                 fastestMode = bool.Parse(Parameters[3]);
             }
 
+            if (Parameters.Count > 4)
+            {
+                strFlags = Parameters[4];
+
+                flags = (Service.SyncFlags) Hubble.Framework.Reflection.Emun.FromString(typeof(Service.SyncFlags), strFlags);
+
+            }
+
             Hubble.Core.Data.OptimizationOption optimizeOption ;
 
             switch (option)
@@ -75,7 +86,6 @@ namespace Hubble.Core.StoredProcedure
                 case 0:
                     optimizeOption = Hubble.Core.Data.OptimizationOption.Idle;
                     break;
-
                 case 1:
                     optimizeOption = Hubble.Core.Data.OptimizationOption.Minimum;
                     break;
@@ -90,7 +100,24 @@ namespace Hubble.Core.StoredProcedure
                     break;
             }
 
-            dbProvider.SynchronizeWithDatabase(step, optimizeOption, fastestMode);
+            dbProvider.SynchronizeWithDatabase(step, optimizeOption, fastestMode, flags);
+
+            if ((flags & Hubble.Core.Service.SyncFlags.WaitForExit) != 0)
+            {
+                //Wait for exit
+
+                while (true)
+                {
+                    if (dbProvider.TableSynchronizeProgress >= 100 ||
+                        dbProvider.TableSynchronizeProgress < 0)
+                    {
+                        OutputMessage(string.Format("Table: {0} finished synchronizing!", Parameters[0]));
+                        return;
+                    }
+
+                    System.Threading.Thread.Sleep(1000);
+                }
+            }
 
             OutputMessage(string.Format("Table: {0} is synchronizing now!", Parameters[0]));
         }

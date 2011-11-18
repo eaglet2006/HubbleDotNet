@@ -129,6 +129,7 @@
     <Compile Include="Net\TcpServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Reflection\Assembly.cs" />
+    <Compile Include="Reflection\Emun.cs" />
     <Compile Include="Reflection\Instance.cs" />
     <Compile Include="Right\RightItem.cs" />
     <Compile Include="Security\DesEncryption.cs" />

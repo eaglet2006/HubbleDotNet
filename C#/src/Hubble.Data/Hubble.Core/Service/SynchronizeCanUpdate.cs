@@ -32,6 +32,8 @@ namespace Hubble.Core.Service
         int _Step;
         OptimizationOption _OptimizeOption;
         bool _FastestMode;
+        bool _HasInsertCount = false;
+        Service.SyncFlags _Flags;
 
         private string GetSqlServerSelectSql(long from)
         {
@@ -49,7 +51,14 @@ namespace Hubble.Core.Service
                 sb.AppendFormat(", [{0}] ", field.Name);
             }
 
-            sb.AppendFormat(" from {0} where [{2}] > {1} order by [{2}]", _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+            if ((_Flags & SyncFlags.NoLock) != 0)
+            {
+                sb.AppendFormat(" from {0} with(nolock) where [{2}] > {1} order by [{2}]", _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+            }
+            else
+            {
+                sb.AppendFormat(" from {0} where [{2}] > {1} order by [{2}]", _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+            }
 
             return sb.ToString();
         }
@@ -103,6 +112,11 @@ namespace Hubble.Core.Service
         {
             StringBuilder sb = new StringBuilder();
 
+            if ((_Flags & SyncFlags.NoLock) != 0)
+            {
+                sb.Append("SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED ;");
+            }
+
             sb.Append("Select ");
 
             int i = 0;
@@ -122,6 +136,12 @@ namespace Hubble.Core.Service
 
             sb.AppendFormat(" from {0} where {1} >= {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
                 _DBProvider.Table.DocIdReplaceField, from, _Step);
+
+
+            if ((_Flags & SyncFlags.NoLock) != 0)
+            {
+                sb.Append(";SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ ;");
+            }
 
             return sb.ToString();
         }
@@ -595,9 +615,6 @@ namespace Hubble.Core.Service
                             string fields = row["Fields"].ToString();
 
                             //Get values updated of this id
-                            StringBuilder sb = new StringBuilder();
-
-                            sb.Append("Select ");
                             
                             string fieldsSQL = fields.Trim();
 
@@ -606,12 +623,26 @@ namespace Hubble.Core.Service
                                 fieldsSQL = fields.Substring(0, fields.Length - 1);
                             }
 
-                            //sb.AppendFormat("{0}, {1} from {2} with(nolock) where {0} in ", _DBProvider.DocIdReplaceField,
-                            //    fieldsSQL, _DBProvider.Table.DBTableName);
-                            // Mark here. Will add a option.
+                            Synchronize.GenerateSelectIDSql generateSelIdSql = new Synchronize.GenerateSelectIDSql(
+                                _DBProvider.DocIdReplaceField, _DBProvider.Table.DBAdapterTypeName, fieldsSQL,
+                                _DBProvider.Table.DBTableName, _Flags);
 
-                            sb.AppendFormat("{0}, {1} from {2} where {0} in ", _DBProvider.DocIdReplaceField,
-                                fieldsSQL, _DBProvider.Table.DBTableName);
+
+                            StringBuilder sb = generateSelIdSql.GetSql();
+
+                            //sb.Append("Select ");
+
+                            //if ((_Flags & SyncFlags.NoLock) != 0)
+                            //{
+                            //    sb.AppendFormat("{0}, {1} from {2} with(nolock) where {0} in ", _DBProvider.DocIdReplaceField,
+                            //        fieldsSQL, _DBProvider.Table.DBTableName);
+                            //    // Mark here. Will add a option.
+                            //}
+                            //else
+                            //{
+                            //    sb.AppendFormat("{0}, {1} from {2} where {0} in ", _DBProvider.DocIdReplaceField,
+                            //        fieldsSQL, _DBProvider.Table.DBTableName);
+                            //}
 
                             if (lastSql == null)
                             {
@@ -705,7 +736,21 @@ namespace Hubble.Core.Service
 
                 if (progress >= 100)
                 {
-                    break;
+                    if (times == 1)
+                    {
+                        System.Threading.Thread.Sleep(200);
+
+                        progress = GetMergeRate();
+
+                        if (progress >= 100)
+                        {
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (showProgress)
@@ -718,13 +763,15 @@ namespace Hubble.Core.Service
         }
 
 
-        public SynchronizeCanUpdate(TableSynchronize tableSync, DBProvider dbProvider, int step, OptimizationOption option, bool fastestMode)
+        public SynchronizeCanUpdate(TableSynchronize tableSync, DBProvider dbProvider, int step, 
+            OptimizationOption option, bool fastestMode, Service.SyncFlags flags)
         {
             _TableSync = tableSync;
             _DBProvider = dbProvider;
             _Step = step;
             _OptimizeOption = option;
             _FastestMode = fastestMode;
+            _Flags = flags;
         }
 
         private void UpdateLastId(long lastId, DBAdapter.IDBAdapter dbAdapter)
@@ -788,9 +835,83 @@ namespace Hubble.Core.Service
                     return lastId;
                 }
             }
-
-
         }
+
+        private int GetRemainCount(long from, DBAdapter.IDBAdapter dbAdapter)
+        {
+            string dbAdapterName = (dbAdapter as INamedExternalReference).Name;
+            _HasInsertCount = true;
+
+            if (dbAdapterName.IndexOf("sqlserver", 0, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                //For sql server
+
+                string sql = string.Format("select rows from sysindexes where id = object_id('{0}') and indid in (0,1)",
+                    _DBProvider.Table.DBTableName.Replace("'", "''"));
+
+                System.Data.DataSet ds = null;
+              
+                try
+                {
+                    ds = dbAdapter.QuerySql(sql);
+                }
+                catch
+                {
+                    ds = null;
+                }
+                
+                if (ds != null)
+                {
+                    if (ds.Tables[0].Rows.Count > 0)
+                    {
+                        return int.Parse(ds.Tables[0].Rows[0][0].ToString()) - 
+                            _DBProvider.DocumentCount;
+                    }
+                }
+            }
+
+            //For others
+            {
+                string sql = string.Format("select count(*) from {0} where {2} > {1}",
+                   _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+
+                System.Data.DataSet ds = null;
+                int times = 0;
+
+                if (!_FastestMode)
+                {
+                    while (times < 3)
+                    {
+
+                        try
+                        {
+                            ds = dbAdapter.QuerySql(sql);
+                            break;
+                        }
+                        catch
+                        {
+                            ds = null;
+                            times++;
+                        }
+                    }
+                }
+
+                int count;
+
+                if (ds == null)
+                {
+                    count = 50000000;
+                    _HasInsertCount = false;
+                }
+                else
+                {
+                    count = int.Parse(ds.Tables[0].Rows[0][0].ToString());
+                }
+
+                return count;
+            }
+        }
+
 
         public void Do()
         {
@@ -801,6 +922,14 @@ namespace Hubble.Core.Service
 
             dbAdapter.Table = _DBProvider.Table;
 
+            if (lastDocId <= 0 && _DBProvider.DocumentCount <= 0)
+            {
+                //first time synchronize
+                //Truncate trigger table
+
+                dbAdapter.Truncate(_DBProvider.Table.TriggerTableName);
+            }
+
             long from = GetLastId(lastDocId, dbAdapter);
 
             if (from == long.MaxValue)
@@ -808,130 +937,113 @@ namespace Hubble.Core.Service
                 from = -1;
             }
 
-            string sql = string.Format("select count(*) from {0} where {2} > {1}",
-                _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
-
-            System.Data.DataSet ds = null;
-            int times = 0;
-
-            if (!_FastestMode)
+            //Synchronize for delete
+            if ((_Flags & SyncFlags.Delete) != 0)
             {
-                while (times < 3)
-                {
-
-                    try
-                    {
-                        ds = dbAdapter.QuerySql(sql);
-                        break;
-                    }
-                    catch
-                    {
-                        ds = null;
-                        times++;
-                    }
-                }
-            }
-
-            int count;
-
-            if (ds == null)
-            {
-                count = 50000000;
-            }
-            else
-            {
-                count = int.Parse(ds.Tables[0].Rows[0][0].ToString());
+                SychronizeForDelete(dbAdapter);
             }
 
             _TableSync.SetProgress(5);
 
-            SychronizeForDelete(dbAdapter);
+           
+            int count = GetRemainCount(from, dbAdapter);
+           
 
             _TableSync.SetProgress(10);
 
-            int insertCount = 0;
+            //Synchronize for insert
 
-            Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert count = {0}, table={1}",
-                count, _DBProvider.TableName));
-
-            while (insertCount < count)
+            if ((_Flags & SyncFlags.Insert) != 0)
             {
-                if (_TableSync.Stopping)
-                {
-                    _TableSync.SetProgress(-1, insertCount);
-                    _TableSync.ResetStopping();
+                int insertCount = 0;
 
-                    try
+                Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert count = {0}, table={1}",
+                    count, _DBProvider.TableName));
+
+                while (true)
+                {
+                    if (_TableSync.Stopping)
                     {
-                        if (_GetDocForInsertThread != null)
+                        _TableSync.SetProgress(-1, insertCount);
+                        _TableSync.ResetStopping();
+
+                        try
                         {
-                            _GetDocForInsertThread.Abort();
+                            if (_GetDocForInsertThread != null)
+                            {
+                                _GetDocForInsertThread.Abort();
+                            }
                         }
+                        catch
+                        {
+                        }
+
+                        return;
                     }
-                    catch
+
+                    Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate GetDocumentsForInsert, from = {0}, table={1}",
+                        from, _DBProvider.TableName));
+
+                    List<Document> documents = GetDocumentsForInsertInvoke(dbAdapter, ref from);
+
+                    if (documents.Count == 0)
                     {
+                        //Global.Report.WriteAppLog(string.Format("Exit before finish when synchronized {0}. Some records deleted during synchronization. insertCount={1} count={2}",
+                        //    _DBProvider.Table.Name, insertCount, count));
+                        
+                        _TableSync.SetProgress(70, insertCount);
+                        break;
                     }
 
-                    return;
-                }
+                    insertCount += documents.Count;
 
-                Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate GetDocumentsForInsert, from = {0}, table={1}",
-                    from, _DBProvider.TableName));
+                    Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert to DBProvider, count = {0}, table={1}",
+                        documents.Count, _DBProvider.TableName));
 
-                List<Document> documents = GetDocumentsForInsertInvoke(dbAdapter, ref from);
+                    _DBProvider.Insert(documents);
 
-                if (documents.Count == 0)
-                {
-                    Global.Report.WriteAppLog(string.Format("Exit before finish when synchronized {0}. Some records deleted during synchronization. insertCount={1} count={2}",
-                        _DBProvider.Table.Name, insertCount, count));
-                    _TableSync.SetProgress(70, insertCount);
-                    break;
-                }
+                    UpdateLastId(from, dbAdapter);
 
-                insertCount += documents.Count;
+                    double progress;
 
-                Global.Report.WriteAppLog(string.Format("SynchronizeCanUpdate Insert to DBProvider, count = {0}, table={1}",
-                    documents.Count, _DBProvider.TableName));
+                    if (!_HasInsertCount)
+                    {
+                        progress = (double)((insertCount % 100000) * 60) / (double)100000;
+                    }
+                    else
+                    {
+                        progress = (double)insertCount * 60 / (double)count;
+                    }
 
-                _DBProvider.Insert(documents);
+                    if (progress > 60)
+                    {
+                        progress = 60;
+                    }
 
-                UpdateLastId(from, dbAdapter);
+                    _TableSync.SetProgress(10 + progress, insertCount);
 
-                double progress;
+                    if (_DBProvider.TooManyIndexFiles)
+                    {
+                        Global.Report.WriteAppLog(string.Format("Begin optimize:type={0}, table={1}",
+                            OptimizationOption.Speedy, _DBProvider.TableName));
 
-                if (_FastestMode)
-                {
-                    progress = (double)((insertCount % 100000) * 60) / (double)100000;
-                }
-                else
-                {
-                    progress = (double)insertCount * 60 / (double)count;
-                }
+                        DoOptimize(OptimizationOption.Speedy, false);
+                        DoOptimize(OptimizationOption.Speedy, false);
 
-                if (progress > 60)
-                {
-                    progress = 60;
-                }
+                        Global.Report.WriteAppLog(string.Format("Finish optimize:type={0}, table={1}",
+                            OptimizationOption.Speedy, _DBProvider.TableName));
 
-                _TableSync.SetProgress(10 + progress, insertCount);
-
-                if (_DBProvider.TooManyIndexFiles)
-                {
-                    Global.Report.WriteAppLog(string.Format("Begin optimize:type={0}, table={1}",
-                        OptimizationOption.Speedy, _DBProvider.TableName));
-
-                    DoOptimize(OptimizationOption.Speedy, false);
-                    DoOptimize(OptimizationOption.Speedy, false);
-
-                    Global.Report.WriteAppLog(string.Format("Finish optimize:type={0}, table={1}",
-                        OptimizationOption.Speedy, _DBProvider.TableName));
-
+                    }
                 }
             }
 
             _TableSync.SetProgress(70);
 
-            SychronizeForUpdate(dbAdapter);
+            //Synchronize for update
+            if ((_Flags & SyncFlags.Update) != 0)
+            {
+                SychronizeForUpdate(dbAdapter);
+            }
 
             if (_OptimizeOption != OptimizationOption.Idle)
             {

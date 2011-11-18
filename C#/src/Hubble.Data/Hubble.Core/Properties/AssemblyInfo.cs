@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.7")]
-[assembly: AssemblyFileVersion("1.1.7.7")]
+[assembly: AssemblyVersion("1.1.7.8")]
+[assembly: AssemblyFileVersion("1.1.7.8")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -73,4 +73,9 @@ using System.Runtime.InteropServices;
  * The old version only optimized the performance for order by score desc.
  * From this version any order by condition which is less than or equal 3 and query one word will be optimized.
  * And group by for above condition is also optimized.
+ * 1.1.7.8 Bo Xiao
+ * Add some features to synchronize function.
+ * Can synchronize only for insert or update or delete.
+ * Can synchronize with nolock.
+ * Can do WaitForExit so that run many synchronize store procedure sequently. 
  *****************************************************************************************/

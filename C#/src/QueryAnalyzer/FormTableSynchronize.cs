@@ -21,6 +21,7 @@ namespace QueryAnalyzer
         System.Threading.Thread _Thread = null;
 
         DateTime _StartTime;
+        string _Flags;
 
         public string TableName
         {
@@ -114,6 +115,34 @@ namespace QueryAnalyzer
 
         }
 
+        private string GetFlags()
+        {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+
+            foreach (Control control in groupBoxFlags.Controls)
+            {
+                if (control is CheckBox)
+                {
+                    CheckBox checkBox = control as CheckBox;
+
+                    if (checkBox.Checked)
+                    {
+                        if (i++ == 0)
+                        {
+                            sb.Append(checkBox.Text);
+                        }
+                        else
+                        {
+                            sb.AppendFormat("|{0}", checkBox.Text);
+                        }
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
+
         private bool Start()
         {
             try
@@ -133,7 +162,7 @@ namespace QueryAnalyzer
 
                 int step = (int)numericUpDownStep.Value;
 
-                _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option, checkBoxFastestMode.Checked);
+                _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option, checkBoxFastestMode.Checked, _Flags);
 
                 _TableSync.Synchronize();
 
@@ -168,6 +197,14 @@ namespace QueryAnalyzer
         {
             if (buttonStart.Text == "Start")
             {
+                _Flags = GetFlags();
+
+                if (string.IsNullOrEmpty(_Flags))
+                {
+                    MessageBox.Show("Please choose at least one flag", "Prompt");
+                    return;
+                }
+
                 if (Start())
                 {
                     buttonStart.Text = "Stop";
@@ -185,6 +222,36 @@ namespace QueryAnalyzer
         private void buttonClose_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void buttonViewScript_Click(object sender, EventArgs e)
+        {
+            string flags = GetFlags();
+
+            if (string.IsNullOrEmpty(flags))
+            {
+                MessageBox.Show("Please choose at least one flag", "Prompt");
+                return;
+            }
+
+            TableSynchronization.OptimizeOption option = TableSynchronization.OptimizeOption.Minimum;
+
+            if (comboBoxOptimizeOption.Text.Equals("Middle"))
+            {
+                option = TableSynchronization.OptimizeOption.Middle;
+            }
+            else if (comboBoxOptimizeOption.Text.Equals("None"))
+            {
+                option = TableSynchronization.OptimizeOption.None;
+            }
+
+            int step = (int)numericUpDownStep.Value;
+
+            _TableSync = new TableSynchronization(DataAccess.Conn, TableName, step, option, checkBoxFastestMode.Checked, flags);
+
+            textBoxScript.Text = _TableSync.GetSql();
+
+            this.Height = textBoxScript.Top + textBoxScript.Height + 40;
         }
     }
 }

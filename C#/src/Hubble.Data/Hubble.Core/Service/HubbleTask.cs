@@ -93,23 +93,26 @@ namespace Hubble.Core.Service
 
         static void OnThreadMonitorEvent(object sender, ThreadMonitor.ThreadMonitorEvent args)
         {
-            StringBuilder sb = new StringBuilder();
-
-            sb.AppendLine(DateTime.Now.ToLongTimeString());
-            if (Global.Setting.Config.SqlTrace)
+            if (args.Name.IndexOf("select", 0, StringComparison.CurrentCultureIgnoreCase) >= 0)
             {
-                sb.AppendLine("Execute more then 30s");
-            }
-            else
-            {
-                sb.AppendLine("Execute more then 60s");
-            }
+                StringBuilder sb = new StringBuilder();
 
-            sb.AppendLine("SQL:" + args.Name);
-            sb.AppendLine("Thread Status:" + args.Status.ToString());
-            sb.AppendLine("Thread Stack:" + args.StackTrace);
+                sb.AppendLine(DateTime.Now.ToLongTimeString());
+                if (Global.Setting.Config.SqlTrace)
+                {
+                    sb.AppendLine("Execute more then 30s");
+                }
+                else
+                {
+                    sb.AppendLine("Execute more then 60s");
+                }
 
-            Global.Report.WriteErrorLog(sb.ToString());
+                sb.AppendLine("SQL:" + args.Name);
+                sb.AppendLine("Thread Status:" + args.Status.ToString());
+                sb.AppendLine("Thread Stack:" + args.StackTrace);
+
+                Global.Report.WriteErrorLog(sb.ToString());
+            }
         }
 
         internal static void ExcuteSqlMessageProcess(MessageReceiveEventArgs args)

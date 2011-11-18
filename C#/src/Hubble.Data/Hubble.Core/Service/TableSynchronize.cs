@@ -24,6 +24,16 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.Service
 {
+    [Flags]
+    public enum SyncFlags 
+    {
+        Insert = 0x01,
+        Update = 0x02,
+        Delete = 0x04,
+        NoLock = 0x08,
+        WaitForExit = 0x10,
+    }
+
     class TableSynchronize
     {
         Table _Table;
@@ -34,6 +44,7 @@ namespace Hubble.Core.Service
         int _Step;
         OptimizationOption _OptimizeOption;
         bool _FastestMode;
+        SyncFlags _Flags;
 
         double _Progress = -1;
         int _InsertRows = 0;
@@ -197,7 +208,8 @@ namespace Hubble.Core.Service
 
         private void DoSynchronizeCanUpdate()
         {
-            SynchronizeCanUpdate syncCanUpdate = new SynchronizeCanUpdate(this, _DBProvider, _Step, _OptimizeOption, _FastestMode);
+            SynchronizeCanUpdate syncCanUpdate = new SynchronizeCanUpdate(this, _DBProvider, _Step, 
+                _OptimizeOption, _FastestMode, _Flags);
             syncCanUpdate.Do();
         }
 
@@ -239,7 +251,9 @@ namespace Hubble.Core.Service
         /// </summary>
         /// <param name="step"></param>
         /// <param name="option">optimize option</param>
-        public void Synchronize(int step, OptimizationOption option, bool fastestMode)
+        /// <param name="fastestMode">if fastest mode. read data from db without log</param>
+        /// <param name="flags">flags</param>
+        public void Synchronize(int step, OptimizationOption option, bool fastestMode, SyncFlags flags)
         {
             if (SyncThread != null)
             {
@@ -277,6 +291,7 @@ namespace Hubble.Core.Service
 
             _OptimizeOption = option;
             _FastestMode = fastestMode;
+            _Flags = flags;
 
             SetProgress(0);
             SyncThread = new Thread(DoSynchronize);

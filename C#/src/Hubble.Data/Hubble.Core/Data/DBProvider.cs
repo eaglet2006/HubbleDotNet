@@ -3102,11 +3102,11 @@ namespace Hubble.Core.Data
             }
         }
 
-        public void SynchronizeWithDatabase(int step, OptimizationOption option, bool fastestMode)
+        public void SynchronizeWithDatabase(int step, OptimizationOption option, bool fastestMode, Service.SyncFlags flags)
         {
             if (_TableSync != null)
             {
-                _TableSync.Synchronize(step, option, fastestMode);
+                _TableSync.Synchronize(step, option, fastestMode, flags);
             }
         }
 
