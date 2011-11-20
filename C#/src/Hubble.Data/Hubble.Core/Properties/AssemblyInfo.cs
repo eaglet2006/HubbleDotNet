@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.8")]
-[assembly: AssemblyFileVersion("1.1.7.8")]
+[assembly: AssemblyVersion("1.1.7.9")]
+[assembly: AssemblyFileVersion("1.1.7.9")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -78,4 +78,7 @@ using System.Runtime.InteropServices;
  * Can synchronize only for insert or update or delete.
  * Can synchronize with nolock.
  * Can do WaitForExit so that run many synchronize store procedure sequently. 
+ * 1.1.7.9 Bo Xiao
+ * Improve the performance for normal order by of contains query.
+ * 
  *****************************************************************************************/

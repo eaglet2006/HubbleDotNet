@@ -474,18 +474,20 @@ namespace Hubble.Core.Query
                     DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
                     _QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, _QueryParameter.OrderByCanBeOptimized, wordIndexes);
 
-                if (qOptimize.Argument.IsOrderByScoreDesc())
+                try
                 {
-                    try
-                    {
-                        qOptimize.CalculateOptimize(upDict, ref docIdRank);
-                        return;
-                    }
-                    finally
-                    {
-                        performanceReport.Stop();
-                    }
+                    qOptimize.CalculateOptimize(upDict, ref docIdRank);
+                    return;
                 }
+                finally
+                {
+                    performanceReport.Stop();
+                }
+
+                //if (qOptimize.Argument.IsOrderByScoreDesc())
+                //{
+          
+                //}
             }
 
             if (docIdRank.Count == 0)
