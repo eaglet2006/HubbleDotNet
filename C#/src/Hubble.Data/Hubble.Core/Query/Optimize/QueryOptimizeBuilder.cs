@@ -4,6 +4,7 @@ using System.Text;
 
 using Hubble.Core.Data;
 using Hubble.Framework.DataStructure;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 using Hubble.Core.SFQL.SyntaxAnalysis.Select;
 
 namespace Hubble.Core.Query.Optimize
@@ -12,7 +13,8 @@ namespace Hubble.Core.Query.Optimize
     {
         static internal IQueryOptimize Build(Type optimizeType, 
             DBProvider dbProvider, int end, string orderBy, List<OrderBy> orderBys,
-            bool needGroupBy, bool orderByCanBeOptimized, WordIndexForQuery[] wordIndexes)
+            bool needGroupBy, bool orderByCanBeOptimized, bool needFilterUntokenizedConditions, 
+            ExpressionTree untokenizedTreeOnRoot, WordIndexForQuery[] wordIndexes)
         {
             IQueryOptimize result = Hubble.Framework.Reflection.Instance.CreateInstance(optimizeType) as IQueryOptimize;
 
@@ -23,7 +25,8 @@ namespace Hubble.Core.Query.Optimize
             }
 
             OptimizeArgumentGenerator generator = new OptimizeArgumentGenerator(dbProvider, end,
-                orderBy, orderBys, needGroupBy, orderByCanBeOptimized);
+                orderBy, orderBys, needGroupBy, orderByCanBeOptimized, needFilterUntokenizedConditions,
+                untokenizedTreeOnRoot);
 
             result.Argument = generator.Argument;
 

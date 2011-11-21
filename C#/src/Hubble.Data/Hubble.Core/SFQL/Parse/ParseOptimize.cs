@@ -5,8 +5,34 @@ using Hubble.Core.SFQL.SyntaxAnalysis;
 
 namespace Hubble.Core.SFQL.Parse
 {
-    class ParseOptimize
+    public class ParseOptimize
     {
+        bool _ComplexTree = false;
+
+        /// <summary>
+        /// Complex tree like following:
+        /// ((title match 'xxx' and price > 1) or (content match 'xxx')) and time > '2000-1-1'
+        /// Folloing is not complex tree
+        /// (title match 'xxx' or content match 'xxx') and time > '2000-1-1' and price > 1
+        /// </summary>
+        internal bool ComplexTree
+        {
+            get
+            {
+                return _ComplexTree;
+            }
+        }
+
+        ExpressionTree _UntokenizedTreeOnRoot = null;
+
+        internal ExpressionTree UntokenizedTreeOnRoot
+        {
+            get
+            {
+                return _UntokenizedTreeOnRoot;
+            }
+        }
+
         private void OptimizeAndChild(ExpressionTree tree)
         {
             ExpressionTree firstTreeUnTokenize = tree;
@@ -42,6 +68,16 @@ namespace Hubble.Core.SFQL.Parse
                 next = next.AndChild;
             }
 
+
+            if (_UntokenizedTreeOnRoot == null)
+            {
+                _UntokenizedTreeOnRoot = firstTreeUnTokenize;
+            }
+            else
+            {
+                _UntokenizedTreeOnRoot = firstTreeUnTokenize;
+                _ComplexTree = true;
+            }
         }
 
         private void OptimizeExpressionTree(ExpressionTree tree)
@@ -63,6 +99,7 @@ namespace Hubble.Core.SFQL.Parse
         private SyntaxAnalysis.Where Optimize(SyntaxAnalysis.Where where)
         {
             OptimizeExpressionTree(where.ExpressionTree);
+
             return where;
         }
 
@@ -106,6 +143,7 @@ namespace Hubble.Core.SFQL.Parse
                     throw new SyntaxException(string.Format("Unknow sentence {0}", sentence.SentenceType));
             }
 
+            sentence.ParseOptimize = this;
             return sentence;
         }
     }

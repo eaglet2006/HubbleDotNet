@@ -227,6 +227,8 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
         #region public Fields
 
+        public SFQL.Parse.ParseOptimize ParseOptimize = null;
+
         public SentenceType SentenceType = SentenceType.NONE;
 
         public List<TSFQLAttribute> Attributes = new List<TSFQLAttribute>();

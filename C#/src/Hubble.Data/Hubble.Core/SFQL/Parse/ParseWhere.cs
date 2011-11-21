@@ -22,6 +22,7 @@ using Hubble.Core.Data;
 
 using Hubble.Core.Entity;
 using Hubble.Core.SFQL.SyntaxAnalysis.Select;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 
 namespace Hubble.Core.SFQL.Parse
 {
@@ -82,6 +83,10 @@ namespace Hubble.Core.SFQL.Parse
                 _NeedDistinct = value;
             }
         }
+
+        public bool ComplexTree = false;
+
+        public ExpressionTree UntokenizedTreeOnRoot = null;
 
         private string _OrderBy;
 
@@ -491,6 +496,8 @@ namespace Hubble.Core.SFQL.Parse
                 query.QueryParameter.OrderBy = _OrderBy;
                 query.QueryParameter.OrderBys = this.OrderBys;
                 query.QueryParameter.NoAndExpression = expressionTree.AndChild == null && _NoneTokenizedAndTree == null;
+                query.QueryParameter.ComplexTree = this.ComplexTree;
+                query.QueryParameter.UntokenizedTreeOnRoot = this.UntokenizedTreeOnRoot;
 
                 query.InvertedIndex = _DBProvider.GetInvertedIndex(fieldName);
 
@@ -557,11 +564,21 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        unsafe bool GetComparisionExpressionValue(Query.DocumentResult* pDocResult, SyntaxAnalysis.ExpressionTree expressionTree)
+        /// <summary>
+        /// Get the comparision expressin value.
+        /// If matched, return true.
+        /// This method is used for mix where conditions that is including both full text query and 
+        /// none-fulltext query.
+        /// </summary>
+        /// <param name="dbProvider">DBProvider</param>
+        /// <param name="pDocResult">pointer to docResult</param>
+        /// <param name="expressionTree"></param>
+        /// <returns></returns>
+        internal unsafe static bool GetComparisionExpressionValue(DBProvider dbProvider, Query.DocumentResult* pDocResult, SyntaxAnalysis.ExpressionTree expressionTree)
         {
             if (pDocResult->PayloadData == null)
             {
-                int* payloadData = _DBProvider.GetPayloadData(pDocResult->DocId);
+                int* payloadData = dbProvider.GetPayloadData(pDocResult->DocId);
 
                 if (payloadData == null)
                 {
@@ -573,7 +590,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.OrChild != null)
             {
-                if (GetComparisionExpressionValue(pDocResult, expressionTree.OrChild))
+                if (GetComparisionExpressionValue(dbProvider, pDocResult, expressionTree.OrChild))
                 {
                     return true;
                 }
@@ -581,7 +598,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.Expression.NeedReverse)
             {
-                if (!GetComparisionExpressionValue(pDocResult, expressionTree.Expression as SyntaxAnalysis.ExpressionTree))
+                if (!GetComparisionExpressionValue(dbProvider, pDocResult, expressionTree.Expression as SyntaxAnalysis.ExpressionTree))
                 {
                     return false;
                 }
@@ -893,7 +910,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.AndChild != null)
             {
-                if (!GetComparisionExpressionValue(pDocResult, expressionTree.AndChild))
+                if (!GetComparisionExpressionValue(dbProvider, pDocResult, expressionTree.AndChild))
                 {
                     return false;
                 }
@@ -1014,7 +1031,7 @@ namespace Hubble.Core.SFQL.Parse
         {
 
             bool needQueryFromDatabase = false;
-            Preprocess(expressionTree, ref needQueryFromDatabase);
+            Preprocess(_DBProvider, expressionTree, ref needQueryFromDatabase);
 
             if (needQueryFromDatabase)
             {
@@ -1028,7 +1045,7 @@ namespace Hubble.Core.SFQL.Parse
 
             foreach (Core.SFQL.Parse.DocumentResultPoint drp in upDict.Values)
             {
-                if (!GetComparisionExpressionValue(drp.pDocumentResult, expressionTree))
+                if (!GetComparisionExpressionValue(_DBProvider, drp.pDocumentResult, expressionTree))
                 {
                     delDocIdList.Add(drp.pDocumentResult->DocId);
                 }
@@ -1043,16 +1060,26 @@ namespace Hubble.Core.SFQL.Parse
             performanceReport.Stop(string.Format("RemoveByPayload result count = {0}", delDocIdList.Count));
         }
 
-        private void Preprocess(SyntaxAnalysis.ExpressionTree expressionTree, ref bool needQueryFromDatabase)
+        static internal void Preprocess(DBProvider dbProvider, SyntaxAnalysis.ExpressionTree expressionTree, ref bool needQueryFromDatabase)
         {
+            if (expressionTree.HasBeenProprocessed)
+            {
+                if (expressionTree.NeedQueryFromDatabase)
+                {
+                    needQueryFromDatabase = true;
+                }
+
+                return;
+            }
+
             if (expressionTree.OrChild != null)
             {
-                Preprocess(expressionTree.OrChild, ref needQueryFromDatabase);
+                Preprocess(dbProvider, expressionTree.OrChild, ref needQueryFromDatabase);
             }
 
             if (expressionTree.Expression.NeedReverse)
             {
-                Preprocess(expressionTree.Expression as SyntaxAnalysis.ExpressionTree, ref needQueryFromDatabase);
+                Preprocess(dbProvider, expressionTree.Expression as SyntaxAnalysis.ExpressionTree, ref needQueryFromDatabase);
             }
             else
             {
@@ -1070,7 +1097,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
                 else
                 {
-                    Field field = _DBProvider.GetField(fieldName);
+                    Field field = dbProvider.GetField(fieldName);
 
                     if (field == null)
                     {
@@ -1080,6 +1107,9 @@ namespace Hubble.Core.SFQL.Parse
                     if (field.IndexType != Field.Index.Untokenized)
                     {
                         needQueryFromDatabase = true;
+                        expressionTree.HasBeenProprocessed = true;
+                        expressionTree.NeedQueryFromDatabase = true;
+
                         return;
                         //throw new ParseException(string.Format("Field: {0} is not Untokenized field!", fieldName));
                     }
@@ -1105,9 +1135,11 @@ namespace Hubble.Core.SFQL.Parse
 
             if (expressionTree.AndChild != null)
             {
-                Preprocess(expressionTree.AndChild, ref needQueryFromDatabase);
+                Preprocess(dbProvider, expressionTree.AndChild, ref needQueryFromDatabase);
             }
 
+            expressionTree.HasBeenProprocessed = true;
+            expressionTree.NeedQueryFromDatabase = needQueryFromDatabase;
         }
 
         unsafe private Core.SFQL.Parse.DocumentResultWhereDictionary AndMergeDict(Core.SFQL.Parse.DocumentResultWhereDictionary and, Core.SFQL.Parse.DocumentResultWhereDictionary or)
@@ -1299,6 +1331,7 @@ namespace Hubble.Core.SFQL.Parse
                 src.Dispose();
             }
 
+            dest.Sorted = false;
             return dest;
         }
 

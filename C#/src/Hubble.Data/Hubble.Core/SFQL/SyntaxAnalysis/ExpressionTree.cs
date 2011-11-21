@@ -157,6 +157,9 @@ namespace Hubble.Core.SFQL.SyntaxAnalysis
 
     public class ExpressionTree : IExpression
     {
+        public bool HasBeenProprocessed = false;
+        public bool NeedQueryFromDatabase = false;
+
         public ExpressionTree Parent = null;
         public ExpressionTree AndChild = null;
         public ExpressionTree OrChild = null;

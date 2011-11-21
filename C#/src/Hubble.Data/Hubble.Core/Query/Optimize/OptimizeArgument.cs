@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.SyntaxAnalysis.Select;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 
 namespace Hubble.Core.Query.Optimize
 {
@@ -18,6 +19,10 @@ namespace Hubble.Core.Query.Optimize
         public OrderBy[] OrderBys { get; set; }
 
         public bool NeedGroupBy { get; set; }
+
+        public bool NeedFilterUntokenizedConditions {get; set;}
+
+        public ExpressionTree UntokenizedTreeOnRoot { get; set; }
 
         private bool _OrderByCanBeOptimized = false;
 

@@ -529,14 +529,16 @@ namespace Hubble.Core.Query
 
             Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
 
-            bool oneWordOptimize = this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression
+            bool oneWordOptimize = this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.AndExpressionCanBeOptimized(this._DBProvider)
                 && wordIndexes.Length == 1 && _NotInDict == null && _QueryParameter.End >= 0 && !_QueryParameter.NeedDistinct;
 
             if (oneWordOptimize)
             {
                 IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(OneWordOptimize),
                     DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
-                    QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, _QueryParameter.OrderByCanBeOptimized, wordIndexes);
+                    QueryParameter.OrderBys, _QueryParameter.NeedGroupBy, 
+                    _QueryParameter.OrderByCanBeOptimized, _QueryParameter.NeedFilterUntokenizedConditions(this._DBProvider),
+                    _QueryParameter.UntokenizedTreeOnRoot, wordIndexes);
 
                 try
                 {

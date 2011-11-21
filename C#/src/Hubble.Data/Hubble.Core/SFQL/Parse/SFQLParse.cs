@@ -177,8 +177,11 @@ namespace Hubble.Core.SFQL.Parse
 
             ParseWhere parseWhere = new ParseWhere(update.TableName, DBProvider.GetDBProvider(update.TableName), false, "");
 
-            parseWhere.Begin = update.Begin;
-            parseWhere.End = update.End;
+            new ParseWhereGenerator(parseWhere, sentence.ParseOptimize, update.Begin, update.End);
+
+            //parseWhere.Begin = update.Begin;
+            //parseWhere.End = update.End;
+
             Query.DocumentResultForSort[] result;
 
             IList<int> groupByCollection;
@@ -249,9 +252,10 @@ namespace Hubble.Core.SFQL.Parse
                 SyntaxAnalysis.Delete.Delete;
 
             ParseWhere parseWhere = new ParseWhere(delete.TableName, DBProvider.GetDBProvider(delete.TableName), false, "");
+            new ParseWhereGenerator(parseWhere, sentence.ParseOptimize, delete.Begin, delete.End);
 
-            parseWhere.Begin = delete.Begin;
-            parseWhere.End = delete.End;
+            //parseWhere.Begin = delete.Begin;
+            //parseWhere.End = delete.End;
             Query.DocumentResultForSort[] result;
 
             IList<int> groupByCollection;
@@ -1019,20 +1023,24 @@ namespace Hubble.Core.SFQL.Parse
 
             ParseWhere parseWhere = new ParseWhere(tableName, dbProvider, orderByScore, GetOrderByString(select));
 
-            parseWhere.Begin = select.Begin;
-            parseWhere.End = select.End;
+            new ParseWhereGenerator(parseWhere, select.Sentence.ParseOptimize,
+                select.Begin, select.End, groupByList.Count > 0 || distinct != null,
+                distinct != null, notIn.NotInDict, select.OrderBys);
 
-            if (parseWhere.Begin < 0)
-            {
-                //Means only return count
-                parseWhere.Begin = 0;
-                parseWhere.End = 0;
-            }
+            //parseWhere.Begin = select.Begin;
+            //parseWhere.End = select.End;
 
-            parseWhere.NeedGroupBy = groupByList.Count > 0 || distinct != null;
-            parseWhere.NeedDistinct = distinct != null;
-            parseWhere.NotInDict = notIn.NotInDict;
-            parseWhere.OrderBys = select.OrderBys;
+            //if (parseWhere.Begin < 0)
+            //{
+            //    //Means only return count
+            //    parseWhere.Begin = 0;
+            //    parseWhere.End = 0;
+            //}
+
+            //parseWhere.NeedGroupBy = groupByList.Count > 0 || distinct != null;
+            //parseWhere.NeedDistinct = distinct != null;
+            //parseWhere.NotInDict = notIn.NotInDict;
+            //parseWhere.OrderBys = select.OrderBys;
 
             Query.DocumentResultForSort[] result;
 

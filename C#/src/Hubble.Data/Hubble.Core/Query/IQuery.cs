@@ -21,6 +21,7 @@ using System.Text;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
 using Hubble.Core.SFQL.SyntaxAnalysis.Select;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 
 namespace Hubble.Core.Query
 {
@@ -89,6 +90,46 @@ namespace Hubble.Core.Query
         /// Order by can be optimized.
         /// </summary>
         public bool OrderByCanBeOptimized = false;
+
+        /// <summary>
+        /// If same fields in mixed where condition, need query from database.
+        /// </summary>
+        public bool NeedQueryFromDatabase = false;
+
+        /// <summary>
+        /// Is it complex tree.
+        /// If not, and Untokenized tree on root is not null, can be optimized.
+        /// </summary>
+        public bool ComplexTree;
+
+        /// <summary>
+        /// Untokenized tree on root tree.
+        /// </summary>
+        public ExpressionTree UntokenizedTreeOnRoot = null;
+
+        public bool AndExpressionCanBeOptimized(DBProvider dbProvider)
+        {
+            if (NoAndExpression)
+            {
+                return true;
+            }
+
+            if (!ComplexTree && !NeedQueryFromDatabase && UntokenizedTreeOnRoot != null)
+            {
+                bool queryFromDatabase = false;
+                ParseWhere.Preprocess(dbProvider, UntokenizedTreeOnRoot, ref queryFromDatabase);
+                return !queryFromDatabase;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public bool NeedFilterUntokenizedConditions(DBProvider dbProvider)
+        {
+            return AndExpressionCanBeOptimized(dbProvider) && !NoAndExpression;
+        }
     }
 
     public interface IQuery

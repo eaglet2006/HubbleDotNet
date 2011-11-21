@@ -173,7 +173,7 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                return _Queue[0];
+                return _Queue[_Start];
             }
         }
 
@@ -181,7 +181,13 @@ namespace Hubble.Framework.DataStructure
         {
             get
             {
-                return _Queue[_Count - 1];
+                int last = _Start + _Count - 1;
+
+                if (last >= _Count)
+                {
+                    last = last - _Count;
+                }
+                return _Queue[last];
             }
         }
 

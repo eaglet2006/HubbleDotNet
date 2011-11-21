@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.7.9")]
-[assembly: AssemblyFileVersion("1.1.7.9")]
+[assembly: AssemblyVersion("1.1.8.0")]
+[assembly: AssemblyFileVersion("1.1.8.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -80,5 +80,9 @@ using System.Runtime.InteropServices;
  * Can do WaitForExit so that run many synchronize store procedure sequently. 
  * 1.1.7.9 Bo Xiao
  * Improve the performance for normal order by of contains query.
+ * 1.1.8.0 
+ * Improve performance for mix condition such as where title contains 'xxx' and price > 10 and price < 100.
+ * For one word optimize and contains optimize.
+ * Fix a bug of PriorQueue that Last value is wrong when _Start > 0. It will effect order by result.
  * 
  *****************************************************************************************/

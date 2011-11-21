@@ -23,6 +23,8 @@ using System.Text;
 
 using Hubble.Core.Data;
 using Hubble.Core.Entity;
+using Hubble.Core.SFQL.Parse;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 using Hubble.Framework.DataStructure;
 
 namespace Hubble.Core.Query.Optimize
@@ -103,6 +105,13 @@ namespace Hubble.Core.Query.Optimize
         {
             DBProvider dBProvider = Argument.DBProvider;
             bool needGroupBy = Argument.NeedGroupBy;
+
+            bool needFilterUntokenizedConditions = this.Argument.NeedFilterUntokenizedConditions;
+            ExpressionTree untokenizedTree = this.Argument.UntokenizedTreeOnRoot;
+
+            Query.DocumentResult documentResult;
+            Query.DocumentResult* drp = &documentResult;
+
 
             //vars for delete
             bool haveRecordsDeleted = dBProvider.DelProvider.Count > 0;
@@ -203,6 +212,21 @@ namespace Hubble.Core.Query.Optimize
 
                 if (curWord >= wordIndexesLen)
                 {
+                    //Process untokenized conditions.
+                    //If is not matched, get the next one.
+                    if (needFilterUntokenizedConditions)
+                    {
+                        int docId = firstDocId;
+                        drp->DocId = docId;
+                        drp->PayloadData = dBProvider.GetPayloadDataWithShareLock(docId);
+                        if (!ParseWhere.GetComparisionExpressionValue(dBProvider, drp,
+                            untokenizedTree))
+                        {
+                            GetNext(fstWifq, ref fstODPL, ref docListArr[0]);
+                            continue;
+                        }
+                    }
+
                     //Matched
                     //Caculate score
 
@@ -363,6 +387,8 @@ namespace Hubble.Core.Query.Optimize
 
                 docIdRank.Add(docid2Long.DocId, new DocumentResult(docid2Long.DocId, score));
             }
+
+            docIdRank.Sorted = true;
         }
 
 
@@ -371,6 +397,12 @@ namespace Hubble.Core.Query.Optimize
 
             DBProvider dBProvider = Argument.DBProvider;
             bool needGroupBy = Argument.NeedGroupBy;
+
+            bool needFilterUntokenizedConditions = this.Argument.NeedFilterUntokenizedConditions;
+            ExpressionTree untokenizedTree = this.Argument.UntokenizedTreeOnRoot;
+
+            Query.DocumentResult documentResult;
+            Query.DocumentResult* drp = &documentResult;
 
             //vars for delete
             bool haveRecordsDeleted = dBProvider.DelProvider.Count > 0;
@@ -477,6 +509,21 @@ namespace Hubble.Core.Query.Optimize
 
                 if (curWord >= wordIndexesLen)
                 {
+                    //Process untokenized conditions.
+                    //If is not matched, get the next one.
+                    if (needFilterUntokenizedConditions)
+                    {
+                        int docId = firstDocId;
+                        drp->DocId = docId;
+                        drp->PayloadData = dBProvider.GetPayloadDataWithShareLock(docId);
+                        if (!ParseWhere.GetComparisionExpressionValue(dBProvider, drp,
+                            untokenizedTree))
+                        {
+                            GetNext(fstWifq, ref fstODPL, ref docListArr[0]);
+                            continue;
+                        }
+                    }
+
                     //Matched
                     //Caculate score
 
@@ -594,6 +641,11 @@ namespace Hubble.Core.Query.Optimize
 
                     Docid2Long cur = new Docid2Long();
 
+                    if (firstDocId == 23659)
+                    {
+                        Console.WriteLine(firstDocId);
+                    }
+
                     if (rows >= top)
                     {
                         rows++;
@@ -602,7 +654,7 @@ namespace Hubble.Core.Query.Optimize
 
                         Docid2Long.Generate(ref cur, dBProvider, orderByFields, totalScore);
 
-                        if (comparer.Compare(last, cur) < 0)
+                        if (comparer.Compare(last, cur) > 0)
                         {
                             priorQueue.Add(cur);
                             last = priorQueue.Last;
@@ -647,6 +699,8 @@ namespace Hubble.Core.Query.Optimize
 
                 docIdRank.Add(docid2Long.DocId, new DocumentResult(docid2Long.DocId, score));
             }
+
+            docIdRank.Sorted = true;
         }
 
         public unsafe void CalculateOptimize(Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary upDict, ref Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank)

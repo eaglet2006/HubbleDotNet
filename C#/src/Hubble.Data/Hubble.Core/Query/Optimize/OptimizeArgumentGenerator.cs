@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 
 using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
+using Hubble.Core.SFQL.SyntaxAnalysis;
 using Hubble.Core.SFQL.SyntaxAnalysis.Select;
 
 namespace Hubble.Core.Query.Optimize
@@ -20,7 +22,8 @@ namespace Hubble.Core.Query.Optimize
         }
 
         internal OptimizeArgumentGenerator(DBProvider dbProvider, int end, 
-            string orderBy, List<OrderBy> orderBys, bool needGroupBy, bool orderByCanBeOptimized)
+            string orderBy, List<OrderBy> orderBys, bool needGroupBy, bool orderByCanBeOptimized,
+            bool needFilterUntokenizedConditions, ExpressionTree untokenizedTreeOnRoot)
         {
             _Argumnet = new OptimizeArgument();
             _Argumnet.DBProvider = dbProvider;
@@ -28,6 +31,8 @@ namespace Hubble.Core.Query.Optimize
             _Argumnet.OrderBy = orderBy;
             _Argumnet.NeedGroupBy = needGroupBy;
             _Argumnet.OrderByCanBeOptimized = orderByCanBeOptimized;
+            _Argumnet.NeedFilterUntokenizedConditions = needFilterUntokenizedConditions;
+            _Argumnet.UntokenizedTreeOnRoot = untokenizedTreeOnRoot;
 
             if (orderBy != null)
             {
