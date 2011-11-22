@@ -36,6 +36,8 @@ namespace Hubble.Core.Service
 
     class TableSynchronize
     {
+        const int MaxStep = 100000;
+
         Table _Table;
         DBProvider _DBProvider;
 
@@ -284,9 +286,9 @@ namespace Hubble.Core.Service
             {
                 _Step = 1;
             }
-            else if (_Step > 10000)
+            else if (_Step > MaxStep)
             {
-                _Step = 10000;
+                _Step = MaxStep;
             }
 
             _OptimizeOption = option;
