@@ -89,6 +89,7 @@
     <Compile Include="Analysis\HighLight\Highlighter.cs" />
     <Compile Include="Analysis\HighLight\SimpleHTMLFormatter.cs" />
     <Compile Include="Analysis\IAnalyzer.cs" />
+    <Compile Include="NoneSegment.cs" />
     <Compile Include="SimpleAnalyzer.cs" />
     <Compile Include="PanGuAnalyzer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

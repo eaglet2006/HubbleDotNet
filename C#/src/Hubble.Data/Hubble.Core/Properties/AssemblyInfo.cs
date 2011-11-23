@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.1")]
-[assembly: AssemblyFileVersion("1.1.8.1")]
+[assembly: AssemblyVersion("1.1.8.2")]
+[assembly: AssemblyFileVersion("1.1.8.2")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -86,4 +86,6 @@ using System.Runtime.InteropServices;
  * Fix a bug of PriorQueue that Last value is wrong when _Start > 0. It will effect order by result.
  * 1.1.8.1
  * Increase the max value of step of synchronize from 10000 to 100000
+ * 1.1.8.2
+ * Add NoneSegment analyzer
  *****************************************************************************************/

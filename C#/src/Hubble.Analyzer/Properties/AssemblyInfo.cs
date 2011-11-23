@@ -27,7 +27,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hubble Star Pty")]
 #if HubblePro
-[assembly: AssemblyProduct("HubblePro 2011 Beta 3 Edition")]
+[assembly: AssemblyProduct("HubblePro 2011 Beta 5 Edition")]
 [assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
 #else
 [assembly: AssemblyProduct("HubbleDotNet Community Edition")]
@@ -54,5 +54,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.1.8.2")]
+[assembly: AssemblyFileVersion("1.1.8.2")]
