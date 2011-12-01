@@ -1497,7 +1497,8 @@ namespace Hubble.Core.SFQL.Parse
                                             }
                                         }
                                     }
-                                    else if (expression.Left[0].Text.Equals(_DBProvider.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                                    else if (expression.Left[0].Text.Equals(_DBProvider.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase) &&
+                                        expression.Operator.SyntaxType == SyntaxType.Equal)
                                     {
                                         //if the expression like: id = 000
 

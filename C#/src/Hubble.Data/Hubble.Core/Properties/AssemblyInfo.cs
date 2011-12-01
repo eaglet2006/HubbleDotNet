@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.2")]
-[assembly: AssemblyFileVersion("1.1.8.2")]
+[assembly: AssemblyVersion("1.1.8.3")]
+[assembly: AssemblyFileVersion("1.1.8.3")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -88,4 +88,9 @@ using System.Runtime.InteropServices;
  * Increase the max value of step of synchronize from 10000 to 100000
  * 1.1.8.2
  * Add NoneSegment analyzer
+ * 1.1.8.3
+ * Fix two bugs.
+ * return wrong result when execute select * from table where id < n 
+ * wrong result when execute the statement like
+ * select top 10 * from news where title match 'abc' and title1 match 'abc' and time > '2005-1-1' and content match 'abc'
  *****************************************************************************************/

@@ -58,10 +58,11 @@ namespace Hubble.Core.SFQL.Parse
                     }
                     else
                     {
-                        if (firstTreeUnTokenize == tree)
-                        {
-                            firstTreeUnTokenize = firstTreeUnTokenize.AndChild;
-                        }
+                        firstTreeUnTokenize = firstTreeUnTokenize.AndChild; //Modification at 2011-12-1
+
+                        //if (firstTreeUnTokenize == tree)
+                        //{
+                        //}
                     }
                 }
 
