@@ -200,10 +200,14 @@ namespace TaskManage
                 //Daily
                 if (rdoRunOnce.Checked == true)//One time only
                 {
-                    string[] timeString = dtDayFrequencyRunOnceTime.Text.Split(':');
-                    int hour = int.Parse(timeString[0]);
-                    int minute = int.Parse(timeString[1]);
-                    int second = int.Parse(timeString[2]);
+                    //string[] timeString = dtDayFrequencyRunOnceTime.Text.Split(':');
+                    int hour = dtDayFrequencyRunOnceTime.Value.Hour;
+                    int minute = dtDayFrequencyRunOnceTime.Value.Minute;
+                    int second = dtDayFrequencyRunOnceTime.Value.Second;
+
+                    //int hour = int.Parse(timeString[0]);
+                    //int minute = int.Parse(timeString[1]);
+                    //int second = int.Parse(timeString[2]);
                     dayFrequency.Option = 1;
                     dayFrequency.RunOnceTime = new TimeSpan(hour, minute, second);
                 }
@@ -220,16 +224,26 @@ namespace TaskManage
                         dayFrequency.TimeUnit = TimeUnit.Minute;
                     }
 
-                    string[] startTime = dtStartTime.Text.Split(':');
-                    int hour = int.Parse(startTime[0]);
-                    int minute = int.Parse(startTime[1]);
-                    int second = int.Parse(startTime[2]);
+                    //string[] startTime = dtStartTime.Text.Split(':');
+                    int hour = dtStartTime.Value.Hour;
+                    int minute = dtStartTime.Value.Minute;
+                    int second = dtStartTime.Value.Second;
+
+                    //int hour = int.Parse(startTime[0]);
+                    //int minute = int.Parse(startTime[1]);
+                    //int second = int.Parse(startTime[2]);
+
                     dayFrequency.StartTime = new TimeSpan(hour, minute, second);
 
-                    string[] endTime = dtEndTime.Text.Split(':');
-                    hour = int.Parse(endTime[0]);
-                    minute = int.Parse(endTime[1]);
-                    second = int.Parse(endTime[2]);
+                    //string[] endTime = dtEndTime.Text.Split(':');
+
+                    hour = dtEndTime.Value.Hour;
+                    minute = dtEndTime.Value.Minute;
+                    second = dtEndTime.Value.Second;
+
+                    //hour = int.Parse(endTime[0]);
+                    //minute = int.Parse(endTime[1]);
+                    //second = int.Parse(endTime[2]);
                     dayFrequency.EndTime = new TimeSpan(hour, minute, second);
                 }
                 //Duration
@@ -308,6 +322,7 @@ namespace TaskManage
             textBoxPassword.Text = Hubble.Framework.Security.DesEncryption.Decrypt(new byte[] { 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, schema.Password);
             textBoxDatabase.Text = schema.Database.Trim();
             textBoxSql.Text = schema.Sql.Trim();
+            textBoxSql.Text = textBoxSql.Text.Replace("\n", "\r\n");
             txtSummary.Text = schema.Description;
 
             txtSchemaName.Text = schema.Name;

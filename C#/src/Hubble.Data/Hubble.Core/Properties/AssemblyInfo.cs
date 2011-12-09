@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.3")]
-[assembly: AssemblyFileVersion("1.1.8.3")]
+[assembly: AssemblyVersion("1.1.8.4")]
+[assembly: AssemblyFileVersion("1.1.8.4")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -93,4 +93,15 @@ using System.Runtime.InteropServices;
  * return wrong result when execute select * from table where id < n 
  * wrong result when execute the statement like
  * select top 10 * from news where title match 'abc' and title1 match 'abc' and time > '2005-1-1' and content match 'abc'
+ * 1.1.8.4
+ * Fix a bug:
+ * if execute a select statement like:
+ * select * from table where a > 0 order by a desc, score.
+ * and a is untokenized index type. it will return wrong order of result.
+ * Fix a bug of QueryAnalyzer:
+ * It will raise exception when we save the task schedule as we set the default time format
+ * in control panel as AM and PM.
+ * Fix a bug that return wrong order of result when order by from untokenized index fields
+ * and one word query. Like where title match 'abc' order by time desc.
+ * 
  *****************************************************************************************/

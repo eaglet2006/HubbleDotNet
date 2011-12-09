@@ -872,6 +872,7 @@
             this.textBoxSql.Location = new System.Drawing.Point(217, 30);
             this.textBoxSql.Multiline = true;
             this.textBoxSql.Name = "textBoxSql";
+            this.textBoxSql.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textBoxSql.Size = new System.Drawing.Size(380, 77);
             this.textBoxSql.TabIndex = 4;
             // 

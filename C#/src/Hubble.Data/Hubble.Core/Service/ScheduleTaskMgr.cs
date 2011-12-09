@@ -63,15 +63,17 @@ namespace Hubble.Core.Service
             try
             {
                 System.Data.SqlClient.SqlConnectionStringBuilder sqlConnBuilder = new System.Data.SqlClient.SqlConnectionStringBuilder();
-                sqlConnBuilder.DataSource = "127.0.0.1";
+                sqlConnBuilder.DataSource = string.Format("127.0.0.1:{0}", Global.Setting.Config.TcpPort);
+
                 sqlConnBuilder.UserID = Schema.UserName.Trim();
                 sqlConnBuilder.Password = Hubble.Framework.Security.DesEncryption.Decrypt(new byte[] { 0x14, 0x0A, 0x0C, 0x0E, 0x0A, 0x11, 0x42, 0x58 }, Schema.Password);
                 sqlConnBuilder.InitialCatalog = Schema.Database.Trim();
 
-                using (Hubble.SQLClient.HubbleConnection conn = new Hubble.SQLClient.HubbleConnection(sqlConnBuilder.ConnectionString))
+                using (Hubble.SQLClient.HubbleAsyncConnection conn = new Hubble.SQLClient.HubbleAsyncConnection(sqlConnBuilder.ConnectionString))
                 {
                     conn.Open();
                     Hubble.SQLClient.HubbleCommand cmd = new Hubble.SQLClient.HubbleCommand(Schema.Sql, conn);
+                    cmd.CommandTimeout = 3600 * 24 * 365 * 10;
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -270,6 +272,14 @@ namespace Hubble.Core.Service
                 }
 
                 _TaskScheduleQueue.Sort(new TaskComparableByNextTime());
+
+                foreach (Task task in _TaskScheduleQueue)
+                {
+                    if (task.NextTime == default(DateTime))
+                    {
+                        task.GetNextTime();
+                    }
+                }
 
                 if (_Thread == null)
                 {

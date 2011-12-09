@@ -531,7 +531,7 @@ namespace Hubble.Core.Query.Optimize
 
                                 Docid2Long.Generate(ref cur, dBProvider, orderByFields, score);
 
-                                if (comparer.Compare(last, cur) < 0)
+                                if (comparer.Compare(last, cur) > 0)
                                 {
                                     priorQueue.Add(cur);
                                     last = priorQueue.Last;

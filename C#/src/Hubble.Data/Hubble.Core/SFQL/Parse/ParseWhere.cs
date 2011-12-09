@@ -301,7 +301,10 @@ namespace Hubble.Core.SFQL.Parse
                 result = _DBProvider.DBAdapter.GetDocumentResults(end, whereSql, orderBy);
             }
 
-            result.Sorted = true;
+            if (orderBy != null)
+            {
+                result.Sorted = true;
+            }
 
             performanceReport.Stop();
             return result;
