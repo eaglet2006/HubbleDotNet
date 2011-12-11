@@ -133,6 +133,7 @@
     <Compile Include="Query\Optimize\DocidCount.cs" />
     <Compile Include="Query\Optimize\Docid2Long.cs" />
     <Compile Include="Query\Optimize\IQueryOptimize.cs" />
+    <Compile Include="Query\Optimize\MultiWordsDocIdEnumerator.cs" />
     <Compile Include="Query\Optimize\OneWordOptimize.cs" />
     <Compile Include="Query\Optimize\OptimizeArgument.cs" />
     <Compile Include="Query\Optimize\OptimizeArgumentGenerator.cs" />
@@ -205,6 +206,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_GCCollect.cs" />
     <Compile Include="StoredProcedure\SP_GetTFIDF.cs" />
     <Compile Include="StoredProcedure\SP_SetBigTable.cs" />
     <Compile Include="StoredProcedure\SP_QueryByDocIds.cs" />

@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.4")]
-[assembly: AssemblyFileVersion("1.1.8.4")]
+[assembly: AssemblyVersion("1.1.8.5")]
+[assembly: AssemblyFileVersion("1.1.8.5")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -103,5 +103,7 @@ using System.Runtime.InteropServices;
  * in control panel as AM and PM.
  * Fix a bug that return wrong order of result when order by from untokenized index fields
  * and one word query. Like where title match 'abc' order by time desc.
- * 
+ * 1.1.8.5
+ * Add SP_GCCollect store procedure.
+ * This store procedure can let user collect GC of hubbletask mannually.
  *****************************************************************************************/

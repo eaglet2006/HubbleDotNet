@@ -501,7 +501,32 @@ namespace Hubble.Core.Query
         unsafe private void CalculateWithPosition(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
             ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
         {
+
+            //System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            //sw.Start();
+            //MultiWordsDocIdEnumerator mwde = new MultiWordsDocIdEnumerator(wordIndexes);
+
+            //Entity.OriginalDocumentPositionList odpl = new Hubble.Core.Entity.OriginalDocumentPositionList();
+
+            //mwde.GetNextOriginal(ref odpl);
+            //while (odpl.DocumentId >= 0)
+            //{
+            //    //Console.WriteLine(odpl.DocumentId);
+
+            //    mwde.GetNextOriginal(ref odpl);
+            //}
+            
+            //sw.Stop();
+            //Console.WriteLine("Count={0} Elapsed={1}ms", mwde.TotalDocIdCount, sw.ElapsedMilliseconds);
+
+            //foreach (WordIndexForQuery wifq in wordIndexes)
+            //{
+            //    wifq.WordIndex.Reset();
+            //}
+
+
             Array.Sort(wordIndexes);
+
 
             MinResultCount = _DBProvider.Table.GroupByLimit;
 
