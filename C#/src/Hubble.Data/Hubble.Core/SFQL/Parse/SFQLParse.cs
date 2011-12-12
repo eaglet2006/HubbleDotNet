@@ -1207,16 +1207,16 @@ namespace Hubble.Core.SFQL.Parse
                     }
                     else
                     {
-                        if (result.Length <= sortLen)
-                        {
-                            if (select.Where != null)
-                            {
-                                if (select.Where.ExpressionTree.NeedTokenize)
-                                {
-                                    all = true;
-                                }
-                            }
-                        }
+                        //if (result.Length <= sortLen)
+                        //{
+                        //    if (select.Where != null)
+                        //    {
+                        //        if (select.Where.ExpressionTree.NeedTokenize)
+                        //        {
+                        //            all = true;
+                        //        }
+                        //    }
+                        //}
 
                         count = Math.Min(result.Length, sortLen);
                     }

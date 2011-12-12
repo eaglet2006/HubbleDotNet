@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.5")]
-[assembly: AssemblyFileVersion("1.1.8.5")]
+[assembly: AssemblyVersion("1.1.8.6")]
+[assembly: AssemblyFileVersion("1.1.8.6")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -106,4 +106,6 @@ using System.Runtime.InteropServices;
  * 1.1.8.5
  * Add SP_GCCollect store procedure.
  * This store procedure can let user collect GC of hubbletask mannually.
+ * 1.1.8.6
+ * Fix a bug of query cache. It will return empty result when go to next page.
  *****************************************************************************************/

@@ -78,10 +78,10 @@ namespace Hubble.Core.Query
                     top = 100;
                 }
 
-                if (this._QueryParameter.End * 2 > top)
-                {
-                    top *= 2;
-                }
+                //if (this._QueryParameter.End * 2 > top)
+                //{
+                //    top *= 2;
+                //}
             }
             else
             {

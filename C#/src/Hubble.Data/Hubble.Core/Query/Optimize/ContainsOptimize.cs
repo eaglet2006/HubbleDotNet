@@ -167,10 +167,10 @@ namespace Hubble.Core.Query.Optimize
                     top = 100;
                 }
 
-                if (this.Argument.End * 2 > top)
-                {
-                    top *= 2;
-                }
+                //if (this.Argument.End * 2 > top)
+                //{
+                //    top *= 2;
+                //}
             }
             else
             {
@@ -462,10 +462,10 @@ namespace Hubble.Core.Query.Optimize
                     top = 100;
                 }
 
-                if (this.Argument.End * 2 > top)
-                {
-                    top *= 2;
-                }
+                //if (this.Argument.End * 2 > top)
+                //{
+                //    top *= 2;
+                //}
             }
             else
             {
