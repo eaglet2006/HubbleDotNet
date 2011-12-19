@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.6")]
-[assembly: AssemblyFileVersion("1.1.8.6")]
+[assembly: AssemblyVersion("1.1.8.7")]
+[assembly: AssemblyFileVersion("1.1.8.7")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -108,4 +108,8 @@ using System.Runtime.InteropServices;
  * This store procedure can let user collect GC of hubbletask mannually.
  * 1.1.8.6
  * Fix a bug of query cache. It will return empty result when go to next page.
+ * 1.1.8.7
+ * Imporve the performance of multi-words match order by score desc. and group by with above statement.
+ * Such as select top 10 * from table where title match 'abc news' order by score desc.
+ * 
  *****************************************************************************************/
