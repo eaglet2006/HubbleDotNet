@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hubble", "Hubble", "{AC8311
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtherDBTest", "OtherDBTest\OtherDBTest.csproj", "{9CEBC151-D943-418D-985D-79FE3E89BD0B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqliteDBAdapter", "SqliteDBAdapter\SqliteDBAdapter.csproj", "{8B97E187-58C5-47BF-BAEB-991DB5A779CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,6 +86,16 @@ Global
 		{9CEBC151-D943-418D-985D-79FE3E89BD0B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9CEBC151-D943-418D-985D-79FE3E89BD0B}.X64|Any CPU.ActiveCfg = Release|Any CPU
 		{9CEBC151-D943-418D-985D-79FE3E89BD0B}.X64|Any CPU.Build.0 = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.HubblePro|Any CPU.ActiveCfg = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.HubblePro|Any CPU.Build.0 = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.PerformanceTest|Any CPU.ActiveCfg = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.PerformanceTest|Any CPU.Build.0 = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.X64|Any CPU.ActiveCfg = Release|Any CPU
+		{8B97E187-58C5-47BF-BAEB-991DB5A779CF}.X64|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

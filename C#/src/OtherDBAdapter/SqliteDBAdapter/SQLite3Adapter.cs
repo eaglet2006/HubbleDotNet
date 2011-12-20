@@ -18,16 +18,21 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics;
+
 using Hubble.Framework.Data;
 using Hubble.Core.Data;
 using Hubble.Core.SFQL.Parse;
-using System.Diagnostics;
+using Hubble.Core.DBAdapter;
+using Data = Hubble.Core.Data;
+using Query = Hubble.Core.Query;
+using Core = Hubble.Core;
 
-namespace Hubble.Core.DBAdapter
+namespace SQLiteDBAdapter
 {
     public class SQLite3Adapter : IDBAdapter, INamedExternalReference
     {
-        private string GetFieldLine(Data.Field field)
+        private string GetFieldLine(Hubble.Core.Data.Field field)
         {
             if (!field.Store)
             {

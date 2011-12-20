@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.7")]
-[assembly: AssemblyFileVersion("1.1.8.7")]
+[assembly: AssemblyVersion("1.1.8.8")]
+[assembly: AssemblyFileVersion("1.1.8.8")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -111,5 +111,8 @@ using System.Runtime.InteropServices;
  * 1.1.8.7
  * Imporve the performance of multi-words match order by score desc. and group by with above statement.
  * Such as select top 10 * from table where title match 'abc news' order by score desc.
- * 
+ * 1.1.8.8
+ * Move sqlite db adapter to OtherDBAdapter.sln. The bone version of hubble will never install 
+ * sqlite dbadapter by default. If you want to use it, please install it via SP_AddExternalReference
+ * manually.
  *****************************************************************************************/

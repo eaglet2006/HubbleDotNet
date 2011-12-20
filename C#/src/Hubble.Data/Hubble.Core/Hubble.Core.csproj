@@ -19,11 +19,12 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>..\..\..\Bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -103,7 +104,6 @@
     <Compile Include="Data\Table.cs" />
     <Compile Include="Data\UpdatePayloadFileProvider.cs" />
     <Compile Include="DBAdapter\Oracle8iAdapter.cs" />
-    <Compile Include="DBAdapter\SQLite3Adapter.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2005Adapter.cs" />

@@ -20,7 +20,16 @@ using System.Collections.Generic;
 using System.Text;
 using System.Data;
 using System.Data.SQLite;
-namespace Hubble.Framework.Data
+
+using Hubble.Framework.Data;
+using Hubble.Core.Data;
+using Hubble.Core.SFQL.Parse;
+using Hubble.Core.DBAdapter;
+using Data = Hubble.Core.Data;
+using Query = Hubble.Core.Query;
+using Core = Hubble.Core;
+
+namespace SQLiteDBAdapter
 {
     public class SQLiteDataProvider : IDisposable
     {

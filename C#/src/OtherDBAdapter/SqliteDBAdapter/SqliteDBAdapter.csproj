@@ -5,12 +5,12 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9CEBC151-D943-418D-985D-79FE3E89BD0B}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{8B97E187-58C5-47BF-BAEB-991DB5A779CF}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OtherDBTest</RootNamespace>
-    <AssemblyName>OtherDBTest</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <RootNamespace>SqliteDBAdapter</RootNamespace>
+    <AssemblyName>SqliteDBAdapter</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -30,21 +30,39 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Reference\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQLite3Adapter.cs" />
+    <Compile Include="SQLiteDataProvider.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MySqlDBAdapter\MySqlDBAdapter.csproj">
-      <Project>{68A1A648-3E4F-4BFE-BA05-A0BEA5933307}</Project>
-      <Name>MySqlDBAdapter</Name>
+    <ProjectReference Include="..\..\Hubble.Data\Hubble.Core\Hubble.Core.csproj">
+      <Project>{003F69CF-186C-45C9-85B6-96D175D56711}</Project>
+      <Name>Hubble.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Hubble.Framework\Hubble.Framework\Hubble.Framework.csproj">
+      <Project>{21D12CAB-9917-432E-A54E-E432DA0F432A}</Project>
+      <Name>Hubble.Framework</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
