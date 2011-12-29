@@ -472,7 +472,7 @@ namespace Hubble.Core.Query.Optimize
                 top = int.MaxValue;
             }
 
-            PriorQueue<Docid2Long> priorQueue = new PriorQueue<Docid2Long>(top, new DocIdLongComparer(false));
+            PriorQueue<Docid2Long> priorQueue = new PriorQueue<Docid2Long>(top, comparer);
 
             int rows = 0;
 

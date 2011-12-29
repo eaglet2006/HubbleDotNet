@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.8")]
-[assembly: AssemblyFileVersion("1.1.8.8")]
+[assembly: AssemblyVersion("1.1.8.9")]
+[assembly: AssemblyFileVersion("1.1.8.9")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -115,4 +115,9 @@ using System.Runtime.InteropServices;
  * Move sqlite db adapter to OtherDBAdapter.sln. The bone version of hubble will never install 
  * sqlite dbadapter by default. If you want to use it, please install it via SP_AddExternalReference
  * manually.
+ * 1.1.8.9
+ * Fix a bug that will return wrong result when order by asc and contains multi words.
+ * Such as following sql
+ * select top 10 time from news where title contains 'abc news' order by time asc
+ * it will return desc result whatever asc or desc.
  *****************************************************************************************/
