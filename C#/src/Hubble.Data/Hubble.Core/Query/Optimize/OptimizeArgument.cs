@@ -117,6 +117,27 @@ namespace Hubble.Core.Query.Optimize
             return false;
         }
 
+        public static bool IsOrderByScoreDesc(IList<OrderBy> orderbys)
+        {
+            if (orderbys == null)
+            {
+                return false;
+            }
+
+            if (orderbys.Count == 1)
+            {
+                if (orderbys[0].Name.Equals("score", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    if (orderbys[0].Order.Equals("desc", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public void Prepare()
         {
             //if (OrderBys == null)

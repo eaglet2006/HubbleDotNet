@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.0")]
-[assembly: AssemblyFileVersion("1.1.9.0")]
+[assembly: AssemblyVersion("1.1.9.1")]
+[assembly: AssemblyFileVersion("1.1.9.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -126,4 +126,7 @@ using System.Runtime.InteropServices;
  * such as select id, score from news where title match 'abc news' order by score desc. It will raise a out of memory exception.
  * the other one is: there are some problem of compare varchar untokenized fields. 
  * Such as select top 10 * from news where title match 'abc' and a > '1234' and a < '2345'.
+ * 1.1.9.1
+ * Fix a bug when match more than one words and not order by score desc, it will return wrong order.
+ * Such as select top 10 * from news where title match 'abc news' order by time desc
  *****************************************************************************************/

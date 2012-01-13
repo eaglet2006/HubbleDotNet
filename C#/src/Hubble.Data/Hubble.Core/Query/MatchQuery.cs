@@ -1444,7 +1444,8 @@ namespace Hubble.Core.Query
                 }
                 else
                 {
-                    if (!this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
+                    if (Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) && 
+                        !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
                     {
                         CalculateWithPositionOrderByScoreDesc(null, ref result, _WordIndexes);
                     }
@@ -1463,7 +1464,8 @@ namespace Hubble.Core.Query
                 }
                 else
                 {
-                    if (!this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
+                    if (Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) &&
+                        !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
                     {
                         CalculateWithPositionOrderByScoreDesc(this.UpDict, ref result, _WordIndexes);
                     }
