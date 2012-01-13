@@ -826,14 +826,27 @@ namespace Hubble.Core.SFQL.Parse
                         {
                             case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Lessthan:
                                 {
+                                    bool equal = true;
+
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)pDocResult->PayloadData[i] >= (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] > (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
+                                        else if ((uint)pDocResult->PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        {
+                                            equal = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (equal)
+                                    {
+                                        return false;
                                     }
                                 }
+
                                 break;
 
                             case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.LessthanEqual:
@@ -844,20 +857,36 @@ namespace Hubble.Core.SFQL.Parse
                                         {
                                             return false;
                                         }
+                                        else if ((uint)pDocResult->PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        {
+                                            break;
+                                        }
                                     }
                                 }
                                 break;
 
                             case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Largethan:
                                 {
+                                    bool equal = true;
                                     for (int i = cur.FieldTab; i < cur.FieldTab + cur.PayloadLength; i++)
                                     {
-                                        if ((uint)pDocResult->PayloadData[i] <= (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        if ((uint)pDocResult->PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
                                         }
+                                        else if ((uint)pDocResult->PayloadData[i] > (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        {
+                                            equal = false;
+                                            break;
+                                        }
+                                    }
+
+                                    if (equal)
+                                    {
+                                        return false;
                                     }
                                 }
+
                                 break;
 
                             case Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.LargethanEqual:
@@ -867,6 +896,10 @@ namespace Hubble.Core.SFQL.Parse
                                         if ((uint)pDocResult->PayloadData[i] < (uint)cur.ComparisionData[i - cur.FieldTab])
                                         {
                                             return false;
+                                        }
+                                        else if ((uint)pDocResult->PayloadData[i] > (uint)cur.ComparisionData[i - cur.FieldTab])
+                                        {
+                                            break;
                                         }
                                     }
                                 }

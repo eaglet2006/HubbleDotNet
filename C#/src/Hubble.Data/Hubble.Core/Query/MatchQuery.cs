@@ -81,8 +81,18 @@ namespace Hubble.Core.Query
                 }
 
                 Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
+                PriorQueue<Docid2Long> priorQueue = null;
+                List<Docid2Long> docid2longList = null;
 
-                PriorQueue<Docid2Long> priorQueue = new PriorQueue<Docid2Long>(top, new DocIdLongComparer(false));
+                if (top == int.MaxValue)
+                {
+                    docid2longList = new List<Docid2Long>();
+                }
+                else
+                {
+                    priorQueue = new PriorQueue<Docid2Long>(top, new DocIdLongComparer(false));
+                }
+
                 long lastMinScore = 0;
                 int rows = 0;
 
@@ -199,12 +209,19 @@ namespace Hubble.Core.Query
                     }
                     else
                     {
-                        priorQueue.Add(new Docid2Long(odpl.DocumentId, totalScore));
-                        rows++;
-
-                        if (rows == top)
+                        if (top == int.MaxValue)
                         {
-                            lastMinScore = priorQueue.Last.Value1;
+                            docid2longList.Add(new Docid2Long(odpl.DocumentId, totalScore));
+                        }
+                        else
+                        {
+                            priorQueue.Add(new Docid2Long(odpl.DocumentId, totalScore));
+                            rows++;
+
+                            if (rows == top)
+                            {
+                                lastMinScore = priorQueue.Last.Value1;
+                            }
                         }
                     }
 
@@ -213,7 +230,19 @@ namespace Hubble.Core.Query
 
                 docIdRank.RelTotalCount = mwde.TotalDocIdCount;
 
-                foreach (Docid2Long docid2Long in priorQueue.ToArray())
+                Docid2Long[] docid2longArr;
+
+                if (top == int.MaxValue)
+                {
+                    docid2longList.Sort(new DocIdLongComparer(false));
+                    docid2longArr = docid2longList.ToArray();
+                }
+                else
+                {
+                    docid2longArr = priorQueue.ToArray();
+                }
+
+                foreach (Docid2Long docid2Long in docid2longArr)
                 {
                     long score = docid2Long.Value1;
 

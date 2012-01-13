@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.8.9")]
-[assembly: AssemblyFileVersion("1.1.8.9")]
+[assembly: AssemblyVersion("1.1.9.0")]
+[assembly: AssemblyFileVersion("1.1.9.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -120,4 +120,10 @@ using System.Runtime.InteropServices;
  * Such as following sql
  * select top 10 time from news where title contains 'abc news' order by time asc
  * it will return desc result whatever asc or desc.
+ * 1.1.9.0
+ * Fix two bugs.
+ * one of them is when we execute sql statement without top or between and match more than one words and order by score desc.
+ * such as select id, score from news where title match 'abc news' order by score desc. It will raise a out of memory exception.
+ * the other one is: there are some problem of compare varchar untokenized fields. 
+ * Such as select top 10 * from news where title match 'abc' and a > '1234' and a < '2345'.
  *****************************************************************************************/
