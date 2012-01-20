@@ -85,7 +85,7 @@ namespace Hubble.Core.Query.Optimize
         /// <param name="dictForGroupBy">dict to calculate group by. If is null, don't need output group by</param>
         /// <param name="top">for optimize by score, how many records want to return</param>
         public MultiWordsDocIdEnumerator(WordIndexForQuery[] wordIndexes, DBProvider dbProvider,
-            Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary dictForGroupBy, int top)
+            Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary dictForGroupBy, int top, bool needFilterUntokenizedConditions)
         {
             _GroupByDict = dictForGroupBy;
             _NeedGroupBy = _GroupByDict != null;
@@ -108,7 +108,7 @@ namespace Hubble.Core.Query.Optimize
 
             _OptimizeByScore = false;
 
-            if (top >= 0)
+            if (top >= 0 && !needFilterUntokenizedConditions)
             {
                 _OptimizeByScore = true;
                 int relTop = top + _DBProvider.DelProvider.Count; //should include del records
@@ -138,7 +138,7 @@ namespace Hubble.Core.Query.Optimize
 
         public MultiWordsDocIdEnumerator(WordIndexForQuery[] wordIndexes, DBProvider dbProvider, 
             Hubble.Core.SFQL.Parse.DocumentResultWhereDictionary dictForGroupBy)
-            : this(wordIndexes, dbProvider, dictForGroupBy, - 1)
+            : this(wordIndexes, dbProvider, dictForGroupBy, - 1, false)
         {
     
         }

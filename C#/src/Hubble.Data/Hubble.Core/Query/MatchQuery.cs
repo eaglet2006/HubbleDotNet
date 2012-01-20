@@ -34,7 +34,7 @@ namespace Hubble.Core.Query
     {
 
         #region Private fields
-        bool _HasRandField = false;
+        bool _HasRankField = false;
 
         int MinResultCount = 32768;
 
@@ -48,222 +48,6 @@ namespace Hubble.Core.Query
         WordIndexForQuery[] _WordIndexes;
 
         #endregion
-
-
-        unsafe private void CalculateWithPositionOrderByScoreDesc(Core.SFQL.Parse.DocumentResultWhereDictionary upDict,
-            ref Core.SFQL.Parse.DocumentResultWhereDictionary docIdRank, WordIndexForQuery[] wordIndexes)
-        {
-            _DBProvider.SharedPayloadProvider.EnterPayloladShareLock();
-
-            try
-            {
-
-                if (upDict != null)
-                {
-                    throw new ParseException("UpDict is not null!");
-                }
-
-                //Calculate top
-                int top;
-
-                if (this._QueryParameter.End >= 0)
-                {
-                    top = (1 + this._QueryParameter.End / 100) * 100;
-
-                    if (top <= 0)
-                    {
-                        top = 100;
-                    }
-                }
-                else
-                {
-                    top = int.MaxValue;
-                }
-
-                Query.PerformanceReport performanceReport = new Hubble.Core.Query.PerformanceReport("Calculate");
-                PriorQueue<Docid2Long> priorQueue = null;
-                List<Docid2Long> docid2longList = null;
-
-                if (top == int.MaxValue)
-                {
-                    docid2longList = new List<Docid2Long>();
-                }
-                else
-                {
-                    priorQueue = new PriorQueue<Docid2Long>(top, new DocIdLongComparer(false));
-                }
-
-                long lastMinScore = 0;
-                int rows = 0;
-
-                Core.SFQL.Parse.DocumentResultWhereDictionary groupByDict = this._QueryParameter.NeedGroupBy ? docIdRank : null;
-
-                MultiWordsDocIdEnumerator mwde = new MultiWordsDocIdEnumerator(wordIndexes, _DBProvider, groupByDict, top);
-
-                Entity.OriginalDocumentPositionList odpl = new Hubble.Core.Entity.OriginalDocumentPositionList();
-
-                mwde.GetNextOriginal(ref odpl);
-
-                Entity.DocumentPositionList lastDocList
-                    = new Hubble.Core.Entity.DocumentPositionList();
-
-                double ratio = 1;
-
-                if (wordIndexes.Length > 1)
-                {
-                    ratio = (double)2 / (double)(wordIndexes.Length - 1);
-                }
-
-                while (odpl.DocumentId >= 0)
-                {
-                    //Matched
-                    //Caculate score
-
-                    long totalScore = 0;
-                    lastDocList.Count = 0;
-                    lastDocList.FirstPosition = 0;
-                    int lastWifqIndex = 0;
-
-                    for (int i = 0; i < mwde.SelectedCount; i++)
-                    {
-                        int index = mwde.SelectedIndexes[i];
-
-                        WordIndexForQuery wifq = mwde.WordIndexes[index];
-
-                        Int16 count = (Int16)mwde.SelectedDocLists[i].Count;
-                        int firstPosition = mwde.SelectedDocLists[i].FirstPosition;
-                        int totalWordsInThisDocument = mwde.SelectedDocLists[i].TotalWordsInThisDocument;
-
-                        long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)count * (long)1000000 / ((long)wifq.Sum_d_t * (long)totalWordsInThisDocument);
-
-                        if (score < 0)
-                        {
-                            //Overflow
-                            score = long.MaxValue - 4000000;
-                        }
-
-                        double delta = 1;
-
-                        if (i > 0)
-                        {
-                            //Calculate with position
-                            double queryPositionDelta = wifq.FirstPosition - wordIndexes[lastWifqIndex].FirstPosition;
-                            double positionDelta = firstPosition - lastDocList.FirstPosition;
-
-                            delta = Math.Abs(queryPositionDelta - positionDelta);
-
-                            if (delta < 0.031)
-                            {
-                                delta = 0.031;
-                            }
-                            else if (delta <= 1.1)
-                            {
-                                delta = 0.5;
-                            }
-                            else if (delta <= 2.1)
-                            {
-                                delta = 1;
-                            }
-
-                            delta = Math.Pow((1 / delta), ratio) * count * lastDocList.Count /
-                                (double)(wifq.QueryCount * wordIndexes[lastWifqIndex].QueryCount);
-                        }
-
-                        lastDocList.Count = count;
-                        lastDocList.FirstPosition = firstPosition;
-                        lastWifqIndex = index;
-
-                        totalScore += (long)(score * delta);
-                    } //End for cycle
-
-                    if (_HasRandField)
-                    {
-                        int rank = _DBProvider.SharedPayloadProvider.GetPayloadRank(odpl.DocumentId);
-                        totalScore *= rank;
-                        if (totalScore < 0)
-                        {
-                            totalScore = long.MaxValue - 4000000;
-                        }
-                    }
-
-                    //all of the words matched
-                    //10 times
-                    if (mwde.SelectedCount == wordIndexes.Length)
-                    {
-                        totalScore *= 10;
-
-                        if (totalScore < 0)
-                        {
-                            totalScore = long.MaxValue - 4000000;
-                        }
-                    }
-
-                    //Insert to prior queue
-                    if (rows >= top)
-                    {
-                        if (lastMinScore < totalScore)
-                        {
-                            priorQueue.Add(new Docid2Long(odpl.DocumentId, totalScore));
-                            lastMinScore = priorQueue.Last.Value1;
-                        }
-                    }
-                    else
-                    {
-                        if (top == int.MaxValue)
-                        {
-                            docid2longList.Add(new Docid2Long(odpl.DocumentId, totalScore));
-                        }
-                        else
-                        {
-                            priorQueue.Add(new Docid2Long(odpl.DocumentId, totalScore));
-                            rows++;
-
-                            if (rows == top)
-                            {
-                                lastMinScore = priorQueue.Last.Value1;
-                            }
-                        }
-                    }
-
-                    mwde.GetNextOriginal(ref odpl);
-                }
-
-                docIdRank.RelTotalCount = mwde.TotalDocIdCount;
-
-                Docid2Long[] docid2longArr;
-
-                if (top == int.MaxValue)
-                {
-                    docid2longList.Sort(new DocIdLongComparer(false));
-                    docid2longArr = docid2longList.ToArray();
-                }
-                else
-                {
-                    docid2longArr = priorQueue.ToArray();
-                }
-
-                foreach (Docid2Long docid2Long in docid2longArr)
-                {
-                    long score = docid2Long.Value1;
-
-                    if (score < 0)
-                    {
-                        //Overflow
-                        score = long.MaxValue - 4000000;
-                    }
-
-                    docIdRank.Add(docid2Long.DocId, new DocumentResult(docid2Long.DocId, score));
-                }
-
-                docIdRank.Sorted = true;
-
-                performanceReport.Stop();
-            }
-            finally
-            {
-                _DBProvider.SharedPayloadProvider.LeavePayloadShareLock();
-            }
-        }
 
         /// <summary>
         /// Order by score desc
@@ -1411,10 +1195,11 @@ namespace Hubble.Core.Query
                 if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
                     rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
                 {
-                    _HasRandField = true;
+                    _HasRankField = true;
                 }
             }
         }
+
 
         public Core.SFQL.Parse.DocumentResultWhereDictionary Search()
         {
@@ -1444,15 +1229,21 @@ namespace Hubble.Core.Query
                 }
                 else
                 {
-                    if (Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) && 
-                        !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
-                    {
-                        CalculateWithPositionOrderByScoreDesc(null, ref result, _WordIndexes);
-                    }
-                    else
-                    {
-                        CalculateWithPosition(null, ref result, _WordIndexes);
-                    }
+                    //For not, we have to return all of the records
+                    //Modified at 18 Jan 2012
+                    CalculateWithPosition(null, ref result, _WordIndexes);
+
+                    //if (Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) && 
+                    //    !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs
+                    //    && this._QueryParameter.AndExpressionCanBeOptimized(_DBProvider) 
+                    //    && _WordIndexes.Length > 1 && this.UpDict == null)
+                    //{
+                    //    CalculateWithPositionOrderByScoreDesc(null, ref result, _WordIndexes);
+                    //}
+                    //else
+                    //{
+                    //    CalculateWithPosition(null, ref result, _WordIndexes);
+                    //}
 
                 }
             }
@@ -1464,10 +1255,29 @@ namespace Hubble.Core.Query
                 }
                 else
                 {
-                    if (Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) &&
-                        !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs && this._QueryParameter.NoAndExpression && _WordIndexes.Length > 1 && this.UpDict == null)
+                    if (//Optimize.OptimizeArgument.IsOrderByScoreDesc(this._QueryParameter.OrderBys) &&
+                        !this._QueryParameter.NeedDistinct && this._QueryParameter.CanLoadPartOfDocs
+                        && this._QueryParameter.AndExpressionCanBeOptimized(_DBProvider) 
+                        && _WordIndexes.Length > 1 && this.UpDict == null)
                     {
-                        CalculateWithPositionOrderByScoreDesc(this.UpDict, ref result, _WordIndexes);
+                        IQueryOptimize qOptimize = QueryOptimizeBuilder.Build(typeof(MatchOptimize),
+                           DBProvider, _QueryParameter.End, _QueryParameter.OrderBy,
+                           _QueryParameter.OrderBys, _QueryParameter.NeedGroupBy,
+                           _QueryParameter.OrderByCanBeOptimized, _QueryParameter.NeedFilterUntokenizedConditions(this._DBProvider),
+                           _QueryParameter.UntokenizedTreeOnRoot, _WordIndexes);
+
+                        Query.PerformanceReport performanceReportCalculate = null;
+
+                        try
+                        {
+                            performanceReportCalculate = new Hubble.Core.Query.PerformanceReport("Calculate");
+
+                            qOptimize.CalculateOptimize(this.UpDict, ref result);
+                        }
+                        finally
+                        {
+                            performanceReportCalculate.Stop();
+                        }
                     }
                     else
                     {

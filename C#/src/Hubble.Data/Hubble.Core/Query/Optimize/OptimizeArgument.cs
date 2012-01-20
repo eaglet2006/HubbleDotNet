@@ -101,6 +101,22 @@ namespace Hubble.Core.Query.Optimize
             return true;
         }
 
+        public bool OrderByIncludingScore()
+        {
+            if (OrderBys.Length > 0)
+            {
+                foreach (OrderBy orderBy in OrderBys)
+                {
+                    if (orderBy.Name.Equals("score", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public bool IsOrderByScoreDesc()
         {
             if (OrderBys.Length == 1)

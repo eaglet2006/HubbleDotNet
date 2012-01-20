@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.1")]
-[assembly: AssemblyFileVersion("1.1.9.1")]
+[assembly: AssemblyVersion("1.1.9.2")]
+[assembly: AssemblyFileVersion("1.1.9.2")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -129,4 +129,7 @@ using System.Runtime.InteropServices;
  * 1.1.9.1
  * Fix a bug when match more than one words and not order by score desc, it will return wrong order.
  * Such as select top 10 * from news where title match 'abc news' order by time desc
+ * 1.1.9.2
+ * Improve performance of match query for normal order by and more than one words.
+ * for example: select top 10 * from news where title match 'abc bcd' order by time desc
  *****************************************************************************************/

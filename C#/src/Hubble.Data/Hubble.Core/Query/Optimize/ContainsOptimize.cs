@@ -31,7 +31,7 @@ namespace Hubble.Core.Query.Optimize
 {
     public class ContainsOptimize : IQueryOptimize
     {
-        bool _HasRandField = false;
+        bool _HasRankField = false;
 
         #region IQueryOptimize Members
 
@@ -96,7 +96,7 @@ namespace Hubble.Core.Query.Optimize
                 if (rankField.DataType == Hubble.Core.Data.DataType.Int &&
                     rankField.IndexType == Hubble.Core.Data.Field.Index.Untokenized)
                 {
-                    _HasRandField = true;
+                    _HasRankField = true;
                 }
             }
         }
@@ -332,7 +332,7 @@ namespace Hubble.Core.Query.Optimize
                         docIdRank.AddToGroupByCollection(firstDocId);
                     }
 
-                    if (_HasRandField)
+                    if (_HasRankField)
                     {
                         int rank = dBProvider.SharedPayloadProvider.GetPayloadRank(firstDocId);
                         totalScore *= rank;
@@ -476,6 +476,7 @@ namespace Hubble.Core.Query.Optimize
 
             int rows = 0;
 
+            Docid2Long cur = new Docid2Long();
             Docid2Long last = new Docid2Long();
             last.DocId = -1;
 
@@ -629,7 +630,7 @@ namespace Hubble.Core.Query.Optimize
                         docIdRank.AddToGroupByCollection(firstDocId);
                     }
 
-                    if (_HasRandField)
+                    if (_HasRankField)
                     {
                         int rank = dBProvider.SharedPayloadProvider.GetPayloadRank(firstDocId);
                         totalScore *= rank;
@@ -637,13 +638,6 @@ namespace Hubble.Core.Query.Optimize
                         {
                             totalScore = long.MaxValue - 4000000;
                         }
-                    }
-
-                    Docid2Long cur = new Docid2Long();
-
-                    if (firstDocId == 23659)
-                    {
-                        Console.WriteLine(firstDocId);
                     }
 
                     if (rows >= top)
