@@ -32,6 +32,7 @@ namespace Hubble.Core.Service
         Delete = 0x04,
         NoLock = 0x08,
         WaitForExit = 0x10,
+        Rebuild= 0x20,
     }
 
     class TableSynchronize
@@ -217,8 +218,23 @@ namespace Hubble.Core.Service
 
         private void DoSynchronize()
         {
+            bool notIndexOnly = false;
+            bool notTableSynchronization = false;
+
             try
             {
+                if (!_Table.IndexOnly)
+                {
+                    notIndexOnly = true;
+                    _Table.IndexOnly = true;
+                }
+
+                if (!_Table.TableSynchronization)
+                {
+                    notTableSynchronization = true;
+                    _Table.TableSynchronization = true;
+                }
+
                 if (_Table.DocIdReplaceField != null)
                 {
                     DoSynchronizeCanUpdate();
@@ -238,6 +254,18 @@ namespace Hubble.Core.Service
                 Global.Report.WriteErrorLog("Table Synchronize fail", e);
                 SetException(e);
                 SyncThread = null;
+            }
+            finally
+            {
+                if (notIndexOnly)
+                {
+                    _Table.IndexOnly = false;
+                }
+
+                if (notTableSynchronization)
+                {
+                    _Table.TableSynchronization = false;
+                }
             }
         }
 
@@ -262,12 +290,12 @@ namespace Hubble.Core.Service
                 return;
             }
 
-            if (!_Table.TableSynchronization)
+            if (!_Table.TableSynchronization && (flags & SyncFlags.Rebuild) == 0)
             {
                 throw new DataException("Can't do synchronization. You must set the TableSynchronization to true!");
             }
 
-            if (!_Table.IndexOnly)
+            if (!_Table.IndexOnly && (flags & SyncFlags.Rebuild) == 0)
             {
                 throw new DataException("Can't do synchronization in non-indexonly mode");
             }

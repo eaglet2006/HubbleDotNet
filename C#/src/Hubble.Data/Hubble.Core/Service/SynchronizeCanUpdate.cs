@@ -783,6 +783,12 @@ namespace Hubble.Core.Service
 
         private long GetLastId(int lastDocId, DBAdapter.IDBAdapter dbAdapter)
         {
+            if ((_Flags & SyncFlags.Rebuild) != 0)
+            {
+                //Rebuild 
+                return long.MaxValue;
+            }
+
             string sql = string.Format("select id from {0} where Opr = 'Insert'",
                 _DBProvider.Table.TriggerTableName);
 

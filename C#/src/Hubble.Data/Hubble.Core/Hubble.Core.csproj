@@ -209,6 +209,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
     <Compile Include="StoredProcedure\SP_GCCollect.cs" />
     <Compile Include="StoredProcedure\SP_GetTFIDF.cs" />
+    <Compile Include="StoredProcedure\SP_Rebuild.cs" />
     <Compile Include="StoredProcedure\SP_SetBigTable.cs" />
     <Compile Include="StoredProcedure\SP_QueryByDocIds.cs" />
     <Compile Include="StoredProcedure\SP_Test.cs" />

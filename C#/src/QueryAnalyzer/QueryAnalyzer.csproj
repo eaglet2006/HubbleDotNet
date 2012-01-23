@@ -92,6 +92,12 @@
     <Compile Include="BigTable\FormBigTableBatchInsert.Designer.cs">
       <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
     </Compile>
+    <Compile Include="FormRebuildTable.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormRebuildTable.Designer.cs">
+      <DependentUpon>FormRebuildTable.cs</DependentUpon>
+    </Compile>
     <Compile Include="CreateTable\AfterDatabaseAttributes.cs" />
     <Compile Include="CreateTable\AfterFields.cs" />
     <Compile Include="CreateTable\AfterIndexMode.cs" />
@@ -178,11 +184,11 @@
     <Compile Include="FormPerformance.Designer.cs">
       <DependentUpon>FormPerformance.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormRebuildTable.cs">
+    <Compile Include="FormRebuildTableOld.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormRebuildTable.Designer.cs">
-      <DependentUpon>FormRebuildTable.cs</DependentUpon>
+    <Compile Include="FormRebuildTableOld.Designer.cs">
+      <DependentUpon>FormRebuildTableOld.cs</DependentUpon>
     </Compile>
     <Compile Include="FormTaskSchedulerList.cs">
       <SubType>Form</SubType>
@@ -250,6 +256,10 @@
       <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FormRebuildTable.resx">
+      <DependentUpon>FormRebuildTable.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormAddUser.resx">
       <DependentUpon>FormAddUser.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -302,8 +312,8 @@
       <DependentUpon>FormPerformance.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormRebuildTable.resx">
-      <DependentUpon>FormRebuildTable.cs</DependentUpon>
+    <EmbeddedResource Include="FormRebuildTableOld.resx">
+      <DependentUpon>FormRebuildTableOld.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FormTableInfo.resx">

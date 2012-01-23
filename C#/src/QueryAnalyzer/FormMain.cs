@@ -559,7 +559,6 @@ namespace QueryAnalyzer
             FormRebuildTable frmRebuildTable = new FormRebuildTable();
             frmRebuildTable.TableName = tableName;
             frmRebuildTable.DataAccess = GlobalSetting.DataAccess;
-            frmRebuildTable.InitError = initError;
             frmRebuildTable.ShowDialog();
         }
 

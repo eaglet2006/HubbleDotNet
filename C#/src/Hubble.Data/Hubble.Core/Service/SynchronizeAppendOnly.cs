@@ -32,6 +32,7 @@ namespace Hubble.Core.Service
         int _Step;
         OptimizationOption _OptimizeOption;
         bool _FastestMode;
+        bool _HasInsertCount = false;
 
         private string GetSqlServerSelectSql(long from)
         {
@@ -409,6 +410,82 @@ namespace Hubble.Core.Service
             _FastestMode = fastestMode;
         }
 
+        private int GetRemainCount(long from, DBAdapter.IDBAdapter dbAdapter)
+        {
+            string dbAdapterName = (dbAdapter as INamedExternalReference).Name;
+            _HasInsertCount = true;
+
+            if (dbAdapterName.IndexOf("sqlserver", 0, StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                //For sql server
+
+                string sql = string.Format("select rows from sysindexes where id = object_id('{0}') and indid in (0,1)",
+                    _DBProvider.Table.DBTableName.Replace("'", "''"));
+
+                System.Data.DataSet ds = null;
+
+                try
+                {
+                    ds = dbAdapter.QuerySql(sql);
+                }
+                catch
+                {
+                    ds = null;
+                }
+
+                if (ds != null)
+                {
+                    if (ds.Tables[0].Rows.Count > 0)
+                    {
+                        return int.Parse(ds.Tables[0].Rows[0][0].ToString()) -
+                            _DBProvider.DocumentCount;
+                    }
+                }
+            }
+
+            //For others
+            {
+                string sql = string.Format("select count(*) from {0} where {2} > {1}",
+                   _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+
+                System.Data.DataSet ds = null;
+                int times = 0;
+
+                if (!_FastestMode)
+                {
+                    while (times < 3)
+                    {
+
+                        try
+                        {
+                            ds = dbAdapter.QuerySql(sql);
+                            break;
+                        }
+                        catch
+                        {
+                            ds = null;
+                            times++;
+                        }
+                    }
+                }
+
+                int count;
+
+                if (ds == null)
+                {
+                    count = 50000000;
+                    _HasInsertCount = false;
+                }
+                else
+                {
+                    count = int.Parse(ds.Tables[0].Rows[0][0].ToString());
+                }
+
+                return count;
+            }
+        }
+
+
         public void Do()
         {
             long from = _DBProvider.LastDocIdForIndexOnly;
@@ -416,42 +493,9 @@ namespace Hubble.Core.Service
             DBAdapter.IDBAdapter dbAdapter = (DBAdapter.IDBAdapter)Hubble.Framework.Reflection.Instance.CreateInstance(
                 Data.DBProvider.GetDBAdapter(_DBProvider.Table.DBAdapterTypeName));
 
-            string sql = string.Format("select count(*) from {0} where docid >= {1}",
-                _DBProvider.Table.DBTableName, from);
-
             dbAdapter.Table = _DBProvider.Table;
 
-            System.Data.DataSet ds = null;
-            int times = 0;
-
-            if (!_FastestMode)
-            {
-                while (times < 3)
-                {
-
-                    try
-                    {
-                        ds = dbAdapter.QuerySql(sql);
-                        break;
-                    }
-                    catch
-                    {
-                        ds = null;
-                        times++;
-                    }
-                }
-            }
-
-            int count;
-
-            if (ds == null)
-            {
-                count = 50000000;
-            }
-            else
-            {
-                count = int.Parse(ds.Tables[0].Rows[0][0].ToString());
-            }
+            int count = GetRemainCount(from, dbAdapter);
 
             _TableSync.SetProgress(10);
 
@@ -498,7 +542,7 @@ namespace Hubble.Core.Service
 
                     double progress;
 
-                    if (_FastestMode)
+                    if (!_HasInsertCount)
                     {
                         progress = (double)((insertCount % 100000) * 80) / (double)100000;
                     }
