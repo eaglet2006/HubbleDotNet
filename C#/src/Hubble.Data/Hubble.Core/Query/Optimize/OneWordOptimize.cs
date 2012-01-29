@@ -351,6 +351,8 @@ namespace Hubble.Core.Query.Optimize
             Query.DocumentResult documentResult;
             Query.DocumentResult* drp = &documentResult;
 
+            bool orderByIncludingScore = Argument.OrderByIncludingScore();
+
             try
             {
                 Field[] orderByFields;
@@ -524,7 +526,14 @@ namespace Hubble.Core.Query.Optimize
 
                             if (rows >= top)
                             {
-                                int score = docList.CountAndWordCount / 8; //one word, score = count
+                                long score = 1;
+
+                                if (orderByIncludingScore)
+                                {
+                                    int wordCount = docList.CountAndWordCount / 8; //one word, score = count
+                                    score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)wordCount * (long)1000000 /
+                                        ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
+                                }
 
                                 cur.DocId = docList.DocumentId;
                                 cur.Rank = docList.TotalWordsInThisDocument;
@@ -539,7 +548,20 @@ namespace Hubble.Core.Query.Optimize
                             }
                             else
                             {
-                                int score = docList.CountAndWordCount / 8; //one word, score = count
+                                long score = 1;
+
+                                if (orderByIncludingScore)
+                                {
+                                    int wordCount = docList.CountAndWordCount / 8; //one word, score = count
+                                    score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * (long)wordCount * (long)1000000 /
+                                        ((long)wifq.Sum_d_t * (long)docList.TotalWordsInThisDocument);
+                                }
+
+                                if (score < 0)
+                                {
+                                    //Overflow
+                                    score = long.MaxValue - 4000000;
+                                }
 
                                 cur.DocId = docList.DocumentId;
                                 cur.Rank = docList.TotalWordsInThisDocument;
@@ -562,10 +584,7 @@ namespace Hubble.Core.Query.Optimize
 
                         foreach (Docid2Long docid2Long in priorQueue.ToArray())
                         {
-                            //long score = (long)wifq.FieldRank * (long)wifq.WordRank * (long)wifq.Idf_t * comparer.GetScore(docid2Long) * (long)1000000 /
-                            //    ((long)wifq.Sum_d_t * (long)docid2Long.Rank); //use Rank store TotalWordsInThisDocument
-
-                            long score = (long)wifq.FieldRank * (long)wifq.WordRank * comparer.GetScore(docid2Long); //use Rank store TotalWordsInThisDocument
+                            long score = comparer.GetScore(docid2Long); //use Rank store TotalWordsInThisDocument
 
                             if (score < 0)
                             {

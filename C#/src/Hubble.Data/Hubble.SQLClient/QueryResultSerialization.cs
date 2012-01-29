@@ -264,7 +264,15 @@ namespace Hubble.SQLClient
             }
             else if (type == typeof(long)) //BigInt
             {
-                stream.Write(BitConverter.GetBytes((long)data), 0, sizeof(long));
+                try
+                {
+
+                    stream.Write(BitConverter.GetBytes((long)data), 0, sizeof(long));
+                }
+                catch
+                {
+                    Console.WriteLine();
+                }
             }
             else if (type == typeof(DateTime)) //DateTime
             {

@@ -180,8 +180,15 @@ namespace Hubble.Framework.Data
                     {
                         _Values[_Columns[columnName].ColumnId] = value.ToString();
                     }
+                    else if (_Columns[columnName].OrginalDataType != value.GetType())
+                    {
+                        //Convert from other data type
+                        _Values[_Columns[columnName].ColumnId] = 
+                            System.ComponentModel.TypeDescriptor.GetConverter(_Columns[columnName].OrginalDataType).ConvertFrom(value.ToString());
+                    }
                     else
                     {
+
                         _Values[_Columns[columnName].ColumnId] = value;
                     }
                 }
@@ -207,6 +214,13 @@ namespace Hubble.Framework.Data
                     {
                         _Values[columnIndex] = value.ToString();
                     }
+                    else if (_Columns[columnIndex].OrginalDataType != value.GetType())
+                    {
+                        //Convert from other data type
+                        _Values[columnIndex] =
+                            System.ComponentModel.TypeDescriptor.GetConverter(_Columns[columnIndex].OrginalDataType).ConvertFrom(value.ToString());
+                    }
+
                     else
                     {
                         _Values[columnIndex] = value;
