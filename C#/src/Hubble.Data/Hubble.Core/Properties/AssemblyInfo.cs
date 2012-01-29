@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.3")]
-[assembly: AssemblyFileVersion("1.1.9.3")]
+[assembly: AssemblyVersion("1.1.9.4")]
+[assembly: AssemblyFileVersion("1.1.9.4")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -137,4 +137,6 @@ using System.Runtime.InteropServices;
  * exec SP_Rebuild 'News'
  * exec SP_Rebuild 'News', 5000, 1
  * exec SP_Rebuild 'News', 5000, 2
+ * 1.1.9.4
+ * Change System.Data.DataSet, DataTable to Hubble.Framework.Data.DataSet, DataTable
  *****************************************************************************************/

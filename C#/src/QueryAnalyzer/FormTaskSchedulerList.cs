@@ -73,7 +73,7 @@ namespace QueryAnalyzer
 
                 listBoxTasks.Items.Clear();
 
-                foreach (System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
                 {
                     listBoxTasks.Items.Add(new SchemaInfo(int.Parse(row["SchemaId"].ToString()),
                         row["Name"].ToString(), row["Description"].ToString(), row["State"].ToString()));

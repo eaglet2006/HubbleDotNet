@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
-using System.Data;
+using Hubble.Framework.Data;
 
 namespace Hubble.SQLClient
 {

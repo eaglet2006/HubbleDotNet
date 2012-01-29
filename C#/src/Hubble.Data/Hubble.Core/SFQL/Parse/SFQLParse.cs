@@ -759,7 +759,7 @@ namespace Hubble.Core.SFQL.Parse
 
         private void GetQueryResult(SyntaxAnalysis.Select.Select select, Data.DBProvider dbProvider,
              Query.DocumentResultForSort[] result, List<Data.Field> selectFields, int allFieldsCount,
-            out System.Data.DataSet ds)
+            out Hubble.Framework.Data.DataSet ds)
         {
             List<Data.Document> docResult = dbProvider.Query(selectFields, result, select.Begin, select.End);
             ds = Data.Document.ToDataSet(selectFields, docResult);
@@ -991,7 +991,7 @@ namespace Hubble.Core.SFQL.Parse
 
                         if (lastModifyTicks <= datacacheTicks)
                         {
-                            System.Data.DataTable table = new System.Data.DataTable();
+                            Hubble.Framework.Data.DataTable table = new Hubble.Framework.Data.DataTable();
                             table.MinimumCapacity = int.MaxValue;
                             table.TableName = "Select_" + select.SelectFroms[0].Alias;
                             qResult.DataSet.Tables.Add(table);
@@ -1186,7 +1186,7 @@ namespace Hubble.Core.SFQL.Parse
                             //Sort before distinct because I want to display results that have the high order then other results.
                             //For example. Order by time desc, I want the 2010 display not 2009 when the results will be distincted.
                             qSort.Sort(result);
-                            System.Data.DataTable distinctTable;
+                            Hubble.Framework.Data.DataTable distinctTable;
                             result = distinct.Distinct(result, out distinctTable);
                             relTotalCount = result.Length;
                         }
@@ -1241,7 +1241,7 @@ namespace Hubble.Core.SFQL.Parse
 
             GetSelectFields(select, dbProvider, out selectFields, out allFieldsCount);
 
-            System.Data.DataSet ds;
+            Hubble.Framework.Data.DataSet ds;
 
             if (select.Begin < 0)
             {
@@ -1430,7 +1430,7 @@ namespace Hubble.Core.SFQL.Parse
 
                 QueryResult qResult = ExcuteSelect(qSelect, dbProvider, tableName, connInfo);
 
-                System.Data.DataColumn col = new System.Data.DataColumn();
+                Hubble.Framework.Data.DataColumn col = new Hubble.Framework.Data.DataColumn();
                 col.ColumnName = "TableName";
                 col.DefaultValue = tableName;
 
@@ -1627,7 +1627,7 @@ namespace Hubble.Core.SFQL.Parse
 
                         qResult.AddPrintMessage(tableTicksReturn);
 
-                        System.Data.DataTable tbl = new System.Data.DataTable();
+                        Hubble.Framework.Data.DataTable tbl = new Hubble.Framework.Data.DataTable();
                         tbl.MinimumCapacity = int.MaxValue;
                         tbl.TableName = unionSelectTableName;
                         qResult.DataSet.Tables.Add(tbl);
@@ -1683,16 +1683,16 @@ namespace Hubble.Core.SFQL.Parse
             int end = _UnionSelects[0].End;
 
             //Get the result of combining.
-            System.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
+            Hubble.Framework.Data.DataTable table = _UnionQueryResult[0].DataSet.Tables[0];
             int count = table.MinimumCapacity;
 
-            System.Data.DataTable statisticTable = new System.Data.DataTable(); //This table statistic the count of records for each tables
+            Hubble.Framework.Data.DataTable statisticTable = new Hubble.Framework.Data.DataTable("Statistic"); //This table statistic the count of records for each tables
 
-            statisticTable.Columns.Add(new System.Data.DataColumn("TableName", typeof(string)));
-            statisticTable.Columns.Add(new System.Data.DataColumn("Count", typeof(int)));
+            statisticTable.Columns.Add(new Hubble.Framework.Data.DataColumn("TableName", typeof(string)));
+            statisticTable.Columns.Add(new Hubble.Framework.Data.DataColumn("Count", typeof(int)));
 
             //Statistic count of records for first table
-            System.Data.DataRow sRow = statisticTable.NewRow();
+            Hubble.Framework.Data.DataRow sRow = statisticTable.NewRow();
 
             sRow["TableName"] = _UnionQueryResult[0].DataSet.Tables[0].Columns["TableName"].DefaultValue;
             sRow["Count"] = _UnionQueryResult[0].DataSet.Tables[0].MinimumCapacity;
@@ -1706,7 +1706,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (_UnionQueryResult.Count > 0)
             {
-                foreach (System.Data.DataColumn col in _UnionQueryResult[0].DataSet.Tables[0].Columns)
+                foreach (Hubble.Framework.Data.DataColumn col in _UnionQueryResult[0].DataSet.Tables[0].Columns)
                 {
                     if (col.ColumnName.Equals("Score", StringComparison.CurrentCultureIgnoreCase))
                     {
@@ -1745,15 +1745,15 @@ namespace Hubble.Core.SFQL.Parse
                 count += _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
 
                 //Statistic count of records for this table
-                System.Data.DataRow sRow1 = statisticTable.NewRow();
+                Hubble.Framework.Data.DataRow sRow1 = statisticTable.NewRow();
 
                 sRow1["TableName"] = _UnionQueryResult[i].DataSet.Tables[0].Columns["TableName"].DefaultValue;
                 sRow1["Count"] = _UnionQueryResult[i].DataSet.Tables[0].MinimumCapacity;
                 statisticTable.Rows.Add(sRow1);
 
-                foreach (System.Data.DataRow srcRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow srcRow in _UnionQueryResult[i].DataSet.Tables[0].Rows)
                 {
-                    System.Data.DataRow row = table.NewRow();
+                    Hubble.Framework.Data.DataRow row = table.NewRow();
 
                     for (int j = 0; j < table.Columns.Count; j++)
                     {
@@ -1770,7 +1770,7 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-            System.Data.DataRow[] ResultsRowArray;
+            Hubble.Framework.Data.DataRow[] ResultsRowArray;
 
             //Sort by order by fields
             if (_UnionSelects[0].OrderBys.Count > 0)
@@ -1803,9 +1803,9 @@ namespace Hubble.Core.SFQL.Parse
             table = table.Clone();
 
             //Get the result of combining that has beed sorted.
-            foreach (System.Data.DataRow srcRow in ResultsRowArray)
+            foreach (Hubble.Framework.Data.DataRow srcRow in ResultsRowArray)
             {
-                System.Data.DataRow row = table.NewRow();
+                Hubble.Framework.Data.DataRow row = table.NewRow();
 
                 for (int j = 0; j < table.Columns.Count; j++)
                 {
@@ -1815,14 +1815,14 @@ namespace Hubble.Core.SFQL.Parse
                 table.Rows.Add(row);
             }
 
-            System.Data.DataSet ds = new System.Data.DataSet();
+            Hubble.Framework.Data.DataSet ds = new Hubble.Framework.Data.DataSet();
             table.MinimumCapacity = count;
 
             ds.Tables.Add(table);
 
             //Get final result 
 
-            System.Data.DataTable finalTable = null;
+            Hubble.Framework.Data.DataTable finalTable = null;
 
             for (int i = begin; i <= end; i++)
             {
@@ -1836,7 +1836,7 @@ namespace Hubble.Core.SFQL.Parse
                     break;
                 }
 
-                System.Data.DataRow row = table.Rows[i];
+                Hubble.Framework.Data.DataRow row = table.Rows[i];
 
                 SyntaxAnalysis.Select.Select select = _UnionSelects[0];
                 List<Data.Field> selectFields;
@@ -1851,7 +1851,7 @@ namespace Hubble.Core.SFQL.Parse
                 GetSelectFields(GetUnionSelectByTableName(_UnionSelects, tableName),
                     dbProvider, out selectFields, out allFieldsCount);
 
-                System.Data.DataSet dataset;
+                Hubble.Framework.Data.DataSet dataset;
                 select.Begin = 0;
                 GetQueryResult(select, dbProvider, result, selectFields, allFieldsCount, out dataset);
 
@@ -1859,14 +1859,14 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     finalTable = dataset.Tables[0].Clone();
 
-                    System.Data.DataColumn col = new System.Data.DataColumn();
+                    Hubble.Framework.Data.DataColumn col = new Hubble.Framework.Data.DataColumn();
                     col.ColumnName = "TableName";
                     finalTable.Columns.Add(col);
                 }
 
-                foreach (System.Data.DataRow srcRow in dataset.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow srcRow in dataset.Tables[0].Rows)
                 {
-                    System.Data.DataRow destRow = finalTable.NewRow();
+                    Hubble.Framework.Data.DataRow destRow = finalTable.NewRow();
 
                     for (int j = 0; j < dataset.Tables[0].Columns.Count; j++)
                     {
@@ -1883,7 +1883,7 @@ namespace Hubble.Core.SFQL.Parse
 
 
 
-            ds = new System.Data.DataSet();
+            ds = new Hubble.Framework.Data.DataSet();
             ds.Tables.Add(finalTable);
             ds.Tables.Add(statisticTable);
 
@@ -1957,11 +1957,11 @@ namespace Hubble.Core.SFQL.Parse
 
             for (int i = 1; i < results.Count; i++)
             {
-                System.Data.DataTable table = result.DataSet.Tables[0];
+                Hubble.Framework.Data.DataTable table = result.DataSet.Tables[0];
 
-                foreach (System.Data.DataRow srcRow in results[i].DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow srcRow in results[i].DataSet.Tables[0].Rows)
                 {
-                    System.Data.DataRow row = table.NewRow();
+                    Hubble.Framework.Data.DataRow row = table.NewRow();
 
                     for (int j = 0; j < table.Columns.Count; j++)
                     {
@@ -2038,24 +2038,24 @@ namespace Hubble.Core.SFQL.Parse
         {
             if (queryResult != null)
             {
-                List<System.Data.DataTable> tables = new List<System.Data.DataTable>();
+                List<Hubble.Framework.Data.DataTable> tables = new List<Hubble.Framework.Data.DataTable>();
 
-                foreach (System.Data.DataTable table in queryResult.DataSet.Tables)
+                foreach (Hubble.Framework.Data.DataTable table in queryResult.DataSet.Tables)
                 {
                     tables.Add(table);
                 }
 
-                foreach (System.Data.DataTable table in tables)
+                foreach (Hubble.Framework.Data.DataTable table in tables)
                 {
                     queryResult.DataSet.Tables.Remove(table);
                 }
 
-                foreach (System.Data.DataTable table in tables)
+                foreach (Hubble.Framework.Data.DataTable table in tables)
                 {
                     result.AddDataTable(table);
                 }
 
-                //foreach (System.Data.DataTable table in tables)
+                //foreach (Hubble.Framework.Data.DataTable table in tables)
                 //{
                 //    table.TableName = "Table" + tableNum.ToString();
                 //    tableNum++;
@@ -2075,9 +2075,9 @@ namespace Hubble.Core.SFQL.Parse
             {
                 if (result.DataSet.Tables != null)
                 {
-                    foreach (System.Data.DataTable table in result.DataSet.Tables)
+                    foreach (Hubble.Framework.Data.DataTable table in result.DataSet.Tables)
                     {
-                        foreach (System.Data.DataColumn col in table.Columns)
+                        foreach (Hubble.Framework.Data.DataColumn col in table.Columns)
                         {
                             try
                             {

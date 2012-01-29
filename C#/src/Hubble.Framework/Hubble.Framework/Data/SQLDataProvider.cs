@@ -86,28 +86,28 @@ namespace Hubble.Framework.Data
             return cmd.ExecuteNonQuery();
         }
 
-        public DataSet QuerySql(string sql)
+        public System.Data.DataSet QuerySql(string sql)
         {
             SqlDataAdapter dadapter = new SqlDataAdapter();
 
             dadapter.SelectCommand = new SqlCommand(sql, _Conn);
             dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             dadapter.Fill(ds);
 
             return ds;
         }
 
 
-        public DataSet GetSchema(string sql)
+        public System.Data.DataSet GetSchema(string sql)
         {
             SqlDataAdapter dadapter = new SqlDataAdapter();
 
             dadapter.SelectCommand = new SqlCommand(sql, _Conn);
             dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             dadapter.FillSchema(ds, SchemaType.Mapped);
 
             return ds;

@@ -217,7 +217,7 @@ namespace QueryAnalyzer
                 }
 
                 cmd.ResetDataCacheAfterTimeout = this.ResetDataCacheAfterTimeout;
-                cmd.Query(cacheTimeout);
+                cmd.ExecuteQuery(cacheTimeout);
                 return cmd.Result;
             }
         }

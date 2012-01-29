@@ -105,7 +105,7 @@ namespace QueryAnalyzer.BigTable
                     QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
                         DatabaseName);
 
-                    foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                    foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                     {
                         if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
                         {

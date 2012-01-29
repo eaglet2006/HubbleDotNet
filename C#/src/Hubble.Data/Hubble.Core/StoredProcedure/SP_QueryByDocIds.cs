@@ -76,7 +76,7 @@ namespace Hubble.Core.StoredProcedure
 
             List<Data.Document> docResult = dbProvider.Query(fields, docs);
 
-            System.Data.DataSet ds = Data.Document.ToDataSet(fields, docResult);
+            Hubble.Framework.Data.DataSet ds = Data.Document.ToDataSet(fields, docResult);
             ds.Tables[0].TableName = "Select_" + select.SelectFroms[0].Alias;
             _QueryResult.DataSet = ds;
         }

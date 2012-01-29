@@ -306,7 +306,7 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        unsafe private System.Data.DataTable GetTable(ulong[] keyList, int relCount)
+        unsafe private Hubble.Framework.Data.DataTable GetTable(ulong[] keyList, int relCount)
         {
             GroupByPair[] groupByPair = GetGroupByPairs(keyList, relCount);
             //GroupByPair[] groupByPair = new GroupByPair[groupByDict.Count];
@@ -320,21 +320,21 @@ namespace Hubble.Core.SFQL.Parse
 
             Array.Sort(groupByPair);
 
-            System.Data.DataTable table = new System.Data.DataTable();
+            Hubble.Framework.Data.DataTable table = new Hubble.Framework.Data.DataTable();
 
             foreach (Field field in _GroupByFields)
             {
-                System.Data.DataColumn col = new System.Data.DataColumn(field.Name,
+                Hubble.Framework.Data.DataColumn col = new Hubble.Framework.Data.DataColumn(field.Name,
                     DataTypeConvert.GetClrType(field.DataType));
 
                 table.Columns.Add(col);
             }
 
-            table.Columns.Add(new System.Data.DataColumn("Count", typeof(int)));
+            table.Columns.Add(new Hubble.Framework.Data.DataColumn("Count", typeof(int)));
 
             foreach (GroupByPair gbp in groupByPair)
             {
-                System.Data.DataRow row = table.NewRow();
+                Hubble.Framework.Data.DataRow row = table.NewRow();
 
                 int preDataLength = 0;
                 int col = _GroupByFields.Count - 1;
@@ -454,7 +454,7 @@ namespace Hubble.Core.SFQL.Parse
 
         }
 
-        private System.Data.DataTable GroupByFromDatabase()
+        private Hubble.Framework.Data.DataTable GroupByFromDatabase()
         {
             string whereSql;
 
@@ -517,9 +517,7 @@ namespace Hubble.Core.SFQL.Parse
             table.TableName = "GroupByCount_" + _GroupByFieldsString;
             
 
-            return table;
-
-
+            return new Hubble.Framework.Data.DataTable(table);
         }
 
         private GroupByPair[] GetGroupByPairs(ulong[] keyList, int relCount)
@@ -594,7 +592,7 @@ namespace Hubble.Core.SFQL.Parse
         /// </summary>
         /// <param name="result">result of the query</param>
         /// <param name="limit">limit count to group by. only group by limit number of records</param>
-        unsafe public System.Data.DataTable GroupBy(Query.DocIdPayloadData[] result, 
+        unsafe public Hubble.Framework.Data.DataTable GroupBy(Query.DocIdPayloadData[] result, 
             int limit, int relCount)
         {
             if (_ExpressionTree == null)

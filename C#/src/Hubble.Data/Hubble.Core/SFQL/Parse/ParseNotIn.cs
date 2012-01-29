@@ -48,7 +48,7 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     if (qResult.DataSet.Tables.Count > 0)
                     {
-                        foreach (System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+                        foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
                         {
                             int docid = int.Parse(row["docid"].ToString());
                             if (!_NotInDict.ContainsKey(docid))

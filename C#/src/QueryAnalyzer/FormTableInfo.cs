@@ -18,10 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
+using Hubble.Framework.Data;
 
 using Hubble.SQLClient;
 
@@ -84,9 +84,9 @@ namespace QueryAnalyzer
             }
         }
 
-        private void ShowTableAttributes(DataTable table)
+        private void ShowTableAttributes(Hubble.Framework.Data.DataTable table)
         {
-            foreach (DataRow row in table.Rows)
+            foreach (Hubble.Framework.Data.DataRow row in table.Rows)
             {
                 AttributeCtrl ctrl;
                 if (_TableInfoControlDict.TryGetValue(row["Attribute"].ToString(), out ctrl))

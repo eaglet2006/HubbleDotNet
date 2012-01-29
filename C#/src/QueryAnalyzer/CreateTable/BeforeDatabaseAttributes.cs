@@ -21,7 +21,7 @@ namespace QueryAnalyzer.CreateTable
 
                 frmCreateTable.comboBoxDBAdapter.Items.Clear();
 
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                 {
                     frmCreateTable.comboBoxDBAdapter.Items.Add(row["Name"].ToString());
                 }
@@ -29,7 +29,7 @@ namespace QueryAnalyzer.CreateTable
                 queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
                     databaseName);
 
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                 {
                     if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
                     {

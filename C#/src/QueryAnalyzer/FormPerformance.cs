@@ -90,7 +90,7 @@ namespace QueryAnalyzer
 
                 StringBuilder report = new StringBuilder();
 
-                report.AppendFormat("{0} ", (ns / (1000 * 1000 * (int)numericUpDownIteration.Value)).ToString("0.00") + " ms");
+                report.AppendFormat("{0} ", (ns / ((long)1000 * (long)1000 * (int)numericUpDownIteration.Value)).ToString("0.00") + " ms");
 
                 labelDuration.Text = report.ToString();
 

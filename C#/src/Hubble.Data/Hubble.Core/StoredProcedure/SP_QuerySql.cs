@@ -89,7 +89,7 @@ namespace Hubble.Core.StoredProcedure
             }
 
 
-            _QueryResult.DataSet = dbAdapter.QuerySql(sql);
+            _QueryResult.DataSet = new Hubble.Framework.Data.DataSet(dbAdapter.QuerySql(sql));
 
         }
 

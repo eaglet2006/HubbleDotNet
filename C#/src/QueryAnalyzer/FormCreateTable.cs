@@ -172,9 +172,11 @@ namespace QueryAnalyzer
             _TableFields.Clear();
         }
 
-        internal void AddTableField(System.Data.DataColumn col)
+        internal void AddTableField(Hubble.Framework.Data.DataColumn col)
         {
-            TableField tableField = new TableField(col, AnalyzerList);
+            System.Data.DataColumn sCol = new DataColumn(col.ColumnName, col.DataType);
+
+            TableField tableField = new TableField(sCol, AnalyzerList);
             tableField.Enabled = true;
             _TableFields.Add(tableField);
         }
@@ -319,8 +321,8 @@ namespace QueryAnalyzer
             try
             {
                 QueryResult qResult = GlobalSetting.DataAccess.Excute("exec SP_AnalyzerList");
-                            
-                foreach(System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+
+                foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
                 {
                     _AnalyzerList.Add(row["Name"].ToString().Trim());
                 }

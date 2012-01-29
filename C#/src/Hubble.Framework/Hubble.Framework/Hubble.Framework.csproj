@@ -94,6 +94,10 @@
     <Compile Include="DataStructure\SortDictionary.cs" />
     <Compile Include="DataStructure\StepList.cs" />
     <Compile Include="DataStructure\SuperList.cs" />
+    <Compile Include="Data\DataColumn.cs" />
+    <Compile Include="Data\DataRow.cs" />
+    <Compile Include="Data\DataSet.cs" />
+    <Compile Include="Data\DataTable.cs" />
     <Compile Include="Data\OLEDataProvider.cs" />
     <Compile Include="Entity\DocIdPayloadRank.cs" />
     <Compile Include="HubbleException.cs" />

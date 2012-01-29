@@ -24,7 +24,7 @@ namespace Hubble.SQLClient
     [Serializable]
     public class QueryResult
     {
-        public System.Data.DataSet DataSet = new System.Data.DataSet();
+        public Hubble.Framework.Data.DataSet DataSet = new Hubble.Framework.Data.DataSet();
 
         private List<string> _PrintMessages = new List<string>();
 
@@ -57,13 +57,13 @@ namespace Hubble.SQLClient
  
         }
 
-        public QueryResult(string printMessage, System.Data.DataSet dataSet)
+        public QueryResult(string printMessage, Hubble.Framework.Data.DataSet dataSet)
         {
             _PrintMessages.Add(printMessage);
             DataSet = dataSet;
         }
 
-        public QueryResult(System.Data.DataSet dataSet)
+        public QueryResult(Hubble.Framework.Data.DataSet dataSet)
         {
             DataSet = dataSet;
         }
@@ -93,14 +93,14 @@ namespace Hubble.SQLClient
             return 0;
         }
 
-        public void AddDataTable(System.Data.DataTable table)
+        public void AddDataTable(Hubble.Framework.Data.DataTable table)
         {
             string tableName = table.TableName;
 
             int serial = 0;
             bool find = false;
 
-            foreach (System.Data.DataTable tb in DataSet.Tables)
+            foreach (Hubble.Framework.Data.DataTable tb in DataSet.Tables)
             {
                 int index = tb.TableName.IndexOf(tableName, 0, StringComparison.CurrentCultureIgnoreCase);
 

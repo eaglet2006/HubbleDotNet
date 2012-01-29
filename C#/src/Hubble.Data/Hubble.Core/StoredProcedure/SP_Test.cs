@@ -115,16 +115,34 @@ namespace Hubble.Core.StoredProcedure
             OutputValue("ElapseOneTime(ms)", (double)sw.ElapsedMilliseconds / count);
         }
 
+        private void TestOutputRows(int n)
+        {
+            AddColumn("Title");
+            AddColumn("Content");
+            AddColumn("Price");
+
+            for (int i = 0; i < n; i++)
+            {
+                NewRow();
+                OutputValue("Title", i.ToString());
+                OutputValue("Content", i.ToString());
+                OutputValue("Price", i);
+            }
+        }
+
 
         public void Run()
         {
 
-            if (Parameters.Count != 1)
-            {
-                throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
-            }
+            //if (Parameters.Count != 1)
+            //{
+            //    throw new ArgumentException("the number of parameters must be 1. Parameter 1 is table name.");
+            //}
 
-            string tableName = Parameters[0];
+            //string tableName = Parameters[0];
+
+            TestOutputRows(10);
+
             //System.Threading.Thread.Sleep(400000);
             //TestGetDocIdReplaceFieldValue(tableName);
             //TestFillPayloadRank(tableName);

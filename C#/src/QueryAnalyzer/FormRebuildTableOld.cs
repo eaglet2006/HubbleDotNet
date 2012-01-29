@@ -18,12 +18,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
+
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 
+using Hubble.Framework.Data;
 using Hubble.SQLClient;
 using Hubble.Core.DBAdapter;
 
@@ -124,7 +125,7 @@ namespace QueryAnalyzer
             {
                 QueryResult result = DataAccess.Excute("exec SP_GetTableAttributes {0}", TableName);
 
-                foreach (System.Data.DataRow row in result.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in result.DataSet.Tables[0].Rows)
                 {
                     if (row["Attribute"].ToString() == "IndexOnly")
                     {
@@ -482,7 +483,7 @@ namespace QueryAnalyzer
             StringBuilder sb = new StringBuilder();
             count = 0;
 
-            foreach (System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+            foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
             {
                 sb.AppendLine(GetOneRowSql(qResult.DataSet, row, TableName));
 

@@ -32,28 +32,28 @@ namespace Hubble.Core.StoredProcedure
         {
             if (_QueryResult.DataSet.Tables.Count == 0)
             {
-                _QueryResult.DataSet.Tables.Add(new System.Data.DataTable());
+                _QueryResult.DataSet.Tables.Add(new Hubble.Framework.Data.DataTable());
             }
 
-            System.Data.DataTable table = _QueryResult.DataSet.Tables[0];
+            Hubble.Framework.Data.DataTable table = _QueryResult.DataSet.Tables[0];
 
             table.TableName = "StoreProc_" + Name;
 
-            System.Data.DataColumn col = new System.Data.DataColumn(columnName);
+            Hubble.Framework.Data.DataColumn col = new Hubble.Framework.Data.DataColumn(columnName);
 
             table.Columns.Add(col);
         }
 
         protected void NewRow()
         {
-            System.Data.DataTable table = _QueryResult.DataSet.Tables[0];
+            Hubble.Framework.Data.DataTable table = _QueryResult.DataSet.Tables[0];
 
             table.Rows.Add(table.NewRow());
         }
 
         protected void OutputValue(string columnName, object value)
         {
-            System.Data.DataTable table = _QueryResult.DataSet.Tables[0];
+            Hubble.Framework.Data.DataTable table = _QueryResult.DataSet.Tables[0];
 
             if (table.Rows.Count == 0)
             {
@@ -105,7 +105,7 @@ namespace Hubble.Core.StoredProcedure
                         {
                             for (int i = 0; i < _QueryResult.DataSet.Tables.Count; i++)
                             {
-                                System.Data.DataTable table = _QueryResult.DataSet.Tables[i];
+                                Hubble.Framework.Data.DataTable table = _QueryResult.DataSet.Tables[i];
                                 table.MinimumCapacity = table.Rows.Count;
                             }
                         }

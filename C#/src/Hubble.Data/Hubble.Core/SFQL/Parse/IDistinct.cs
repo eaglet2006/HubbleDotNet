@@ -12,6 +12,6 @@ namespace Hubble.Core.SFQL.Parse
         /// <param name="result">input result</param>
         /// <param name="table">output distinct informations to datatable</param>
         /// <returns>return result distincted</returns>
-        Query.DocumentResultForSort[] Distinct(Query.DocumentResultForSort[] result, out System.Data.DataTable table);
+        Query.DocumentResultForSort[] Distinct(Query.DocumentResultForSort[] result, out Hubble.Framework.Data.DataTable table);
     }
 }

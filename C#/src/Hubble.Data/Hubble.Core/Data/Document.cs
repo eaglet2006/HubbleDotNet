@@ -155,20 +155,20 @@ namespace Hubble.Core.Data
 
         #region static methods
 
-        public static System.Data.DataSet ToDataSet(List<Field> schema, List<Document> docs)
+        public static Hubble.Framework.Data.DataSet ToDataSet(List<Field> schema, List<Document> docs)
         {
-            System.Data.DataTable dt = new System.Data.DataTable();
+            Hubble.Framework.Data.DataTable dt = new Hubble.Framework.Data.DataTable();
 
             foreach(Field field in  schema)
             {
-                System.Data.DataColumn col = new System.Data.DataColumn(field.Name,
+                Hubble.Framework.Data.DataColumn col = new Hubble.Framework.Data.DataColumn(field.Name,
                     DataTypeConvert.GetClrType(field.DataType));
                 dt.Columns.Add(col);
             }
 
             foreach (Document doc in docs)
             {
-                System.Data.DataRow row = dt.NewRow();
+                Hubble.Framework.Data.DataRow row = dt.NewRow();
 
                 foreach (FieldValue fv in doc.FieldValues)
                 {
@@ -208,7 +208,7 @@ namespace Hubble.Core.Data
                 dt.Rows.Add(row);
             }
 
-            System.Data.DataSet ds = new System.Data.DataSet();
+            Hubble.Framework.Data.DataSet ds = new Hubble.Framework.Data.DataSet();
             ds.Tables.Add(dt);
             return ds;
         }

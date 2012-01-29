@@ -211,7 +211,7 @@ namespace QueryAnalyzer
 
                 listBoxUsers.Items.Clear();
 
-                foreach (System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
                 {
                     listBoxUsers.Items.Add(row["UserName"]);
                 }
@@ -241,7 +241,7 @@ namespace QueryAnalyzer
                 QueryResult qResult = GlobalSetting.DataAccess.Excute("exec SP_GetUserRights {0}", 
                     userName);
 
-                foreach (System.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in qResult.DataSet.Tables[0].Rows)
                 {
                     result.Add(new DatabaseRight(row["Database"].ToString(), int.Parse(row["Right"].ToString())));
                 }

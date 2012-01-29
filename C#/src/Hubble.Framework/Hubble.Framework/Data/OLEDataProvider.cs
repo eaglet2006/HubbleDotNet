@@ -58,7 +58,7 @@ namespace Hubble.Framework.Data
             return cmd.ExecuteNonQuery();
         }
 
-        public DataSet QuerySql(string sql)
+        public System.Data.DataSet QuerySql(string sql)
         {
             OleDbDataAdapter dadapter = new OleDbDataAdapter();
 
@@ -67,21 +67,21 @@ namespace Hubble.Framework.Data
 
             dadapter.AcceptChangesDuringFill = false;
 
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             dadapter.Fill(ds);
 
             return ds;
         }
 
 
-        public DataSet GetSchema(string sql)
+        public System.Data.DataSet GetSchema(string sql)
         {
             OleDbDataAdapter dadapter = new OleDbDataAdapter();
 
             dadapter.SelectCommand = new OleDbCommand(sql, _OleDbConnection);
             dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             dadapter.FillSchema(ds, SchemaType.Mapped);
 
             return ds;

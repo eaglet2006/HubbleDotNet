@@ -269,7 +269,7 @@ namespace Hubble.Core.SFQL.Parse
         #region IDistinct Members
 
         public Hubble.Core.Query.DocumentResultForSort[] Distinct(
-            Hubble.Core.Query.DocumentResultForSort[] result, out System.Data.DataTable table)
+            Hubble.Core.Query.DocumentResultForSort[] result, out Hubble.Framework.Data.DataTable table)
         {
             Dictionary<ulong, int> distinctByDict = new Dictionary<ulong, int>();
 

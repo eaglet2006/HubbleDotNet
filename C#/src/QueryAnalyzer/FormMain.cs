@@ -18,11 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
+using Hubble.Framework.Data;
 using Hubble.Core.SFQL.Parse;
 using Hubble.SQLClient;
 
@@ -239,7 +239,7 @@ namespace QueryAnalyzer
                     queryResult = GlobalSetting.DataAccess.Excute(sql);
                 }
 
-                System.Data.DataTable table = null;
+                Hubble.Framework.Data.DataTable table = null;
 
                 if (queryResult.DataSet.Tables.Count > 0)
                 {
@@ -267,7 +267,7 @@ namespace QueryAnalyzer
 
                 for (int i = 0; i < queryResult.DataSet.Tables.Count; i++)
                 {
-                    mulitGridView.GridViewList[i].DataSource = queryResult.DataSet.Tables[i];
+                    mulitGridView.GridViewList[i].DataSource = queryResult.DataSet.Tables[i].ConvertToSystemDataTable();
 
                     DataTable tbl = queryResult.DataSet.Tables[i];
 
@@ -602,7 +602,7 @@ namespace QueryAnalyzer
 
                 FormCreateDatabase frmCreateDatabase = new FormCreateDatabase();
 
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                 {
                     frmCreateDatabase.DBAdapterList.Add(row["Name"].ToString());
                 }
@@ -629,7 +629,7 @@ namespace QueryAnalyzer
 
                 QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_DBAdapterList");
 
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                 {
                     frmDatabaseInfo.DBAdapterList.Add(row["Name"].ToString());
                 }
@@ -637,7 +637,7 @@ namespace QueryAnalyzer
                 queryResult = GlobalSetting.DataAccess.Excute("exec SP_GetDatabaseAttributes {0}",
                     databaseName);
 
-                foreach (System.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
+                foreach (Hubble.Framework.Data.DataRow row in queryResult.DataSet.Tables[0].Rows)
                 {
                     if (row["Attribute"].ToString().Trim().Equals("DefaultPath"))
                     {

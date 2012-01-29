@@ -306,7 +306,7 @@ namespace Hubble.SQLClient
             return sb.ToString();
         }
 
-        private bool IsSelectOrSpTalbe(System.Data.DataTable table)
+        private bool IsSelectOrSpTalbe(Hubble.Framework.Data.DataTable table)
         {
             if (table.TableName.IndexOf("Select_", 0, StringComparison.CurrentCultureIgnoreCase) == 0)
             {
@@ -328,7 +328,7 @@ namespace Hubble.SQLClient
         /// <param name="qrDataCache">data cache</param>
         /// <param name="table">table from server</param>
         /// <param name="result">add the merge table to result</param>
-        private void MergeDataCache(QueryResult qrDataCache, System.Data.DataTable table, QueryResult result)
+        private void MergeDataCache(QueryResult qrDataCache, Hubble.Framework.Data.DataTable table, QueryResult result)
         {
             int i = 0;
             bool find = false;
@@ -344,7 +344,7 @@ namespace Hubble.SQLClient
 
             if (find)
             {
-                System.Data.DataTable[] tables = new System.Data.DataTable[qrDataCache.DataSet.Tables.Count];
+                Hubble.Framework.Data.DataTable[] tables = new Hubble.Framework.Data.DataTable[qrDataCache.DataSet.Tables.Count];
                 qrDataCache.DataSet.Tables.CopyTo(tables, 0);
 
                 do
@@ -431,7 +431,7 @@ namespace Hubble.SQLClient
             asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId, priorMessage);
         }
 
-        private System.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
+        private Hubble.Framework.Data.DataSet InnerQuery(string orginalSql, int cacheTimeout)
         {
             if (!_SqlConnection.Connected)
             {
@@ -566,7 +566,7 @@ namespace Hubble.SQLClient
 
                     int noChangedTables = 0;
 
-                    List<System.Data.DataTable> sourceTables = new List<System.Data.DataTable>();
+                    List<Hubble.Framework.Data.DataTable> sourceTables = new List<Hubble.Framework.Data.DataTable>();
 
                     for (int i = 0; i < _QueryResult.DataSet.Tables.Count; i++)
                     {
@@ -575,7 +575,7 @@ namespace Hubble.SQLClient
 
                     for (int i = 0; i < sourceTables.Count; i++)
                     {
-                        System.Data.DataTable table;
+                        Hubble.Framework.Data.DataTable table;
 
                         if (sourceTables[i].MinimumCapacity == int.MaxValue)
                         {
@@ -661,7 +661,7 @@ namespace Hubble.SQLClient
 
             try
             {
-                return InnerQuery(orginalSql, cacheTimeout);
+                return InnerQuery(orginalSql, cacheTimeout).ConvertToSystemDataSet();
             }
             catch (System.IO.IOException ex)
             {
@@ -669,7 +669,7 @@ namespace Hubble.SQLClient
 
                 if (ts.TotalMilliseconds < 1000)
                 {
-                    return InnerQuery(orginalSql, cacheTimeout);
+                    return InnerQuery(orginalSql, cacheTimeout).ConvertToSystemDataSet();
                 }
                 else
                 {
@@ -764,6 +764,7 @@ namespace Hubble.SQLClient
                 asyncConnection.EndAsyncQuery(_ClassId);
             }
         }
+
 
         /// <summary>
         /// SQL query
@@ -898,7 +899,7 @@ namespace Hubble.SQLClient
 
         public override int ExecuteNonQuery()
         {
-            Query();
+            ExecuteQuery();
 
             if (_QueryResult.DataSet != null)
             {
@@ -909,6 +910,48 @@ namespace Hubble.SQLClient
             }
 
             return 0;
+        }
+
+
+        public Hubble.Framework.Data.DataSet ExecuteQuery()
+        {
+            return ExecuteQuery(CacheTimeout);
+        }
+
+        /// <summary>
+        /// SQL query
+        /// </summary>
+        /// <param name="cacheTimeout">Time out for data cache. In second</param>
+        /// <returns></returns>
+        public Hubble.Framework.Data.DataSet ExecuteQuery(int cacheTimeout)
+        {
+            return ExecuteQuery(Sql, cacheTimeout);
+        }
+
+        private Hubble.Framework.Data.DataSet ExecuteQuery(string orginalSql, int cacheTimeout)
+        {
+            DateTime startTime = DateTime.Now;
+
+            try
+            {
+                return InnerQuery(orginalSql, cacheTimeout);
+            }
+            catch (System.IO.IOException ex)
+            {
+                TimeSpan ts = DateTime.Now - startTime;
+
+                if (ts.TotalMilliseconds < 1000)
+                {
+                    return InnerQuery(orginalSql, cacheTimeout);
+                }
+                else
+                {
+                    throw ex;
+                }
+            }
+            finally
+            {
+            }
         }
 
         public override object ExecuteScalar()
