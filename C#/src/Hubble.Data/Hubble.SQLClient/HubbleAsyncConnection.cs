@@ -27,6 +27,7 @@ namespace Hubble.SQLClient
     public class HubbleAsyncConnection : HubbleConnection
     {
         object _AsyncQueryLock = new object();
+        TcpItem _TcpItem;
 
         /// <summary>
         /// Initializes a new instance of the SqlConnection  class.
@@ -44,6 +45,9 @@ namespace Hubble.SQLClient
         {
         }
 
+        /// <summary>
+        /// Connection string 
+        /// </summary>
         public override string ConnectionString
         {
             get
@@ -59,6 +63,42 @@ namespace Hubble.SQLClient
             }
         }
 
+        /// <summary>
+        /// Id of tcp item.
+        /// </summary>
+        public long TcpItemId
+        {
+            get
+            {
+                if (_TcpItem != null)
+                {
+                    return _TcpItem.ItemId;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Connection times of tcp item
+        /// </summary>
+        public long TcpItemConnectTimes
+        {
+            get
+            {
+                if (_TcpItem != null)
+                {
+                    return _TcpItem.ConnectTimes;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+        }
+
         public override void Open()
         {
             Open(base.ConnectionTimeout * 1000);
@@ -70,49 +110,83 @@ namespace Hubble.SQLClient
         /// <param name="timeout">in milliseconds</param>
         public void Open(int timeout)
         {
-            TcpItem tcpItem;
             DateTime start = DateTime.Now;
             DateTime end = start;
 
             lock (this)
             {
-                tcpItem = AsyncTcpManager.Get(base.ConnectionString);
-                if (tcpItem == null)
-                {
-                    Hubble.Framework.Net.TcpClient tcpClient;
-                    InitTcpClient(out tcpClient);
-                    tcpItem = AsyncTcpManager.Set(base.ConnectionString, tcpClient);
-                }
+                ConnectionPool pool = AsyncTcpManager.Get(this, base.ConnectionString);
+                
+                _TcpItem = pool.GetOne();
             }
 
             while ((end - start).TotalMilliseconds <= timeout)
             {
-                if (tcpItem.TcpClient.Closed)
+                if (end != start)
                 {
-                    if (!tcpItem.TryGetConnecting())
+                    //not first time
+
+                    lock (this)
+                    {
+                        //Try to find a connected tcp item to use
+                        ConnectionPool pool = AsyncTcpManager.Get(this, base.ConnectionString);
+
+                        try
+                        {
+                            TcpItem tcpItem = pool.TryGetAConnectedItem();
+                            if (tcpItem != null)
+                            {
+                                _TcpItem = tcpItem;
+                            }
+
+                        }
+                        catch(Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+
+                    }
+                }
+
+                if (_TcpItem.TcpClient.Closed)
+                {
+                    if (!_TcpItem.TryGetConnecting())
                     {
                         try
                         {
-                            tcpItem.Enter();
+                            _TcpItem.Enter();
+                            _TcpItem.ServerBusy = false;
                             Hubble.Framework.Net.TcpClient tcpClient;
                             InitTcpClient(out tcpClient);
                             tcpClient.ReceiveTimeout = 0;
+                            TryConnectTimeout = 1;
+                            CommandReportNoCache = false;
 
                             base.Open(tcpClient);
-                            tcpClient.SetToAsync();
-                            tcpItem.TcpClient = tcpClient;
-                            return;
+
+                            if (base.ServerBusy)
+                            {
+                                _TcpItem.ServerBusy = true;
+                                System.Threading.Thread.Sleep(20);
+                                end = DateTime.Now;
+                            }
+                            else
+                            {
+                                tcpClient.SetToAsync();
+                                _TcpItem.TcpClient = tcpClient;
+                                return;
+                            }
                         }
                         finally
                         {
-                            tcpItem.Connecting = false;
-                            tcpItem.Leave();
+                            _TcpItem.Connecting = false;
+                            _TcpItem.Leave();
                         }
                     }
                     else
                     {
-                        end = DateTime.Now;
                         System.Threading.Thread.Sleep(20);
+                        end = DateTime.Now;
                     }
                 }
                 else
@@ -129,10 +203,9 @@ namespace Hubble.SQLClient
         {
             lock (this)
             {
-                TcpItem tcpItem = AsyncTcpManager.Get(base.ConnectionString);
-                if (tcpItem != null)
+                if (_TcpItem != null)
                 {
-                    tcpItem.RemoveClassId(classId);
+                    _TcpItem.RemoveClassId(classId);
                 }
             }
         }
@@ -145,12 +218,9 @@ namespace Hubble.SQLClient
         internal void BeginAsyncQuerySql(string sql, HubbleCommand command, ref int classId, 
             bool priorMessage)
         {
-            TcpItem tcpItem;
-
             lock (this)
             {
-                tcpItem = AsyncTcpManager.Get(base.ConnectionString);
-                if (tcpItem == null)
+                if (_TcpItem == null)
                 {
                     throw new System.IO.IOException("Hasn't connection");
                 }
@@ -158,7 +228,7 @@ namespace Hubble.SQLClient
 
             if (classId < 0)
             {
-                classId = tcpItem.GetClassId(command);
+                classId = _TcpItem.GetClassId(command);
             }
 
             lock (_AsyncQueryLock)
@@ -166,7 +236,7 @@ namespace Hubble.SQLClient
                 Hubble.Framework.Net.ASyncPackage package = new Hubble.Framework.Net.ASyncPackage(
                     classId, sql);
 
-                tcpItem.TcpClient.SendASyncMessage((short)ConnectEvent.ExcuteSql,
+                _TcpItem.TcpClient.SendASyncMessage((short)ConnectEvent.ExcuteSql,
                     ref package, priorMessage);
             }
         }
@@ -198,21 +268,19 @@ namespace Hubble.SQLClient
         {
             get
             {
-                TcpItem tcpItem = AsyncTcpManager.Get(base.ConnectionString);
-
-                if (tcpItem == null)
+                if (_TcpItem == null)
                 {
                     return false;
                 }
                 else
                 {
-                    if (tcpItem.Connecting)
+                    if (_TcpItem.Connecting)
                     {
                         return false;
                     }
                     else
                     {
-                        return !tcpItem.TcpClient.Closed;
+                        return !_TcpItem.TcpClient.Closed;
                     }
                 }
             }

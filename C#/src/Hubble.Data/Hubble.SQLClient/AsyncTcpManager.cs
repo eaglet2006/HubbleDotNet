@@ -25,15 +25,78 @@ namespace Hubble.SQLClient
 {
     class TcpItem
     {
+        static long _GlobalItemId = 0;
+        static object _GlobalLockObj = new object();
+
         Dictionary<int, IAsyncClass> _ClassDict = new Dictionary<int, IAsyncClass>();
 
         object _ClassIdLock = new object();
         object _ConnectingLock = new object();
         object _LockObj = new object();
 
+        bool _ServerBusy = false;
+
         bool _Connecting = false;
 
+        long _ConnectTimes = 0;
+
+        long _ItemId;
+
         int _ClassId = -1;
+
+        internal long ItemId
+        {
+            get
+            {
+                return _ItemId;
+            }
+        }
+
+        internal bool ServerBusy
+        {
+            get
+            {
+                lock (_ConnectingLock)
+                {
+                    return _ServerBusy;
+                }
+            }
+
+            set
+            {
+                lock (_ConnectingLock)
+                {
+                    _ServerBusy = value;
+                }
+            }
+        }
+
+        internal long ConnectTimes
+        {
+            get
+            {
+                lock (_ConnectingLock)
+                {
+                    return _ConnectTimes;
+                }
+            }
+
+            set
+            {
+                lock (_ConnectingLock)
+                {
+                    _ConnectTimes = value;
+                }
+            }
+        }
+
+        internal TcpItem()
+        {
+            lock (_GlobalLockObj)
+            {
+                _ItemId = _GlobalItemId++;
+            }
+        }
 
         internal int GetClassId(IAsyncClass asyncClass)
         {
@@ -183,44 +246,45 @@ namespace Hubble.SQLClient
     static class AsyncTcpManager
     {
         static object _LockObj = new object();
-        static Dictionary<string, TcpItem> _TcpItemDict = new Dictionary<string, TcpItem>();
+        static Dictionary<string, ConnectionPool> _TcpItemDict = new Dictionary<string, ConnectionPool>();
 
-        static internal TcpItem Get(string connectionString)
+        static internal ConnectionPool Get(HubbleAsyncConnection asyncConnection, string connectionString)
         {
             lock (_LockObj)
             {
-                TcpItem item;
+                ConnectionPool pool;
 
-                if (_TcpItemDict.TryGetValue(connectionString, out item))
+                if (_TcpItemDict.TryGetValue(connectionString, out pool))
                 {
-                    return item;
+                    return pool;
                 }
                 else
                 {
-                    return null;
+                    pool = new ConnectionPool(asyncConnection, connectionString);
+                    _TcpItemDict.Add(connectionString, pool);
+                    return pool;
                 }
             }
         }
 
-        static internal TcpItem Set(string connectionString, TcpClient tcpClient)
-        {
-            lock (_LockObj)
-            {
-                TcpItem item = new TcpItem();
-                item.TcpClient = tcpClient;
+        //static internal ConnectionPool Set(HubbleAsyncConnection asyncConnection, string connectionString)
+        //{
+        //    lock (_LockObj)
+        //    {
+        //        ConnectionPool pool = new ConnectionPool(asyncConnection, connectionString);
 
-                if (_TcpItemDict.ContainsKey(connectionString))
-                {
-                    _TcpItemDict[connectionString] = item;
-                }
-                else
-                {
-                    _TcpItemDict.Add(connectionString, item);
-                }
+        //        if (_TcpItemDict.ContainsKey(connectionString))
+        //        {
+        //            _TcpItemDict[connectionString] = pool;
+        //        }
+        //        else
+        //        {
+        //            _TcpItemDict.Add(connectionString, pool);
+        //        }
 
-                return item;
-            }
-        }
+        //        return pool;
+        //    }
+        //}
 
     }
 }

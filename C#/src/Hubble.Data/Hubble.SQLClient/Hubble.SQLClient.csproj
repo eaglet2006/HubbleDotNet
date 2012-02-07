@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncTcpManager.cs" />
+    <Compile Include="ConnectionPool.cs" />
     <Compile Include="DataCache.cs" />
     <Compile Include="DataCacheMgr.cs" />
     <Compile Include="HubbleAsyncConnection.cs">

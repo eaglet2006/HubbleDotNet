@@ -221,7 +221,7 @@ namespace Hubble.SQLClient
 
             set
             {
-                _CommandReportNoCache = true;
+                _CommandReportNoCache = value;
             }
         }
 
@@ -333,7 +333,7 @@ namespace Hubble.SQLClient
             }
         }
 
-        protected void InitTcpClient(out TcpClient tcpClient)
+        internal void InitTcpClient(out TcpClient tcpClient)
         {
             if (_SqlConnBuilder == null)
             {
@@ -409,7 +409,7 @@ namespace Hubble.SQLClient
 
         protected void Open(TcpClient tcpClient)
         {
-            int elapseConnectTime = 0;
+            int elapseConnectTime = 1;
             Random rand = new Random();
             _ServerBusy = false;
 
@@ -430,19 +430,19 @@ namespace Hubble.SQLClient
                         _Connected = false;
                         ConnectionString = ConnectionString;
 
-                        int sleepMillisecond = rand.Next(200, 800);
-                        System.Threading.Thread.Sleep(sleepMillisecond);
-
                         if (!CommandReportNoCache && TryConnectTimeout > 0)
                         {
-                            if (elapseConnectTime > TryConnectTimeout)
+                            if (elapseConnectTime >= TryConnectTimeout)
                             {
                                 _ServerBusy = true;
                                 return;
                             }
                         }
 
+                        int sleepMillisecond = rand.Next(200, 800);
                         elapseConnectTime += sleepMillisecond;
+                        System.Threading.Thread.Sleep(sleepMillisecond);
+
                         continue;
                     }
 

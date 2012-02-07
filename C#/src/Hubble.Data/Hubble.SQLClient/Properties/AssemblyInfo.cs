@@ -54,5 +54,13 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.9.4")]
-[assembly: AssemblyFileVersion("1.1.9.4")]
+[assembly: AssemblyVersion("1.1.9.6")]
+[assembly: AssemblyFileVersion("1.1.9.6")]
+
+/*****************************************************************************************
+ * Hubble.SQLClient modification records
+ * ***************************************************************************************
+ * 1.1.9.6
+ * Add connection pool for async connection. Add Min Pool Size parameter in connection string of Hubble can 
+ * set the connection pool size. Default value is 1.
+*****************************************************************************************/

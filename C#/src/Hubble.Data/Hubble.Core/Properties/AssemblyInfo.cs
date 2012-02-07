@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.5")]
-[assembly: AssemblyFileVersion("1.1.9.5")]
+[assembly: AssemblyVersion("1.1.9.6")]
+[assembly: AssemblyFileVersion("1.1.9.6")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -143,4 +143,7 @@ using System.Runtime.InteropServices;
  * Fix a bug of Hubble.Framework.Data.DataRow that doesn't convert other datatype to the specify datatype
  * Fix a problem of score value of one word match when order by normal fields and including score.
  * For example select top 10 * from news where title contains 'abc' order by time desc, score desc
+ * 1.1.9.6
+ * Add connection pool for async connection. Add Min Pool Size parameter in connection string of Hubble can 
+ * set the connection pool size. Default value is 1.
  *****************************************************************************************/
