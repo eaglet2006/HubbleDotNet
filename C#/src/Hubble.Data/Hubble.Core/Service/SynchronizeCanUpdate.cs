@@ -928,7 +928,7 @@ namespace Hubble.Core.Service
 
             dbAdapter.Table = _DBProvider.Table;
 
-            if (lastDocId <= 0 && _DBProvider.DocumentCount <= 0)
+            if (lastDocId <= 0 && _DBProvider.DocumentCount <= 0 && (_Flags & SyncFlags.Rebuild) == 0)
             {
                 //first time synchronize
                 //Truncate trigger table
@@ -1008,7 +1008,10 @@ namespace Hubble.Core.Service
 
                     _DBProvider.Insert(documents);
 
-                    UpdateLastId(from, dbAdapter);
+                    if ((_Flags & SyncFlags.Rebuild) == 0)
+                    {
+                        UpdateLastId(from, dbAdapter);
+                    }
 
                     double progress;
 

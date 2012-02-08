@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.6")]
-[assembly: AssemblyFileVersion("1.1.9.6")]
+[assembly: AssemblyVersion("1.1.9.7")]
+[assembly: AssemblyFileVersion("1.1.9.7")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -146,4 +146,8 @@ using System.Runtime.InteropServices;
  * 1.1.9.6
  * Add connection pool for async connection. Add Min Pool Size parameter in connection string of Hubble can 
  * set the connection pool size. Default value is 1.
+ * 1.1.9.7
+ * Fix a bug of SP_Rebuild for updatable table that will raise exception when run rebuild.
+ * Add a static function named Cancel for HubbleAsyncConnection class.
+ * This function can be used to cancel the tcp connection.
  *****************************************************************************************/

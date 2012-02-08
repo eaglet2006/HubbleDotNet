@@ -138,6 +138,26 @@ namespace Hubble.SQLClient
             }
         }
 
+        internal void Clear()
+        {
+            lock (_LockObj)
+            {
+                foreach (TcpItem tcpItem in _TcpItemPool)
+                {
+                    try
+                    {
+                        tcpItem.TcpClient.Close();
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                _TcpItemPool.Clear();
+            }
+
+        }
+
         internal void Remove(TcpItem tcpItem)
         {
             lock (_LockObj)
@@ -145,6 +165,7 @@ namespace Hubble.SQLClient
                 try
                 {
                     _TcpItemPool.Remove(tcpItem);
+                    tcpItem.TcpClient.Close();
                 }
                 catch
                 {

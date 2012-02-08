@@ -248,6 +248,21 @@ namespace Hubble.SQLClient
         static object _LockObj = new object();
         static Dictionary<string, ConnectionPool> _TcpItemDict = new Dictionary<string, ConnectionPool>();
 
+        static internal void Remove(string connectionString)
+        {
+            lock (_LockObj)
+            {
+                ConnectionPool pool;
+
+                if (_TcpItemDict.TryGetValue(connectionString, out pool))
+                {
+                    pool.Clear();
+                    _TcpItemDict.Remove(connectionString);
+                }
+
+            }
+        }
+
         static internal ConnectionPool Get(HubbleAsyncConnection asyncConnection, string connectionString)
         {
             lock (_LockObj)

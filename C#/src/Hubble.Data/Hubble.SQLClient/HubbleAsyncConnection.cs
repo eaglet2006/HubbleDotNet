@@ -26,6 +26,16 @@ namespace Hubble.SQLClient
     /// </summary>
     public class HubbleAsyncConnection : HubbleConnection
     {
+        /// <summary>
+        /// This function is used to cancel the connection for specified connection string.
+        /// </summary>
+        /// <param name="connectionString">specified connection string</param>
+        public static void Cancel(string connectionString)
+        {
+            AsyncTcpManager.Remove(connectionString);
+        }
+
+
         object _AsyncQueryLock = new object();
         TcpItem _TcpItem;
 
