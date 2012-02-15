@@ -59,6 +59,8 @@ namespace Hubble.Core.Service
                 }
             }
 
+            args.QueryStoreProcedure = queryStoreProcedure;
+
             if (queryStoreProcedure)
             {
                 _SPPool.ExecuteSql(args);

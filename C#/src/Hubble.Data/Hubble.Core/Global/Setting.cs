@@ -447,6 +447,25 @@ namespace Hubble.Core.Global
             }
         }
 
+        int _QueryQueueWaitingTimeout = 300;
+
+        /// <summary>
+        /// timeout when the sql statement was waiting in the query queue.
+        /// In seconds
+        /// </summary>
+        public int QueryQueueWaitingTimeout
+        {
+            get
+            {
+                return _QueryQueueWaitingTimeout;
+            }
+
+            set
+            {
+                _QueryQueueWaitingTimeout = value;
+            }
+        }
+
         int _QueryThreadNum = 64;
 
         public int QueryThreadNum

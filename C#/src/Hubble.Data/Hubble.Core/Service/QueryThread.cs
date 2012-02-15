@@ -59,6 +59,20 @@ namespace Hubble.Core.Service
                     CurrentConnection.ConnectionInfo.QueryThread = this;
                     _ManagedThreadId = this.ManagedThreadId;
 
+                    if (!_Args.QueryStoreProcedure)
+                    {
+                        int queryQueueWaitingTimeout = Global.Setting.Config.QueryQueueWaitingTimeout;
+
+                        if (queryQueueWaitingTimeout > 0)
+                        {
+                            TimeSpan timeSpan = DateTime.Now - _Args.StartTime;
+                            if (timeSpan.TotalSeconds > queryQueueWaitingTimeout)
+                            {
+                                throw new Hubble.Core.Query.QueryException("Timeout during sql was waiting in Query Queue.");
+                            }
+                        }
+                    }
+
                     HubbleTask.ExcuteSqlMessageProcess(_Args);
 
                     _Args = null;

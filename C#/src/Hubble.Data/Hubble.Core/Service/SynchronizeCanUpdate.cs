@@ -134,7 +134,7 @@ namespace Hubble.Core.Service
                 i++;
             }
 
-            sb.AppendFormat(" from {0} where {1} >= {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
+            sb.AppendFormat(" from {0} where {1} > {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
                 _DBProvider.Table.DocIdReplaceField, from, _Step);
 
 
@@ -167,7 +167,7 @@ namespace Hubble.Core.Service
                 i++;
             }
 
-            sb.AppendFormat(" from {0} where {1} >= {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
+            sb.AppendFormat(" from {0} where {1} > {2} order by {1} limit {3}", _DBProvider.Table.DBTableName,
                 _DBProvider.Table.DocIdReplaceField, from, _Step);
 
             return sb.ToString();

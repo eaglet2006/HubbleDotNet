@@ -190,6 +190,8 @@ namespace Hubble.Framework.Net
         private int _ClassId;
         private object _ConnectionInfo;
         public object LockObj;
+        public DateTime StartTime = DateTime.Now;
+        public bool QueryStoreProcedure = false;
 
         /// <summary>
         /// Tcp server

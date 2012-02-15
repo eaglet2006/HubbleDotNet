@@ -140,6 +140,7 @@
     <Compile Include="Query\Optimize\OptimizeArgumentGenerator.cs" />
     <Compile Include="Query\Optimize\QueryOptimizeBuilder.cs" />
     <Compile Include="Query\PerformanceReport.cs" />
+    <Compile Include="Query\QueryException.cs" />
     <Compile Include="Query\Searcher.cs" />
     <Compile Include="Data\Field.cs" />
     <Compile Include="Data\Document.cs" />
