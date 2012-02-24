@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.8")]
-[assembly: AssemblyFileVersion("1.1.9.8")]
+[assembly: AssemblyVersion("1.1.9.9")]
+[assembly: AssemblyFileVersion("1.1.9.9")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -157,4 +157,7 @@ using System.Runtime.InteropServices;
  * Fix a bug of SynchronizeCanUpdate for MySql and Sqlite. In GetMySqlSelectSql and GetSqliteSelectSql function,
  * " from {0} where {1} >= {2} order by {1} limit {3}" should be 
  * " from {0} where {1} > {2} order by {1} limit {3}"
+ * 1.1.9.9
+ * Fix a bug when index file large then 2GB and using RamIndex, it will raise a exception said can't 
+ * set System.IO.FileStream.set_Position a negative number.
  *****************************************************************************************/

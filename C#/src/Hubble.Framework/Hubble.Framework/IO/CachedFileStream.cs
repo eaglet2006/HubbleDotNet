@@ -280,7 +280,7 @@ namespace Hubble.Framework.IO
             {
                 using (System.IO.FileStream fs = new FileStream(_FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    fs.Position = index * CachedFileBufferManager.BufferUnitSize;
+                    fs.Position = (long)index * CachedFileBufferManager.BufferUnitSize;
                     int offset = 0;
                     int read = 0;
 
