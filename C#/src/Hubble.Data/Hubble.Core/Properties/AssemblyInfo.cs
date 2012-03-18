@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.1.9.9")]
-[assembly: AssemblyFileVersion("1.1.9.9")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -160,4 +160,7 @@ using System.Runtime.InteropServices;
  * 1.1.9.9
  * Fix a bug when index file large then 2GB and using RamIndex, it will raise a exception said can't 
  * set System.IO.FileStream.set_Position a negative number.
+ * 1.2.0.0
+ * Fix a bug when None index field include Null value, it raise "is not a valid value for Int32" exception.
+ * top optimize if MultiWordsDocIdEnumerator will effect search result, disable it.
  *****************************************************************************************/

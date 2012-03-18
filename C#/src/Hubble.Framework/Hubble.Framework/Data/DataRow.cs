@@ -170,7 +170,7 @@ namespace Hubble.Framework.Data
 
             set
             {
-                if (value == null)
+                if (value == null || value == System.DBNull.Value)
                 {
                     _Values[_Columns[columnName].ColumnId] = System.DBNull.Value;
                 }
@@ -188,7 +188,6 @@ namespace Hubble.Framework.Data
                     }
                     else
                     {
-
                         _Values[_Columns[columnName].ColumnId] = value;
                     }
                 }
@@ -204,7 +203,7 @@ namespace Hubble.Framework.Data
 
             set
             {
-                if (value == null)
+                if (value == null || value == System.DBNull.Value)
                 {
                     _Values[columnIndex] = System.DBNull.Value;
                 }

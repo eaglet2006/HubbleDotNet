@@ -81,8 +81,12 @@ namespace Hubble.Core.Query.Optimize
 
             Core.SFQL.Parse.DocumentResultWhereDictionary groupByDict = Argument.NeedGroupBy ? docIdRank : null;
 
-            MultiWordsDocIdEnumerator mwde = new MultiWordsDocIdEnumerator(wordIndexes, dbProvider, groupByDict, top, 
-                needFilterUntokenizedConditions);
+
+            MultiWordsDocIdEnumerator mwde = new MultiWordsDocIdEnumerator(wordIndexes, dbProvider, groupByDict, -1,
+                needFilterUntokenizedConditions); //Changed at 2012-3-18, top optimize will effect search result, disable it.
+
+            //MultiWordsDocIdEnumerator mwde = new MultiWordsDocIdEnumerator(wordIndexes, dbProvider, groupByDict, top, 
+            //    needFilterUntokenizedConditions);
 
             Entity.OriginalDocumentPositionList odpl = new Hubble.Core.Entity.OriginalDocumentPositionList();
 
