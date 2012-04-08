@@ -385,6 +385,7 @@ namespace Hubble.Core.Service
                 catch (Exception e)
                 {
                     Global.Report.WriteErrorLog("Get documents for insert fail!", e);
+                    _DocForInsertResult = new List<Document>();
                 }
                 ReadyToGet = true;
 

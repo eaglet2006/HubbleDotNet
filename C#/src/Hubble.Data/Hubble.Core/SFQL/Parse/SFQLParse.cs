@@ -582,6 +582,12 @@ namespace Hubble.Core.SFQL.Parse
                 Data.Field field = new Field();
 
                 field.Name = tfield.FieldName;
+
+                if (field.Name.Equals("score", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    throw new ParseException("Can't use score as the field name.");
+                }
+
                 field.Mode = Field.IndexMode.Complex;
                 field.IndexType = tfield.IndexType;
                 field.Mode = tfield.IndexMode;

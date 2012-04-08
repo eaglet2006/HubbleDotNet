@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.0.0")]
-[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyVersion("1.2.1.0")]
+[assembly: AssemblyFileVersion("1.2.1.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -163,4 +163,7 @@ using System.Runtime.InteropServices;
  * 1.2.0.0
  * Fix a bug when None index field include Null value, it raise "is not a valid value for Int32" exception.
  * top optimize if MultiWordsDocIdEnumerator will effect search result, disable it.
+ * 1.2.1.0
+ * Fix a bug, if GetDocumentsForInsert fail in Synchornize, it will occur a unhandled exception and stop the service.
+ * Check the field name in create table. Can't use score as the field name.
  *****************************************************************************************/
