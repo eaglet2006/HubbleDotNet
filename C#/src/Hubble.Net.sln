@@ -51,6 +51,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspDotNetPager", "Demo\WebD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hubble.SQLClient.Linq", "Hubble.Data\Hubble.SQLClient.Linq\Hubble.SQLClient.Linq.csproj", "{35442360-4FD9-4D99-A4F3-93457861B01D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HubbleService", "HubbleService\HubbleService.csproj", "{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|.NET = Debug|.NET
@@ -151,6 +153,16 @@ Global
 		{35442360-4FD9-4D99-A4F3-93457861B01D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35442360-4FD9-4D99-A4F3-93457861B01D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{35442360-4FD9-4D99-A4F3-93457861B01D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Debug|.NET.ActiveCfg = Debug|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Release|.NET.ActiveCfg = Release|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -165,5 +177,6 @@ Global
 		{D94FD044-AC5D-4EF0-891B-019491461A16} = {70BF7819-6D26-4E25-90DE-3A18F7E729DB}
 		{350D6DE0-014F-4B11-AED2-B759F66E136B} = {11451498-1D0C-47F3-A1A6-55FE16D07621}
 		{45D8FBF0-4184-414E-94F3-54433BF9FF0D} = {BF6C72AB-E41A-4ACE-887A-C40B721C6E1F}
+		{7A46522F-6F86-42D8-AD85-3BAFCF3F0827} = {BF6C72AB-E41A-4ACE-887A-C40B721C6E1F}
 	EndGlobalSection
 EndGlobal
