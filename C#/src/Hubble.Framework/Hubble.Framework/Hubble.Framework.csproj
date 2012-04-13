@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{21D12CAB-9917-432E-A54E-E432DA0F432A}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -67,6 +67,14 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson, Version=1.4.0.4468, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\References\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=1.4.0.4468, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\References\MongoDB.Driver.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -98,6 +106,7 @@
     <Compile Include="Data\DataRow.cs" />
     <Compile Include="Data\DataSet.cs" />
     <Compile Include="Data\DataTable.cs" />
+    <Compile Include="Data\MongoDataProvider.cs" />
     <Compile Include="Data\OLEDataProvider.cs" />
     <Compile Include="Entity\DocIdPayloadRank.cs" />
     <Compile Include="HubbleException.cs" />

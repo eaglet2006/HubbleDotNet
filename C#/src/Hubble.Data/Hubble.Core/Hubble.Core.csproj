@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{003F69CF-186C-45C9-85B6-96D175D56711}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -69,6 +69,14 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson, Version=1.4.0.4468, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\References\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver, Version=1.4.0.4468, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\References\MongoDB.Driver.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core">
@@ -103,6 +111,7 @@
     <Compile Include="Data\ReplaceFieldValueToDocId.cs" />
     <Compile Include="Data\Table.cs" />
     <Compile Include="Data\UpdatePayloadFileProvider.cs" />
+    <Compile Include="DBAdapter\MongoAdapter.cs" />
     <Compile Include="DBAdapter\Oracle8iAdapter.cs" />
     <Compile Include="DBAdapter\SqlServer2000Adapter.cs" />
     <Compile Include="DBAdapter\IDBAdapter.cs" />
