@@ -55,6 +55,29 @@ namespace Hubble.Core.Service
             return sb.ToString();
         }
 
+        private string GetMongoDBSelectSql(long from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("Select top {0} 'DocId' ", _Step);
+
+            foreach (Field field in _DBProvider.Table.Fields)
+            {
+                if (field.IndexType == Field.Index.None)
+                {
+                    continue;
+                }
+
+                sb.AppendFormat(", '{0}' ", field.Name);
+            }
+
+            sb.AppendFormat(" from {0} where DocId >= {1} order by DocId", _DBProvider.Table.DBTableName, from);
+
+            return sb.ToString();
+        }
+
+        
+
         private string GetOracleFieldNameList(long from)
         {
             StringBuilder sb = new StringBuilder();
@@ -127,6 +150,10 @@ namespace Hubble.Core.Service
             if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetSqlServerSelectSql(from);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mongodb", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetMongoDBSelectSql(from);
             }
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
             {

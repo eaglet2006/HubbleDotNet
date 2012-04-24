@@ -635,6 +635,17 @@ namespace Hubble.Core.Data
         {
             return new DateTime(ticks);
         }
+
+        public static string DataToString(byte[] data)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static byte[] StringToData(string text)
+        {
+            throw new NotImplementedException();
+        }
+    
     }
 
 }

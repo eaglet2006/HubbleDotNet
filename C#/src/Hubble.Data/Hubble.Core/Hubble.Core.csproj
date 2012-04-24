@@ -206,6 +206,7 @@
     <Compile Include="SFQL\SyntaxAnalysis\Select\Select.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Select\SelectFrom.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\SentenceType.cs" />
+    <Compile Include="SFQL\SyntaxAnalysis\SyntaxAnalyse.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\SyntaxException.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\TSFQLAttribute.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Syntax.cs" />

@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.1.0")]
-[assembly: AssemblyFileVersion("1.2.1.0")]
+[assembly: AssemblyVersion("1.2.3.0")]
+[assembly: AssemblyFileVersion("1.2.3.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -166,4 +166,6 @@ using System.Runtime.InteropServices;
  * 1.2.1.0
  * Fix a bug, if GetDocumentsForInsert fail in Synchornize, it will occur a unhandled exception and stop the service.
  * Check the field name in create table. Can't use score as the field name.
+ * 1.2.3.0
+ * First version can support MongoDB.
  *****************************************************************************************/

@@ -12,103 +12,119 @@ using MongoDB.Driver.Builders;
 
 namespace Hubble.Framework.Data
 {
-
     /// <summary>
-    /// Mongo自增长ID数据序列
+    /// MongoDB Session
     /// </summary>
-    [Serializable]
-    public class MongoSequence
+    public class MongoDataProvider : IDisposable
     {
-        /// <summary>
-        /// 存储数据的序列
-        /// </summary>
-        public string Sequence { get; set; }
-        /// <summary>
-        /// 对应的Collection名称
-        /// </summary>
-        public string CollectionName { get; set; }
-        /// <summary>
-        /// 对应Collection的自增长ID
-        /// </summary>
-        public string IncrementID { get; set; }
-
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        /// <param name="sequence">序列表名称</param>
-        /// <param name="collectionName">集合字段名称</param>
-        /// <param name="incrementID">自增长ID字段名称</param>
-        public MongoSequence(string sequence, string collectionName, string incrementID)
+        private enum MongoFunction
         {
-            Sequence = sequence;
-            CollectionName = collectionName;
-            IncrementID = incrementID;
+            None = 0,
+            RunCommand = 1,
+            EnsureIndex = 2,
+            Find = 3,
         }
 
+        #region Fields
 
-        /// <summary>
-        /// 构造函数
-        /// </summary>
-        public MongoSequence()
-        {
-            Sequence = "Sequence";
-            CollectionName = "CollectionName";
-            IncrementID = "IncrementID";
-        }
-    }
-    /// <summary>
-    /// MongoDB数据访问连接对象
-    /// </summary>
-    public class MongoSession : IDisposable
-    {
-        #region 私有方法
-
-        /// <summary>
-        /// MongoDB连接字符串默认配置节
-        /// </summary>
-        private const string DEFAULT_CONFIG_NODE = "MongoDB";
-        /// <summary>
-        /// Mongo自增长ID数据序列
-        /// </summary>
-        private MongoSequence _sequence { get; set; }
         /// <summary>
         /// MongoDB SafeMode
         /// </summary>
-        private SafeMode _safeMode { get; set; }
+        private SafeMode _SafeMode;
         /// <summary>
         /// MongoServer
         /// </summary>
-        private MongoServer _mongoServer { get; set; }
+        private MongoServer _MongoServer;
         /// <summary>
         /// MongoDatabase
         /// </summary>
-        public MongoDatabase mongoDatabase;
+        private MongoDatabase _MongoDatabase;
         /// <summary>
         /// collectionTableName
         /// </summary>
-        public string collectionTableName = "DefaultName";
+        readonly private string _TableName;
 
-        /// <summary>
-        /// 根据数据类型得到集合
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="collectionTableName">连接的表名</param>
-        /// <returns></returns>
-        public MongoCollection<T> GetCollection<T>() where T : class, new()
+        #endregion 
+
+        #region Private methods
+
+        private MongoFunction ParseSql(string sql, out BsonDocument bson)
         {
-            return mongoDatabase.GetCollection<T>(collectionTableName);
+            string function = null;
+            int bsonBegin = -1;
+
+            for (int i = 0; i < sql.Length; i++)
+            {
+                if (sql[i] == '(')
+                {
+                    bsonBegin = i + 1;
+                    function = sql.Substring(0, i);
+                    break;
+                }
+            }
+
+            if (function == null)
+            {
+                throw new BsonException("no '(' in the sql");
+            }
+
+            string bsonString = null;
+
+            for (int i = sql.Length - 1; i >= 0; i--)
+            {
+                if (sql[i] == ')')
+                {
+                    bsonString = sql.Substring(bsonBegin, i - bsonBegin);
+                    break;
+                }                
+            }
+
+            if (bsonString == null)
+            {
+                throw new BsonException("no ')' in the sql");
+            }
+
+            bson = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(bsonString);
+
+
+            //bson = bsonString.ToBsonDocument();
+
+            function = function.Trim().ToLower();
+
+            switch (function)
+            {
+                case "runcommand":
+                    return MongoFunction.RunCommand;
+
+                case "ensureindex":
+                    return MongoFunction.EnsureIndex;
+                case "find":
+                    return MongoFunction.Find;
+                default:
+                    throw new BsonException(string.Format("invalid function:{0}", function));
+            }
         }
 
         /// <summary>
-        /// 链接Mongo
+        /// Get the collection 
+        /// </summary>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <returns>the collection contains with the current table name</returns>
+        public MongoCollection<T> GetCollection<T>() where T : class, new()
+        {
+            return _MongoDatabase.GetCollection<T>(_TableName);
+        }
+
+        /// <summary>
+        /// Connect Mongo
         /// </summary>
         public void Conn()
         {
-            this._mongoServer.Connect();
+            this._MongoServer.Connect();
         }
 
         /// <summary>
-        /// 删除表
+        /// Drop current table
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public void Drop<T>() where T : class, new()
@@ -119,47 +135,24 @@ namespace Hubble.Framework.Data
             }
         }
 
-        /// <summary>
-        /// 构造函数
-        /// <remarks>默认连接串配置节 Web.config > connectionStrings > MongoDB</remarks>
-        /// </summary>
-        /// <param name="dbName">数据库名称</param>
-        /// <param name="configNode">MongoDB连接字符串配置节</param>
-        /// <param name="safeMode">SafeMode选项</param>
-        /// <param name="sequence">Mongo自增长ID数据序列对象</param>
-        /// <returns></returns>
-        public MongoSession(string tableName, string connStr, SafeMode safeMode, MongoSequence sequence)
+        public MongoDataProvider(string tableName, string connectionString)
+            : this(tableName, connectionString, SafeMode.True)
         {
-            //update by zccokie @2011.8.25
-            //string _dbName = "";
-            //string _connstr = "";
-            //if (!string.IsNullOrEmpty(connStr))
-            //{
-            //    string[] arrConnStr = connStr.Split(';');
 
-            //    if (arrConnStr.Length >= 2)
-            //    {
-            //        for (int i = 0; i < arrConnStr.Length; i++)
-            //        {
-            //            if (arrConnStr[i].Split('=')[0].Equals("DataBase", StringComparison.CurrentCultureIgnoreCase))
-            //            {
-            //                _dbName = arrConnStr[i].Split('=')[1];
-            //            }
-            //            else if (arrConnStr[i].Split('=')[0].Equals("Servers", StringComparison.CurrentCultureIgnoreCase))
-            //            {
-            //                _connstr = arrConnStr[i];
-            //            }
-            //        }
-            //    }
-            //}
+        }
 
+        /// <summary>
+        /// Constractor 
+        /// </summary>
+        /// <param name="tableName">table name</param>
+        /// <param name="conntionString">connection string. As same as sql server connection string</param>
+        /// <param name="safeMode">Safe mode</param>
+        /// <returns></returns>
+        public MongoDataProvider(string tableName, string conntionString, SafeMode safeMode)
+        {
+            SqlConnectionStringBuilder sqlConnBuilder = new SqlConnectionStringBuilder(conntionString);
 
-            //var connString = _connstr;
-
-            SqlConnectionStringBuilder sqlConnBuilder = new SqlConnectionStringBuilder(connStr);
-
-            this._safeMode = safeMode ?? SafeMode.False;
-            this._sequence = sequence ?? new MongoSequence();
+            this._SafeMode = safeMode ?? SafeMode.False;
 
             StringBuilder connString = new StringBuilder();
             connString.Append("mongodb://");
@@ -176,67 +169,82 @@ namespace Hubble.Framework.Data
 
             string databaseName = sqlConnBuilder.InitialCatalog;
 
-            this._mongoServer = MongoServer.Create(connString.ToString());
+            this._MongoServer = MongoServer.Create(connString.ToString());
 
-            this.mongoDatabase = this._mongoServer.GetDatabase(databaseName, this._safeMode);
-            this.collectionTableName = tableName;
+            this._MongoDatabase = this._MongoServer.GetDatabase(databaseName, this._SafeMode);
+            this._TableName = tableName;
         }
 
         /// <summary>
-        /// 析构函数
+        /// Dispose function
         /// </summary>
         public void Dispose()
         {
-            this._mongoServer.Disconnect();
+            this._MongoServer.Disconnect();
         }
 
         #endregion
 
-        #region 公有方法
+        #region public metheds
 
         /// <summary>
-        /// 创建自增长ID
-        /// <remarks>默认自增ID存放 [Sequence] 集合</remarks>
+        /// Execute sql
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <returns></returns>
-        public long CreateIncID<T>() where T : class, new()
+        /// <typeparam name="T"></typeparam>
+        /// <param name="sql"></param>
+        public void ExecuteSql<T>(string sql) where T : class, new()
         {
-            long id = 1;
-            var collection = mongoDatabase.GetCollection(this._sequence.Sequence);
-
-            if (collection.Exists() &&
-                collection.Find(MongoDB.Driver.Builders.Query.EQ(this._sequence.CollectionName, typeof(T).Name)).Count() > 0)
+            BsonDocument bDoc;
+            switch (ParseSql(sql, out bDoc))
             {
-                var result = collection.FindAndModify(
-                    MongoDB.Driver.Builders.Query.EQ(this._sequence.CollectionName, typeof(T).Name),
-                    null,
-                    MongoDB.Driver.Builders.Update.Inc(this._sequence.IncrementID, 1),
-                    true);
+                case MongoFunction.EnsureIndex:
+                    IndexKeysDocument indexKeysDoc = new IndexKeysDocument(bDoc.Elements);
+                    this.GetCollection<T>().CreateIndex(indexKeysDoc);
+                    break;
 
-                if (result.Ok && result.ModifiedDocument != null)
-                    long.TryParse(result.ModifiedDocument.GetValue(this._sequence.IncrementID).ToString(), out id);
+                case MongoFunction.RunCommand:
+                    _MongoDatabase.RunCommand(new CommandDocument(bDoc.Elements));
+                    break;
             }
-            else
-            {
-                collection.Insert(
-                    new BsonDocument { 
-                        { this._sequence.CollectionName, typeof(T).Name },
-                        { this._sequence.IncrementID, id }
-                    },
-                    this._safeMode);
-            }
-
-            return id;
         }
 
+        public bool CheckBson(string bson)
+        {
+            try
+            {
+                BsonDocument bDoc;
+                ParseSql(bson, out bDoc);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public MongoCursor<T> QuerySql<T>(string sql) where T : class, new()
+        {
+            BsonDocument bDoc;
+            MongoFunction function = ParseSql(sql, out bDoc);
+            switch (function)
+            {
+                case MongoFunction.Find:
+                    return this.GetCollection<T>().Find(new QueryDocument(bDoc));
+
+                default:
+                    throw new BsonException(string.Format("invalid function:{0}", function));
+            }
+        }
+
+
+
         /// <summary>
-        /// 查询跟新一条记录后返回该记录
+        /// Find and modify
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="sortBy">排序表达式</param>
-        /// <param name="update">跟新表达式</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="query">Query</param>
+        /// <param name="sortBy">Sort by</param>
+        /// <param name="update">update</param>
         /// <returns></returns>
         public T FindAndModify<T>(IMongoQuery query, IMongoSortBy sortyBy, IMongoUpdate update) where T : class, new()
         {
@@ -251,152 +259,130 @@ namespace Hubble.Framework.Data
         }
 
         /// <summary>
-        /// 创建索引
+        /// create index
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="indexKeys">索引字段列表</param>
-        public void CreateIndex<T>(string[] indexKeyArray) where T : class, new()
+        /// <typeparam name="T">data type</typeparam>
+        /// <param name="indexKeys">fields for index</param>
+        public void CreateIndex<T>(string[] indexKeys, bool unique) where T : class, new()
         {
-            if (indexKeyArray.Length > 0)
+            if (indexKeys.Length > 0)
             {
-                this.GetCollection<T>().CreateIndex(indexKeyArray);
+                var keys = IndexKeys.Ascending(indexKeys);
+
+                var options = IndexOptions.SetUnique(unique);
+
+                StringBuilder indexName = new StringBuilder();
+                indexName.Append("Index");
+
+                foreach(string key in indexKeys)
+                {
+                    indexName.AppendFormat("_{0}", key);
+                }
+
+                options.SetName(indexName.ToString());
+
+                this.GetCollection<T>().CreateIndex(keys, options);
             }
         }
 
         /// <summary>
-        /// 添加数据
+        /// insert data
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="item">待添加数据</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="item">insert item</param>
         /// <returns></returns>
         public SafeModeResult Insert<T>(T item) where T : class, new()
         {
-            return this.GetCollection<T>().Insert(item, this._safeMode);
+            return this.GetCollection<T>().Insert(item, this._SafeMode);
         }
 
         /// <summary>
-        /// 获取系统当前时间
+        /// Get current system date time
         /// </summary>
         /// <returns></returns>
         public DateTime GetSysDateTime()
         {
-            return mongoDatabase.Eval("new Date()", null).AsDateTime;
+            return _MongoDatabase.Eval("new Date()", null).AsDateTime;
         }
 
         /// <summary>
-        /// 批量添加数据
+        /// batch insert
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="items">待添加数据集合</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="items">items</param>
         /// <returns></returns>
         public IEnumerable<SafeModeResult> InsertBatch<T>(IEnumerable<T> items) where T : class, new()
         {
-            return this.GetCollection<T>().InsertBatch(items, this._safeMode);
+            return this.GetCollection<T>().InsertBatch(items, this._SafeMode);
         }
 
         /// <summary>
-        /// 更新数据对象
+        /// Update data
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="item">待更新数据对象</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="item">Item</param>
         /// <returns></returns>
         public SafeModeResult Update<T>(T item) where T : class, new()
         {
-            return this.GetCollection<T>().Save<T>(item, this._safeMode);
+            return this.GetCollection<T>().Save<T>(item, this._SafeMode);
         }
 
         /// <summary>
-        /// 更新数据
+        /// update
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="update">待更新数据表达式</param>
-        /// <param name="updateFlag">修改标志[一条或多条]</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="query">query information</param>
+        /// <param name="update">update information</param>
+        /// <param name="updateFlag">update flag</param>
         /// <returns></returns>
-        public SafeModeResult Update<T>(IMongoQuery query, IMongoUpdate update, UpdateFlags updateFlag) where T : class, new()
+        public void Update<T>(IMongoQuery query, IMongoUpdate update, UpdateFlags updateFlag) where T : class, new()
         {
-            return this.GetCollection<T>().Update(query, update, updateFlag, this._safeMode);
+            //this.GetCollection<T>().FindAndModify(query, null, update);
+            this.GetCollection<T>().Update(query, update, updateFlag, this._SafeMode);
         }
 
-        /// <summary>
-        /// 自增长数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="name">字段名</param>
-        /// <param name="val">自增长的值</param>
-        /// <param name="updateFlag">修改标志[一条或多条]</param>
-        /// <returns></returns>
-        public SafeModeResult Inc<T>(IMongoQuery query, string name, long val, UpdateFlags updateFlag) where T : class, new()
-        {
-            if (val <= 0) val = 1;
-            return this.Update<T>(query, MongoDB.Driver.Builders.Update.Inc(name, val), updateFlag);
-        }
 
         /// <summary>
-        /// 添加数据至数组
+        /// Delete 
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="name">数组字段名</param>
-        /// <param name="val">待添加值</param>
-        /// <param name="updateFlag">修改标志[一条或多条]</param>
-        /// <returns></returns>
-        public SafeModeResult Push<T>(IMongoQuery query, string name, BsonValue val, UpdateFlags updateFlag) where T : class, new()
-        {
-            return this.Update<T>(query, MongoDB.Driver.Builders.Update.Push(name, val), updateFlag);
-        }
-
-        /// <summary>
-        /// 从数组中删除数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="name">数组字段名</param>
-        /// <param name="val">待删除值</param>
-        /// <param name="updateFlag">修改标志[一条或多条]</param>
-        /// <returns></returns>
-        public SafeModeResult Pull<T>(IMongoQuery query, string name, BsonValue val, UpdateFlags updateFlag) where T : class, new()
-        {
-            return this.Update<T>(query, MongoDB.Driver.Builders.Update.Pull(name, val), updateFlag);
-        }
-
-        /// <summary>
-        /// 添加数据至数组(保证数据唯一)
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="name">数组字段名</param>
-        /// <param name="val">待添加值</param>
-        /// <param name="updateFlag">修改标志[一条或多条]</param>
-        /// <returns></returns>
-        public SafeModeResult AddToSet<T>(IMongoQuery query, string name, BsonValue val, UpdateFlags updateFlag) where T : class, new()
-        {
-            return this.Update<T>(query, MongoDB.Driver.Builders.Update.AddToSet(name, val), updateFlag);
-        }
-
-        /// <summary>
-        /// 删除数据
-        /// <remarks>一般不用</remarks>
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="removeFlag">删除标志[一条或多条]</param>
+        /// <typeparam name="T">Date Type</typeparam>
+        /// <param name="query">Query information</param>
+        /// <param name="removeFlag">remove flag</param>
         public SafeModeResult Remove<T>(IMongoQuery query, RemoveFlags removeFlag) where T : class, new()
         {
-            return this.GetCollection<T>().Remove(query, removeFlag, this._safeMode);
+            return this.GetCollection<T>().Remove(query, removeFlag, this._SafeMode);
         }
 
         /// <summary>
-        /// 获取多条数据
-        /// <remarks>所有或分页数据</remarks>
+        /// Get all data from the collection
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="sortBy">排序表达式</param>
-        /// <param name="pageIndex">当前页索引</param>
-        /// <param name="pageSize">每页数据数</param>
-        /// <returns></returns>
+        /// <typeparam name="T">Data type</typeparam>
+        /// <param name="sortBy">sort by fields</param>
+        /// <param name="pageIndex">current page index. start with zero</param>
+        /// <param name="pageSize">size of page</param>
+        /// <returns>Cursor</returns>
+        public MongoCursor<T> QueryAll<T>(IMongoSortBy sortBy, int pageIndex, int pageSize) where T : class, new()
+        {
+            var cursor = this.GetCollection<T>().FindAll();
+
+            if (sortBy != null)
+                cursor = cursor.SetSortOrder(sortBy);
+            if (pageSize != 0)
+                cursor.SetSkip(pageIndex * pageSize).SetLimit(pageSize);
+
+            return cursor;
+        }
+
+        /// <summary>
+        /// Query data
+        /// <remarks>if pageSize == 0, return all of the data contains of this query</remarks>
+        /// </summary>
+        /// <typeparam name="T">data type</typeparam>
+        /// <param name="query">query</param>
+        /// <param name="sortBy">sort by fields</param>
+        /// <param name="pageIndex">current page index. start with zero</param>
+        /// <param name="pageSize">size of page</param>
+        /// <returns>Cursor</returns>
         public MongoCursor<T> Query<T>(IMongoQuery query, IMongoSortBy sortBy, int pageIndex, int pageSize) where T : class, new()
         {
             var cursor = this.GetCollection<T>().Find(query);
@@ -409,126 +395,181 @@ namespace Hubble.Framework.Data
             return cursor;
         }
 
+        public MongoCursor<T> Top<T>(string bsonWhere, IMongoQuery inQuery, IMongoSortBy sortBy, int topCount) where T : class, new()
+        {
+            return this.Query<T>(bsonWhere, inQuery, sortBy, 0, topCount);
+        }
+
         /// <summary>
-        /// 获取前几条数据
+        /// Query by bson where and inQuery
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="sortBy">排序表达式</param>
-        /// <param name="topCount">数据条数</param>
-        /// <returns></returns>
+        /// <typeparam name="T">Data type</typeparam>
+        /// <param name="bsonWhere">bson format of where statement</param>
+        /// <param name="inQuery">ids in this query. If don't exist, inQuery==null</param>
+        /// <param name="sortBy">sort by information</param>
+        /// <param name="pageIndex">page index</param>
+        /// <param name="pageSize">page size</param>
+        /// <returns>cursor</returns>
+        public MongoCursor<T> Query<T>(string bsonWhere, IMongoQuery inQuery, IMongoSortBy sortBy, int pageIndex, int pageSize) where T : class, new()
+        {
+            BsonDocument bson = MongoDB.Bson.Serialization.BsonSerializer.Deserialize<BsonDocument>(bsonWhere);
+            MongoCursor<T> cursor;
+
+            if (inQuery != null)
+            {
+                 cursor = this.GetCollection<T>().Find(MongoDB.Driver.Builders.Query.And(inQuery, new QueryDocument(bson)));
+            }
+            else
+            {
+                cursor = this.GetCollection<T>().Find(new QueryDocument(bson));
+            }
+
+            if (sortBy != null)
+                cursor = cursor.SetSortOrder(sortBy);
+            if (pageSize != 0)
+                cursor.SetSkip(pageIndex * pageSize).SetLimit(pageSize);
+
+            return cursor;
+        }
+
+        /// <summary>
+        /// Get top of data for the query
+        /// </summary>
+        /// <typeparam name="T">data type</typeparam>
+        /// <param name="query">query</param>
+        /// <param name="sortBy">sort by fields</param>
+        /// <param name="topCount">number of top</param>
+        /// <returns>Cursor</returns>
         public MongoCursor<T> Top<T>(IMongoQuery query, IMongoSortBy sortBy, int topCount) where T : class, new()
         {
             return this.Query<T>(query, sortBy, 0, topCount);
         }
 
         /// <summary>
-        /// 获取一条数据
+        /// Get Top of all of the data 
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="sortBy">排序表达式</param>
-        /// <returns></returns>
-        public T Get<T>(IMongoQuery query, IMongoSortBy sortBy) where T : class, new()
+        /// <typeparam name="T">data type</typeparam>
+        /// <param name="sortBy">sort by fields</param>
+        /// <param name="topCount">number of top</param>
+        /// <returns>Cursor</returns>
+        public MongoCursor<T> TopAll<T>(IMongoSortBy sortBy, int topCount) where T : class, new()
         {
-            T obj = null;
-
-            foreach (var item in this.Top<T>(query, sortBy, 1))
-                obj = item;
-
-            return obj;
+            return this.QueryAll<T>(sortBy, 0, topCount);
         }
 
-        /// <summary>
-        /// Distinct数据
-        /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="key">字段名</param>
-        /// <param name="query">查询表达式</param>
-        /// <returns></returns>
-        public IEnumerable<BsonValue> Distinct<T>(string key, IMongoQuery query) where T : class, new()
-        {
-            return this.GetCollection<T>().Distinct(key, query);
-        }
 
         /// <summary>
-        /// 获取数据数
+        /// Get the count of query
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
+        /// <typeparam name="T">Data Type</typeparam>
+        /// <param name="query">Query information</param>
         /// <returns></returns>
         public long Count<T>(IMongoQuery query) where T : class, new()
         {
             return this.GetCollection<T>().Count(query);
         }
+       
+        #endregion
+
+
+        #region Static methods
 
         /// <summary>
-        /// 二维空间搜索最近的数据
+        /// Get type from Bson type
         /// </summary>
-        /// <typeparam name="T">数据类型</typeparam>
-        /// <param name="query">查询表达式</param>
-        /// <param name="x">坐标X</param>
-        /// <param name="y">坐标Y</param>
-        /// <param name="limit">数据条数</param>
-        /// <param name="geoNearOptions">geoNearOptions选项</param>
-        /// <returns></returns>
-        public GeoNearResult<T> GeoNear<T>(IMongoQuery query, double x, double y, int limit, IMongoGeoNearOptions geoNearOptions) where T : class, new()
+        /// <param name="bType">bson type</param>
+        /// <returns>.net type</returns>
+        public static Type GetTypeFromBsonType(BsonType bType)
         {
-            #region Command Demo
+            Type type = typeof(string);
 
-            //> db.runCommand({geoNear:"asdf", near:[50,50]})  
-            //{  
-            //    "ns" : "test.places",  
-            //    "near" : "1100110000001111110000001111110000001111110000001111",  
-            //    "results" : [  
-            //            {  
-            //                    "dis" : 69.29646421910687,  
-            //                    "obj" : {  
-            //                            "_id" : ObjectId("4b8bd6b93b83c574d8760280"),  
-            //                            "y" : [  
-            //                                    1,  
-            //                                    1  
-            //                            ],  
-            //                            "category" : "Coffee"  
-            //                    }  
-            //            },  
-            //            {  
-            //                    "dis" : 69.29646421910687,  
-            //                    "obj" : {  
-            //                            "_id" : ObjectId("4b8bd6b03b83c574d876027f"),  
-            //                            "y" : [  
-            //                                    1,  
-            //                                    1  
-            //                            ]  
-            //                    }  
-            //            }  
-            //    ],  
-            //    "stats" : {  
-            //            "time" : 0,  
-            //            "btreelocs" : 1,  
-            //            "btreelocs" : 1,  
-            //            "nscanned" : 2,  
-            //            "nscanned" : 2,  
-            //            "objectsLoaded" : 2,  
-            //            "objectsLoaded" : 2,  
-            //            "avgDistance" : 69.29646421910687  
-            //    },  
-            //    "ok" : 1  
-            //}  
+            switch (bType)
+            {
+                case BsonType.Array:
+                case BsonType.Binary:
+                    type = typeof(byte[]);
+                    break;
+                case BsonType.Boolean:
+                    type = typeof(bool);
+                    break;
+                case BsonType.DateTime:
+                    type = typeof(DateTime);
+                    break;
+                case BsonType.Document:
+                    type = typeof(string);
+                    break;
+                case BsonType.Double:
+                    type = typeof(double);
+                    break;
+                case BsonType.Int32:
+                    type = typeof(int);
+                    break;
+                case BsonType.Int64:
+                    type = typeof(long);
+                    break;
+                case BsonType.JavaScript:
+                    type = typeof(string);
+                    break;
+                case BsonType.String:
+                    type = typeof(string);
+                    break;
+                default:
+                    type = typeof(string);
+                    break;
+            }
 
-            #endregion
-
-            return this.GetCollection<T>().GeoNear(query, x, y, limit, geoNearOptions);
+            return type;
         }
-
 
         /// <summary>
-        /// Mapreduce
+        /// Bson GUID to dotnet GUID
         /// </summary>
-        public MapReduceResult Mapreduce<T>(IMongoQuery query, BsonJavaScript map, BsonJavaScript reduce) where T : class, new()
+        /// <param name="guidString">bson guid string</param>
+        /// <returns>.net GUID string</returns>
+        private static string BsonGUIDToDotNetGUID(string guidString)
         {
-            return this.GetCollection<T>().MapReduce(query, map, reduce);
+            return guidString.Substring(0, 8) + "-" +
+                guidString.Substring(8, 4) + "-" +
+                guidString.Substring(12, 4) + "-" +
+                guidString.Substring(16, 4) + "-" +
+                guidString.Substring(24, 8);
         }
+
+        /// <summary>
+        /// Convert Bson value to the right data type
+        /// </summary>
+        /// <param name="value">bson value</param>
+        /// <returns>value</returns>
+        public static object ConvertFromBsonValue(BsonValue value)
+        {
+            switch (value.BsonType)
+            {
+                case BsonType.Array:
+                case BsonType.Binary:
+                    return value.AsByteArray;
+                case BsonType.Boolean:
+                    return value.AsBoolean;
+                case BsonType.DateTime:
+                    return value.AsDateTime.ToLocalTime();
+                case BsonType.Document:
+                    return value.ToString();
+                case BsonType.Double:
+                    return value.AsDouble;
+                case BsonType.Int32:
+                    return value.AsInt32;
+                case BsonType.Int64:
+                    return value.AsInt64;
+                case BsonType.String:
+                    return value.AsString;
+                case BsonType.Null:
+                    return DBNull.Value;
+                case BsonType.ObjectId:
+                    return value.ToString();
+                default:
+                    return value.ToString();
+            }
+        }
+
 
         #endregion
     }

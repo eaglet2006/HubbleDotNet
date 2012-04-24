@@ -69,6 +69,39 @@ namespace Hubble.Core.Service
                 top, _DBProvider.Table.TriggerTableName, opr, serial);
         }
 
+        private string GetMongoDBSelectSql(long from)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            sb.AppendFormat("Select top {0} '{1}' ", _Step, _DBProvider.Table.DocIdReplaceField);
+
+            foreach (Field field in _DBProvider.Table.Fields)
+            {
+                if (field.Name.Equals(_DBProvider.Table.DocIdReplaceField, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    continue;
+                }
+
+                sb.AppendFormat(", '{0}' ", field.Name);
+            }
+
+            if ((_Flags & SyncFlags.NoLock) != 0)
+            {
+                sb.AppendFormat(" from {0} with(nolock) where '{2}' > {1} order by '{2}'", _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+            }
+            else
+            {
+                sb.AppendFormat(" from {0} where '{2}' > {1} order by '{2}'", _DBProvider.Table.DBTableName, from, _DBProvider.Table.DocIdReplaceField);
+            }
+
+            return sb.ToString();
+        }
+
+        private string GetMongoDBTriggleSql(long serial, int top, string opr)
+        {
+            return string.Format("select top {0} Serial, Id, Fields from {1} where Opr = '{2}' and Serial > {3} order by Serial",
+                top, _DBProvider.Table.TriggerTableName, opr, serial);
+        }
 
         private string GetOracleFieldNameList(long from)
         {
@@ -193,6 +226,10 @@ namespace Hubble.Core.Service
             {
                 return GetSqlServerSelectSql(from);
             }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mongodb", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetMongoDBSelectSql(from);
+            }
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetOracleSelectSql(from);
@@ -218,6 +255,10 @@ namespace Hubble.Core.Service
             if (_DBProvider.Table.DBAdapterTypeName.IndexOf("sqlserver", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
                 return GetSqlServerTriggleSql(serial, top, opr);
+            }
+            else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("mongodb", StringComparison.CurrentCultureIgnoreCase) == 0)
+            {
+                return GetMongoDBTriggleSql(serial, top, opr);
             }
             else if (_DBProvider.Table.DBAdapterTypeName.IndexOf("oracle", StringComparison.CurrentCultureIgnoreCase) == 0)
             {
@@ -417,6 +458,8 @@ namespace Hubble.Core.Service
         private List<Document> GetDocumentsForInsert(IDBAdapter dbAdapter, ref long from)
         {
             List<Document> result = new List<Document>();
+
+            dbAdapter.DBProvider = this._DBProvider;
 
             System.Data.DataSet ds = dbAdapter.QuerySql(GetSelectSql(from));
 
