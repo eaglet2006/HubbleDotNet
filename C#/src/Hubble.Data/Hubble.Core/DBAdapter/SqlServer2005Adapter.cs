@@ -514,6 +514,34 @@ namespace Hubble.Core.DBAdapter
                                 insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
                             }
                             break;
+
+                        case DataType.TinyInt:
+                            {
+                                int temp;
+
+                                if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    temp = 1;
+                                }
+                                else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    temp = 0;
+                                }
+                                else if (!int.TryParse(fv.Value, out temp))
+                                {
+                                    temp = (int)double.Parse(fv.Value);
+                                }
+
+                                if (i == 0 && Table.DocIdReplaceField != null)
+                                {
+                                    insertString.AppendFormat("{0}", temp);
+                                }
+                                else
+                                {
+                                    insertString.AppendFormat(",{0}", temp);
+                                }
+                            }
+                            break;
                         default:
                             if (i == 0 && Table.DocIdReplaceField != null)
                             {

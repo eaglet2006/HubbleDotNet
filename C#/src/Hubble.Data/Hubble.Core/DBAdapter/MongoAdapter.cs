@@ -170,8 +170,27 @@ namespace Hubble.Core.DBAdapter
                             break;
                         case Hubble.Core.Data.DataType.Int:
                         case Hubble.Core.Data.DataType.SmallInt:
-                        case Hubble.Core.Data.DataType.TinyInt:
                             bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                            break;
+                        case Hubble.Core.Data.DataType.TinyInt:
+                            {
+                                int temp;
+
+                                if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    temp = 1;
+                                }
+                                else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                                {
+                                    temp = 0;
+                                }
+                                else if (!int.TryParse(fv.Value, out temp))
+                                {
+                                    temp = (int)double.Parse(fv.Value);
+                                }
+
+                                bsonvalue = new BsonInt32(temp);
+                            }
                             break;
                         case Hubble.Core.Data.DataType.BigInt:
                             bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));

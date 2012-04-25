@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.3.0")]
-[assembly: AssemblyFileVersion("1.2.3.0")]
+[assembly: AssemblyVersion("1.2.3.1")]
+[assembly: AssemblyFileVersion("1.2.3.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -168,4 +168,8 @@ using System.Runtime.InteropServices;
  * Check the field name in create table. Can't use score as the field name.
  * 1.2.3.0
  * First version can support MongoDB.
+ * 1.2.3.1
+ * Fix a bug of mirror table insert that will cause exception when the source table is providered from sql server and there are
+ * at least one field which Data Type is bit.
+ * 
  *****************************************************************************************/
