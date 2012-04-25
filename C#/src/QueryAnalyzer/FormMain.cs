@@ -267,6 +267,7 @@ namespace QueryAnalyzer
 
                 for (int i = 0; i < queryResult.DataSet.Tables.Count; i++)
                 {
+                    queryResult.DataSet.Tables[i].MinimumCapacity = 0;
                     mulitGridView.GridViewList[i].DataSource = queryResult.DataSet.Tables[i].ConvertToSystemDataTable();
 
                     DataTable tbl = queryResult.DataSet.Tables[i];

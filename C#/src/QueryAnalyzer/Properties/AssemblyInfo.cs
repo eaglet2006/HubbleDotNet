@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.3.2")]
-[assembly: AssemblyFileVersion("1.2.3.2")]
+[assembly: AssemblyVersion("1.2.3.3")]
+[assembly: AssemblyFileVersion("1.2.3.3")]
 
 /*****************************************************************************************
  * QueryAnalyzer modification records
@@ -69,4 +69,8 @@ using System.Runtime.InteropServices;
  * 
  * 1.1.9.4
  * Change System.Data.DataSet, DataTable to Hubble.Framework.Data.DataSet, DataTable
+ * 
+ * 1.2.3.3
+ * MinimumCapacity can cause windows form control alloc a lot of memory. Set it to zeor before 
+ * dataset transfer to windows from control. 
  *****************************************************************************************/
