@@ -231,7 +231,7 @@
             this.Controls.Add(this.buttonStart);
             this.Controls.Add(this.progressBar);
             this.Name = "FormRebuildTable";
-            this.Text = "Table Synchronize";
+            this.Text = "Rebuild table";
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownStep)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

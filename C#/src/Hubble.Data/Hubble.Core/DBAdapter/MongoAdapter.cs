@@ -1332,11 +1332,14 @@ namespace Hubble.Core.DBAdapter
 
             try
             {
-                //try to get DBProvider.
-                //If can't find, use the field name and table name as the input. 
-                string tableName = select.SelectFroms[0].Name;
+                if (this.DBProvider == null)
+                {
+                    //try to get DBProvider.
+                    //If can't find, use the field name and table name as the input. 
+                    string tableName = select.SelectFroms[0].Name;
 
-                this.DBProvider = DBProvider.GetDBProvider(tableName);
+                    this.DBProvider = DBProvider.GetDBProvider(tableName);
+                }
             }
             catch
             {
