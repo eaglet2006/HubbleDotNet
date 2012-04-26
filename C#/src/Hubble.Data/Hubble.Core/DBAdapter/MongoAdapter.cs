@@ -71,6 +71,12 @@ namespace Hubble.Core.DBAdapter
             {
                 mongoProvider.CreateIndex<BsonDocument>(new string[] { Table.DocIdReplaceField }, true);
             }
+
+            if (!string.IsNullOrEmpty(Table.MirrorSQLForCreate))
+            {
+                ExcuteSql(Table.MirrorSQLForCreate);
+            }
+
         }
 
         
@@ -82,7 +88,7 @@ namespace Hubble.Core.DBAdapter
         public void Truncate(string tableName)
         {
             MongoDataProvider mongoProvider = new MongoDataProvider(tableName, Table.ConnectionString);
-            mongoProvider.Remove<BsonDocument>(null, MongoDB.Driver.RemoveFlags.None);
+            mongoProvider.Drop<BsonDocument>();
         }
         
         public void Insert(IList<Document> docs)

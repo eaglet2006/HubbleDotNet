@@ -131,7 +131,13 @@ namespace Hubble.Framework.Data
         {
             if (this.GetCollection<T>().Exists())
             {
-                this.GetCollection<T>().Drop();
+
+                //var command = new CommandDocument {     
+                //    { "drop", _TableName }
+                //};
+
+                //_MongoDatabase.RunCommand(command); 
+                _MongoDatabase.DropCollection(_TableName);
             }
         }
 

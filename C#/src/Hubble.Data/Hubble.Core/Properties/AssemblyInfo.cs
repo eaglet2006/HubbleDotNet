@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.3.2")]
-[assembly: AssemblyFileVersion("1.2.3.2")]
+[assembly: AssemblyVersion("1.2.3.4")]
+[assembly: AssemblyFileVersion("1.2.3.4")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -173,4 +173,7 @@ using System.Runtime.InteropServices;
  * at least one field which Data Type is bit.
  * 1.2.3.2
  * Fix a bug of Mongodb database adpter that will cause a error when we use Mongodb as mirror table and run non-sql query.
+ * 1.2.3.4
+ * Fix two bugs of mongodb adapter. One is truncate table will use a lot of memory and very slow because of I use remove all before. 
+ * Use drop instead of removeall is ok. The other one is MirrorSQLForCreate dose not work before. 
  *****************************************************************************************/

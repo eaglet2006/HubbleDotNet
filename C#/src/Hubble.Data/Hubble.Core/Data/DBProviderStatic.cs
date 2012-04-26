@@ -495,26 +495,28 @@ namespace Hubble.Core.Data
 
                     dbProvider.SetIndexOnly(true);
 
-                    if (!indexReadOnly)
-                    {
-                        dbProvider.DBAdapter.Truncate();
-                    }
-                    else
-                    {
-                        if (dbProvider.MirrorDBAdapter != null)
-                        {
-                            try
-                            {
-                                dbProvider.MirrorDBAdapter.Truncate();
-                            }
-                            catch (Exception e)
-                            {
-                                Global.Report.WriteErrorLog(string.Format("Truncate mirror table fail! tablename={0}, dbadapter={1} connectstring={2}",
-                                    dbProvider.Table.MirrorDBTableName, dbProvider.Table.MirrorDBAdapterTypeName,
-                                    dbProvider.Table.MirrorConnectionString), e);
-                            }
-                        }
-                    }
+                    //Don't need truncate table. because it will do drop table. 2012-04-26
+
+                    //if (!indexReadOnly)
+                    //{
+                    //    dbProvider.DBAdapter.Truncate();
+                    //}
+                    //else
+                    //{
+                    //    if (dbProvider.MirrorDBAdapter != null)
+                    //    {
+                    //        try
+                    //        {
+                    //            dbProvider.MirrorDBAdapter.Truncate();
+                    //        }
+                    //        catch (Exception e)
+                    //        {
+                    //            Global.Report.WriteErrorLog(string.Format("Truncate mirror table fail! tablename={0}, dbadapter={1} connectstring={2}",
+                    //                dbProvider.Table.MirrorDBTableName, dbProvider.Table.MirrorDBAdapterTypeName,
+                    //                dbProvider.Table.MirrorConnectionString), e);
+                    //        }
+                    //    }
+                    //}
 
                     Drop(tableName);
 
