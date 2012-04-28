@@ -20,7 +20,39 @@ namespace Hubble.Core.DBAdapter
 {
     public class MongoAdapter : IDBAdapter, INamedExternalReference
     {
-        const string DocIdFieldName = "DocId";
+        public const string DocIdFieldName = "DocId";
+
+        private void LoadIndexToMemoryOnInit(object state)
+        {
+            string idFieldName = (string)state;
+            var query = MongoDB.Driver.Builders.Query.GTE(idFieldName, new BsonInt32(0));
+
+            for (int i = 0; i < 600; i++)
+            {
+                try
+                {
+                    using (MongoDataProvider mongoProvider = new MongoDataProvider(Table.DBTableName, Table.ConnectionString))
+                    {
+                        mongoProvider.Count<BsonDocument>(query);
+                    }
+
+                    return;
+                }
+                catch
+                {
+
+                }
+
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        public void Init(string idFieldName)
+        {
+            System.Threading.Thread thread = new System.Threading.Thread(LoadIndexToMemoryOnInit);
+            thread.IsBackground = true;
+            thread.Start(idFieldName);
+        }
 
         #region IDBAdapter Members
 

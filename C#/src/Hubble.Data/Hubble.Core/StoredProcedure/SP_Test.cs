@@ -70,7 +70,6 @@ namespace Hubble.Core.StoredProcedure
 
             Stopwatch sw = new Stopwatch();
             //int docid = rand.Next(lastDocId);
-            int data;
             sw.Start();
 
             for (int j = 0; j < count / payloads.Length; j++)

@@ -1118,6 +1118,14 @@ namespace Hubble.Core.Data
                         DBAdapter.DocIdReplaceField = DocIdReplaceField;
                         DBAdapter.DBProvider = this;
 
+                        //load mongodb id index to memory at the begining of start
+                        if (DBAdapter is Hubble.Core.DBAdapter.MongoAdapter)
+                        {
+                            ((Hubble.Core.DBAdapter.MongoAdapter)DBAdapter).Init(
+                                DocIdReplaceField == null ? Hubble.Core.DBAdapter.MongoAdapter.DocIdFieldName :
+                                    DocIdReplaceField);
+                        }
+
                         int TryConnectDBTimes = 5;
 
                         if (!IndexOnly)
@@ -1155,6 +1163,15 @@ namespace Hubble.Core.Data
                         MirrorDBAdapter.Table = table.GetMirrorTable();
                         MirrorDBAdapter.DocIdReplaceField = DocIdReplaceField;
                         MirrorDBAdapter.DBProvider = this;
+
+                        //load mongodb id index to memory at the begining of start
+                        if (MirrorDBAdapter is Hubble.Core.DBAdapter.MongoAdapter)
+                        {
+                            ((Hubble.Core.DBAdapter.MongoAdapter)MirrorDBAdapter).Init(
+                                DocIdReplaceField == null ? Hubble.Core.DBAdapter.MongoAdapter.DocIdFieldName :
+                                    DocIdReplaceField);
+                        }
+
                     }
 
                     //Open delete provider

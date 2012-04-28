@@ -35,7 +35,6 @@ namespace Hubble.SQLClient
             AsyncTcpManager.Remove(connectionString);
         }
 
-
         object _AsyncQueryLock = new object();
         TcpItem _TcpItem;
 

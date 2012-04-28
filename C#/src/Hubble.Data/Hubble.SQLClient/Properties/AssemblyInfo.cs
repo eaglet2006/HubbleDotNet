@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.9.7")]
-[assembly: AssemblyFileVersion("1.1.9.7")]
+[assembly: AssemblyVersion("1.2.4.0")]
+[assembly: AssemblyFileVersion("1.2.4.0")]
 
 /*****************************************************************************************
  * Hubble.SQLClient modification records
@@ -66,4 +66,7 @@ using System.Runtime.InteropServices;
  * 1.1.9.7
  * Add a static function named Cancel for HubbleAsyncConnection class.
  * This function can be used to cancel the tcp connection.
+ * 1.2.4.0
+ * Fix a import bug of AsyncHubbleConnection that will hang up the caller at high loading environment.
+ * Please replace hubble.sqlclient.dll at the bin folder of asp.net or any client side.
 *****************************************************************************************/

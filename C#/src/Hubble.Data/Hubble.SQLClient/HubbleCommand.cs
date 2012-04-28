@@ -23,7 +23,7 @@ using Hubble.Framework.Net;
 
 namespace Hubble.SQLClient
 {
-    public class HubbleCommand : System.Data.Common.DbCommand, ICloneable, IAsyncClass
+    public class HubbleCommand : System.Data.Common.DbCommand, ICloneable, IAsyncClass, IDisposable
     {
         class DbParameterForSort : IComparer<System.Data.Common.DbParameter>
         {
@@ -47,6 +47,19 @@ namespace Hubble.SQLClient
         private HubbleConnection _SqlConnection;
 
         private System.Threading.ManualResetEvent _QueryEvent = null;
+        private System.Threading.ManualResetEvent QueryEvent
+        {
+            get
+            {
+                return _QueryEvent;
+            }
+
+            set
+            {
+                _QueryEvent = value;
+            }
+        }
+
         private string _Sql;
         private object[] _ObjParameters = null;
         private HubbleParameterCollection _Parameters = null;
@@ -253,8 +266,10 @@ namespace Hubble.SQLClient
         #endregion
 
         #region constractors
+
         ~HubbleCommand()
         {
+            Dispose();
         }
 
         public HubbleCommand(HubbleConnection sqlConn)
@@ -528,11 +543,11 @@ namespace Hubble.SQLClient
                 _AsyncException = null;
                 HubbleAsyncConnection asyncConnection = _SqlConnection as HubbleAsyncConnection;
 
+                QueryEvent = new System.Threading.ManualResetEvent(false);
+
                 asyncConnection.BeginAsyncQuerySql(sql, this, ref _ClassId);
 
-                _QueryEvent = new System.Threading.ManualResetEvent(false);
-
-                if (_QueryEvent.WaitOne(CommandTimeout * 1000, false))
+                if (QueryEvent.WaitOne(CommandTimeout * 1000, false))
                 {
                     if (_AsyncException != null)
                     {
@@ -1035,10 +1050,15 @@ namespace Hubble.SQLClient
 
         #region IAsyncClass Members
 
+        /// <summary>
+        /// Receive message from AsyncTcpManager
+        /// </summary>
+        /// <param name="message"></param>
         public void ReceiveMessage(object message)
         {
-            if (_QueryEvent != null)
+            if (QueryEvent != null)
             {
+                //Asyncronized query
                 if (message is QueryResult)
                 {
                     _QueryResult = message as QueryResult;
@@ -1057,14 +1077,35 @@ namespace Hubble.SQLClient
                 }
 
                 this.EndAsyncQuery();
-                _QueryEvent.Set();
+                QueryEvent.Set();
                 return;
             }
 
+            //Syncronized query
             if (OnReceiveAsyncMessage != null)
             {
                 OnReceiveAsyncMessage(message);
             }
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        protected override void Dispose(bool disposing)
+        {
+            try
+            {
+                if (QueryEvent != null)
+                {
+                    QueryEvent.Close();
+                }
+            }
+            catch
+            {
+            }
+
+            base.Dispose(disposing);
         }
 
         #endregion

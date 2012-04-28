@@ -233,6 +233,10 @@ namespace Hubble.SQLClient
             {
                 if (!_ClassDict.TryGetValue(package.ClassId, out asyncClass))
                 {
+                    //If hubblecommand query timeout
+                    //It will not find the class id when package return from server.
+                    //Doesn't matter
+                    
                     Console.WriteLine(string.Format("AsyncTcp Manager, class id = {0} is not find", 
                         package.ClassId));
                     return;

@@ -299,6 +299,12 @@ namespace Hubble.SQLClient
         {
         }
 
+
+        ~HubbleConnection()
+        {
+            base.Dispose();
+        }
+
         /// <summary>
         /// Initializes a new instance of the SqlConnection  class when given a string that contains the connection string.
         /// </summary>
