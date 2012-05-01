@@ -253,7 +253,6 @@
             // 
             // buttonMirrorTable
             // 
-            this.buttonMirrorTable.Enabled = false;
             this.buttonMirrorTable.Location = new System.Drawing.Point(30, 380);
             this.buttonMirrorTable.Name = "buttonMirrorTable";
             this.buttonMirrorTable.Size = new System.Drawing.Size(75, 23);

@@ -2506,7 +2506,7 @@ namespace Hubble.Core.Data
                 {
                     if (IndexOnly && DocIdReplaceField == null)
                     {
-                        throw new DataException("Can not update fulltext field when the table is index only.");
+                        throw new DataException("Can not update fulltext field when the table is append only.");
                     }
 
                     Dictionary<string, int> fieldNameIndex = new Dictionary<string, int>();

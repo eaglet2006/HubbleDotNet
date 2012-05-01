@@ -784,6 +784,19 @@ namespace Hubble.Core.Data
         {
             foreach (Field field in table.Fields)
             {
+                if (table.DocIdReplaceField != null)
+                {
+                    //some database is case sensitive such as Mongodb
+                    //We have to set the DocIdReplaceField as the same name as field name
+                    if (table.DocIdReplaceField.Equals(field.Name, StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (table.DocIdReplaceField != field.Name)
+                        {
+                            table.DocIdReplaceField = field.Name;
+                        }
+                    }
+                }
+
                 if (field.IndexType == Field.Index.Untokenized)
                 {
                     switch (field.DataType)

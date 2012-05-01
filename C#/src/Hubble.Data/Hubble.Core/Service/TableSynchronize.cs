@@ -205,7 +205,8 @@ namespace Hubble.Core.Service
 
         private void DoSynchronizeAppendOnly()
         {
-            SynchronizeAppendOnly syncAppendOnly = new SynchronizeAppendOnly(this, _DBProvider, _Step, _OptimizeOption, _FastestMode);
+            SynchronizeAppendOnly syncAppendOnly = new SynchronizeAppendOnly(this, _DBProvider, _Step, 
+                _OptimizeOption, _FastestMode, _Flags);
             syncAppendOnly.Do();
         }
 

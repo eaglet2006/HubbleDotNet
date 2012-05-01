@@ -33,6 +33,7 @@ namespace Hubble.Core.Service
         OptimizationOption _OptimizeOption;
         bool _FastestMode;
         bool _HasInsertCount = false;
+        Service.SyncFlags _Flags;
 
         private string GetSqlServerSelectSql(long from)
         {
@@ -42,15 +43,17 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
-                if (field.IndexType == Field.Index.None)
-                {
-                    continue;
-                }
-
                 sb.AppendFormat(", [{0}] ", field.Name);
             }
 
-            sb.AppendFormat(" from {0} where DocId >= {1} order by DocId", _DBProvider.Table.DBTableName, from);
+            if ((_Flags & SyncFlags.NoLock) != 0)
+            {
+                sb.AppendFormat(" from {0} with(nolock) where DocId >= {1} order by DocId", _DBProvider.Table.DBTableName, from);
+            }
+            else
+            {
+                sb.AppendFormat(" from {0} where DocId >= {1} order by DocId", _DBProvider.Table.DBTableName, from);
+            }
 
             return sb.ToString();
         }
@@ -63,11 +66,6 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
-                if (field.IndexType == Field.Index.None)
-                {
-                    continue;
-                }
-
                 sb.AppendFormat(", '{0}' ", field.Name);
             }
 
@@ -86,11 +84,6 @@ namespace Hubble.Core.Service
 
             foreach (Field field in _DBProvider.Table.Fields)
             {
-                if (field.IndexType == Field.Index.None)
-                {
-                    continue;
-                }
-
                 sb.AppendFormat(", {0} ", Oracle8iAdapter.GetFieldName(field.Name));
             }
 
@@ -428,13 +421,15 @@ namespace Hubble.Core.Service
         }
 
 
-        public SynchronizeAppendOnly(TableSynchronize tableSync, DBProvider dbProvider, int step, OptimizationOption option, bool fastestMode)
+        public SynchronizeAppendOnly(TableSynchronize tableSync, DBProvider dbProvider, int step,
+            OptimizationOption option, bool fastestMode, Service.SyncFlags flags)
         {
             _TableSync = tableSync;
             _DBProvider = dbProvider;
             _Step = step;
             _OptimizeOption = option;
             _FastestMode = fastestMode;
+            _Flags = flags;
         }
 
         private int GetRemainCount(long from, DBAdapter.IDBAdapter dbAdapter)

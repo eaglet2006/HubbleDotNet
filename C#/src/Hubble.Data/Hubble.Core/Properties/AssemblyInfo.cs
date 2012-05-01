@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.4.0")]
-[assembly: AssemblyFileVersion("1.2.4.0")]
+[assembly: AssemblyVersion("1.2.4.1")]
+[assembly: AssemblyFileVersion("1.2.4.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -180,4 +180,8 @@ using System.Runtime.InteropServices;
  * Load mongodb primary id index to memory at the begining of table openning.
  * Fix a import bug of AsyncHubbleConnection that will hang up the caller at high loading environment.
  * Please replace hubble.sqlclient.dll at the bin folder of asp.net or any client side.
+ * 1.2.4.1
+ * Can create mirror table at append only mode
+ * Fix some bugs of Mongodb adapter when it used as a mirror table.
+ * Some of them is case sensitive problem and some of them is mirror table for append only.
  *****************************************************************************************/

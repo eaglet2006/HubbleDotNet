@@ -99,9 +99,19 @@ namespace Hubble.Core.DBAdapter
 
         public void CreateMirrorTable()
         {
+            string idFieldName;
+            if (Table.DocIdReplaceField != null)
+            {
+                idFieldName = Table.DocIdReplaceField;
+            }
+            else
+            {
+                idFieldName = DocIdFieldName;
+            }
+
             using (MongoDataProvider mongoProvider = new MongoDataProvider(Table.MirrorDBTableName, Table.ConnectionString))
             {
-                mongoProvider.CreateIndex<BsonDocument>(new string[] { Table.DocIdReplaceField }, true);
+                mongoProvider.CreateIndex<BsonDocument>(new string[] { idFieldName }, true);
             }
 
             if (!string.IsNullOrEmpty(Table.MirrorSQLForCreate))
@@ -168,7 +178,7 @@ namespace Hubble.Core.DBAdapter
                             break;
                     }
 
-                    document.Add(fv.FieldName, bsonvalue);
+                    document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
                 }
 
                 list.Add(document);
@@ -186,6 +196,12 @@ namespace Hubble.Core.DBAdapter
             foreach (Hubble.Core.Data.Document doc in docs)
             {
                 BsonDocument document = new BsonDocument();
+
+                if (DocIdReplaceField == null)
+                {
+                    document.Add(DocIdFieldName, new BsonInt32(doc.DocId));
+                }
+
                 foreach (Data.FieldValue fv in doc.FieldValues)
                 {
                     if (fv.Value == null)
@@ -241,7 +257,7 @@ namespace Hubble.Core.DBAdapter
                             break;
                     }
 
-                    document.Add(fv.FieldName, bsonvalue);
+                    document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
                 }
 
                 list.Add(document);
@@ -373,7 +389,7 @@ namespace Hubble.Core.DBAdapter
                     }
                 }
 
-                update.Set(fv.FieldName, bsonvalue);
+                update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
             }
 
             string strWhereUpdateID = "";
@@ -454,7 +470,7 @@ namespace Hubble.Core.DBAdapter
                     }
                 }
 
-                update.Set(fv.FieldName, bsonvalue);
+                update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
             }
 
             string strWhereUpdateID = "";

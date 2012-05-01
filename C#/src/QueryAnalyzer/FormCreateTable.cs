@@ -421,6 +421,8 @@ namespace QueryAnalyzer
 
         private void radioButtonIndexMode_CheckedChanged(object sender, EventArgs e)
         {
+            buttonMirrorTable.Enabled = !radioButtonCreateNewTable.Checked;
+
             if (radioButtonCreateNewTable.Checked)
             {
                 labelDBTableName.Text = "TableName in database";
@@ -493,7 +495,6 @@ namespace QueryAnalyzer
         private void radioButtonAppendOnly_CheckedChanged(object sender, EventArgs e)
         {
             panelDocIdReplaceField.Visible = !radioButtonAppendOnly.Checked;
-            buttonMirrorTable.Enabled = !radioButtonAppendOnly.Checked;
         }
 
         private void buttonFinish_Click(object sender, EventArgs e)
