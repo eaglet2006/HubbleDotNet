@@ -1114,22 +1114,22 @@ namespace Hubble.Core.DBAdapter
             {
                 if (DocIdReplaceField == null)
                 {
-                    sql += string.Format(" docid from {0} ", Table.DBTableName);
+                    sql += string.Format(" docid from [{0}] ", Table.DBTableName);
                 }
                 else
                 {
-                    sql += string.Format(" {0} from {1} ", DocIdReplaceField, Table.DBTableName);
+                    sql += string.Format(" [{0}] from [{1}] ", DocIdReplaceField, Table.DBTableName);
                 }
             }
             else
             {
                 if (DocIdReplaceField == null)
                 {
-                    sql += string.Format(" docid from {0} where {1}", Table.DBTableName, where);
+                    sql += string.Format(" docid from [{0}] where {1}", Table.DBTableName, where);
                 }
                 else
                 {
-                    sql += string.Format(" {0} from {1} where {2}", DocIdReplaceField, Table.DBTableName, where);
+                    sql += string.Format(" [{0}] from [{1}] where {2}", DocIdReplaceField, Table.DBTableName, where);
                 }
             }
 
