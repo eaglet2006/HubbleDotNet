@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.4.2")]
-[assembly: AssemblyFileVersion("1.2.4.2")]
+[assembly: AssemblyVersion("1.2.5.0")]
+[assembly: AssemblyFileVersion("1.2.5.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -186,5 +186,7 @@ using System.Runtime.InteropServices;
  * Some of them is case sensitive problem and some of them is mirror table for append only.
  * 1.2.4.2
  * Fix a bug of keywords as a table name like select top 10 * from 'check' where 'title' match 'abc' order by score desc
- * 
+ * 1.2.5.0
+ * Read all index file once before it prepare to using. This optimization can increase the performance of 
+ * IO read when the ram index is none cached.
  *****************************************************************************************/

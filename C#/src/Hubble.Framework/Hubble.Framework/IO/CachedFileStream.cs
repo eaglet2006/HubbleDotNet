@@ -180,12 +180,46 @@ namespace Hubble.Framework.IO
             {
                 _CacheBufferIndex = null;
                 _LastOLWithBuffer = null;
+
+                if (mode == FileMode.Open && access == FileAccess.Read)
+                {
+                    //Read index
+                    InitNoCachedRead();
+                }
             }
         }
 
         #endregion
 
         #region Private methods
+
+        private void InitNoCachedRead()
+        {
+            int bufLength;
+            if (base.Length < 50 * 1024 * 1024)
+            {
+                bufLength = (int)base.Length;
+            }
+            else
+            {
+                bufLength = 50 * 1024 * 1024;
+            }
+
+            byte[] buf = new byte[bufLength];
+
+
+            int len = base.Read(buf, 0, buf.Length);
+
+            while (len > 0)
+            {
+                len = base.Read(buf, 0, buf.Length);
+            }
+
+            base.Seek(0, SeekOrigin.Begin);
+
+            GC.Collect(GC.MaxGeneration);
+        }
+
         private int InitCacheBufferIndex()
         {
             int indexLength = (int)(this.Length / CachedFileBufferManager.BufferUnitSize);
