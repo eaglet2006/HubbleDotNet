@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.5.0")]
-[assembly: AssemblyFileVersion("1.2.5.0")]
+[assembly: AssemblyVersion("1.2.6.0")]
+[assembly: AssemblyFileVersion("1.2.6.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -189,4 +189,9 @@ using System.Runtime.InteropServices;
  * 1.2.5.0
  * Read all index file once before it prepare to using. This optimization can increase the performance of 
  * IO read when the ram index is none cached.
+ * 1.2.6.0
+ * Add a feature of Distinct. We can specify the count of distinct and default count is 1.
+ * For example. Following sql can output same group id 4 times in the result.
+ * [Distinct('GroupId',4)]
+   select top 10 * from News where title match 'abc' order by score desc
  *****************************************************************************************/

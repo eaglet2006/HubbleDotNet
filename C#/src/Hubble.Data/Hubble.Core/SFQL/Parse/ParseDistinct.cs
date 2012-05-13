@@ -61,6 +61,7 @@ namespace Hubble.Core.SFQL.Parse
         DBProvider _DBProvider;
         List<Field> _DistinctFields;
         string _DistinctFieldsString;
+        int _DistinctCount = 1;
         SyntaxAnalysis.ExpressionTree _ExpressionTree;
 
         /// <summary>
@@ -212,6 +213,14 @@ namespace Hubble.Core.SFQL.Parse
 
             _DistinctFieldsString = attribute.Parameters[0];
 
+            _DistinctCount = 1;
+
+            if (attribute.Parameters.Count > 1)
+            {
+                //Second paramter is distinct count. Default is 1.
+                _DistinctCount = int.Parse(attribute.Parameters[1]);
+            }
+
             foreach (string fieldName in _DistinctFieldsString.Split(new char[] { ',' }))
             {
                 Field field = dbProvider.GetField(fieldName.Trim());
@@ -271,7 +280,7 @@ namespace Hubble.Core.SFQL.Parse
         public Hubble.Core.Query.DocumentResultForSort[] Distinct(
             Hubble.Core.Query.DocumentResultForSort[] result, out Hubble.Framework.Data.DataTable table)
         {
-            Dictionary<ulong, int> distinctByDict = new Dictionary<ulong, int>();
+            Dictionary<ulong, int> distinctByDict = new Dictionary<ulong, int>(); //key is the value of the distinct fields, value is distinct count
 
             table = null;
             List<Hubble.Core.Query.DocumentResultForSort> distinctResult =
@@ -286,6 +295,11 @@ namespace Hubble.Core.SFQL.Parse
                 if (distinctByDict.TryGetValue(key, out count))
                 {
                     distinctByDict[key] = count + 1;
+
+                    if (count + 1 <= _DistinctCount)
+                    {
+                        distinctResult.Add(result[i]);
+                    }
                 }
                 else
                 {
