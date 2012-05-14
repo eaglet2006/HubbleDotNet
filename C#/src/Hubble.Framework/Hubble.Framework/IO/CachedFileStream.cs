@@ -50,9 +50,16 @@ namespace Hubble.Framework.IO
             }
         }
 
+        #region static fields
+
+        private static FileLastAccessManager _FileLastAccessManager = new FileLastAccessManager(512, 300 * 1000);
+ 
+        #endregion
+
         private CachedType _Type;
 
         private string _FilePath;
+        private bool _ReadOnly;
 
         private bool _Closed = false;
 
@@ -148,7 +155,8 @@ namespace Hubble.Framework.IO
 
         public CachedFileStream(CachedType type, int minCacheLength, string path,
                  FileMode mode, FileAccess access, FileShare share)
-            : base(path, mode, access, share)
+            : base(path, mode, access, share, 8192, 
+             mode == FileMode.Open && access == FileAccess.Read?FileOptions.None : FileOptions.WriteThrough)
         {
             _Type = type;
             _MinCacheLength = minCacheLength;
@@ -160,6 +168,8 @@ namespace Hubble.Framework.IO
             {
                 _MinCacheLength = CachedFileBufferManager.BufferUnitSize;
             }
+
+            _ReadOnly = mode == FileMode.Open && access == FileAccess.Read;
 
             if (mode != FileMode.Open || share != FileShare.Read)
             {
@@ -181,10 +191,13 @@ namespace Hubble.Framework.IO
                 _CacheBufferIndex = null;
                 _LastOLWithBuffer = null;
 
-                if (mode == FileMode.Open && access == FileAccess.Read)
+                if (_ReadOnly)
                 {
                     //Read index
-                    InitNoCachedRead();
+                    if (!_FileLastAccessManager.AccessRecently(_FilePath))
+                    {
+                        InitNoCachedRead();
+                    }
                 }
             }
         }
@@ -887,6 +900,11 @@ namespace Hubble.Framework.IO
                 _Closed = true;
 
                 Cleanup();
+
+                if (!_ReadOnly)
+                {
+                    _FileLastAccessManager.Add(_FilePath);
+                }
 
             }
             catch(Exception e)

@@ -113,6 +113,7 @@
     <Compile Include="IO\BufferMemory.cs" />
     <Compile Include="IO\CachedFileBufferManager.cs" />
     <Compile Include="IO\CachedFileStream.cs" />
+    <Compile Include="IO\FileLastAccessManager.cs" />
     <Compile Include="IO\HGlobalMemoryBlock.cs" />
     <Compile Include="IO\BlockedMemoryStream.cs" />
     <Compile Include="DataStructure\VInt.cs" />

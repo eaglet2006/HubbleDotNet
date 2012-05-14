@@ -271,6 +271,11 @@ namespace Hubble.Framework.IO
             }
         }
 
+        public static bool Exists(string path)
+        {
+            return System.IO.File.Exists(path);
+        }
+
         public static void DeleteFile(string path, string fileName, bool recursive)
         {
             if (path[path.Length - 1] != '\\')

@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.6.0")]
-[assembly: AssemblyFileVersion("1.2.6.0")]
+[assembly: AssemblyVersion("1.2.6.1")]
+[assembly: AssemblyFileVersion("1.2.6.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -194,4 +194,6 @@ using System.Runtime.InteropServices;
  * For example. Following sql can output same group id 4 times in the result.
  * [Distinct('GroupId',4)]
    select top 10 * from News where title match 'abc' order by score desc
+ * 1.2.6.1
+ * Optimize the IO read and write for index data.
  *****************************************************************************************/
