@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.6.1")]
-[assembly: AssemblyFileVersion("1.2.6.1")]
+[assembly: AssemblyVersion("1.2.7.0")]
+[assembly: AssemblyFileVersion("1.2.7.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -196,4 +196,11 @@ using System.Runtime.InteropServices;
    select top 10 * from News where title match 'abc' order by score desc
  * 1.2.6.1
  * Optimize the IO read and write for index data.
+ * 1.2.7.0
+ * Add external distinct interface so that user can load his customer distinct algorithm into hubbledotnet core.
+ * Add external distinct: SP_AddExternalReference 'distinct', 'ExternalDistinct.dll'
+ * Delete external distinct: SP_DeleteExternalReference 'distinct', 'ExternalDistinct.dll'
+ * List external all references that are already in the system: SP_ExternalReference
+ * [Distinct('time', 20, 'Demo')] --Third parameter is external distinct name.
+ * select top 10 * from News where title match 'abc' order by score desc
  *****************************************************************************************/

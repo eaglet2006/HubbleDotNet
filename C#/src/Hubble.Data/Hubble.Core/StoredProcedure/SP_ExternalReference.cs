@@ -41,6 +41,13 @@ namespace Hubble.Core.StoredProcedure
                 OutputValue("RefName", "DBAdapter");
                 OutputValue("AssemblyFile", externRef.AssemblyFile);
             }
+
+            foreach (Hubble.Core.Global.ExternalReference externRef in Global.Setting.Config.IDistincts)
+            {
+                NewRow();
+                OutputValue("RefName", "Distinct");
+                OutputValue("AssemblyFile", externRef.AssemblyFile);
+            }
         }
 
         public void Run()

@@ -172,6 +172,7 @@
     <Compile Include="Service\ThreadMonitor.cs" />
     <Compile Include="SFQL\LexicalAnalysis\Lexical.cs" />
     <Compile Include="SFQL\LexicalAnalysis\LexicalException.cs" />
+    <Compile Include="SFQL\Parse\DistinctInterfaceLoader.cs" />
     <Compile Include="SFQL\Parse\ParseWhereGenerator.cs" />
     <Compile Include="SFQL\Parse\QueryResultHeapSort.cs" />
     <Compile Include="SFQL\Parse\ParseDistinct.cs" />

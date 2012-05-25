@@ -24,7 +24,7 @@ using Hubble.Core.Data;
 
 namespace Hubble.Core.SFQL.Parse
 {
-    class ParseDistinct : IDistinct
+    class ParseDistinct : IDistinct, INamedExternalReference
     {
         struct DistinctPair : IComparable<DistinctPair>
         {
@@ -57,6 +57,8 @@ namespace Hubble.Core.SFQL.Parse
 
             #endregion
         }
+
+        bool _Inited = false;
 
         DBProvider _DBProvider;
         List<Field> _DistinctFields;
@@ -185,19 +187,17 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="attribute">DistinctBy Attribute</param>
-        /// <param name="dbProvider"></param>
-        /// <example> 
-        /// [DistinctBy("type1, type2")]
-        /// equivalent sql:
-        /// select top 10 count(*) as count from table group by type1, type2 order by count desc
-        /// </example>
-        internal ParseDistinct(TSFQLAttribute attribute, DBProvider dbProvider,
-            SyntaxAnalysis.ExpressionTree expressionTree)
+        private void Init()
         {
+            if (_Inited)
+            {
+                return;
+            }
+
+            TSFQLAttribute attribute = this.Attribute;
+            DBProvider dbProvider = this.DBProvider;
+            SyntaxAnalysis.ExpressionTree expressionTree = this.ExpressionTree;
+
             if (attribute.Parameters.Count < 1)
             {
                 throw new ParseException("Invalid parameter count");
@@ -272,14 +272,62 @@ namespace Hubble.Core.SFQL.Parse
             {
                 throw new ParseException("It need at least one group by field");
             }
+
+            _Inited = true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="attribute">DistinctBy Attribute</param>
+        /// <param name="dbProvider"></param>
+        /// <example> 
+        /// [DistinctBy("type1, type2")]
+        /// equivalent sql:
+        /// select top 10 count(*) as count from table group by type1, type2 order by count desc
+        /// </example>
+        public ParseDistinct()
+        {
         }
 
 
         #region IDistinct Members
 
+        public int StartRow
+        {
+            get;
+            set;
+        }
+
+        public int EndRow
+        {
+            get;
+            set;
+        }
+
+        public TSFQLAttribute Attribute
+        {
+            get;
+            set;
+        }
+
+        public DBProvider DBProvider
+        {
+            get;
+            set;
+        }
+
+        public ExpressionTree ExpressionTree
+        {
+            get;
+            set;
+        }
+
         public Hubble.Core.Query.DocumentResultForSort[] Distinct(
             Hubble.Core.Query.DocumentResultForSort[] result, out Hubble.Framework.Data.DataTable table)
         {
+            Init();
+
             Dictionary<ulong, int> distinctByDict = new Dictionary<ulong, int>(); //key is the value of the distinct fields, value is distinct count
 
             table = null;
@@ -310,6 +358,17 @@ namespace Hubble.Core.SFQL.Parse
 
             return distinctResult.ToArray();
 
+        }
+
+        #endregion
+
+
+
+        #region INamedExternalReference Members
+
+        public string Name
+        {
+            get { return "Default"; }
         }
 
         #endregion

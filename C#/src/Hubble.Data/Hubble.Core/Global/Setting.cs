@@ -759,6 +759,24 @@ namespace Hubble.Core.Global
         }
 
 
+        List<IDistinctConfig> _IDistincts = new List<IDistinctConfig>();
+
+        /// <summary>
+        /// IDistinct exernal reference configuration 
+        /// </summary>
+        public List<IDistinctConfig> IDistincts
+        {
+            get
+            {
+                return _IDistincts;
+            }
+
+            set
+            {
+                _IDistincts = value;
+            }
+        }
+
         #endregion
     }
 
@@ -996,5 +1014,26 @@ namespace Hubble.Core.Global
         }
     }
 
+    [Serializable]
+    public class IDistinctConfig : ExternalReference
+    {
+        [System.Xml.Serialization.XmlIgnore]
+        protected override Type Interface
+        {
+            get
+            {
+                return typeof(Core.SFQL.Parse.IDistinct);
+            }
+        }
+
+        public IDistinctConfig()
+        {
+        }
+
+        public IDistinctConfig(string assemblyFile)
+        {
+            base.AssemblyFile = assemblyFile;
+        }
+    }
 
 }

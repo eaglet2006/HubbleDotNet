@@ -686,7 +686,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        internal Field GetField(string fieldName)
+        public Field GetField(string fieldName)
         {
             lock (this)
             {
@@ -1678,7 +1678,7 @@ namespace Hubble.Core.Data
             }
         }
 
-        internal unsafe int* GetPayloadData(int docId)
+        public unsafe int* GetPayloadData(int docId)
         {
             lock (this)
             {

@@ -841,13 +841,32 @@ namespace Hubble.Core.SFQL.Parse
         }
 
         private IDistinct GetDistinct(TSFQLSentence sentence, Data.DBProvider dbProvider,
-            SyntaxAnalysis.ExpressionTree expressionTree)
+            SyntaxAnalysis.ExpressionTree expressionTree, int begin, int end)
         {
             foreach (TSFQLAttribute attribute in sentence.Attributes)
             {
                 if (attribute.Name.Equals("Distinct", StringComparison.CurrentCultureIgnoreCase))
                 {
-                    return new ParseDistinct(attribute, dbProvider, expressionTree);
+                    string name = "Default";
+                    if (attribute.Parameters.Count >= 3)
+                    {
+                        //The third parameter is extenal interface name
+                        name = attribute.Parameters[2].Trim();
+                    }
+
+                    IDistinct result = DistinctInterfaceLoader.GetDistinct(name);
+
+                    if (result == null)
+                    {
+                        throw new ParseException(string.Format("Can't load IDistinct named:{0}", name));
+                    }
+
+                    result.Attribute = attribute;
+                    result.DBProvider = dbProvider;
+                    result.ExpressionTree = expressionTree;
+                    result.StartRow = begin;
+                    result.EndRow = end;
+                    return result;
                 }
             }
 
@@ -969,7 +988,7 @@ namespace Hubble.Core.SFQL.Parse
                 select.Where == null ? null : select.Where.ExpressionTree);
 
             IDistinct distinct = GetDistinct(select.Sentence, dbProvider,
-                select.Where == null ? null : select.Where.ExpressionTree);
+                select.Where == null ? null : select.Where.ExpressionTree, select.Begin, select.End);
             ParseNotIn notIn = new ParseNotIn(select.Sentence);
 
             if (distinct != null)

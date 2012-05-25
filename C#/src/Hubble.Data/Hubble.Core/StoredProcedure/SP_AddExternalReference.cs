@@ -82,6 +82,18 @@ namespace Hubble.Core.StoredProcedure
                     Global.Setting.Save();
                     break;
 
+                case "distinct":
+                    Hubble.Core.Global.IDistinctConfig idistinctConfig = new Hubble.Core.Global.IDistinctConfig(assemblyFile);
+
+                    if (Global.Setting.Config.IDistincts.Contains(idistinctConfig))
+                    {
+                        throw new StoredProcException(string.Format("assembly file : {0} is already configured!", assemblyFile));
+                    }
+
+                    Global.Setting.Config.IDistincts.Add(idistinctConfig);
+                    Global.Setting.Save();
+                    break;
+
                 default:
                     throw new StoredProcException("refName must be 'Query', 'Analyzer' or 'DBAdapter");
             }

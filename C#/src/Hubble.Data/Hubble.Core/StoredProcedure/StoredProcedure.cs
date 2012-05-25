@@ -19,10 +19,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using Hubble.SQLClient;
+using Hubble.Core.Data;
 
 namespace Hubble.Core.StoredProcedure
 {
-    public abstract class StoredProcedure 
+    public abstract class StoredProcedure : INamedExternalReference
     {
         abstract public string Name { get; }
 

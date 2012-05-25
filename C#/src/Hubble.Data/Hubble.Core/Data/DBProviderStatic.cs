@@ -695,24 +695,24 @@ namespace Hubble.Core.Data
             }
 
    
-                //Load from external reference 
-                //Load IQuery external reference
-                foreach (IQueryConfig iquery in Setting.Config.IQuerys)
+            //Load from external reference 
+            //Load IQuery external reference
+            foreach (IQueryConfig iquery in Setting.Config.IQuerys)
+            {
+                try
                 {
-                    try
+                    if (iquery != null)
                     {
-                        if (iquery != null)
-                        {
-                            iquery.Load(_QueryTable);
-                        }
+                        iquery.Load(_QueryTable);
                     }
-                    catch (Exception e)
-                    {
-                        Global.Report.WriteErrorLog(string.Format("Load IQuery fail. IQuery asm file:{0}", iquery.AssemblyFile),
-                            e);
-                    }
-
                 }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Load IQuery fail. IQuery asm file:{0}", iquery.AssemblyFile),
+                        e);
+                }
+
+            }
 
             //Load IAnalyzer external reference
             foreach (IAnalyzerConfig ianalyzer in Setting.Config.IAnalyzers)
@@ -748,6 +748,23 @@ namespace Hubble.Core.Data
                 }
             }
 
+
+            //Load IDistinct external reference
+            foreach (IDistinctConfig idistinct in Setting.Config.IDistincts)
+            {
+                try
+                {
+                    if (idistinct != null)
+                    {
+                        idistinct.Load(Core.SFQL.Parse.DistinctInterfaceLoader.ExternalDistincts);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Global.Report.WriteErrorLog(string.Format("Load IDistinct fail. IDistinct asm file:{0}", idistinct.AssemblyFile),
+                        e);
+                }
+            }
             //List<string> removeDirs = new List<string>();
 
             //Init table
