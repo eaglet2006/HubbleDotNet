@@ -80,7 +80,7 @@ namespace SQLiteDBAdapter
 
         }
 
-        public int SaveDataTable(DataTable dt)
+        public int SaveDataTable(System.Data.DataTable dt)
         {
             SQLiteTransaction tran = null;
 
@@ -167,14 +167,14 @@ namespace SQLiteDBAdapter
             return cmd.ExecuteScalar();
         }
 
-        public DataSet QuerySql(string sql)
+        public System.Data.DataSet QuerySql(string sql)
         {
             return ExecuteReader(sql);
         }
 
-        public DataSet ExecuteReader(string sql)
+        public System.Data.DataSet ExecuteReader(string sql)
         {
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             SQLiteDataAdapter dadapter = new SQLiteDataAdapter();
 
             dadapter.SelectCommand = new SQLiteCommand(sql, _Conn);
@@ -182,9 +182,9 @@ namespace SQLiteDBAdapter
             dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
             dadapter.Fill(ds);
 
-            foreach (DataTable table in ds.Tables)
+            foreach (System.Data.DataTable table in ds.Tables)
             {
-                foreach (DataColumn col in table.Columns)
+                foreach (System.Data.DataColumn col in table.Columns)
                 {
                     if (col.ColumnName.StartsWith("[") && col.ColumnName.EndsWith("]"))
                     {
@@ -196,9 +196,9 @@ namespace SQLiteDBAdapter
             return ds;
         }
 
-        public DataSet GetSchema(string sql)
+        public System.Data.DataSet GetSchema(string sql)
         {
-            DataSet ds = new DataSet();
+            System.Data.DataSet ds = new System.Data.DataSet();
             SQLiteDataAdapter dadapter = new SQLiteDataAdapter();
             dadapter.SelectCommand = new SQLiteCommand(sql, _Conn);
             dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;

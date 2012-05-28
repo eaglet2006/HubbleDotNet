@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.0")]
-[assembly: AssemblyFileVersion("1.2.7.0")]
+[assembly: AssemblyVersion("1.2.7.1")]
+[assembly: AssemblyFileVersion("1.2.7.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -203,4 +203,7 @@ using System.Runtime.InteropServices;
  * List external all references that are already in the system: SP_ExternalReference
  * [Distinct('time', 20, 'Demo')] --Third parameter is external distinct name.
  * select top 10 * from News where title match 'abc' order by score desc
+ * 1.2.7.1
+ * fix a bug of mongodb adapter for mirror update. It will raise an exception when the master database is 
+ * sql server and has some fields need to be updated are bit data type.
  *****************************************************************************************/

@@ -144,41 +144,49 @@ namespace Hubble.Core.DBAdapter
 
                 foreach (Data.FieldValue fv in doc.FieldValues)
                 {
-                    if (fv.Value == null)
+                    try
                     {
-                        continue;
-                    }
-                    BsonValue bsonvalue = null;
-                    switch (fv.Type)
-                    {
-                        case Hubble.Core.Data.DataType.Varchar:
-                        case Hubble.Core.Data.DataType.NVarchar:
-                        case Hubble.Core.Data.DataType.Char:
-                        case Hubble.Core.Data.DataType.NChar:
-                            bsonvalue = new BsonString(fv.Value);
-                            break;
-                        case Hubble.Core.Data.DataType.DateTime:
-                        case Hubble.Core.Data.DataType.Date:
-                        case Hubble.Core.Data.DataType.SmallDateTime:
-                            bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Int:
-                        case Hubble.Core.Data.DataType.SmallInt:
-                        case Hubble.Core.Data.DataType.TinyInt:
-                            bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.BigInt:
-                            bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Float:
-                            bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Data:
-                            bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
-                            break;
-                    }
+                        if (fv.Value == null)
+                        {
+                            continue;
+                        }
+                        BsonValue bsonvalue = null;
+                        switch (fv.Type)
+                        {
+                            case Hubble.Core.Data.DataType.Varchar:
+                            case Hubble.Core.Data.DataType.NVarchar:
+                            case Hubble.Core.Data.DataType.Char:
+                            case Hubble.Core.Data.DataType.NChar:
+                                bsonvalue = new BsonString(fv.Value);
+                                break;
+                            case Hubble.Core.Data.DataType.DateTime:
+                            case Hubble.Core.Data.DataType.Date:
+                            case Hubble.Core.Data.DataType.SmallDateTime:
+                                bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Int:
+                            case Hubble.Core.Data.DataType.SmallInt:
+                            case Hubble.Core.Data.DataType.TinyInt:
+                                bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.BigInt:
+                                bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Float:
+                                bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Data:
+                                bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
+                                break;
+                        }
 
-                    document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
+                        document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new Data.DataException(string.Format("Mirror insert fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
+                            fv.FieldName, fv.Value, e.Message, e.StackTrace));
+                    }
                 }
 
                 list.Add(document);
@@ -204,60 +212,68 @@ namespace Hubble.Core.DBAdapter
 
                 foreach (Data.FieldValue fv in doc.FieldValues)
                 {
-                    if (fv.Value == null)
+                    try
                     {
-                        continue;
+                        if (fv.Value == null)
+                        {
+                            continue;
+                        }
+                        BsonValue bsonvalue = null;
+                        switch (fv.Type)
+                        {
+                            case Hubble.Core.Data.DataType.Varchar:
+                            case Hubble.Core.Data.DataType.NVarchar:
+                            case Hubble.Core.Data.DataType.Char:
+                            case Hubble.Core.Data.DataType.NChar:
+                                bsonvalue = new BsonString(fv.Value);
+                                break;
+                            case Hubble.Core.Data.DataType.DateTime:
+                            case Hubble.Core.Data.DataType.Date:
+                            case Hubble.Core.Data.DataType.SmallDateTime:
+                                bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Int:
+                            case Hubble.Core.Data.DataType.SmallInt:
+                                bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.TinyInt:
+                                {
+                                    int temp;
+
+                                    if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        temp = 1;
+                                    }
+                                    else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        temp = 0;
+                                    }
+                                    else if (!int.TryParse(fv.Value, out temp))
+                                    {
+                                        temp = (int)double.Parse(fv.Value);
+                                    }
+
+                                    bsonvalue = new BsonInt32(temp);
+                                }
+                                break;
+                            case Hubble.Core.Data.DataType.BigInt:
+                                bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Float:
+                                bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Data:
+                                bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
+                                break;
+                        }
+
+                        document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
                     }
-                    BsonValue bsonvalue = null;
-                    switch (fv.Type)
+                    catch (Exception e)
                     {
-                        case Hubble.Core.Data.DataType.Varchar:
-                        case Hubble.Core.Data.DataType.NVarchar:
-                        case Hubble.Core.Data.DataType.Char:
-                        case Hubble.Core.Data.DataType.NChar:
-                            bsonvalue = new BsonString(fv.Value);
-                            break;
-                        case Hubble.Core.Data.DataType.DateTime:
-                        case Hubble.Core.Data.DataType.Date:
-                        case Hubble.Core.Data.DataType.SmallDateTime:
-                            bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Int:
-                        case Hubble.Core.Data.DataType.SmallInt:
-                            bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.TinyInt:
-                            {
-                                int temp;
-
-                                if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
-                                {
-                                    temp = 1;
-                                }
-                                else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
-                                {
-                                    temp = 0;
-                                }
-                                else if (!int.TryParse(fv.Value, out temp))
-                                {
-                                    temp = (int)double.Parse(fv.Value);
-                                }
-
-                                bsonvalue = new BsonInt32(temp);
-                            }
-                            break;
-                        case Hubble.Core.Data.DataType.BigInt:
-                            bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Float:
-                            bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Data:
-                            bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
-                            break;
+                        throw new Data.DataException(string.Format("Mirror insert fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
+                            fv.FieldName, fv.Value, e.Message, e.StackTrace));
                     }
-
-                    document.Add(GetMatchedFieldName(fv.FieldName), bsonvalue);
                 }
 
                 list.Add(document);
@@ -352,44 +368,52 @@ namespace Hubble.Core.DBAdapter
 
             foreach (Data.FieldValue fv in doc.FieldValues)
             {
-                BsonValue bsonvalue = null;
-                if (fv.Value == null)
+                try
                 {
-                    bsonvalue = new BsonString("");
-                }
-                else
-                {
-                    switch (fv.Type)
+                    BsonValue bsonvalue = null;
+                    if (fv.Value == null)
                     {
-                        case Hubble.Core.Data.DataType.Varchar:
-                        case Hubble.Core.Data.DataType.NVarchar:
-                        case Hubble.Core.Data.DataType.Char:
-                        case Hubble.Core.Data.DataType.NChar:
-                            bsonvalue = new BsonString(fv.Value);
-                            break;
-                        case Hubble.Core.Data.DataType.DateTime:
-                        case Hubble.Core.Data.DataType.Date:
-                        case Hubble.Core.Data.DataType.SmallDateTime:
-                            bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Int:
-                        case Hubble.Core.Data.DataType.SmallInt:
-                        case Hubble.Core.Data.DataType.TinyInt:
-                            bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.BigInt:
-                            bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Float:
-                            bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Data:
-                            bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
-                            break;
+                        bsonvalue = new BsonString("");
                     }
-                }
+                    else
+                    {
+                        switch (fv.Type)
+                        {
+                            case Hubble.Core.Data.DataType.Varchar:
+                            case Hubble.Core.Data.DataType.NVarchar:
+                            case Hubble.Core.Data.DataType.Char:
+                            case Hubble.Core.Data.DataType.NChar:
+                                bsonvalue = new BsonString(fv.Value);
+                                break;
+                            case Hubble.Core.Data.DataType.DateTime:
+                            case Hubble.Core.Data.DataType.Date:
+                            case Hubble.Core.Data.DataType.SmallDateTime:
+                                bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Int:
+                            case Hubble.Core.Data.DataType.SmallInt:
+                            case Hubble.Core.Data.DataType.TinyInt:
+                                bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.BigInt:
+                                bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Float:
+                                bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Data:
+                                bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
+                                break;
+                        }
+                    }
 
-                update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
+                    update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
+                }
+                catch (Exception e)
+                {
+                    throw new Data.DataException(string.Format("Mirror update fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
+                        fv.FieldName, fv.Value, e.Message, e.StackTrace));
+                }
             }
 
             string strWhereUpdateID = "";
@@ -433,44 +457,73 @@ namespace Hubble.Core.DBAdapter
 
             foreach (Data.FieldValue fv in fieldValues)
             {
-                BsonValue bsonvalue = null;
-                if (fv.Value == null)
+                try
                 {
-                    bsonvalue = new BsonString("");
-                }
-                else
-                {
-                    switch (fv.Type)
+                    BsonValue bsonvalue = null;
+                    if (fv.Value == null)
                     {
-                        case Hubble.Core.Data.DataType.Varchar:
-                        case Hubble.Core.Data.DataType.NVarchar:
-                        case Hubble.Core.Data.DataType.Char:
-                        case Hubble.Core.Data.DataType.NChar:
-                            bsonvalue = new BsonString(fv.Value);
-                            break;
-                        case Hubble.Core.Data.DataType.DateTime:
-                        case Hubble.Core.Data.DataType.Date:
-                        case Hubble.Core.Data.DataType.SmallDateTime:
-                            bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Int:
-                        case Hubble.Core.Data.DataType.SmallInt:
-                        case Hubble.Core.Data.DataType.TinyInt:
-                            bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.BigInt:
-                            bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Float:
-                            bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
-                            break;
-                        case Hubble.Core.Data.DataType.Data:
-                            bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
-                            break;
+                        bsonvalue = new BsonString("");
                     }
+                    else
+                    {
+                        switch (fv.Type)
+                        {
+                            case Hubble.Core.Data.DataType.Varchar:
+                            case Hubble.Core.Data.DataType.NVarchar:
+                            case Hubble.Core.Data.DataType.Char:
+                            case Hubble.Core.Data.DataType.NChar:
+                                bsonvalue = new BsonString(fv.Value);
+                                break;
+                            case Hubble.Core.Data.DataType.DateTime:
+                            case Hubble.Core.Data.DataType.Date:
+                            case Hubble.Core.Data.DataType.SmallDateTime:
+                                bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Int:
+                            case Hubble.Core.Data.DataType.SmallInt:
+                                bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.TinyInt:
+                                {
+                                    int temp;
+
+                                    if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        temp = 1;
+                                    }
+                                    else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        temp = 0;
+                                    }
+                                    else if (!int.TryParse(fv.Value, out temp))
+                                    {
+                                        temp = (int)double.Parse(fv.Value);
+                                    }
+
+                                    bsonvalue = new BsonInt32(temp);
+                                }
+                                break;
+                            case Hubble.Core.Data.DataType.BigInt:
+                                bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Float:
+                                bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
+                                break;
+                            case Hubble.Core.Data.DataType.Data:
+                                bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
+                                break;
+                        }
+
+                    }
+
+                    update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
+                }
+                catch (Exception e)
+                {
+                    throw new Data.DataException(string.Format("Mirror update fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
+                        fv.FieldName, fv.Value, e.Message, e.StackTrace));
                 }
 
-                update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
             }
 
             string strWhereUpdateID = "";
