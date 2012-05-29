@@ -586,7 +586,15 @@ namespace Hubble.Core.DBAdapter
                 {
                     replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docId);
 
-                    replaceFieldValueToDocId.Add(replaceFieldValue, docId);
+                    try
+                    {
+                        replaceFieldValueToDocId.Add(replaceFieldValue, docId);
+                    }
+                    catch(Exception e)
+                    {
+                        throw new ArgumentException(string.Format("value: {0} in {1} docid = {2} err:{3}",
+                            replaceFieldValue, this.DBProvider.Table.DocIdReplaceField, docId, e.Message));
+                    }
                 }
                 else
                 {

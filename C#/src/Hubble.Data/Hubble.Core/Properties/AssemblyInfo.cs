@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.1")]
-[assembly: AssemblyFileVersion("1.2.7.1")]
+[assembly: AssemblyVersion("1.2.7.2")]
+[assembly: AssemblyFileVersion("1.2.7.2")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -206,4 +206,6 @@ using System.Runtime.InteropServices;
  * 1.2.7.1
  * fix a bug of mongodb adapter for mirror update. It will raise an exception when the master database is 
  * sql server and has some fields need to be updated are bit data type.
+ * 1.2.7.2
+ * Add a exception in MongoAdapter.Query to report the reduplicated insert.
  *****************************************************************************************/
