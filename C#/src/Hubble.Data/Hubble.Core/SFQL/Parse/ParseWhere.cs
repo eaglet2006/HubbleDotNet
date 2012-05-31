@@ -294,11 +294,25 @@ namespace Hubble.Core.SFQL.Parse
 
             if (_DBProvider.Table.UsingMirrorTableForNonFulltextQuery && _DBProvider.MirrorDBAdapter != null)
             {
-                result = _DBProvider.MirrorDBAdapter.GetDocumentResults(end, whereSql, orderBy);
+                if (this._NeedDistinct)
+                {
+                    result = _DBProvider.MirrorDBAdapter.GetDocumentResults(-1, whereSql, orderBy);
+                }
+                else
+                {
+                    result = _DBProvider.MirrorDBAdapter.GetDocumentResults(end, whereSql, orderBy);
+                }
             }
             else
             {
-                result = _DBProvider.DBAdapter.GetDocumentResults(end, whereSql, orderBy);
+                if (this._NeedDistinct)
+                {
+                    result = _DBProvider.DBAdapter.GetDocumentResults(-1, whereSql, orderBy);
+                }
+                else
+                {
+                    result = _DBProvider.DBAdapter.GetDocumentResults(end, whereSql, orderBy);
+                }
             }
 
             if (orderBy != null)

@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.2")]
-[assembly: AssemblyFileVersion("1.2.7.2")]
+[assembly: AssemblyVersion("1.2.7.3")]
+[assembly: AssemblyFileVersion("1.2.7.3")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -208,4 +208,7 @@ using System.Runtime.InteropServices;
  * sql server and has some fields need to be updated are bit data type.
  * 1.2.7.2
  * Add a exception in MongoAdapter.Query to report the reduplicated insert.
+ * 1.2.7.3
+ * Fix a bug of distinct that will not return whole results while non-fulltext query
+ * Increase the sql length to 4096 for SQLTrace
  *****************************************************************************************/

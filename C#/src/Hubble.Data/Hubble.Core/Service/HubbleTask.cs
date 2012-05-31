@@ -124,12 +124,12 @@ namespace Hubble.Core.Service
             long sqlid = 0;
 
             string sql = (args.InMessage as string);
-            int len = Math.Min(255, sql.Length);
-
-            sql = sql.Substring(0, len);
-
+            
             if (Global.Setting.Config.SqlTrace)
             {
+                int len = Math.Min(4096, sql.Length);
+                sql = sql.Substring(0, len);
+
                 ts = System.Diagnostics.Process.GetCurrentProcess().TotalProcessorTime;
 
                 sw = new System.Diagnostics.Stopwatch();
@@ -148,6 +148,10 @@ namespace Hubble.Core.Service
             }
             else
             {
+                int len = Math.Min(255, sql.Length);
+
+                sql = sql.Substring(0, len);
+
                 _ThreadMonitor.Register(new ThreadMonitor.MonitorParameter(
                     System.Threading.Thread.CurrentThread, string.Format("time={0} sql={1}",
                     DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), sql), 60000, 20000,
