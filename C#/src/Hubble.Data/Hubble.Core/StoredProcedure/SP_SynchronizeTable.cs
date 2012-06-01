@@ -105,6 +105,7 @@ namespace Hubble.Core.StoredProcedure
             if ((flags & Hubble.Core.Service.SyncFlags.WaitForExit) != 0)
             {
                 //Wait for exit
+                int count = 0;
 
                 while (true)
                 {
@@ -113,6 +114,12 @@ namespace Hubble.Core.StoredProcedure
                     {
                         OutputMessage(string.Format("Table: {0} finished synchronizing!", Parameters[0]));
                         return;
+                    }
+
+                    if ((++count % 60) == 0)
+                    {
+                        Hubble.Core.Global.Report.WriteAppLog(string.Format("TableSynchronizeProgress = {0}% of table:{1}",
+                            dbProvider.TableSynchronizeProgress, dbProvider.TableName));
                     }
 
                     System.Threading.Thread.Sleep(1000);

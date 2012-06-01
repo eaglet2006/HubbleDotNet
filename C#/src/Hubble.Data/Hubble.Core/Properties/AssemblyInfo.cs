@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.3")]
-[assembly: AssemblyFileVersion("1.2.7.3")]
+[assembly: AssemblyVersion("1.2.7.4")]
+[assembly: AssemblyFileVersion("1.2.7.4")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -211,4 +211,6 @@ using System.Runtime.InteropServices;
  * 1.2.7.3
  * Fix a bug of distinct that will not return whole results while non-fulltext query
  * Increase the sql length to 4096 for SQLTrace
+ * 1.2.7.4
+ * Fix a bug of synchronize that will return a progress more then 100 percent.
  *****************************************************************************************/

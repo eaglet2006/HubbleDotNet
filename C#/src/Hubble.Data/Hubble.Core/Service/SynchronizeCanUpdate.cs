@@ -731,12 +731,22 @@ namespace Hubble.Core.Service
 
                     _DBProvider.Update(updateEntityList);
 
-                    _TableSync.SetProgress(70 + 20 * (double)doCount / (double)totalCount);
-
                     string deleteSql = string.Format("delete from {0} where Serial <= {1} and Opr = 'Update'",
                         _DBProvider.Table.TriggerTableName, serial);
 
                     dbAdapter.ExcuteSql(deleteSql);
+
+                    if (((double)doCount / (double)totalCount) > 100)
+                    {
+                        //some update record in trigger table come after we got the count last time
+                        //Leave the remain records for next time that execute synchronize 
+                        _TableSync.SetProgress(70 + 20); 
+                        break;
+                    }
+                    else
+                    {
+                        _TableSync.SetProgress(70 + 20 * (double)doCount / (double)totalCount);
+                    }
                 }
 
             } while (count > 0);
