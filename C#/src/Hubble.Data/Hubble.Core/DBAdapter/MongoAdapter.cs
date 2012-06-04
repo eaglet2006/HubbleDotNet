@@ -447,113 +447,105 @@ namespace Hubble.Core.DBAdapter
         }
         
 
-        public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues, IList<Query.DocumentResultForSort> docs)
+        public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues, 
+            IList<Query.DocumentResultForSort> docs)
         {
             MongoDataProvider mongoProvider = new MongoDataProvider(Table.MirrorDBTableName, 
                 Table.MirrorConnectionString);
 
-            MongoDB.Driver.Builders.UpdateBuilder update = new MongoDB.Driver.Builders.UpdateBuilder();
-            MongoDB.Driver.Builders.QueryComplete query = null;
-
-            foreach (Data.FieldValue fv in fieldValues)
+            for (int index = 0; index < docs.Count; index++)
             {
-                try
+                for (int i = 0; i < fieldValues.Count; i++)
                 {
-                    BsonValue bsonvalue = null;
-                    if (fv.Value == null)
+                    Data.FieldValue fvFieldName = fieldValues[i];
+
+                    Data.FieldValue fv = docValues[index][i];
+
+                    try
                     {
-                        bsonvalue = new BsonString("");
-                    }
-                    else
-                    {
-                        switch (fv.Type)
+                        MongoDB.Driver.Builders.UpdateBuilder update = new MongoDB.Driver.Builders.UpdateBuilder();
+                        MongoDB.Driver.Builders.QueryComplete query = null;
+
+                        BsonValue bsonvalue = null;
+                        if (fv.Value == null)
                         {
-                            case Hubble.Core.Data.DataType.Varchar:
-                            case Hubble.Core.Data.DataType.NVarchar:
-                            case Hubble.Core.Data.DataType.Char:
-                            case Hubble.Core.Data.DataType.NChar:
-                                bsonvalue = new BsonString(fv.Value);
-                                break;
-                            case Hubble.Core.Data.DataType.DateTime:
-                            case Hubble.Core.Data.DataType.Date:
-                            case Hubble.Core.Data.DataType.SmallDateTime:
-                                bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
-                                break;
-                            case Hubble.Core.Data.DataType.Int:
-                            case Hubble.Core.Data.DataType.SmallInt:
-                                bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
-                                break;
-                            case Hubble.Core.Data.DataType.TinyInt:
-                                {
-                                    int temp;
+                            bsonvalue = new BsonString("");
+                        }
+                        else
+                        {
+                            switch (fvFieldName.Type)
+                            {
+                                case Hubble.Core.Data.DataType.Varchar:
+                                case Hubble.Core.Data.DataType.NVarchar:
+                                case Hubble.Core.Data.DataType.Char:
+                                case Hubble.Core.Data.DataType.NChar:
+                                    bsonvalue = new BsonString(fv.Value);
+                                    break;
+                                case Hubble.Core.Data.DataType.DateTime:
+                                case Hubble.Core.Data.DataType.Date:
+                                case Hubble.Core.Data.DataType.SmallDateTime:
+                                    bsonvalue = new BsonDateTime(Convert.ToDateTime(fv.Value));
+                                    break;
+                                case Hubble.Core.Data.DataType.Int:
+                                case Hubble.Core.Data.DataType.SmallInt:
+                                    bsonvalue = new BsonInt32(Convert.ToInt32(fv.Value));
+                                    break;
+                                case Hubble.Core.Data.DataType.TinyInt:
+                                    {
+                                        int temp;
 
-                                    if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
-                                    {
-                                        temp = 1;
-                                    }
-                                    else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
-                                    {
-                                        temp = 0;
-                                    }
-                                    else if (!int.TryParse(fv.Value, out temp))
-                                    {
-                                        temp = (int)double.Parse(fv.Value);
-                                    }
+                                        if (fv.Value.Equals("True", StringComparison.CurrentCultureIgnoreCase))
+                                        {
+                                            temp = 1;
+                                        }
+                                        else if (fv.Value.Equals("False", StringComparison.CurrentCultureIgnoreCase))
+                                        {
+                                            temp = 0;
+                                        }
+                                        else if (!int.TryParse(fv.Value, out temp))
+                                        {
+                                            temp = (int)double.Parse(fv.Value);
+                                        }
 
-                                    bsonvalue = new BsonInt32(temp);
-                                }
-                                break;
-                            case Hubble.Core.Data.DataType.BigInt:
-                                bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
-                                break;
-                            case Hubble.Core.Data.DataType.Float:
-                                bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
-                                break;
-                            case Hubble.Core.Data.DataType.Data:
-                                bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
-                                break;
+                                        bsonvalue = new BsonInt32(temp);
+                                    }
+                                    break;
+                                case Hubble.Core.Data.DataType.BigInt:
+                                    bsonvalue = new BsonInt64(Convert.ToInt64(fv.Value));
+                                    break;
+                                case Hubble.Core.Data.DataType.Float:
+                                    bsonvalue = new BsonDouble(Convert.ToDouble(fv.Value));
+                                    break;
+                                case Hubble.Core.Data.DataType.Data:
+                                    bsonvalue = new BsonBinaryData(Hubble.Core.Data.DataTypeConvert.StringToData(fv.Value));
+                                    break;
+                            }
+
                         }
 
+                        update.Set(GetMatchedFieldName(fvFieldName.FieldName), bsonvalue);
+
+                        int docId = docs[index].DocId;
+
+                        if (DocIdReplaceField == null)
+                        {
+                            query = MongoDB.Driver.Builders.Query.EQ(DocIdFieldName, new BsonInt32(docId));
+                        }
+                        else
+                        {
+                            long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docId);
+                            query = MongoDB.Driver.Builders.Query.EQ(DocIdReplaceField, new BsonInt64(replaceFieldValue));
+                        }
+
+                        mongoProvider.Update<BsonDocument>(query, update, MongoDB.Driver.UpdateFlags.None);
                     }
-
-                    update.Set(GetMatchedFieldName(fv.FieldName), bsonvalue);
-                }
-                catch (Exception e)
-                {
-                    throw new Data.DataException(string.Format("Mirror update fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
-                        fv.FieldName, fv.Value, e.Message, e.StackTrace));
-                }
-
-            }
-
-            string strWhereUpdateID = "";
-            BsonArray bsonArray = new BsonArray();
-            if (DocIdReplaceField == null)
-            {
-                strWhereUpdateID = DocIdFieldName;
-            }
-            else
-            {
-                strWhereUpdateID = DocIdReplaceField;
-            }
-
-            foreach (Query.DocumentResultForSort docResult in docs)
-            {
-                int docId = docResult.DocId;
-                if (DocIdReplaceField == null)
-                {
-                    bsonArray.Add(new BsonInt32(docId));
-                }
-                else
-                {
-                    long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docId);
-                    bsonArray.Add(new BsonInt64(replaceFieldValue));
+                    catch (Exception e)
+                    {
+                        throw new Data.DataException(string.Format("Mirror update fail. fieldname={0} value={1} \r\nerr:{2} \r\ninner stacktrace:{3}",
+                            fv.FieldName, fv.Value, e.Message, e.StackTrace));
+                    }
                 }
             }
-
-            query = MongoDB.Driver.Builders.Query.In(strWhereUpdateID, bsonArray);
-            mongoProvider.Update<BsonDocument>(query, update, MongoDB.Driver.UpdateFlags.Multi);
-
         }
         
         public System.Data.DataTable Query(IList<Field> selectFields, IList<Query.DocumentResultForSort> docs)

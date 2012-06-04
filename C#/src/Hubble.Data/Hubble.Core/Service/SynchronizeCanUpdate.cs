@@ -22,6 +22,7 @@ using System.Text;
 using Hubble.Core.Data;
 using Hubble.Core.DBAdapter;
 using Hubble.SQLClient;
+using Hubble.Core.Service.Synchronize;
 
 namespace Hubble.Core.Service
 {
@@ -482,13 +483,13 @@ namespace Hubble.Core.Service
             int count;
             do
             {
-                string sql = GetTriggleSql(serial, 5000, "Delete");
+                string sql = GetTriggleSql(serial, this._Step, "Delete");
                 System.Data.DataSet ds = dbAdapter.QuerySql(sql);
                 count = ds.Tables[0].Rows.Count;
 
                 if (count > 0)
                 {
-                    List<int> docs = new List<int>(5000);
+                    List<int> docs = new List<int>(_Step);
 
                     foreach (System.Data.DataRow row in ds.Tables[0].Rows)
                     {
@@ -626,37 +627,53 @@ namespace Hubble.Core.Service
 
             do
             {
-                string sql = GetTriggleSql(serial, 2500, "Update");
+                string sql = GetTriggleSql(serial, _Step, "Update");
                 System.Data.DataSet ds = dbAdapter.QuerySql(sql);
 
                 count = ds.Tables[0].Rows.Count;
 
                 if (count > 0)
                 {
+                    doCount += count;
+
+                    if (doCount > totalCount)
+                    {
+                        //some update record in trigger table come after we got the count last time
+                        //Leave the remain records for next time that execute synchronize 
+                        Global.Report.WriteAppLog("SynchronizeForUpdate, some update record in trigger table come after we got the count last time. Leave the remain records for next time that execute synchronize.");
+
+                        _TableSync.SetProgress(70 + 20);
+                        break;
+                    }
+
                     Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, update count = {0}, table={1}",
                         count, _DBProvider.TableName));
-
-                    doCount += count;
 
                     List<SFQL.Parse.SFQLParse.UpdateEntity> updateEntityList = new List<SFQL.Parse.SFQLParse.UpdateEntity>();
 
                     string lastSql = null;
+                    bool lastHasTokenized = false;
+
                     List<long> ids = new List<long>();
 
-                    foreach (System.Data.DataRow row in ds.Tables[0].Rows)
+                    foreach (GenerateSelectIDSql.IdFields idField in
+                        GenerateSelectIDSql.GetIdFieldsList(this._DBProvider, _DBProvider.Table.DBAdapterTypeName,
+                            ds.Tables[0], out serial))
                     {
-                        long id = long.Parse(row["id"].ToString());
+                        if (idField == null)
+                        {
+                            continue;
+                        }
+
+                        long id = idField.Id;
 
                         int docid = _DBProvider.GetDocIdFromDocIdReplaceFieldValue(id);
-
-
-                        serial = long.Parse(row["Serial"].ToString());
 
                         if (docid >= 0)
                         {
                             List<FieldValue> fieldValues = new List<FieldValue>();
 
-                            string fields = row["Fields"].ToString();
+                            string fields = idField.Fields;
 
                             //Get values updated of this id
                             
@@ -690,6 +707,7 @@ namespace Hubble.Core.Service
 
                             if (lastSql == null)
                             {
+                                lastHasTokenized = idField.HasTokenizedFields;
                                 ids.Add(id);
                                 lastSql = sb.ToString();
                                 continue;
@@ -703,11 +721,13 @@ namespace Hubble.Core.Service
                                 }
                             }
 
-                            Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}, table={1}",
-                                ids.Count, _DBProvider.TableName));
+                            Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}, table={1}, {2}",
+                                ids.Count, _DBProvider.TableName, 
+                                lastHasTokenized ? "With tokenized index fields" : "Without tokenized index fields"));
 
                             System.Data.DataSet vDs = dbAdapter.QuerySql(BuildSelectSql(lastSql, ids));
 
+                            lastHasTokenized = idField.HasTokenizedFields;
                             lastSql = sb.ToString();
                             ids.Clear();
                             ids.Add(id);
@@ -719,8 +739,8 @@ namespace Hubble.Core.Service
 
                     if (lastSql != null)
                     {
-                        Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}, table={1}",
-                            ids.Count, _DBProvider.TableName));
+                        Global.Report.WriteAppLog(string.Format("SynchronizeForUpdate, get update details, count = {0}, table={1}, {2}",
+                            ids.Count, _DBProvider.TableName, lastHasTokenized ? "With tokenized index fields" : "Without tokenized index fields"));
 
                         System.Data.DataSet vDs = dbAdapter.QuerySql(BuildSelectSql(lastSql, ids));
 
@@ -740,6 +760,8 @@ namespace Hubble.Core.Service
                     {
                         //some update record in trigger table come after we got the count last time
                         //Leave the remain records for next time that execute synchronize 
+                        Global.Report.WriteAppLog("SynchronizeForUpdate, some update record in trigger table come after we got the count last time. Leave the remain records for next time that execute synchronize.");
+
                         _TableSync.SetProgress(70 + 20); 
                         break;
                     }
