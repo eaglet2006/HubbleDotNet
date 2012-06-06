@@ -28,13 +28,27 @@ namespace MySqlDBAdapter
     {
         bool _Opened = false;
         string _ConnectionString;
+        int _CommandTimeOut = 300;
 
         MySqlConnection _MySqlConnection = null;
 
         unsafe public void Connect(string connectionString)
         {
+            if (!connectionString.Contains("Connection Timeout") && !connectionString.Contains("Connect Timeout"))
+            {
+                if (connectionString.EndsWith(";"))
+                {
+                    connectionString += "Connection Timeout=300;";
+                }
+                else
+                {
+                    connectionString += ";Connection Timeout=300;";
+                }
+            }
+
             _ConnectionString = connectionString;
             _MySqlConnection = new MySqlConnection(connectionString);
+            _CommandTimeOut = _MySqlConnection.ConnectionTimeout;
             _MySqlConnection.Open();
             _Opened = true;
         }
@@ -56,6 +70,7 @@ namespace MySqlDBAdapter
         public System.Data.Common.DbDataReader ExecuteReader(string sql, out MySqlCommand cmd)
         {
             cmd = new MySqlCommand(sql, _MySqlConnection);
+            cmd.CommandTimeout = _CommandTimeOut;
             return cmd.ExecuteReader();
         }
 
@@ -63,18 +78,17 @@ namespace MySqlDBAdapter
         public int ExcuteSql(string sql)
         {
             MySqlCommand cmd = new MySqlCommand(sql, _MySqlConnection);
+            cmd.CommandTimeout = _CommandTimeOut;
             return cmd.ExecuteNonQuery();
         }
 
         public DataSet QuerySql(string sql)
         {
-
             MySqlDataAdapter dadapter = new MySqlDataAdapter();
-
             MySqlCommand cmd = new MySqlCommand(sql, _MySqlConnection);
 
             dadapter.SelectCommand = cmd;
-
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
             dadapter.AcceptChangesDuringFill = false;
 
             DataSet ds = new DataSet();
@@ -90,6 +104,7 @@ namespace MySqlDBAdapter
             MySqlDataAdapter dadapter = new MySqlDataAdapter();
 
             dadapter.SelectCommand = new MySqlCommand(sql, _MySqlConnection);
+            dadapter.SelectCommand.CommandTimeout = _CommandTimeOut;
 
             DataSet ds = new DataSet();
             dadapter.FillSchema(ds, SchemaType.Mapped);

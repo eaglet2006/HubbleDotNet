@@ -123,7 +123,7 @@ namespace MySqlDBAdapter
                     throw new ArgumentException(field.DataType.ToString());
             }
 
-            string sql = string.Format("{0}]" + sqlType + " ", field.Name,
+            string sql = string.Format("`{0}`" + sqlType + " ", field.Name,
                 field.DataLength <= 0 ? "max" : field.DataLength.ToString());
 
             if (!field.CanNull)
@@ -214,7 +214,7 @@ namespace MySqlDBAdapter
             //xx
           //  string sql = string.Format("if exists (select * from sysobjects where id = object_id('{0}') and type = 'u')	drop table {0}",
             //Table.DBTableName);
-            string sql = "select now()";
+            string sql = string.Format("drop table IF EXIST {0}", Table.DBTableName);
             
 
             using (MysqlDataProvider sqlData = new MysqlDataProvider())
@@ -983,32 +983,308 @@ namespace MySqlDBAdapter
 
         #region IDBAdapter Members
 
-
         public void CreateMirrorTable()
         {
-            throw new NotImplementedException();
+            Debug.Assert(Table != null);
+
+            List<string> primaryKeys = new List<string>();
+
+            StringBuilder sql = new StringBuilder();
+
+            sql.AppendFormat("create table {0} (", Table.DBTableName);
+
+            if (Table.DocIdReplaceField != null)
+            {
+                primaryKeys.Add(Table.DocIdReplaceField);
+            }
+            else
+            {
+                primaryKeys.Add("DocId");
+                sql.Append("DocId Int NOT NULL,");
+            }
+
+            int i = 0;
+
+            for (i = 0; i < Table.Fields.Count; i++)
+            {
+                Data.Field field = Table.Fields[i];
+                string fieldSql = GetFieldLine(field);
+                if (!String.IsNullOrEmpty(fieldSql))
+                {
+                    sql.Append(fieldSql);
+
+                    if (i < Table.Fields.Count - 1)
+                    {
+                        sql.Append(",");
+                    }
+                }
+            }
+
+
+            if (primaryKeys.Count > 0)
+            {
+                i = 0;
+                sql.Append(", primary key (");
+
+                foreach (string pkName in primaryKeys)
+                {
+                    if (i == 0)
+                    {
+                        sql.AppendFormat("`{0}`", pkName);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",`{0}`", pkName);
+                    }
+
+                    i++;
+                }
+
+                sql.Append(")");
+            }
+
+            sql.Append(")");
+
+            using (MysqlDataProvider sqlData = new MysqlDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+
+                if (!string.IsNullOrEmpty(Table.SQLForCreate))
+                {
+                    sqlData.ExcuteSql(Table.SQLForCreate);
+                }
+            }
         }
 
         public void Truncate(string tableName)
         {
-            throw new NotImplementedException();
+            Debug.Assert(Table != null);
+
+            string sql = string.Format("truncate table {0}",
+                tableName);
+
+            using (MysqlDataProvider sqlData = new MysqlDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql);
+            }
         }
 
         public void MirrorInsert(IList<Document> docs)
         {
-            throw new NotImplementedException();
+            StringBuilder insertString = new StringBuilder();
+
+            foreach (Hubble.Core.Data.Document doc in docs)
+            {
+                if (Table.DocIdReplaceField == null)
+                {
+                    insertString.AppendFormat("Insert {0} (`DocId`", _Table.DBTableName);
+                }
+                else
+                {
+                    insertString.AppendFormat("Insert {0} (", _Table.DBTableName);
+                }
+
+                int i = 0;
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
+                    if (i == 0 && Table.DocIdReplaceField != null)
+                    {
+                        insertString.AppendFormat("`{0}`", fv.FieldName);
+                    }
+                    else
+                    {
+                        insertString.AppendFormat(", `{0}`", fv.FieldName);
+                    }
+
+                    i++;
+                }
+
+                if (Table.DocIdReplaceField == null)
+                {
+                    insertString.AppendFormat(") Values({0}", doc.DocId);
+                }
+                else
+                {
+                    insertString.Append(") Values(");
+                }
+
+                i = 0;
+
+                foreach (Data.FieldValue fv in doc.FieldValues)
+                {
+                    if (fv.Value == null)
+                    {
+                        continue;
+                    }
+
+                    switch (fv.Type)
+                    {
+                        case Hubble.Core.Data.DataType.Varchar:
+                        case Hubble.Core.Data.DataType.NVarchar:
+                        case Hubble.Core.Data.DataType.Char:
+                        case Hubble.Core.Data.DataType.NChar:
+                        case Hubble.Core.Data.DataType.DateTime:
+                        case Hubble.Core.Data.DataType.Date:
+                        case Hubble.Core.Data.DataType.SmallDateTime:
+                        case Hubble.Core.Data.DataType.Data:
+                            if (i == 0 && Table.DocIdReplaceField != null)
+                            {
+                                insertString.AppendFormat("'{0}'", fv.Value.Replace("'", "''"));
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",'{0}'", fv.Value.Replace("'", "''"));
+                            }
+                            break;
+                        default:
+                            if (i == 0 && Table.DocIdReplaceField != null)
+                            {
+                                insertString.AppendFormat("{0}", fv.Value);
+                            }
+                            else
+                            {
+                                insertString.AppendFormat(",{0}", fv.Value);
+                            }
+                            break;
+                    }
+
+                    i++;
+                }
+
+                insertString.Append(")\r\n");
+            }
+
+            using (MysqlDataProvider sqlData = new MysqlDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(insertString.ToString());
+            }
         }
 
         public void MirrorDelete(IList<int> docIds)
         {
-            throw new NotImplementedException();
+            StringBuilder sql = new StringBuilder();
+
+            sql.Append(" delete from ");
+
+            if (Table.DocIdReplaceField != null)
+            {
+                sql.AppendFormat(" {0} where {1} in (", Table.DBTableName, Table.DocIdReplaceField);
+            }
+            else
+            {
+                sql.AppendFormat(" {0} where docId in (", Table.DBTableName);
+            }
+            int i = 0;
+            foreach (int docId in docIds)
+            {
+                long id;
+
+                if (Table.DocIdReplaceField != null)
+                {
+                    id = this.DBProvider.GetDocIdReplaceFieldValue(docId);
+                    if (id == long.MaxValue)
+                    {
+                        //does not find this record
+                        continue;
+                    }
+                }
+                else
+                {
+                    id = docId;
+                }
+
+                if (i++ == 0)
+                {
+                    sql.AppendFormat("{0}", id);
+                }
+                else
+                {
+                    sql.AppendFormat(",{0}", id);
+                }
+            }
+
+            if (i == 0)
+            {
+                //No records need to delete
+                return;
+            }
+
+            sql.Append(")");
+
+            using (MysqlDataProvider sqlData = new MysqlDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
         }
 
         public void MirrorUpdate(IList<FieldValue> fieldValues, IList<List<FieldValue>> docValues, IList<Hubble.Core.Query.DocumentResultForSort> docs)
         {
-            throw new NotImplementedException();
-        }
+            StringBuilder sql = new StringBuilder();
 
+            for (int index = 0; index < docs.Count; index++)
+            {
+                sql.AppendFormat("update {0} set ", Table.DBTableName);
+
+                for (int i = 0; i < fieldValues.Count; i++)
+                {
+                    Data.FieldValue fvFieldName = fieldValues[i];
+
+                    Data.FieldValue fv = docValues[index][i];
+
+                    string value;
+
+                    if (fv.Value == null)
+                    {
+                        value = "NULL";
+                    }
+                    else
+                    {
+                        value = fv.Type == Data.DataType.Varchar || fv.Type == Data.DataType.NVarchar ||
+                            fv.Type == Data.DataType.NChar || fv.Type == Data.DataType.Char ||
+                            fv.Type == Data.DataType.Date || fv.Type == Data.DataType.DateTime ||
+                            fv.Type == Data.DataType.SmallDateTime || fv.Type == Data.DataType.Data ?
+                            string.Format("'{0}'", fv.Value.Replace("'", "''")) : fv.Value;
+                    }
+
+                    if (i == 0)
+                    {
+                        sql.AppendFormat("`{0}`={1}", fvFieldName.FieldName, value);
+                    }
+                    else
+                    {
+                        sql.AppendFormat(",`{0}`={1}", fvFieldName.FieldName, value);
+                    }
+                }
+
+                int docid = docs[index].DocId;
+
+                if (DocIdReplaceField == null)
+                {
+                    sql.AppendFormat(" where docId = {0}; \r\n", docid);
+                }
+                else
+                {
+                    long replaceFieldValue = this.DBProvider.GetDocIdReplaceFieldValue(docid);
+                    sql.AppendFormat(" where {0} = {1}; \r\n", DocIdReplaceField, replaceFieldValue);
+                }
+
+            }
+
+            using (MysqlDataProvider sqlData = new MysqlDataProvider())
+            {
+                sqlData.Connect(Table.ConnectionString);
+                sqlData.ExcuteSql(sql.ToString());
+            }
+        }
         #endregion
     }
 }
