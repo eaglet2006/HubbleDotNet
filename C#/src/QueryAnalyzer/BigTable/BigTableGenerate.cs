@@ -182,7 +182,7 @@ namespace QueryAnalyzer.BigTable
                         return;
                     }
 
-                    TabletInfo tablet = new TabletInfo(tableName, connectionString);
+                    TabletInfo tablet = new TabletInfo(tableName, new Hubble.Core.BigTable.ServerInfo("", connectionString));
                     BigTableInfo.Add(tablet);
                     listBoxTablets.Items.Add(tablet);
                     listBoxTablets.SelectedItem = tablet;
