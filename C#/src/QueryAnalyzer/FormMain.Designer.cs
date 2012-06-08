@@ -415,7 +415,7 @@
             this.treeViewData.Size = new System.Drawing.Size(129, 615);
             this.treeViewData.TabIndex = 0;
             this.treeViewData.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeViewData_AfterSelect);
-            this.treeViewData.MouseDown += new System.Windows.Forms.MouseEventHandler(this.treeViewData_MouseDown);
+            this.treeViewData.NodeMouseClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.treeViewData_NodeMouseClick);
             // 
             // contextMenuStripTable
             // 

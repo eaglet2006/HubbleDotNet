@@ -39,7 +39,7 @@ namespace Hubble.Core.StoredProcedure
 
             if (Parameters.Count < 1)
             {
-                throw new ArgumentException("the number of parameters must be large then 0. Parameter 1 is directory");
+                throw new ArgumentException("the number of parameters must be large than 0. Parameter 1 is directory");
             }
 
             string directory = null;

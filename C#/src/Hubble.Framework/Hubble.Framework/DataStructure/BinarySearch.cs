@@ -26,7 +26,7 @@ namespace Hubble.Framework.DataStructure
     {
         /// <summary>
         /// Find the index of value close to.
-        /// The index of value is equal or great then the value's index;
+        /// The index of value is equal or great than the value's index;
         /// Array = 1,3,5 value = 2, index = 1
         /// This function used for cycle buffer that from start to start - 1.
         /// </summary>
@@ -84,7 +84,7 @@ namespace Hubble.Framework.DataStructure
 
         /// <summary>
         /// Find the index of value close to.
-        /// The index of value is equal or great then the value's index;
+        /// The index of value is equal or great than the value's index;
         /// Array = 1,3,5 value = 2, index = 1
         /// </summary>
         /// <param name="array"></param>

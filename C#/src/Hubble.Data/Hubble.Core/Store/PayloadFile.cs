@@ -250,7 +250,7 @@ namespace Hubble.Core.Store
             {
                 if (_PayloadEntities[i].DocId <= lastDocId)
                 {
-                    throw new DataException(string.Format("DocId:{0} less then or equal with the last docid:{1}",
+                    throw new DataException(string.Format("DocId:{0} less than or equal with the last docid:{1}",
                         _PayloadEntities[i].DocId, lastDocId));
                 }
 
@@ -431,7 +431,7 @@ namespace Hubble.Core.Store
 
                 if ((fileHead.Version[0] <= 0 && fileHead.Version[1] < 8) || (fileHead.Version[0] <= 0 && fileHead.Version[1] == 8 && fileHead.Version[2] == 0 && fileHead.Version[3] < 4))
                 {
-                    throw new Data.DataException("Index file version is less then V0.8.0.4, you have to rebuild the index");
+                    throw new Data.DataException("Index file version is less than V0.8.0.4, you have to rebuild the index");
                 }
 
                 for (int i = 0; i < head.FieldMD5.Length; i++)

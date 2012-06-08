@@ -184,7 +184,7 @@ namespace Hubble.Core.Data
 
                     if (index < 0)
                     {
-                        //less then first docid
+                        //less than first docid
                         index = 0;
                         indexElement = null;
                         break;

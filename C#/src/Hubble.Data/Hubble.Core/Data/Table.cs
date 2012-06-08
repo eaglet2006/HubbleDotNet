@@ -805,7 +805,7 @@ namespace Hubble.Core.Data
                         case DataType.SmallInt:
                             if (field.SubTabIndex < 0)
                             {
-                                throw new DataException(string.Format("SubTabIndex of field:{0} less then zero, the payload file is for old version, please truncate table and rebuild it!",
+                                throw new DataException(string.Format("SubTabIndex of field:{0} less than zero, the payload file is for old version, please truncate table and rebuild it!",
                                     field.Name));
                             }
                             break;

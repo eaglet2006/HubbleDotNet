@@ -100,11 +100,11 @@ namespace Hubble.Core.Service
                 sb.AppendLine(DateTime.Now.ToLongTimeString());
                 if (Global.Setting.Config.SqlTrace)
                 {
-                    sb.AppendLine("Execute more then 30s");
+                    sb.AppendLine("Execute more than 30s");
                 }
                 else
                 {
-                    sb.AppendLine("Execute more then 60s");
+                    sb.AppendLine("Execute more than 60s");
                 }
 
                 sb.AppendLine("SQL:" + args.Name);

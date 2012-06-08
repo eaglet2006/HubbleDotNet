@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.4.1")]
-[assembly: AssemblyFileVersion("1.2.4.1")]
+[assembly: AssemblyVersion("1.2.7.7")]
+[assembly: AssemblyFileVersion("1.2.7.7")]
 
 /*****************************************************************************************
  * QueryAnalyzer modification records
@@ -75,4 +75,8 @@ using System.Runtime.InteropServices;
  * dataset transfer to windows from control. 
  * 1.2.4.1
  * Can create mirror table at append only mode
+ * 1.2.7.7
+ * Fix the right click issue.
+ * Expand treeview after truncate table.
+ * 
  *****************************************************************************************/

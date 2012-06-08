@@ -40,7 +40,7 @@ namespace Hubble.Core.Store
     /// IndexHead - Segment 0
     /// Word table - Segment 1 to ReserveSegments - 1 
     /// If word table overflow, alloc data segment for it, and link store
-    /// Data segments - large then ReserveSegments - 1 
+    /// Data segments - large than ReserveSegments - 1 
     /// </summary>
     public class IndexFile 
     {

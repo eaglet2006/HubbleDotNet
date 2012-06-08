@@ -56,7 +56,7 @@ namespace Hubble.Framework.DataStructure
         {
             if (len < 0)
             {
-                throw new System.ArgumentException("Queue length less then zero");
+                throw new System.ArgumentException("Queue length less than zero");
             }
 
             _Start = 0;
@@ -235,7 +235,7 @@ namespace Hubble.Framework.DataStructure
         {
             if (len < 0)
             {
-                throw new System.ArgumentException("Queue length less then zero");
+                throw new System.ArgumentException("Queue length less than zero");
             }
 
             _QueueLength = len;

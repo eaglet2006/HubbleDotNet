@@ -39,7 +39,7 @@ namespace Hubble.Core.StoredProcedure
 
             if (Parameters.Count < 1)
             {
-                throw new ArgumentException("the number of parameters must large then 0. Parameter 1 is table name, Parameter 2 is step, Parameter 3 is optimize mode");
+                throw new ArgumentException("the number of parameters must large than 0. Parameter 1 is table name, Parameter 2 is step, Parameter 3 is optimize mode");
             }
 
             Data.DBProvider dbProvider = Data.DBProvider.GetDBProvider(Parameters[0]);

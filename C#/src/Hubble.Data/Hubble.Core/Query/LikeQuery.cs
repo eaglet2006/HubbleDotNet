@@ -765,7 +765,7 @@ namespace Hubble.Core.Query
 
             if (result.Count < docIdRank.Count && this._QueryParameter.NeedGroupBy)
             {
-                //if result count less then total count
+                //if result count less than total count
                 //and need group by
                 //init group by collection
                 foreach (int docid in docIdRank.Keys)

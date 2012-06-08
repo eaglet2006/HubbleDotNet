@@ -122,7 +122,7 @@ namespace QueryAnalyzer.BigTable
 
                     foreach (string tableName in listBoxTable.SelectedItems)
                     {
-                        _TempBigTableInfo.Add(tableName, serverType, serverInfo.ServerName);
+                        _TempBigTableInfo.Add(tableName, serverType, serverInfo);
                     }
                 }
 

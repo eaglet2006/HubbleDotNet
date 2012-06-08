@@ -409,17 +409,17 @@ namespace Hubble.Core.Data
 
                     if (dataLength <= 0)
                     {
-                        throw new ArgumentException("String data length must larger then 0!");
+                        throw new ArgumentException("String data length must larger than 0!");
                     }
 
                     if (dataLength > 32)
                     {
-                        throw new ArgumentException("String data length must less then 32!");
+                        throw new ArgumentException("String data length must less than 32!");
                     }
 
                     if (value.Length > dataLength)
                     {
-                        throw new ArgumentException("String value larger then data length!");
+                        throw new ArgumentException("String value larger than data length!");
                     }
 
                     int len = dataLength % 2 == 0 ? dataLength / 2 : dataLength / 2 + 1;
@@ -567,7 +567,7 @@ namespace Hubble.Core.Data
                 case DataType.Data:
                     if (length > 64)
                     {
-                        throw new ArgumentException("Data index length must less then 64!");
+                        throw new ArgumentException("Data index length must less than 64!");
                     }
                     return length % sizeof(int) == 0 ? length / sizeof(int) : length / sizeof(int) + 1;
 
@@ -578,7 +578,7 @@ namespace Hubble.Core.Data
 
                     if (length > 32 || length <= 0)
                     {
-                        throw new ArgumentException("Data index length must less then 32!");
+                        throw new ArgumentException("Data index length must less than 32!");
                     }
                     return length % 2 == 0 ? length / 2 : length / 2 + 1;
                 case DataType.Date:

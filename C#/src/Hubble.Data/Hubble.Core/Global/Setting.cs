@@ -253,7 +253,7 @@ namespace Hubble.Core.Global
             {
                 if (database.Tables.Count > 0)
                 {
-                    throw new Data.DataException(string.Format("Database {0} can't be droped! There are more then one tables contain in this database",
+                    throw new Data.DataException(string.Format("Database {0} can't be droped! There are more than one tables contain in this database",
                         database.DatabaseName));
                 }
 

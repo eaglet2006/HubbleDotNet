@@ -52,7 +52,7 @@ namespace Hubble.Core.Query
         /// <summary>
         /// Order by score desc
         /// and only one expression in the banch of expression tree.
-        /// and more then two words
+        /// and more than two words
         /// </summary>
         /// <param name="upDict"></param>
         /// <param name="docIdRank"></param>
@@ -292,10 +292,10 @@ namespace Hubble.Core.Query
                 }
             }
 
-            long maxScoreValue = 0; //Max score value of the docid that hit count less then wordIndexes.Length
+            long maxScoreValue = 0; //Max score value of the docid that hit count less than wordIndexes.Length
             int wordIndexesLen = wordIndexes.Length;
 
-            //Get the max score value of the docs that hit count less then wordIndexes.Length
+            //Get the max score value of the docs that hit count less than wordIndexes.Length
             foreach (DocumentResultPoint docResult in docIdRank.Values)
             {
                 if (docResult.pDocumentResult->HitCount < wordIndexesLen)
@@ -729,9 +729,9 @@ namespace Hubble.Core.Query
             }
 
             //Adjust score of the docs that hit count equal wordIndexes.Length
-            //Let these docs's score large then others
+            //Let these docs's score large than others
 
-            //Get the max score value of the docs that hit count less then wordIndexes.Length
+            //Get the max score value of the docs that hit count less than wordIndexes.Length
             int wordIndexesLen = wordIndexes.Length;
             long maxScoreValue = 0;
             foreach (DocumentResultPoint docResult in docIdRank.Values)

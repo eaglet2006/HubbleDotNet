@@ -183,7 +183,7 @@ namespace Hubble.SQLClient
 
         /// <summary>
         /// in milliseconds.
-        /// When TryConnectTimeout > 0, if connect time large then this setting
+        /// When TryConnectTimeout > 0, if connect time large than this setting
         /// try to find data cache of the sql, if on data cache, connect again else
         /// return the data of cache.
         /// </summary>

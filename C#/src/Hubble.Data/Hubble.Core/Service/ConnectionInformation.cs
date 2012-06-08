@@ -98,7 +98,7 @@ namespace Hubble.Core.Service
             }
             catch 
             {
-                throw new Data.DataException(string.Format("Invalid connection string: {0} , the version of sqlclient is less then 0.8.2.9!",
+                throw new Data.DataException(string.Format("Invalid connection string: {0} , the version of sqlclient is less than 0.8.2.9!",
                     connectionString));
             }
 

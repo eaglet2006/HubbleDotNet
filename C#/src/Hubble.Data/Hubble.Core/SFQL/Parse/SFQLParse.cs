@@ -421,7 +421,7 @@ namespace Hubble.Core.SFQL.Parse
 
                         if (count <= 0)
                         {
-                            throw new ParseException("ForceCollectCount must be large then 0!");
+                            throw new ParseException("ForceCollectCount must be large than 0!");
                         }
 
                         table.ForceCollectCount = count;

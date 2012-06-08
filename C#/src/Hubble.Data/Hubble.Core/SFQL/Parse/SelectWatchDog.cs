@@ -110,7 +110,7 @@ namespace Hubble.Core.SFQL.Parse
                                     threadInfo.QueryThread.AbortAndRestart();
                                 }
 
-                                Global.Report.WriteErrorLog(string.Format("Select statement of {0} has been executing more then {1} ms. Abort it",
+                                Global.Report.WriteErrorLog(string.Format("Select statement of {0} has been executing more than {1} ms. Abort it",
                                     threadInfo.TableName, threadInfo.TimeOut));
                             }
                             catch (Exception e)

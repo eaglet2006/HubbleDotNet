@@ -114,7 +114,7 @@ namespace Hubble.Core.Entity
     /// means two int
     /// first int is 0x5f7f7f
     /// second int is 0x7f
-    /// Input int must not be less then zero!
+    /// Input int must not be less than zero!
     /// </summary>
     //[StructLayout(LayoutKind.Sequential,Pack=4)]
     public struct DocumentPositionList

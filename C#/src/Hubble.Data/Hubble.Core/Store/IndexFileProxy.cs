@@ -874,7 +874,7 @@ namespace Hubble.Core.Store
 
                             if (_IndexFile.IndexFileList[0].Size > sizeSumAfterFirst)
                             {
-                                //Fisrt index large then the others
+                                //Fisrt index large than the others
 
                                 begin = _IndexFile.IndexFileList[1].Serial;
                                 end = _IndexFile.IndexFileList[_IndexFile.IndexFileList.Count - 1].Serial;

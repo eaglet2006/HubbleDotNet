@@ -183,7 +183,7 @@ namespace Hubble.Framework.Net
         {
             if (offset + count > buffer.Length)
             {
-                throw new ArgumentException("Count + offset large then buffer.Length");
+                throw new ArgumentException("Count + offset large than buffer.Length");
             }
 
             int remain = count - (BUF_SIZE - _BufLen);

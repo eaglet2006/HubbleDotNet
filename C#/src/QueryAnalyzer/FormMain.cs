@@ -103,6 +103,16 @@ namespace QueryAnalyzer
 
         private void ShowTree()
         {
+            ShowTree(null, null);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="selDatabaseName">select this database after refresh tree</param>
+        /// <param name="selTableName">select this table after refresh tree</param>
+        private void ShowTree(string selDatabaseName, string selTableName)
+        {
             try
             {
                 treeViewData.Nodes.Clear();
@@ -125,6 +135,39 @@ namespace QueryAnalyzer
 
                 toolStripComboBoxDatabases.Text = GlobalSetting.DataAccess.DatabaseName;
                 treeViewData.SelectedNode = serverNode;
+
+                if (selDatabaseName != null)
+                {
+                    serverNode.Expand();
+
+                    TreeNode selDBNode = null;
+
+                    foreach (TreeNode dbNode in serverNode.Nodes)
+                    {
+                        if (dbNode.Text.Equals(selDatabaseName, StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            selDBNode = dbNode;
+                            treeViewData.SelectedNode = dbNode;
+                            break;
+                        }
+                    }
+
+                    if (selTableName != null && selDBNode != null)
+                    {
+                        selDBNode.Expand();
+
+                        foreach (TreeNode tbNode in selDBNode.Nodes)
+                        {
+                            if (tbNode.Text.Equals(selTableName, StringComparison.CurrentCultureIgnoreCase))
+                            {
+                                treeViewData.SelectedNode = tbNode;
+                                break;
+                            }
+                        }
+
+                    }
+                }
+
             }
             catch (Exception e)
             {
@@ -322,59 +365,6 @@ namespace QueryAnalyzer
             }
         }
 
-        private void treeViewData_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                try
-                {
-                    contextMenuStripServer.Enabled = false;
-                    contextMenuStripDatabase.Enabled = false;
-                    contextMenuStripTable.Enabled = false;
-
-                    troubleshooterToolStripMenuItem.Enabled = false;
-                    troubleshooterToolStripMenuItem1.Enabled = false;
-                    troubleshooterToolStripMenuItem2.Enabled = false;
-
-                    if (treeViewData.SelectedNode == null)
-                    {
-                        return;
-                    }
-
-                    if (treeViewData.SelectedNode.Tag.ToString() == "Table")
-                    {
-                        TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
-                        treeViewData.ContextMenuStrip = contextMenuStripTable;
-                        contextMenuStripTable.Enabled = true;
-
-                        toolStripComboBoxDatabases.Text = treeViewData.SelectedNode.Parent.Text;
-
-                        if (!string.IsNullOrEmpty(tableInfo.InitError))
-                        {
-                            troubleshooterToolStripMenuItem.Enabled = true;
-                        }
-                    }
-                    else if (treeViewData.SelectedNode.Tag.ToString() == "Server")
-                    {
-                        treeViewData.ContextMenuStrip = contextMenuStripServer;
-                        contextMenuStripServer.Enabled = true;
-                    }
-                    else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
-                    {
-                        treeViewData.ContextMenuStrip = contextMenuStripDatabase;
-                        contextMenuStripDatabase.Enabled = true;
-
-                        dropDatabaseToolStripMenuItem.Enabled = treeViewData.SelectedNode.Nodes.Count == 0 &&
-                            !treeViewData.SelectedNode.Text.Trim().Equals("Master", StringComparison.CurrentCultureIgnoreCase);
-                    }
-                }
-                catch(Exception e1)
-                {
-                    MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
         private void tableInfoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
@@ -456,7 +446,7 @@ namespace QueryAnalyzer
 
                     if (sqlText.Length > textBoxSql.MaxLength)
                     {
-                        MessageBox.Show(string.Format("SQL file length large then {0}. It will be truncated", textBoxSql.MaxLength),
+                        MessageBox.Show(string.Format("SQL file length large than {0}. It will be truncated", textBoxSql.MaxLength),
                             "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                         sqlText = sqlText.Substring(0, textBoxSql.MaxLength);
@@ -697,7 +687,7 @@ namespace QueryAnalyzer
                     DialogResult.Yes)
                 {
                     QueryResult queryResult = GlobalSetting.DataAccess.Excute("exec SP_TruncateTable {0}", tableName);
-                    ShowTree();
+                    ShowTree(GlobalSetting.DataAccess.DatabaseName, tableName);
                 }
 
             }
@@ -910,6 +900,64 @@ namespace QueryAnalyzer
             catch (Exception ex)
             {
                 QAMessageBox.ShowErrorMessage(ex.Message);
+            }
+        }
+
+
+        private void treeViewData_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            TreeNode cur = e.Node;
+
+            treeViewData.SelectedNode = e.Node;
+
+            if (e.Button == MouseButtons.Right)
+            {
+                try
+                {
+                    contextMenuStripServer.Enabled = false;
+                    contextMenuStripDatabase.Enabled = false;
+                    contextMenuStripTable.Enabled = false;
+
+                    troubleshooterToolStripMenuItem.Enabled = false;
+                    troubleshooterToolStripMenuItem1.Enabled = false;
+                    troubleshooterToolStripMenuItem2.Enabled = false;
+
+                    if (treeViewData.SelectedNode == null)
+                    {
+                        return;
+                    }
+
+                    if (treeViewData.SelectedNode.Tag.ToString() == "Table")
+                    {
+                        TableInfo tableInfo = (TableInfo)treeViewData.SelectedNode.Tag;
+                        treeViewData.ContextMenuStrip = contextMenuStripTable;
+                        contextMenuStripTable.Enabled = true;
+
+                        toolStripComboBoxDatabases.Text = treeViewData.SelectedNode.Parent.Text;
+
+                        if (!string.IsNullOrEmpty(tableInfo.InitError))
+                        {
+                            troubleshooterToolStripMenuItem.Enabled = true;
+                        }
+                    }
+                    else if (treeViewData.SelectedNode.Tag.ToString() == "Server")
+                    {
+                        treeViewData.ContextMenuStrip = contextMenuStripServer;
+                        contextMenuStripServer.Enabled = true;
+                    }
+                    else if (treeViewData.SelectedNode.Tag.ToString() == "Database")
+                    {
+                        treeViewData.ContextMenuStrip = contextMenuStripDatabase;
+                        contextMenuStripDatabase.Enabled = true;
+
+                        dropDatabaseToolStripMenuItem.Enabled = treeViewData.SelectedNode.Nodes.Count == 0 &&
+                            !treeViewData.SelectedNode.Text.Trim().Equals("Master", StringComparison.CurrentCultureIgnoreCase);
+                    }
+                }
+                catch (Exception e1)
+                {
+                    MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

@@ -265,7 +265,7 @@ namespace Hubble.Core.SFQL.Parse
 
             if (fieldsDataLength > 8)
             {
-                throw new ParseException("Sum of the data length of all group by fields can't be large then 8.");
+                throw new ParseException("Sum of the data length of all group by fields can't be large than 8.");
             }
 
             if (_DistinctFields.Count <= 0)

@@ -22,7 +22,7 @@ namespace Hubble.Framework.DataStructure
         /// 
         /// </summary>
         /// <param name="initCapability">initial capability</param>
-        /// <param name="startStep">when capablility large then this value begin to step</param>
+        /// <param name="startStep">when capablility large than this value begin to step</param>
         /// <param name="step">Append bytes every step</param>
         public StepList(int initCapability, int startStep, int step)
         {

@@ -126,7 +126,7 @@ namespace Hubble.Framework.IO
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="capacity">the capacity of files need to manager. If more then this capacity, it will remove the older files</param>
+        /// <param name="capacity">the capacity of files need to manager. If more than this capacity, it will remove the older files</param>
         /// <param name="timeout">timeout to remove the file from list. In ms</param>
         internal FileLastAccessManager(int capacity, int timeout)
         {

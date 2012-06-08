@@ -53,7 +53,7 @@ namespace Hubble.Framework.Threading
         /// Enter lock
         /// </summary>
         /// <param name="mode">Share or mutex</param>
-        /// <param name="timeout">how many milliseconds waitting for. If timeout less then 0, wait until enter lock</param>
+        /// <param name="timeout">how many milliseconds waitting for. If timeout less than 0, wait until enter lock</param>
         public bool Enter(Mode mode, int timeout)
         {
             bool waitShareCounterZero = false;

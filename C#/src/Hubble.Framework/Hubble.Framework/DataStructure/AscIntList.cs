@@ -100,7 +100,7 @@ namespace Hubble.Framework.DataStructure
         {
             if (value <= _LastValue)
             {
-                throw new ArgumentException(string.Format("value={0} must large then last value={1}",
+                throw new ArgumentException(string.Format("value={0} must large than last value={1}",
                     value, _LastValue));
             }
 

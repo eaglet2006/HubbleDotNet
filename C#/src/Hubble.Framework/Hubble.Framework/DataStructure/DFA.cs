@@ -126,7 +126,7 @@ namespace Hubble.Framework.DataStructure
         /// <summary>
         /// Get next state
         /// </summary>
-        /// <param name="action">action (letter eg.), if ation less then 0, means get else state</param>
+        /// <param name="action">action (letter eg.), if ation less than 0, means get else state</param>
         /// <param name="dfa">DFA that call this state</param>
         /// <returns>next state id</returns>
         public virtual int NextState(int action, DFA<Token, Function> dfa, out bool isElseAction)

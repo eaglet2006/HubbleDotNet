@@ -157,7 +157,7 @@ namespace Hubble.Core.Query.Optimize
             int top;
 
             //calculate top
-            //If less then 100, set to 100
+            //If less than 100, set to 100
             if (this.Argument.End >= 0)
             {
                 top = (1 + this.Argument.End / 100) * 100;
@@ -452,7 +452,7 @@ namespace Hubble.Core.Query.Optimize
             int top;
 
             //calculate top
-            //If less then 100, set to 100
+            //If less than 100, set to 100
             if (this.Argument.End >= 0)
             {
                 top = (1 + this.Argument.End / 100) * 100;

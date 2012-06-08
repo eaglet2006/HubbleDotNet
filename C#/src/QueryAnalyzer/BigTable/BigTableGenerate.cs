@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Data;
 using System.Text;
+using System.Linq;
+
 using System.Windows.Forms;
 using Hubble.Core.BigTable;
 using Hubble.SQLClient;
@@ -97,7 +99,11 @@ namespace QueryAnalyzer.BigTable
 
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
-                ListViewItem item = new ListViewItem(new string[] { serverInfo.ServerName, serverInfo.ConnectionString });
+                ListViewItem item = new ListViewItem(new string[] {serverInfo.Enabled.ToString(), serverInfo.ServerName, serverInfo.ConnectionString });
+                item.Name = "Enabled";
+                item.SubItems[0].Name = "Enabled";
+                item.SubItems[1].Name = "ServerName";
+                item.SubItems[2].Name = "ConnectionString";
 
                 listViewServers.Items.Add(item);
             }
@@ -137,18 +143,18 @@ namespace QueryAnalyzer.BigTable
         private void RefreshBalanceServerList(TabletInfo tablet)
         {
             listBoxBalanceServer.Items.Clear();
-            foreach (string serverName in tablet.BalanceServers)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in tablet.BalanceServers)
             {
-                listBoxBalanceServer.Items.Add(serverName);
+                listBoxBalanceServer.Items.Add(serverInfo.ServerName);
             }
         }
 
         private void RefreshFailoverServerList(TabletInfo tablet)
         {
             listBoxFailoverServers.Items.Clear();
-            foreach (string serverName in tablet.FailoverServers)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in tablet.FailoverServers)
             {
-                listBoxFailoverServers.Items.Add(serverName);
+                listBoxFailoverServers.Items.Add(serverInfo.ServerName);
             }
         }
 
@@ -210,8 +216,23 @@ namespace QueryAnalyzer.BigTable
             listViewServers.HeaderStyle = ColumnHeaderStyle.Clickable;
             listViewServers.FullRowSelect = true;
 
-            listViewServers.Columns.Add("Server Name", 100);
-            listViewServers.Columns.Add("Connection String", 500);
+            ColumnHeader colHeader = new ColumnHeader();
+            colHeader.Name = "Enabled";
+            colHeader.Text = "Enabled";
+            colHeader.Width = 100;
+            listViewServers.Columns.Add(colHeader);
+
+            colHeader = new ColumnHeader();
+            colHeader.Name = "ServerName";
+            colHeader.Text = "Server Name";
+            colHeader.Width = 100;
+            listViewServers.Columns.Add("ServerName", "Server Name", 100);
+
+            colHeader = new ColumnHeader();
+            colHeader.Name = "ConnectionString";
+            colHeader.Text = "Connection String";
+            colHeader.Width = 500;
+            listViewServers.Columns.Add("ConnectionString", "Connection String", 500);
 
             if (!CreateTable)
             {
@@ -416,13 +437,13 @@ namespace QueryAnalyzer.BigTable
                 ListViewItem item = listViewServers.SelectedItems[0];
 
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
-                    item.SubItems[0].Text)) == DialogResult.Yes)
+                    item.SubItems["ServerName"].Text)) == DialogResult.Yes)
                 {
                     listViewServers.Items.Remove(item);
 
                     Hubble.Core.BigTable.ServerInfo serverInfo =
-                                           new Hubble.Core.BigTable.ServerInfo(item.SubItems[0].Text,
-                                           item.SubItems[1].Text);
+                                           new Hubble.Core.BigTable.ServerInfo(item.SubItems["ServerName"].Text,
+                                           item.SubItems["ConnectionString"].Text);
 
                     BigTableInfo.RemoveServerInfo(serverInfo);
 
@@ -461,8 +482,8 @@ namespace QueryAnalyzer.BigTable
                 return;
             }
 
-            tablet.BalanceServers.Add(serverInfo.ServerName);
-            listBoxBalanceServer.Items.Add(serverInfo.ServerName);
+            tablet.BalanceServers.Add(serverInfo);
+            listBoxBalanceServer.Items.Add(serverInfo);
         }
 
         private void buttonDeleteBS_Click(object sender, EventArgs e)
@@ -482,7 +503,7 @@ namespace QueryAnalyzer.BigTable
                    serverName)) == DialogResult.Yes)
                 {
                     listBoxBalanceServer.Items.Remove(serverName);
-                    tablet.BalanceServers.Remove(serverName);
+                    tablet.BalanceServers.Remove(new Hubble.Core.BigTable.ServerInfo(serverName, ""));
                 }
             }
         }
@@ -511,7 +532,7 @@ namespace QueryAnalyzer.BigTable
             }
 
             listBoxFailoverServers.Items.Add(serverInfo.ServerName);
-            tablet.FailoverServers.Add(serverInfo.ServerName);
+            tablet.FailoverServers.Add(serverInfo);
         }
 
         private void buttonDelFailoverServers_Click(object sender, EventArgs e)
@@ -531,7 +552,7 @@ namespace QueryAnalyzer.BigTable
                    serverName)) == DialogResult.Yes)
                 {
                     listBoxFailoverServers.Items.Remove(serverName);
-                    tablet.FailoverServers.Remove(serverName);
+                    tablet.FailoverServers.Remove(new Hubble.Core.BigTable.ServerInfo(serverName, ""));
                 }
             }
         }
@@ -550,32 +571,72 @@ namespace QueryAnalyzer.BigTable
 
         private void buttonUpdateServer_Click(object sender, EventArgs e)
         {
-            if (listViewServers.SelectedItems.Count > 0)
+            try
             {
-                string serverName = listViewServers.SelectedItems[0].SubItems[0].Text;
-                string connectionString = listViewServers.SelectedItems[0].SubItems[1].Text;
-
-                if (QAMessageBox.ShowInputBox(string.Format("Update Connection String of Server : {0}", serverName), 
-                    "Please input Connection String", ref connectionString) == DialogResult.OK)
+                if (listViewServers.SelectedItems.Count > 0)
                 {
+                    string serverName = listViewServers.SelectedItems[0].SubItems["ServerName"].Text;
+                    string connectionString = listViewServers.SelectedItems[0].SubItems["ConnectionString"].Text;
+
                     Hubble.Core.BigTable.ServerInfo serverInfo =
                         new Hubble.Core.BigTable.ServerInfo(serverName,
                         connectionString);
 
-                    for (int i = 0; i < BigTableInfo.ServerList.Count; i++)
+                    serverInfo = BigTableInfo.ServerList.SingleOrDefault(s => s.Equals(serverInfo));
+
+                    if (serverInfo == null)
                     {
-                        if (BigTableInfo.ServerList[i].Equals(serverInfo))
-                        {
-                            BigTableInfo.ServerList[i].ConnectionString = connectionString;
-                            break;
-                        }
+                        return;
                     }
 
-                    listViewServers.SelectedItems[0].SubItems[1].Text = connectionString;
+                    FormServerInfo frmServerInfo = new FormServerInfo();
 
-                    RefreshServersComboBox();
+                    if (frmServerInfo.ShowDialog(serverInfo) == DialogResult.OK)
+                    {
+                        serverInfo = frmServerInfo.ServerInfo;
+
+                        for (int i = 0; i < BigTableInfo.ServerList.Count; i++)
+                        {
+                            if (BigTableInfo.ServerList[i].Equals(serverInfo))
+                            {
+                                BigTableInfo.ServerList[i] = serverInfo;
+                                break;
+                            }
+                        }
+
+                        //Find the tablets and change the specified server info 
+                        for (int i = 0; i < BigTableInfo.Tablets.Count; i++)
+                        {
+                            for (int j = 0; j < BigTableInfo.Tablets[i].BalanceServers.Count; j++)
+                            {
+                                if (BigTableInfo.Tablets[i].BalanceServers[j].Equals(serverInfo))
+                                {
+                                    BigTableInfo.Tablets[i].BalanceServers[j] = serverInfo.Clone();
+                                    break;
+                                }
+                            }
+
+                            for (int j = 0; j < BigTableInfo.Tablets[i].FailoverServers.Count; j++)
+                            {
+                                if (BigTableInfo.Tablets[i].FailoverServers[j].Equals(serverInfo))
+                                {
+                                    BigTableInfo.Tablets[i].FailoverServers[j] = serverInfo.Clone();
+                                    break;
+                                }
+                            }
+                        }
+
+                        listViewServers.SelectedItems[0].SubItems["ConnectionString"].Text = connectionString;
+
+                        RefreshServerGUI();
+                        RefreshServersComboBox();
+                        RefreshTabletGUI();
+                    }
                 }
-
+            }
+            catch (Exception ex)
+            {
+                QAMessageBox.ShowErrorMessage(ex);
             }
         }
 

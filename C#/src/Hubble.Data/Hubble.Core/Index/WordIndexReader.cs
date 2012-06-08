@@ -36,7 +36,7 @@ namespace Hubble.Core.Index
         WordDocumentsList _ListForReader = new WordDocumentsList();
         long _WordCountSum;
         int _Count; //Count of docs that Reader will read.
-        int _RelDocCount; //Rel doc count of this word. It is large then or equal with _Count.
+        int _RelDocCount; //Rel doc count of this word. It is large than or equal with _Count.
 
         Data.DBProvider _DBProvider;
 

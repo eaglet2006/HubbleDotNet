@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{350D6DE0-014F-4B11-AED2-B759F66E136B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -91,6 +91,12 @@
     </Compile>
     <Compile Include="BigTable\FormBigTableBatchInsert.Designer.cs">
       <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BigTable\FormServerInfo.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BigTable\FormServerInfo.Designer.cs">
+      <DependentUpon>FormServerInfo.cs</DependentUpon>
     </Compile>
     <Compile Include="FormRebuildTable.cs">
       <SubType>Form</SubType>
@@ -255,6 +261,9 @@
     <EmbeddedResource Include="BigTable\FormBigTableBatchInsert.resx">
       <DependentUpon>FormBigTableBatchInsert.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BigTable\FormServerInfo.resx">
+      <DependentUpon>FormServerInfo.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FormRebuildTable.resx">
       <DependentUpon>FormRebuildTable.cs</DependentUpon>

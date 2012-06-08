@@ -1232,7 +1232,7 @@ namespace Hubble.Core.Data
                                 {
                                     long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
 
-                                    //If update tokenize field, the docid replace field value point to more then one docid
+                                    //If update tokenize field, the docid replace field value point to more than one docid
                                     //GetDocIdByDocIdReplaceFieldValue can get last docid
                                     //if last docid == input docid, this record is deleted not updated
                                     //so remove it.
@@ -1462,7 +1462,7 @@ namespace Hubble.Core.Data
 
             if (begin < 0)
             {
-                throw new DataException("Query error, begin less then 0!");
+                throw new DataException("Query error, begin less than 0!");
             }
 
             for(int i = begin; i <= end; i++)
@@ -2223,7 +2223,7 @@ namespace Hubble.Core.Data
                                     {
                                         if (fValue.Value.Length > field.DataLength)
                                         {
-                                            throw new DataException(string.Format("Field:{0} string length is {1} large then {2}",
+                                            throw new DataException(string.Format("Field:{0} string length is {1} large than {2}",
                                                 fValue.FieldName, fValue.Value.Length, field.DataLength));
                                         }
                                     }
@@ -3030,7 +3030,7 @@ namespace Hubble.Core.Data
                     {
                         long docIdReplaceFieldValue = GetDocIdReplaceFieldValue(docId);
 
-                        //If update tokenize field, the docid replace field value point to more then one docid
+                        //If update tokenize field, the docid replace field value point to more than one docid
                         //GetDocIdByDocIdReplaceFieldValue can get last docid
                         //if last docid == input docid, this record is deleted not updated
                         //so remove it.

@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.5")]
-[assembly: AssemblyFileVersion("1.2.7.5")]
+[assembly: AssemblyVersion("1.2.7.7")]
+[assembly: AssemblyFileVersion("1.2.7.7")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -153,12 +153,12 @@ using System.Runtime.InteropServices;
  * 1.1.9.8
  * Add a item named QueryQueueWaitingTimeout in setting.xml. This setting specifies the 
  * timeout when the sql statement was waiting in the query queue. It is in second and default value is 300.
- * If we set it less then zero, it means infinite timeout.
+ * If we set it less than zero, it means infinite timeout.
  * Fix a bug of SynchronizeCanUpdate for MySql and Sqlite. In GetMySqlSelectSql and GetSqliteSelectSql function,
  * " from {0} where {1} >= {2} order by {1} limit {3}" should be 
  * " from {0} where {1} > {2} order by {1} limit {3}"
  * 1.1.9.9
- * Fix a bug when index file large then 2GB and using RamIndex, it will raise a exception said can't 
+ * Fix a bug when index file large than 2GB and using RamIndex, it will raise a exception said can't 
  * set System.IO.FileStream.set_Position a negative number.
  * 1.2.0.0
  * Fix a bug when None index field include Null value, it raise "is not a valid value for Int32" exception.
@@ -212,9 +212,14 @@ using System.Runtime.InteropServices;
  * Fix a bug of distinct that will not return whole results while non-fulltext query
  * Increase the sql length to 4096 for SQLTrace
  * 1.2.7.4
- * Fix a bug of synchronize that will return a progress more then 100 percent.
+ * Fix a bug of synchronize that will return a progress more than 100 percent.
  * 1.2.7.5
  * Fix a bug of MongoAdapter for mirror table update
  * Improve the performance of updatable synronize for update. Can merge the same id in the trigger table
  * and can batch update
+ * 1.2.7.7
+ * Fix the right click issue.
+ * Expand treeview after truncate table.
+ * Fix the prompt error. More then is More than.
+ * Add a enabled feature in Bigtable serverinfo so we can enable or disable specified server or tablet.
  *****************************************************************************************/

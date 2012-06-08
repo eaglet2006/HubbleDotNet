@@ -400,7 +400,7 @@ namespace Hubble.Core.SFQL.Parse
             if (fst.Count > sec.Count)
             {
                 //Swap input dictionaries
-                //Let fst count less then sec
+                //Let fst count less than sec
 
                 DocumentResultWhereDictionary temp;
 

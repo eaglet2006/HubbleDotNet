@@ -309,7 +309,7 @@ namespace Hubble.Framework.IO
             if (lastReserveSegment > LastSegment)
             {
                 Close();
-                throw new ArgumentOutOfRangeException("LinkedSegmentFileStream invalid parameter, lastReserveSegment large then LastSegment!");
+                throw new ArgumentOutOfRangeException("LinkedSegmentFileStream invalid parameter, lastReserveSegment large than LastSegment!");
             }
 
             _LastReserveSegment = lastReserveSegment;
@@ -334,8 +334,8 @@ namespace Hubble.Framework.IO
         /// <summary>
         /// Seek to segment and positionInSegment
         /// </summary>
-        /// <param name="segment">segment number. Must large then 0 and less then SegmentSize</param>
-        /// <param name="positionInSegment">poistion in segment. Must less then or equal SegmentSize - 4</param>
+        /// <param name="segment">segment number. Must large than 0 and less than SegmentSize</param>
+        /// <param name="positionInSegment">poistion in segment. Must less than or equal SegmentSize - 4</param>
         public void Seek(int segment, int positionInSegment)
         {
             if (segment <= 0 || positionInSegment > SegmentSize - 4 || segment > LastSegment)
@@ -406,7 +406,7 @@ namespace Hubble.Framework.IO
                 //Only distrustful file can raise this exception
                 if (nextSegment > LastSegment)
                 {
-                    throw new System.IO.IOException(string.Format("Distrustful data, next segment large then LastSegment!, from segment {0} nextSegment {1}",
+                    throw new System.IO.IOException(string.Format("Distrustful data, next segment large than LastSegment!, from segment {0} nextSegment {1}",
                         segment, nextSegment));
                 }
 

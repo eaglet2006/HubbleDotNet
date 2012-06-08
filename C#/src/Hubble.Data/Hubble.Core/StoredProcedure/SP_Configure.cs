@@ -216,7 +216,7 @@ namespace Hubble.Core.StoredProcedure
             }
             else
             {
-                throw new StoredProcException("The number of parameters is more then 2.");
+                throw new StoredProcException("The number of parameters is more than 2.");
             }
 
         }

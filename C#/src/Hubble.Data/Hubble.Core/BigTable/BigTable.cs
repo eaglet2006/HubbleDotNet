@@ -29,6 +29,7 @@ namespace Hubble.Core.BigTable
 
     public class ServerInfo
     {
+        public bool Enabled = true;
         public string ServerName = "";
         public string ConnectionString = "";
 
@@ -47,6 +48,7 @@ namespace Hubble.Core.BigTable
         public ServerInfo Clone()
         {
             ServerInfo serverInfo = new ServerInfo();
+            serverInfo.Enabled = this.Enabled;
             serverInfo.ConnectionString = this.ConnectionString;
             serverInfo.ServerName = this.ServerName;
             return serverInfo;
@@ -88,6 +90,7 @@ namespace Hubble.Core.BigTable
         }
     }
 
+ 
     public class TabletInfo
     {
         public string TableName = "";
@@ -95,12 +98,12 @@ namespace Hubble.Core.BigTable
         /// <summary>
         /// server name list of balance servers
         /// </summary>
-        public List<string> BalanceServers = new List<string>();
+        public List<ServerInfo> BalanceServers = new List<ServerInfo>();
 
         /// <summary>
         /// server name list of failover servers
         /// </summary>
-        public List<string> FailoverServers = new List<string>();
+        public List<ServerInfo> FailoverServers = new List<ServerInfo>();
 
         public TabletInfo()
         {
@@ -111,10 +114,10 @@ namespace Hubble.Core.BigTable
             this.TableName = tableName;
         }
 
-        public TabletInfo(string tableName, string connectionString)
+        public TabletInfo(string tableName, ServerInfo serverInfo)
         {
             this.TableName = tableName;
-            BalanceServers.Add(connectionString);
+            BalanceServers.Add(serverInfo.Clone());
         }
 
         public TabletInfo Clone()
@@ -122,14 +125,14 @@ namespace Hubble.Core.BigTable
             TabletInfo tableInfo = new TabletInfo();
             tableInfo.TableName = this.TableName;
 
-            foreach (string connectionString in this.BalanceServers)
+            foreach (ServerInfo serverInfo in this.BalanceServers)
             {
-                tableInfo.BalanceServers.Add(connectionString);
+                tableInfo.BalanceServers.Add(serverInfo.Clone());
             }
 
-            foreach (string connectionString in this.FailoverServers)
+            foreach (ServerInfo serverInfo in this.FailoverServers)
             {
-                tableInfo.FailoverServers.Add(connectionString);
+                tableInfo.FailoverServers.Add(serverInfo.Clone());
             }
 
             return tableInfo;
@@ -212,14 +215,14 @@ namespace Hubble.Core.BigTable
 
                 foreach (TabletInfo tablet in Tablets)
                 {
-                    tablet.BalanceServers.Remove(serverInfo.ServerName);
-                    tablet.FailoverServers.Remove(serverInfo.ServerName);
+                    tablet.BalanceServers.Remove(serverInfo);
+                    tablet.FailoverServers.Remove(serverInfo);
                 }
             }
 
         }
 
-        public void Add(string tableName, ServerType serverType, string serverName)
+        public void Add(string tableName, ServerType serverType, ServerInfo serverInfo)
         {
             TabletInfo tablet = new TabletInfo(tableName);
 
@@ -231,24 +234,24 @@ namespace Hubble.Core.BigTable
                 switch (serverType)
                 {
                     case ServerType.Balance:
-                        if (tablet.BalanceServers.Contains(serverName))
+                        if (tablet.BalanceServers.Contains(serverInfo))
                         {
                             throw new Hubble.Core.Data.DataException("Can insert same table name with same server name into bigtable");
                         }
                         else
                         {
-                            tablet.BalanceServers.Add(serverName);
+                            tablet.BalanceServers.Add(serverInfo);
                         }
                         break;
 
                     case ServerType.Failover:
-                        if (tablet.FailoverServers.Contains(serverName))
+                        if (tablet.FailoverServers.Contains(serverInfo))
                         {
                             throw new Hubble.Core.Data.DataException("Can insert same table name with same server name into bigtable");
                         }
                         else
                         {
-                            tablet.FailoverServers.Add(serverName);
+                            tablet.FailoverServers.Add(serverInfo);
                         }
                         break;
                 }
@@ -259,11 +262,11 @@ namespace Hubble.Core.BigTable
                 switch (serverType)
                 {
                     case ServerType.Balance:
-                        tablet.BalanceServers.Add(serverName);
+                        tablet.BalanceServers.Add(serverInfo);
                         break;
 
                     case ServerType.Failover:
-                        tablet.FailoverServers.Add(serverName);
+                        tablet.FailoverServers.Add(serverInfo);
                         break;
                 }
 
