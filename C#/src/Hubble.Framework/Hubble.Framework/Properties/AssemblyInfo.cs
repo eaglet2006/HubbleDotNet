@@ -27,8 +27,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hubble Star Pty")]
 #if HubblePro
-[assembly: AssemblyProduct("HubblePro 2012 Beta 1 Edition")]
-[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+[assembly: AssemblyProduct("HubblePro 2012 Beta 2 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011-2012")]
 #else
 [assembly: AssemblyProduct("HubbleDotNet Community Edition")]
 [assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]

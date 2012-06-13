@@ -122,5 +122,19 @@ namespace QueryAnalyzer.BigTable
                 }
             }
         }
+
+        private void FormBigTable_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (_BigTableGenerate.SettingChanged)
+            {
+                if (QAMessageBox.ShowQuestionMessage("Setting changed, do you want to save the setting?") == DialogResult.Yes)
+                {
+                    if (!_BigTableGenerate.Save())
+                    {
+                        e.Cancel = true;
+                    }
+                }
+            }
+        }
     }
 }

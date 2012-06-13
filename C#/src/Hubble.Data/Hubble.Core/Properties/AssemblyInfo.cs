@@ -10,8 +10,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hubble Star Pty")]
 #if HubblePro
-[assembly: AssemblyProduct("HubblePro 2012 Beta 1 Edition")]
-[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+[assembly: AssemblyProduct("HubblePro 2012 Beta 2 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011-2012")]
 #else
 [assembly: AssemblyProduct("HubbleDotNet Community Edition")]
 [assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2009-2011")]
@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.7")]
-[assembly: AssemblyFileVersion("1.2.7.7")]
+[assembly: AssemblyVersion("1.2.7.8")]
+[assembly: AssemblyFileVersion("1.2.7.8")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -222,4 +222,6 @@ using System.Runtime.InteropServices;
  * Expand treeview after truncate table.
  * Fix the prompt error. More then is More than.
  * Add a enabled feature in Bigtable serverinfo so we can enable or disable specified server or tablet.
+ * 1.2.7.8
+ * Add SP_EnableTablet and SP_DisableTablet
  *****************************************************************************************/

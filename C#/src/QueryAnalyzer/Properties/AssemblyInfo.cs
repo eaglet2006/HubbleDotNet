@@ -27,8 +27,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Hubble Star Pty")]
 #if HubblePro
-[assembly: AssemblyProduct("HubblePro 2012 Beta 1 Edition")]
-[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011")]
+[assembly: AssemblyProduct("HubblePro 2012 Beta 2 Edition")]
+[assembly: AssemblyCopyright("Copyright © Hubble Star Pty 2011-2012")]
 #else
 [assembly: AssemblyProduct("HubbleDotNet Community Edition")]
 [assembly: AssemblyCopyright("Copyright © eaglet 2009-2011")]
@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.7.7")]
-[assembly: AssemblyFileVersion("1.2.7.7")]
+[assembly: AssemblyVersion("1.2.7.8")]
+[assembly: AssemblyFileVersion("1.2.7.8")]
 
 /*****************************************************************************************
  * QueryAnalyzer modification records
@@ -78,5 +78,6 @@ using System.Runtime.InteropServices;
  * 1.2.7.7
  * Fix the right click issue.
  * Expand treeview after truncate table.
- * 
+ * 1.2.7.8
+ * Modify Bigtable setting, can enable/disable server, enable/disable tablet
  *****************************************************************************************/

@@ -17,6 +17,16 @@ namespace QueryAnalyzer.BigTable
     public partial class BigTableGenerate : UserControl
     {
         bool _Init = true;
+        bool _SettingChanged = false;
+
+        public bool SettingChanged
+        {
+            get
+            {
+                return _SettingChanged;
+            }
+        }
+
         FormBigTable _ParentForm;
 
         public string DefaultIndexFolder;
@@ -142,10 +152,10 @@ namespace QueryAnalyzer.BigTable
 
         private void RefreshBalanceServerList(TabletInfo tablet)
         {
-            listBoxBalanceServer.Items.Clear();
+            listBoxBalanceServers.Items.Clear();
             foreach (Hubble.Core.BigTable.ServerInfo serverInfo in tablet.BalanceServers)
             {
-                listBoxBalanceServer.Items.Add(serverInfo.ServerName);
+                listBoxBalanceServers.Items.Add(serverInfo);
             }
         }
 
@@ -154,7 +164,7 @@ namespace QueryAnalyzer.BigTable
             listBoxFailoverServers.Items.Clear();
             foreach (Hubble.Core.BigTable.ServerInfo serverInfo in tablet.FailoverServers)
             {
-                listBoxFailoverServers.Items.Add(serverInfo.ServerName);
+                listBoxFailoverServers.Items.Add(serverInfo);
             }
         }
 
@@ -193,6 +203,29 @@ namespace QueryAnalyzer.BigTable
             catch (Exception ex)
             {
                 QAMessageBox.ShowErrorMessage(ex.Message);
+            }
+        }
+
+        private void buttonSettingChanged_Click(object sender, EventArgs e)
+        {
+            _SettingChanged = true;
+        }
+
+        private void SetControlsSettingChanged_Click(Control control)
+        {
+            foreach (Control ctrl in control.Controls)
+            {
+                if (ctrl.Controls.Count > 0)
+                {
+                    SetControlsSettingChanged_Click(ctrl);
+                }
+                else
+                {
+                    if (ctrl is Button)
+                    {
+                        (ctrl as Button).Click += new EventHandler(buttonSettingChanged_Click);
+                    }
+                }
             }
         }
 
@@ -240,6 +273,9 @@ namespace QueryAnalyzer.BigTable
             }
 
             _Init = false;
+
+            SetControlsSettingChanged_Click(tabPageServers);
+            SetControlsSettingChanged_Click(tabPageTables);
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
@@ -247,26 +283,26 @@ namespace QueryAnalyzer.BigTable
             _ParentForm.Close();
         }
 
-        private void buttonSave_Click(object sender, EventArgs e)
+        internal bool Save()
         {
             IndexFolder = IndexFolder.Trim();
             TableName = TableName.Trim();
             if (IndexFolder == "")
             {
                 QAMessageBox.ShowErrorMessage("Index folder can't be empty.");
-                return;
+                return false;
             }
 
             if (TableName == "")
             {
                 QAMessageBox.ShowErrorMessage("Table name can't be empty.");
-                return;
+                return false;
             }
 
             if (BigTableInfo.Tablets.Count <= 0)
             {
                 QAMessageBox.ShowErrorMessage("BigTable must have at least one tablet!");
-                return;
+                return false;
             }
 
             foreach (TabletInfo tableInfo in BigTableInfo.Tablets)
@@ -275,7 +311,7 @@ namespace QueryAnalyzer.BigTable
                 {
                     QAMessageBox.ShowErrorMessage(string.Format("Table name:{0} must include at least one BalanceServer!",
                         tableInfo.TableName));
-                    return;
+                    return false;
                 }
             }
 
@@ -287,12 +323,22 @@ namespace QueryAnalyzer.BigTable
                 _ParentForm.BigTable.KeepDataIntegrity = checkBoxKeepDataIntegrity.Checked;
                 _ParentForm.BigTable.ExecuteTimeout = (int)numericUpDownExecuteTimeout.Value;
                 _ParentForm._Result = DialogResult.OK;
-                _ParentForm.Close();
+
+                return true;
             }
             catch (Exception e1)
             {
                 MessageBox.Show(e1.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }  
+        }
+
+        private void buttonSave_Click(object sender, EventArgs e)
+        {
+            if (Save())
+            {
+                _ParentForm.Close();
+            }
         }
 
         private void textBoxTableName_TextChanged(object sender, EventArgs e)
@@ -333,34 +379,34 @@ namespace QueryAnalyzer.BigTable
 
         private void CheckServerList()
         {
-            List<string> delServerInfos = new List<string>();
+            List<Hubble.Core.BigTable.ServerInfo> delServerInfos = new List<Hubble.Core.BigTable.ServerInfo>();
 
-            foreach (string serverName in listBoxBalanceServer.Items)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in listBoxBalanceServers.Items)
             {
-                if (!BigTableInfo.ServerList.Contains(new Hubble.Core.BigTable.ServerInfo(serverName, "")))
+                if (!BigTableInfo.ServerList.Contains(serverInfo))
                 {
-                    delServerInfos.Add(serverName);
+                    delServerInfos.Add(serverInfo);
                 }
             }
 
-            foreach (string serverName in delServerInfos)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in delServerInfos)
             {
-                listBoxBalanceServer.Items.Remove(serverName);
+                listBoxBalanceServers.Items.Remove(serverInfo);
             }
 
             delServerInfos.Clear();
 
-            foreach (string serverName in listBoxFailoverServers.Items)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in listBoxFailoverServers.Items)
             {
-                if (!BigTableInfo.ServerList.Contains(new Hubble.Core.BigTable.ServerInfo(serverName, "")))
+                if (!BigTableInfo.ServerList.Contains(serverInfo))
                 {
-                    delServerInfos.Add(serverName);
+                    delServerInfos.Add(serverInfo);
                 }
             }
 
-            foreach (string serverName in delServerInfos)
+            foreach (Hubble.Core.BigTable.ServerInfo serverInfo in delServerInfos)
             {
-                listBoxFailoverServers.Items.Remove(serverName);
+                listBoxFailoverServers.Items.Remove(serverInfo);
             }
         }
 
@@ -476,14 +522,16 @@ namespace QueryAnalyzer.BigTable
                 return;
             }
 
-            if (listBoxBalanceServer.Items.Contains(serverInfo))
+            if (listBoxBalanceServers.Items.Contains(serverInfo))
             {
                 QAMessageBox.ShowErrorMessage("Can't input reduplicate server name!");
                 return;
             }
 
             tablet.BalanceServers.Add(serverInfo);
-            listBoxBalanceServer.Items.Add(serverInfo);
+            listBoxBalanceServers.Items.Add(serverInfo);
+            buttonEnableBS.Enabled = listBoxBalanceServers.Items.Count > 0;
+
         }
 
         private void buttonDeleteBS_Click(object sender, EventArgs e)
@@ -496,16 +544,18 @@ namespace QueryAnalyzer.BigTable
                 return;
             }
 
-            string serverName = listBoxBalanceServer.SelectedItem as string;
-            if (serverName != null)
+            Hubble.Core.BigTable.ServerInfo serverInfo = listBoxBalanceServers.SelectedItem as Hubble.Core.BigTable.ServerInfo;
+            if (serverInfo != null)
             {
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
-                   serverName)) == DialogResult.Yes)
+                   serverInfo.ServerName)) == DialogResult.Yes)
                 {
-                    listBoxBalanceServer.Items.Remove(serverName);
-                    tablet.BalanceServers.Remove(new Hubble.Core.BigTable.ServerInfo(serverName, ""));
+                    listBoxBalanceServers.Items.Remove(serverInfo);
+                    tablet.BalanceServers.Remove(serverInfo);
                 }
             }
+
+            buttonEnableBS.Enabled = listBoxBalanceServers.Items.Count > 0;
         }
 
         private void buttonAddFailoverServers_Click(object sender, EventArgs e)
@@ -531,8 +581,10 @@ namespace QueryAnalyzer.BigTable
                 return;
             }
 
-            listBoxFailoverServers.Items.Add(serverInfo.ServerName);
+            listBoxFailoverServers.Items.Add(serverInfo);
             tablet.FailoverServers.Add(serverInfo);
+
+            buttonEnableFS.Enabled = listBoxFailoverServers.Items.Count > 0;
         }
 
         private void buttonDelFailoverServers_Click(object sender, EventArgs e)
@@ -545,16 +597,18 @@ namespace QueryAnalyzer.BigTable
                 return;
             }
 
-            string serverName = listBoxFailoverServers.SelectedItem as string;
-            if (serverName != null)
+            Hubble.Core.BigTable.ServerInfo serverInfo = listBoxFailoverServers.SelectedItem as Hubble.Core.BigTable.ServerInfo;
+            if (serverInfo != null)
             {
                 if (QAMessageBox.ShowQuestionMessage(string.Format("Are you sure you want to remove server: {0} ?",
-                   serverName)) == DialogResult.Yes)
+                   serverInfo.ServerName)) == DialogResult.Yes)
                 {
-                    listBoxFailoverServers.Items.Remove(serverName);
-                    tablet.FailoverServers.Remove(new Hubble.Core.BigTable.ServerInfo(serverName, ""));
+                    listBoxFailoverServers.Items.Remove(serverInfo);
+                    tablet.FailoverServers.Remove(serverInfo);
                 }
             }
+
+            buttonEnableFS.Enabled = listBoxFailoverServers.Items.Count > 0;
         }
 
         private void listBoxTablets_SelectedIndexChanged(object sender, EventArgs e)
@@ -565,6 +619,25 @@ namespace QueryAnalyzer.BigTable
             {
                 RefreshBalanceServerList(tablet);
                 RefreshFailoverServerList(tablet);
+                if (listBoxBalanceServers.Items.Count > 0)
+                {
+                    listBoxBalanceServers.SelectedIndex = 0;
+                    buttonEnableBS.Enabled = true;
+                }
+                else
+                {
+                    buttonEnableBS.Enabled = false;
+                }
+
+                if (listBoxFailoverServers.Items.Count > 0)
+                {
+                    listBoxFailoverServers.SelectedIndex = 0;
+                    buttonEnableFS.Enabled = true;
+                }
+                else
+                {
+                    buttonEnableFS.Enabled = false;
+                }
                 //CheckServerList();
             }
         }
@@ -631,6 +704,7 @@ namespace QueryAnalyzer.BigTable
                         RefreshServerGUI();
                         RefreshServersComboBox();
                         RefreshTabletGUI();
+                        _SettingChanged = true;
                     }
                 }
             }
@@ -643,6 +717,161 @@ namespace QueryAnalyzer.BigTable
         private void listViewServers_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             buttonUpdateServer_Click(sender, e);
+        }
+
+        private void listBoxTablets_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            e.DrawBackground();
+            Graphics g = e.Graphics;
+
+            int index = e.Index;
+
+            if (index >= 0)
+            {
+                bool selected = ((e.State & DrawItemState.Selected) == DrawItemState.Selected);
+
+                TabletInfo tableinfo = listBoxTablets.Items[index] as TabletInfo;
+
+                if (selected)
+                {
+                    g.FillRectangle(new SolidBrush(Color.FromKnownColor(KnownColor.Highlight)), e.Bounds);
+                }
+                else
+                {
+                    if (tableinfo.AllDisabled())
+                    {
+                        g.FillRectangle(new SolidBrush(Color.Gray), e.Bounds);
+                    }
+                    else if (tableinfo.PartDisabled())
+                    {
+                        g.FillRectangle(new SolidBrush(Color.Silver), e.Bounds);
+                    }
+                    else
+                    {
+                        g.FillRectangle(new SolidBrush(Color.White), e.Bounds);
+                    }
+                }
+
+                g.DrawString(tableinfo.TableName, listBoxTablets.Font, new SolidBrush(Color.Black), e.Bounds);
+                e.DrawFocusRectangle();
+            }
+        }
+
+        private void listBoxBalanceServer_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            ListBox listBox = sender as ListBox;
+
+            e.DrawBackground();
+            Graphics g = e.Graphics;
+
+            int index = e.Index;
+
+            if (index >= 0)
+            {
+                bool selected = ((e.State & DrawItemState.Selected) == DrawItemState.Selected);
+
+                Hubble.Core.BigTable.ServerInfo serverinfo = listBox.Items[index] as Hubble.Core.BigTable.ServerInfo;
+
+                if (selected)
+                {
+                    g.FillRectangle(new SolidBrush(Color.FromKnownColor(KnownColor.Highlight)), e.Bounds);
+                }
+                else
+                {
+                    if (!serverinfo.Enabled)
+                    {
+                        g.FillRectangle(new SolidBrush(Color.Gray), e.Bounds);
+                    }
+                    else
+                    {
+                        g.FillRectangle(new SolidBrush(Color.White), e.Bounds);
+                    }
+                }
+
+                g.DrawString(serverinfo.ServerName, listBox.Font, new SolidBrush(Color.Black), e.Bounds);
+                e.DrawFocusRectangle();
+            }
+
+        }
+
+        private void listBoxBalanceServer_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int index = listBoxBalanceServers.SelectedIndex;
+
+            if (index >= 0)
+            {
+                Hubble.Core.BigTable.ServerInfo serverInfo = listBoxBalanceServers.Items[index] as
+                    Hubble.Core.BigTable.ServerInfo;
+
+                labelBalanceEnabled.Text = serverInfo.ServerName + " ";
+                labelBalanceEnabled.Text += serverInfo.Enabled ? "Enabled" : "Disabled";
+                buttonEnableBS.Text = !serverInfo.Enabled ? "Enable" : "Disable";
+            }
+        }
+
+        private void listBoxFailoverServers_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int index = listBoxFailoverServers.SelectedIndex;
+
+            if (index >= 0)
+            {
+                Hubble.Core.BigTable.ServerInfo serverInfo = listBoxFailoverServers.Items[index] as
+                    Hubble.Core.BigTable.ServerInfo;
+
+                labelFailoverEnabled.Text = serverInfo.ServerName + " ";
+                labelFailoverEnabled.Text += serverInfo.Enabled ? "Enabled" : "Disabled";
+                buttonEnableFS.Text = !serverInfo.Enabled ? "Enable" : "Disable";
+            }
+        }
+
+        private void buttonEnableBS_Click(object sender, EventArgs e)
+        {
+            int index = listBoxBalanceServers.SelectedIndex;
+
+            if (index >= 0)
+            {
+                Hubble.Core.BigTable.ServerInfo serverInfo = listBoxBalanceServers.Items[index] as
+                    Hubble.Core.BigTable.ServerInfo;
+                serverInfo.Enabled = buttonEnableBS.Text == "Enable";
+
+                int tabletIndex = listBoxTablets.SelectedIndex;
+
+                RefreshTabletGUI();
+                
+                listBoxTablets.SelectedIndex = tabletIndex;
+
+                listBoxBalanceServers.SelectedIndex = index;
+            }
+        }
+
+        private void buttonEnableFS_Click(object sender, EventArgs e)
+        {
+            int index = listBoxFailoverServers.SelectedIndex;
+
+            if (index >= 0)
+            {
+                Hubble.Core.BigTable.ServerInfo serverInfo = listBoxFailoverServers.Items[index] as
+                    Hubble.Core.BigTable.ServerInfo;
+                serverInfo.Enabled = buttonEnableFS.Text == "Enable";
+
+                int tabletIndex = listBoxTablets.SelectedIndex;
+
+                RefreshTabletGUI();
+
+                listBoxTablets.SelectedIndex = tabletIndex;
+
+                listBoxFailoverServers.SelectedIndex = index;
+            }
+        }
+
+        private void checkBoxKeepDataIntegrity_CheckedChanged(object sender, EventArgs e)
+        {
+            _SettingChanged = true;
+        }
+
+        private void numericUpDownExecuteTimeout_ValueChanged(object sender, EventArgs e)
+        {
+            _SettingChanged = true;
         }
     }
 }

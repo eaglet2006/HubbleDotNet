@@ -38,6 +38,7 @@
             this.Name = "FormBigTable";
             this.Text = "BigTable";
             this.Load += new System.EventHandler(this.FormBigTable_Load);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormBigTable_FormClosing);
             this.ResumeLayout(false);
 
         }

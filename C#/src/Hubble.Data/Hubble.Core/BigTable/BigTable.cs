@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Hubble.Core.BigTable
 {
@@ -118,6 +119,32 @@ namespace Hubble.Core.BigTable
         {
             this.TableName = tableName;
             BalanceServers.Add(serverInfo.Clone());
+        }
+
+        public bool PartDisabled()
+        {
+            int balanceCount = this.BalanceServers.Count(s => s.Enabled);
+            int failoverCount = this.FailoverServers.Count(s => s.Enabled);
+
+            if (balanceCount < this.BalanceServers.Count && balanceCount > 0)
+            {
+                return true;
+            }
+
+            if (failoverCount < this.FailoverServers.Count && failoverCount > 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool AllDisabled()
+        {
+            int balanceCount = this.BalanceServers.Count(s => s.Enabled);
+            int failoverCount = this.FailoverServers.Count(s => s.Enabled);
+
+            return (balanceCount == 0 && failoverCount == 0);
         }
 
         public TabletInfo Clone()

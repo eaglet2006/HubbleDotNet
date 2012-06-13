@@ -219,6 +219,8 @@
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateField.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Update\UpdateTableName.cs" />
     <Compile Include="SFQL\SyntaxAnalysis\Where.cs" />
+    <Compile Include="StoredProcedure\SP_DisableTablet.cs" />
+    <Compile Include="StoredProcedure\SP_EnableTablet.cs" />
     <Compile Include="StoredProcedure\SP_GCCollect.cs" />
     <Compile Include="StoredProcedure\SP_GetTFIDF.cs" />
     <Compile Include="StoredProcedure\SP_Rebuild.cs" />
