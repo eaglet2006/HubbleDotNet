@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.7.8")]
-[assembly: AssemblyFileVersion("1.2.7.8")]
+[assembly: AssemblyVersion("1.2.7.9")]
+[assembly: AssemblyFileVersion("1.2.7.9")]
 
 /*****************************************************************************************
  * QueryAnalyzer modification records
@@ -80,4 +80,6 @@ using System.Runtime.InteropServices;
  * Expand treeview after truncate table.
  * 1.2.7.8
  * Modify Bigtable setting, can enable/disable server, enable/disable tablet
+ * 1.2.7.9
+ * Fix a bug of bigtable setting interface that will show a question dialog twice when click save button.
  *****************************************************************************************/

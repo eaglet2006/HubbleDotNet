@@ -337,6 +337,7 @@ namespace QueryAnalyzer.BigTable
         {
             if (Save())
             {
+                _SettingChanged = false;
                 _ParentForm.Close();
             }
         }
