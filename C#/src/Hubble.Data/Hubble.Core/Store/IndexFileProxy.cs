@@ -1559,6 +1559,29 @@ MergeAckLoop:
             }
 
         }
+
+        public void CloseIndexWriter()
+        {
+            if (!HBMonitor.TryEnter(_LockObj, Timeout))
+            {
+                if (_NeedClose)
+                {
+                    return;
+                }
+
+                throw new TimeoutException();
+            }
+
+            try
+            {
+                _IndexFile.CloseIndexWriter();
+            }
+            finally
+            {
+                HBMonitor.Exit(_LockObj);
+            }
+        }
+
         public void Collect()
         {
             if (!HBMonitor.TryEnter(_LockObj, Timeout))

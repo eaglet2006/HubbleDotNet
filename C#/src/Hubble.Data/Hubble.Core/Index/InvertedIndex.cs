@@ -259,49 +259,56 @@ namespace Hubble.Core.Index
 
         private void StoreIndexToFile()
         {
-            lock (this)
+            try
             {
-                if (_DBProvider.DelProvider != null)
+                lock (this)
                 {
-                    _DBProvider.DelProvider.IncDeleteStamp();
+                    if (_DBProvider.DelProvider != null)
+                    {
+                        _DBProvider.DelProvider.IncDeleteStamp();
+                    }
+
                 }
 
-            }
-
-            if (_WordTableWriter == null)
-            {
-                return;
-            }
-
-            int wordIndexWriterCount = _WordTableWriter.Count;
-
-            if (wordIndexWriterCount <= 0)
-            {
-                return;
-            }
-
-            Array.Sort(_WordIndexWriterPool, 0, wordIndexWriterCount);
-
-            for (int index = 0; index < wordIndexWriterCount; index++)
-            {
-                IEnumerable<DocumentPositionList> docList = _WordIndexWriterPool[index].GetDocListForWriter();
-
-                if (docList != null)
+                if (_WordTableWriter == null)
                 {
-                    _IndexFileProxy.AddWordPositionAndDocumentPositionList(
-                        _WordIndexWriterPool[index].Word, _WordIndexWriterPool[index].GetFirstDocList(), 
-                        _WordIndexWriterPool[index].Count, docList);
+                    return;
                 }
-            }
 
-            _WordTableWriter = null;
-            _WordIndexWriterPool = null;
-            _IndexWriterPoolId = 0;
-            _TempWordIndexWriter = null;
-            _DocPositionAlloc = null;
+                int wordIndexWriterCount = _WordTableWriter.Count;
+
+                if (wordIndexWriterCount <= 0)
+                {
+                    return;
+                }
+
+                Array.Sort(_WordIndexWriterPool, 0, wordIndexWriterCount);
+
+                for (int index = 0; index < wordIndexWriterCount; index++)
+                {
+                    IEnumerable<DocumentPositionList> docList = _WordIndexWriterPool[index].GetDocListForWriter();
+
+                    if (docList != null)
+                    {
+                        _IndexFileProxy.AddWordPositionAndDocumentPositionList(
+                            _WordIndexWriterPool[index].Word, _WordIndexWriterPool[index].GetFirstDocList(),
+                            _WordIndexWriterPool[index].Count, docList);
+                    }
+                }
+
+                _WordTableWriter = null;
+                _WordIndexWriterPool = null;
+                _IndexWriterPoolId = 0;
+                _TempWordIndexWriter = null;
+                _DocPositionAlloc = null;
+            }
+            catch(Exception e)
+            {
+                _IndexFileProxy.CloseIndexWriter();
+                throw e;
+            }
 
             _IndexFileProxy.Collect();
-
             _IndexMerge.Optimize(OptimizationOption.Speedy);
         }
 

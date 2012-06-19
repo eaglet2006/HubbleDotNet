@@ -81,6 +81,8 @@ namespace Hubble.Core.StoredProcedure
 
                 flags &= ~Hubble.Core.Service.SyncFlags.Delete;
                 flags &= ~Hubble.Core.Service.SyncFlags.Update;
+                flags |= Hubble.Core.Service.SyncFlags.Rebuild;
+                flags |= Hubble.Core.Service.SyncFlags.Insert;
             }
 
             Hubble.Core.Data.OptimizationOption optimizeOption;

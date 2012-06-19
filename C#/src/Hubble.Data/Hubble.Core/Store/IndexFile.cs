@@ -896,6 +896,14 @@ namespace Hubble.Core.Store
             return new WordIndexReader(word, docList, totalDocs, dbProvider);
         }
 
+        /// <summary>
+        /// only close index writer
+        /// </summary>
+        public void CloseIndexWriter()
+        {
+            ClearWordFilePositionList();
+            _IndexWriter.Close();
+        }
 
         /// <summary>
         /// Collect forcedly

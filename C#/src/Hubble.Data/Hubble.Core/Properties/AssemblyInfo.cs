@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.7.8")]
-[assembly: AssemblyFileVersion("1.2.7.8")]
+[assembly: AssemblyVersion("1.2.8.0")]
+[assembly: AssemblyFileVersion("1.2.8.0")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -224,4 +224,7 @@ using System.Runtime.InteropServices;
  * Add a enabled feature in Bigtable serverinfo so we can enable or disable specified server or tablet.
  * 1.2.7.8
  * Add SP_EnableTablet and SP_DisableTablet
+ * 1.2.8.0
+ * Fix a bug that if the system throw exception during indexing, the indexwriter won't be closed.
+ * Fix a bug of SP_Rebuild that can't execute the statement like this SP_Rebuild 'News',5000,1,'WaitForExit'
  *****************************************************************************************/
