@@ -54,8 +54,8 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.7.9")]
-[assembly: AssemblyFileVersion("1.2.7.9")]
+[assembly: AssemblyVersion("1.2.8.1")]
+[assembly: AssemblyFileVersion("1.2.8.1")]
 
 /*****************************************************************************************
  * QueryAnalyzer modification records
@@ -82,4 +82,6 @@ using System.Runtime.InteropServices;
  * Modify Bigtable setting, can enable/disable server, enable/disable tablet
  * 1.2.7.9
  * Fix a bug of bigtable setting interface that will show a question dialog twice when click save button.
+ * 1.2.8.1
+ * Fix a bug of bigtable setting interface that will show the server name does not including the specified tablet in the combox.
  *****************************************************************************************/

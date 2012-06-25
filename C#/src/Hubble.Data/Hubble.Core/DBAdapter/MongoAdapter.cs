@@ -665,9 +665,12 @@ namespace Hubble.Core.DBAdapter
                     case Hubble.Core.Data.DataType.SmallDateTime:
                         type = typeof(DateTime);
                         break;
-                    case Hubble.Core.Data.DataType.Int:
-                    case Hubble.Core.Data.DataType.BigInt:
                     case Hubble.Core.Data.DataType.TinyInt:
+                    case Hubble.Core.Data.DataType.SmallInt:
+                    case Hubble.Core.Data.DataType.Int:
+                        type = typeof(int);
+                        break;
+                    case Hubble.Core.Data.DataType.BigInt:
                         type = typeof(Int64);
                         break;
                     case Hubble.Core.Data.DataType.Float:
@@ -676,6 +679,8 @@ namespace Hubble.Core.DBAdapter
                     case Hubble.Core.Data.DataType.Data:
                         type = typeof(byte[]);
                         break;
+                    default:
+                        throw new Data.DataException(string.Format("Invalid data type : {0}", field.DataType));
                 }
 
                 table.Columns.Add(new System.Data.DataColumn(field.Name, type));

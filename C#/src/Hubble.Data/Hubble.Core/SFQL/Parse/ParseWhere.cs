@@ -1513,7 +1513,7 @@ namespace Hubble.Core.SFQL.Parse
                     Core.SFQL.SyntaxAnalysis.Expression expression = 
                         expressionTree.Expression as Core.SFQL.SyntaxAnalysis.Expression;
 
-                    if (_DBProvider.DocIdReplaceField != null)
+                    if (_DBProvider.DocIdReplaceField != null) //Updatable
                     {
                         if (expression != null)
                         {
@@ -1572,6 +1572,44 @@ namespace Hubble.Core.SFQL.Parse
                                         groupByCollection = null;
                                         sorted = false;
                                         return new Query.DocumentResultForSort[0];
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    else if (_DBProvider.IndexOnly && _DBProvider.DocIdReplaceField == null) //Append only
+                    {
+                        if (expression != null)
+                        {
+                            if (expression.Left != null)
+                            {
+                                if (expression.Left.Count == 1)
+                                {
+                                    //if the expression like: Docid = 000
+                                    if (expression.Left[0].Text.Equals("DocId", StringComparison.CurrentCultureIgnoreCase))
+                                    {
+                                        if (expression.Operator.SyntaxType == Hubble.Core.SFQL.SyntaxAnalysis.SyntaxType.Equal)
+                                        {
+                                            int docid = int.Parse(expression.Right[0].Text);
+                                            
+                                            if (_DBProvider.GetPayloadData(docid) != null)
+                                            {
+                                                Query.DocumentResultForSort[] dresult = new Hubble.Core.Query.DocumentResultForSort[1];
+                                                dresult[0] = new Hubble.Core.Query.DocumentResultForSort(docid);
+                                                relTotalCount = 1;
+                                                groupByCollection = null;
+                                                sorted = false;
+                                                return dresult;
+                                            }
+                                            else
+                                            {
+                                                relTotalCount = 0;
+                                                groupByCollection = null;
+                                                sorted = false;
+                                                return new Query.DocumentResultForSort[0];
+                                            }
+                                        }
                                     }
                                 }
                             }

@@ -50,6 +50,8 @@
             this.tabPageTables = new System.Windows.Forms.TabPage();
             this.panel1 = new System.Windows.Forms.Panel();
             this.groupBoxFailoverServers = new System.Windows.Forms.GroupBox();
+            this.buttonEnableFS = new System.Windows.Forms.Button();
+            this.labelFailoverEnabled = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.comboBoxFailoverServers = new System.Windows.Forms.ComboBox();
@@ -57,6 +59,8 @@
             this.listBoxFailoverServers = new System.Windows.Forms.ListBox();
             this.buttonAddFailoverServers = new System.Windows.Forms.Button();
             this.groupBoxBalanceServers = new System.Windows.Forms.GroupBox();
+            this.buttonEnableBS = new System.Windows.Forms.Button();
+            this.labelBalanceEnabled = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.comboBoxBalanceServers = new System.Windows.Forms.ComboBox();
@@ -67,10 +71,6 @@
             this.buttonAdd = new System.Windows.Forms.Button();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.listBoxTablets = new System.Windows.Forms.ListBox();
-            this.labelBalanceEnabled = new System.Windows.Forms.Label();
-            this.labelFailoverEnabled = new System.Windows.Forms.Label();
-            this.buttonEnableBS = new System.Windows.Forms.Button();
-            this.buttonEnableFS = new System.Windows.Forms.Button();
             this.tabControl.SuspendLayout();
             this.tabPageGlobal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownExecuteTimeout)).BeginInit();
@@ -337,6 +337,25 @@
             this.groupBoxFailoverServers.TabStop = false;
             this.groupBoxFailoverServers.Text = "Failover Servers";
             // 
+            // buttonEnableFS
+            // 
+            this.buttonEnableFS.Location = new System.Drawing.Point(329, 131);
+            this.buttonEnableFS.Name = "buttonEnableFS";
+            this.buttonEnableFS.Size = new System.Drawing.Size(75, 23);
+            this.buttonEnableFS.TabIndex = 13;
+            this.buttonEnableFS.Text = "Enable";
+            this.buttonEnableFS.UseVisualStyleBackColor = true;
+            this.buttonEnableFS.Click += new System.EventHandler(this.buttonEnableFS_Click);
+            // 
+            // labelFailoverEnabled
+            // 
+            this.labelFailoverEnabled.AutoSize = true;
+            this.labelFailoverEnabled.Location = new System.Drawing.Point(94, 53);
+            this.labelFailoverEnabled.Name = "labelFailoverEnabled";
+            this.labelFailoverEnabled.Size = new System.Drawing.Size(46, 13);
+            this.labelFailoverEnabled.TabIndex = 12;
+            this.labelFailoverEnabled.Text = "Enabled";
+            // 
             // label7
             // 
             this.label7.AutoSize = true;
@@ -411,6 +430,25 @@
             this.groupBoxBalanceServers.TabIndex = 4;
             this.groupBoxBalanceServers.TabStop = false;
             this.groupBoxBalanceServers.Text = "Balance Servers";
+            // 
+            // buttonEnableBS
+            // 
+            this.buttonEnableBS.Location = new System.Drawing.Point(329, 148);
+            this.buttonEnableBS.Name = "buttonEnableBS";
+            this.buttonEnableBS.Size = new System.Drawing.Size(75, 23);
+            this.buttonEnableBS.TabIndex = 12;
+            this.buttonEnableBS.Text = "Enable";
+            this.buttonEnableBS.UseVisualStyleBackColor = true;
+            this.buttonEnableBS.Click += new System.EventHandler(this.buttonEnableBS_Click);
+            // 
+            // labelBalanceEnabled
+            // 
+            this.labelBalanceEnabled.AutoSize = true;
+            this.labelBalanceEnabled.Location = new System.Drawing.Point(96, 53);
+            this.labelBalanceEnabled.Name = "labelBalanceEnabled";
+            this.labelBalanceEnabled.Size = new System.Drawing.Size(46, 13);
+            this.labelBalanceEnabled.TabIndex = 11;
+            this.labelBalanceEnabled.Text = "Enabled";
             // 
             // label6
             // 
@@ -509,44 +547,6 @@
             this.listBoxTablets.TabIndex = 0;
             this.listBoxTablets.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxTablets_DrawItem);
             this.listBoxTablets.SelectedIndexChanged += new System.EventHandler(this.listBoxTablets_SelectedIndexChanged);
-            // 
-            // labelBalanceEnabled
-            // 
-            this.labelBalanceEnabled.AutoSize = true;
-            this.labelBalanceEnabled.Location = new System.Drawing.Point(96, 53);
-            this.labelBalanceEnabled.Name = "labelBalanceEnabled";
-            this.labelBalanceEnabled.Size = new System.Drawing.Size(46, 13);
-            this.labelBalanceEnabled.TabIndex = 11;
-            this.labelBalanceEnabled.Text = "Enabled";
-            // 
-            // labelFailoverEnabled
-            // 
-            this.labelFailoverEnabled.AutoSize = true;
-            this.labelFailoverEnabled.Location = new System.Drawing.Point(94, 53);
-            this.labelFailoverEnabled.Name = "labelFailoverEnabled";
-            this.labelFailoverEnabled.Size = new System.Drawing.Size(46, 13);
-            this.labelFailoverEnabled.TabIndex = 12;
-            this.labelFailoverEnabled.Text = "Enabled";
-            // 
-            // buttonEnableBS
-            // 
-            this.buttonEnableBS.Location = new System.Drawing.Point(329, 148);
-            this.buttonEnableBS.Name = "buttonEnableBS";
-            this.buttonEnableBS.Size = new System.Drawing.Size(75, 23);
-            this.buttonEnableBS.TabIndex = 12;
-            this.buttonEnableBS.Text = "Enable";
-            this.buttonEnableBS.UseVisualStyleBackColor = true;
-            this.buttonEnableBS.Click += new System.EventHandler(this.buttonEnableBS_Click);
-            // 
-            // buttonEnableFS
-            // 
-            this.buttonEnableFS.Location = new System.Drawing.Point(329, 131);
-            this.buttonEnableFS.Name = "buttonEnableFS";
-            this.buttonEnableFS.Size = new System.Drawing.Size(75, 23);
-            this.buttonEnableFS.TabIndex = 13;
-            this.buttonEnableFS.Text = "Enable";
-            this.buttonEnableFS.UseVisualStyleBackColor = true;
-            this.buttonEnableFS.Click += new System.EventHandler(this.buttonEnableFS_Click);
             // 
             // BigTableGenerate
             // 

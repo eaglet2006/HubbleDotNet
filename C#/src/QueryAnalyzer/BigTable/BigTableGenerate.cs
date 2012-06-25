@@ -16,8 +16,57 @@ namespace QueryAnalyzer.BigTable
 {
     public partial class BigTableGenerate : UserControl
     {
+        class DatabaseTableEnumerate
+        {
+            /// <summary>
+            /// Database Name specified in bigtable
+            /// </summary>
+            internal string DBName { get; private set; }
+
+            /// <summary>
+            /// list all of the tables in this database
+            /// </summary>
+            internal List<string> Tables { get; private set; }
+
+            private void ListTable(Hubble.Core.BigTable.ServerInfo serverInfo)
+            {
+                Tables = new List<string>();
+
+                using (HubbleAsyncConnection conn = new HubbleAsyncConnection(serverInfo.ConnectionString))
+                {
+                    conn.Open();
+
+                    HubbleCommand command = new HubbleCommand("exec sp_tablelist", conn);
+                    DataSet ds = command.Query();
+
+                    foreach (DataRow row in ds.Tables[0].Rows)
+                    {
+                        if (!bool.Parse(row["IsBigTable"].ToString()))
+                        {
+                            string fullName = row["TableName"].ToString();
+                            int index = fullName.IndexOf(conn.Database, 0, StringComparison.CurrentCultureIgnoreCase);
+                            if (index == 0)
+                            {
+                                index += conn.Database.Length;
+                                Tables.Add(fullName.Substring(index + 1, fullName.Length - index - 1));
+                            }
+                        }
+                    }
+                }
+            }
+
+            internal DatabaseTableEnumerate(Hubble.Core.BigTable.ServerInfo serverInfo)
+            {
+                ListTable(serverInfo);
+                this.DBName = serverInfo.ServerName;
+            }
+        }
+
+
         bool _Init = true;
         bool _SettingChanged = false;
+
+        List<DatabaseTableEnumerate> _DBTableEnumerate = null;
 
         public bool SettingChanged
         {
@@ -103,6 +152,36 @@ namespace QueryAnalyzer.BigTable
             InitializeComponent();
         }
 
+        private bool TableInDatabase(string tableName, string dbName)
+        {
+            var dbTableEnumerate = _DBTableEnumerate.SingleOrDefault(s => s.DBName.Equals(dbName, StringComparison.CurrentCultureIgnoreCase));
+
+            if (dbTableEnumerate == null)
+            {
+                return false;
+            }
+
+            return dbTableEnumerate.Tables.SingleOrDefault(s => s.Equals(tableName, StringComparison.CurrentCultureIgnoreCase)) != null;
+        }
+
+        private void RefreshDatabaseTableEnumerate()
+        {
+            _DBTableEnumerate = new List<DatabaseTableEnumerate>();
+
+            foreach (var serverInfo in _BigTableInfo.ServerList)
+            {
+                try
+                {
+                    _DBTableEnumerate.Add(new DatabaseTableEnumerate(serverInfo));
+                }
+                catch (Exception e)
+                {
+                    QAMessageBox.ShowInformationMessage(string.Format("Try to connect server:{0} fail. Err:{1}",
+                        serverInfo.ServerName, e.Message));
+                }
+            }
+        }
+
         private void RefreshServerGUI()
         {
             listViewServers.Items.Clear();
@@ -117,8 +196,6 @@ namespace QueryAnalyzer.BigTable
 
                 listViewServers.Items.Add(item);
             }
-
-            RefreshServersComboBox();
         }
 
         private void RefreshTabletGUI()
@@ -229,6 +306,8 @@ namespace QueryAnalyzer.BigTable
             }
         }
 
+
+
         private void BigTableGenerate_Load(object sender, EventArgs e)
         {
             _ParentForm = this.Parent as FormBigTable;
@@ -269,6 +348,7 @@ namespace QueryAnalyzer.BigTable
 
             if (!CreateTable)
             {
+                RefreshDatabaseTableEnumerate();
                 RefreshGUI();
             }
 
@@ -411,28 +491,37 @@ namespace QueryAnalyzer.BigTable
             }
         }
 
-        private void RefreshServersComboBox()
+        private void RefreshServersComboBox(string tableName)
         {
             comboBoxBalanceServers.Items.Clear();
 
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
-                comboBoxBalanceServers.Items.Add(serverInfo);
+                if (TableInDatabase(tableName, serverInfo.ServerName))
+                {
+                    comboBoxBalanceServers.Items.Add(serverInfo);
+                }
             }
 
             comboBoxFailoverServers.Items.Clear();
 
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
-                comboBoxFailoverServers.Items.Add(serverInfo);
+                if (TableInDatabase(tableName, serverInfo.ServerName))
+                {
+                    comboBoxFailoverServers.Items.Add(serverInfo);
+                }
             }
 
-            if (BigTableInfo.ServerList.Count > 0)
+            if (comboBoxBalanceServers.Items.Count > 0)
             {
-                comboBoxBalanceServers.Text = BigTableInfo.ServerList[0].ServerName;
-                comboBoxFailoverServers.Text = BigTableInfo.ServerList[0].ServerName;
+                comboBoxBalanceServers.SelectedIndex = 0;
             }
 
+            if (comboBoxFailoverServers.Items.Count > 0)
+            {
+                comboBoxFailoverServers.SelectedIndex = 0;
+            }
         }
 
         private void buttonAddServer_Click(object sender, EventArgs e)
@@ -472,7 +561,7 @@ namespace QueryAnalyzer.BigTable
 
                     listViewServers.Items.Add(item);
 
-                    RefreshServersComboBox();
+                    RefreshDatabaseTableEnumerate();
                 }
             }
         }
@@ -488,14 +577,16 @@ namespace QueryAnalyzer.BigTable
                 {
                     listViewServers.Items.Remove(item);
 
+                    RefreshDatabaseTableEnumerate();
+
                     Hubble.Core.BigTable.ServerInfo serverInfo =
                                            new Hubble.Core.BigTable.ServerInfo(item.SubItems["ServerName"].Text,
                                            item.SubItems["ConnectionString"].Text);
 
                     BigTableInfo.RemoveServerInfo(serverInfo);
 
-                    RefreshServersComboBox();
                     CheckServerList();
+
                 }
 
             }
@@ -618,6 +709,7 @@ namespace QueryAnalyzer.BigTable
 
             if (tablet != null)
             {
+                RefreshServersComboBox(tablet.TableName);
                 RefreshBalanceServerList(tablet);
                 RefreshFailoverServerList(tablet);
                 if (listBoxBalanceServers.Items.Count > 0)
@@ -702,8 +794,9 @@ namespace QueryAnalyzer.BigTable
 
                         listViewServers.SelectedItems[0].SubItems["ConnectionString"].Text = connectionString;
 
+                        RefreshDatabaseTableEnumerate();
+
                         RefreshServerGUI();
-                        RefreshServersComboBox();
                         RefreshTabletGUI();
                         _SettingChanged = true;
                     }

@@ -18,6 +18,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 using Hubble.Core.SFQL.LexicalAnalysis;
 using Hubble.Core.SFQL.SyntaxAnalysis;
@@ -313,10 +314,10 @@ namespace Hubble.Core.SFQL.Parse
                 throw new DataException(string.Format("Table: {0} is setting to synchronize with database now. Can't do insert by sql.!", tableName));
             }
 
+            List<Field> fields = dBProvider.GetAllFields();
 
             if (insert.Fields.Count == 0)
-            {
-                List<Field> fields = dBProvider.GetAllFields();
+            {   //for insert statement that is not specified the fields. eg. insert table values(1,2,3);
 
                 if (dBProvider.IndexOnly && dBProvider.DocIdReplaceField == null)
                 {
@@ -333,9 +334,6 @@ namespace Hubble.Core.SFQL.Parse
                 }
             }
 
-
-
-
             if (insert.Fields.Count > insert.Values.Count)
             {
                 throw new DataException("There are more columns in the INSERT statement than values specified in the VALUES clause. The number of values in the VALUES clause must match the number of columns specified in the INSERT statement.");
@@ -345,6 +343,38 @@ namespace Hubble.Core.SFQL.Parse
                 throw new DataException("There are fewer columns in the INSERT statement than values specified in the VALUES clause. The number of values in the VALUES clause must match the number of columns specified in the INSERT statement.");
             }
 
+            if ((dBProvider.IndexOnly && dBProvider.DocIdReplaceField == null && insert.Fields.Count < fields.Count + 1) ||
+                ((!dBProvider.IndexOnly || dBProvider.DocIdReplaceField != null) && insert.Fields.Count < fields.Count))
+            {
+                foreach (Field field in fields)
+                {
+                    if (insert.Fields.SingleOrDefault(s => s.Name.Equals(field.Name, StringComparison.CurrentCultureIgnoreCase))
+                        == null)
+                    {
+                        //the field is not in the insert fields
+
+                        if (field.DefaultValue != null)
+                        {
+                            SyntaxAnalysis.Insert.InsertField insertField = new SyntaxAnalysis.Insert.InsertField();
+                            insertField.Name = field.Name;
+                            insert.Fields.Add(insertField);
+
+                            SyntaxAnalysis.Insert.InsertValue insertValue = new Hubble.Core.SFQL.SyntaxAnalysis.Insert.InsertValue();
+                            insertValue.Value = field.DefaultValue;
+                            insert.Values.Add(insertValue);
+                        }
+                        else
+                        {
+                            if (!field.CanNull)
+                            {
+                                throw new DataException(string.Format("Field:{0} can be insert NULL", field.Name));
+                            }
+                        }
+                    }
+
+                }
+
+            }
 
             for(int i = 0; i < insert.Fields.Count; i++)
             {

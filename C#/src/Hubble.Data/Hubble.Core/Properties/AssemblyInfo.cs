@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.8.0")]
-[assembly: AssemblyFileVersion("1.2.8.0")]
+[assembly: AssemblyVersion("1.2.8.1")]
+[assembly: AssemblyFileVersion("1.2.8.1")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -227,4 +227,11 @@ using System.Runtime.InteropServices;
  * 1.2.8.0
  * Fix a bug that if the system throw exception during indexing, the indexwriter won't be closed.
  * Fix a bug of SP_Rebuild that can't execute the statement like this SP_Rebuild 'News',5000,1,'WaitForExit'
+ * 1.2.8.1
+ * Fix a bug of bigtable setting interface that will show the server name does not including the specified tablet in the balance or failover server combox.
+ * Fix a bug of Mongodb adapter that will throw a exception when execute select statement and there has smallint data type in select fields
+ * Fix a bug of insert statement that will not insert default value when the insert field is not completed. eg.
+ * insert testdatatype (Title) values('bcd')
+ * Fix a bug of append only that will search dateabase when we only want to get the result for some specified docid.
+ * e.g select * from NewsAppendOnly where docid = 100002
  *****************************************************************************************/
