@@ -182,6 +182,14 @@ namespace QueryAnalyzer.BigTable
             }
         }
 
+        private void InitListViewItem(ListViewItem item)
+        {
+            item.Name = "Enabled";
+            item.SubItems[0].Name = "Enabled";
+            item.SubItems[1].Name = "ServerName";
+            item.SubItems[2].Name = "ConnectionString";
+        }
+
         private void RefreshServerGUI()
         {
             listViewServers.Items.Clear();
@@ -189,10 +197,8 @@ namespace QueryAnalyzer.BigTable
             foreach (ServerInfomation serverInfo in BigTableInfo.ServerList)
             {
                 ListViewItem item = new ListViewItem(new string[] {serverInfo.Enabled.ToString(), serverInfo.ServerName, serverInfo.ConnectionString });
-                item.Name = "Enabled";
-                item.SubItems[0].Name = "Enabled";
-                item.SubItems[1].Name = "ServerName";
-                item.SubItems[2].Name = "ConnectionString";
+
+                InitListViewItem(item);
 
                 listViewServers.Items.Add(item);
             }
@@ -557,9 +563,11 @@ namespace QueryAnalyzer.BigTable
                     BigTableInfo.ServerList.Add(new Hubble.Core.BigTable.ServerInfo(serverName,
                         connectionString));
 
-                    ListViewItem item = new ListViewItem(new string[] {serverName, connectionString});
+                    ListViewItem item = new ListViewItem(new string[] {"True", serverName, connectionString});
 
                     listViewServers.Items.Add(item);
+
+                    InitListViewItem(item);
 
                     RefreshDatabaseTableEnumerate();
                 }
