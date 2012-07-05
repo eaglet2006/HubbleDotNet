@@ -69,6 +69,7 @@ namespace Hubble.Core.SFQL.Parse
         void ThreadProc()
         {
             List<ThreadInfo> terminateThreads = new List<ThreadInfo>();
+
             while (true)
             {
                 lock (_LockObj)
@@ -95,35 +96,42 @@ namespace Hubble.Core.SFQL.Parse
                             {
                                 _ThreadIdToThread.Remove(threadInfo.Thread.ManagedThreadId);
                             }
-
-                            try
-                            {
-                                if (threadInfo.QueryThread == null)
-                                {
-                                    threadInfo.Thread.Abort();
-                                }
-                                else
-                                {
-                                    // For async connection
-                                    //Don't worry about abort when return message. because 
-                                    //return select watch dog before return message to tcp channel.
-                                    threadInfo.QueryThread.AbortAndRestart();
-                                }
-
-                                Global.Report.WriteErrorLog(string.Format("Select statement of {0} has been executing more than {1} ms. Abort it",
-                                    threadInfo.TableName, threadInfo.TimeOut));
-                            }
-                            catch (Exception e)
-                            {
-                                Global.Report.WriteErrorLog("Select Watch dog Abort fail.", e);
-                            }
-                        }
-
-                        if (terminateThreads.Count > 0)
-                        {
-                            terminateThreads.Clear();
                         }
                     }
+                }
+
+                //deadlock when i put following code in above lock block. Because:
+                //The thread that calls Abort might block if the thread that is being aborted is in a protected region of code, 
+                //such as a catch block, finally block, or constrained execution region. If the thread that calls Abort holds a 
+                //lock that the aborted thread requires, a deadlock can occur.
+                foreach (ThreadInfo threadInfo in terminateThreads)
+                {
+                    try
+                    {
+                        if (threadInfo.QueryThread == null)
+                        {
+                            threadInfo.Thread.Abort();
+                        }
+                        else
+                        {
+                            // For async connection
+                            //Don't worry about abort when return message. because 
+                            //return select watch dog before return message to tcp channel.
+                            threadInfo.QueryThread.AbortAndRestart();
+                        }
+
+                        Global.Report.WriteErrorLog(string.Format("Select statement of {0} has been executing more than {1} ms. Abort it",
+                            threadInfo.TableName, threadInfo.TimeOut));
+                    }
+                    catch (Exception e)
+                    {
+                        Global.Report.WriteErrorLog("Select Watch dog Abort fail.", e);
+                    }
+                }
+
+                if (terminateThreads.Count > 0)
+                {
+                    terminateThreads.Clear();
                 }
 
                 System.Threading.Thread.Sleep(1000);
