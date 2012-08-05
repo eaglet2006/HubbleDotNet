@@ -234,7 +234,7 @@ namespace Hubble.Core.Store
                         throw new Data.DataException("Payload fileIndex < 0!");
                     }
 
-                    fs.Seek(pe.Payload.FileIndex * _StoreLength + HeadLength + sizeof(int), System.IO.SeekOrigin.Begin);
+                    fs.Seek((long)pe.Payload.FileIndex * (long)_StoreLength + HeadLength + sizeof(int), System.IO.SeekOrigin.Begin);
 
                     pe.Payload.CopyTo(data);
                     fs.Write(data, 0, data.Length);
