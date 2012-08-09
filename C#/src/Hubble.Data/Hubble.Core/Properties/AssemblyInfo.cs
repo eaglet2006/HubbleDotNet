@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.8.4")]
-[assembly: AssemblyFileVersion("1.2.8.4")]
+[assembly: AssemblyVersion("1.2.8.5")]
+[assembly: AssemblyFileVersion("1.2.8.5")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -240,4 +240,6 @@ using System.Runtime.InteropServices;
  * Fix a bug of SelectWatchDog. deadlock when select watch dog want to abort some thread that is running select statement and timeout.
  * 1.2.8.4
  * Fix a bug that if payload.db large than 4GB, will throw a exception.
+ * 1.2.8.5
+ * change lock (this) to lock (_SyncObj) of DBProvider class. 
  *****************************************************************************************/

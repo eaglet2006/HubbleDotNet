@@ -75,6 +75,7 @@ namespace Hubble.Core.Data
 
         private Cache.QueryCache _QueryCache = null;
 
+        private object _SyncObj = new object();
         private object _ExitLock = new object();
         private bool _NeedExit = false;
         private int _BusyCount = 0;
@@ -181,7 +182,7 @@ namespace Hubble.Core.Data
         {
             get
             {
-                lock (this)
+                lock (_SyncObj)
                 {
                     if (_Table.IndexOnly)
                     {
@@ -199,7 +200,7 @@ namespace Hubble.Core.Data
         {
             get
             {
-                lock (this)
+                lock (_SyncObj)
                 {
                     return _LastDocId;
                 }
@@ -310,7 +311,7 @@ namespace Hubble.Core.Data
         {
             get
             {
-                lock (this)
+                lock (_SyncObj)
                 {
                     foreach (InvertedIndex index in _FieldInvertedIndex.Values)
                     {
@@ -364,7 +365,7 @@ namespace Hubble.Core.Data
 
         internal void SetLastModifyTicks(DateTime time)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 if (_PayloadFile != null)
                 {
@@ -381,7 +382,7 @@ namespace Hubble.Core.Data
         {
             get
             {
-                lock (this)
+                lock (_SyncObj)
                 {
                     return _LastModifyTicks;
                 }
@@ -511,7 +512,7 @@ namespace Hubble.Core.Data
 
         private void AddFieldInvertedIndex(string fieldName, InvertedIndex index)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 index.ForceCollectCount = _Table.ForceCollectCount;
                 _FieldInvertedIndex.Add(fieldName.Trim().ToLower(), index);
@@ -632,7 +633,7 @@ namespace Hubble.Core.Data
 
         internal InvertedIndex[] GetInvertedIndexes()
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 InvertedIndex[] result = new InvertedIndex[_FieldInvertedIndex.Count];
 
@@ -652,7 +653,7 @@ namespace Hubble.Core.Data
 
         internal InvertedIndex GetInvertedIndex(string fieldName)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 InvertedIndex index;
 
@@ -669,7 +670,7 @@ namespace Hubble.Core.Data
 
         private void ClearAll()
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 _FieldIndex.Clear();
                 _FieldInvertedIndex.Clear();
@@ -680,7 +681,7 @@ namespace Hubble.Core.Data
 
         private void AddFieldIndex(string fieldName, Field field)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 _FieldIndex.Add(fieldName.Trim().ToLower(), field);
             }
@@ -688,7 +689,7 @@ namespace Hubble.Core.Data
 
         public Field GetField(string fieldName)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 Field field;
 
@@ -706,7 +707,7 @@ namespace Hubble.Core.Data
 
         internal List<Field> GetAllFields()
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 List<Field> selectFields = new List<Field>();
 
@@ -731,7 +732,7 @@ namespace Hubble.Core.Data
 
         internal List<Field> GetAllSelectFields()
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 List<Field> selectFields = new List<Field>();
 
@@ -1183,7 +1184,7 @@ namespace Hubble.Core.Data
                     //set payload file name
                     _PayloadFileName = Hubble.Framework.IO.Path.AppendDivision(_Directory, '\\') + "Payload.db";
 
-                    lock (this)
+                    lock (_SyncObj)
                     {
                         //Get doc id replace field
                         if (DocIdReplaceField != null)
@@ -1488,7 +1489,7 @@ namespace Hubble.Core.Data
 
                 int* payloadData;
 
-                lock (this)
+                lock (_SyncObj)
                 {
                     if (!_DocPayload.TryGetData(docId, out payloadData))
                     {
@@ -1597,7 +1598,7 @@ namespace Hubble.Core.Data
         {
             int numDocWords = 1000000;
 
-            lock (this)
+            lock (_SyncObj)
             {
                 _DocPayload.TryGetWordCount(docId, tabIndex, ref numDocWords);
             }
@@ -1608,7 +1609,7 @@ namespace Hubble.Core.Data
 
         internal unsafe void FillPayloadRank(int rankTabIndex, int count, OriginalDocumentPositionList[] docPayloads)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 _DocPayload.FillRank(rankTabIndex, count, docPayloads);
             }
@@ -1617,7 +1618,7 @@ namespace Hubble.Core.Data
         internal unsafe void FillDocIdPayloadData(Query.DocIdPayloadData[] docidPayloads,
             int count)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 int len = Math.Min(docidPayloads.Length, count);
 
@@ -1644,7 +1645,7 @@ namespace Hubble.Core.Data
 
         internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults, int count)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 int len = Math.Min(docResults.Length, count);
 
@@ -1680,7 +1681,7 @@ namespace Hubble.Core.Data
 
         public unsafe int* GetPayloadData(int docId)
         {
-            lock (this)
+            lock (_SyncObj)
             {
                 int* payloadData;
                 if (_DocPayload.TryGetData(docId, out payloadData))
@@ -1935,7 +1936,7 @@ namespace Hubble.Core.Data
                     System.IO.File.Delete(_PayloadFileName);
                 }
 
-                lock (this)
+                lock (_SyncObj)
                 {
                     //Reset last docid
                     _LastDocId = 0;
@@ -2623,7 +2624,7 @@ namespace Hubble.Core.Data
 
                         int* payLoadData;
                         int payLoadFileIndex;
-                        lock (this)
+                        lock (_SyncObj)
                         {
                             int payLoadLength;
                             if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
@@ -2899,7 +2900,7 @@ namespace Hubble.Core.Data
 
                         int* payLoadData;
                         int payLoadFileIndex;
-                        lock (this)
+                        lock (_SyncObj)
                         {
                             int payLoadLength;
                             if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
@@ -3015,7 +3016,7 @@ namespace Hubble.Core.Data
 
                 int delCount = _DelProvider.Delete(docs);
 
-                lock (this)
+                lock (_SyncObj)
                 {
                     foreach (InvertedIndex index in _FieldInvertedIndex.Values)
                     {
