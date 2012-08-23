@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.8.5")]
-[assembly: AssemblyFileVersion("1.2.8.5")]
+[assembly: AssemblyVersion("1.2.8.6")]
+[assembly: AssemblyFileVersion("1.2.8.6")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -242,4 +242,6 @@ using System.Runtime.InteropServices;
  * Fix a bug that if payload.db large than 4GB, will throw a exception.
  * 1.2.8.5
  * change lock (this) to lock (_SyncObj) of DBProvider class. 
+ * 1.2.8.6
+ * Deadlock in DBProvider with _SyncObj. Try to fix it.
  *****************************************************************************************/

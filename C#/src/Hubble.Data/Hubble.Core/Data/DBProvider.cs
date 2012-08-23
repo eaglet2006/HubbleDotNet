@@ -365,13 +365,25 @@ namespace Hubble.Core.Data
 
         internal void SetLastModifyTicks(DateTime time)
         {
+            bool getLastModifyTicksFromPayload = false;
+
             lock (_SyncObj)
             {
-                if (_PayloadFile != null)
+                getLastModifyTicksFromPayload = _PayloadFile != null;
+            }
+
+            if (getLastModifyTicksFromPayload)
+            {
+                long lastModifyTicks = _PayloadFile.SetPayloadLastWriteTime(time).ToFileTimeUtc();
+
+                lock (_SyncObj)
                 {
-                    _LastModifyTicks = _PayloadFile.SetPayloadLastWriteTime(time).ToFileTimeUtc();
+                    _LastModifyTicks = lastModifyTicks;
                 }
-                else
+            }
+            else
+            {
+                lock (_SyncObj)
                 {
                     _LastModifyTicks = time.ToFileTimeUtc();
                 }
@@ -674,9 +686,10 @@ namespace Hubble.Core.Data
             {
                 _FieldIndex.Clear();
                 _FieldInvertedIndex.Clear();
-                _DocPayload.Clear();
                 _PayloadFile = null;
             }
+
+            _DocPayload.Clear();
         }
 
         private void AddFieldIndex(string fieldName, Field field)
@@ -1489,13 +1502,11 @@ namespace Hubble.Core.Data
 
                 int* payloadData;
 
-                lock (_SyncObj)
+                if (!_DocPayload.TryGetData(docId, out payloadData))
                 {
-                    if (!_DocPayload.TryGetData(docId, out payloadData))
-                    {
-                        payloadData = null;
-                    }
+                    payloadData = null;
                 }
+                
 
                 foreach(Field field in selectFields)
                 {
@@ -1598,10 +1609,7 @@ namespace Hubble.Core.Data
         {
             int numDocWords = 1000000;
 
-            lock (_SyncObj)
-            {
-                _DocPayload.TryGetWordCount(docId, tabIndex, ref numDocWords);
-            }
+            _DocPayload.TryGetWordCount(docId, tabIndex, ref numDocWords);
 
             return numDocWords;
 
@@ -1609,31 +1617,25 @@ namespace Hubble.Core.Data
 
         internal unsafe void FillPayloadRank(int rankTabIndex, int count, OriginalDocumentPositionList[] docPayloads)
         {
-            lock (_SyncObj)
-            {
-                _DocPayload.FillRank(rankTabIndex, count, docPayloads);
-            }
+            _DocPayload.FillRank(rankTabIndex, count, docPayloads);
         }
 
         internal unsafe void FillDocIdPayloadData(Query.DocIdPayloadData[] docidPayloads,
             int count)
         {
-            lock (_SyncObj)
+            int len = Math.Min(docidPayloads.Length, count);
+
+            for (int i = 0; i < len; i++)
             {
-                int len = Math.Min(docidPayloads.Length, count);
-
-                for (int i = 0; i < len; i++)
+                if (docidPayloads[i].PayloadData != null)
                 {
-                    if (docidPayloads[i].PayloadData != null)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    int* payloadData;
-                    if (_DocPayload.TryGetData(docidPayloads[i].DocId, out payloadData))
-                    {
-                        docidPayloads[i].PayloadData = payloadData;
-                    }
+                int* payloadData;
+                if (_DocPayload.TryGetData(docidPayloads[i].DocId, out payloadData))
+                {
+                    docidPayloads[i].PayloadData = payloadData;
                 }
             }
         }
@@ -1645,24 +1647,20 @@ namespace Hubble.Core.Data
 
         internal unsafe void FillPayloadData(Query.DocumentResultForSort[] docResults, int count)
         {
-            lock (_SyncObj)
+            int len = Math.Min(docResults.Length, count);
+
+            for (int i = 0; i < len; i++)
             {
-                int len = Math.Min(docResults.Length, count);
-
-                for (int i = 0; i < len; i++)
+                if (docResults[i].PayloadData != null)
                 {
-                    if (docResults[i].PayloadData != null)
-                    {
-                        continue;
-                    }
-
-                    int* payloadData;
-                    if (_DocPayload.TryGetData(docResults[i].DocId, out payloadData))
-                    {
-                        docResults[i].PayloadData = payloadData;
-                    }
+                    continue;
                 }
 
+                int* payloadData;
+                if (_DocPayload.TryGetData(docResults[i].DocId, out payloadData))
+                {
+                    docResults[i].PayloadData = payloadData;
+                }
             }
         }
 
@@ -1681,17 +1679,14 @@ namespace Hubble.Core.Data
 
         public unsafe int* GetPayloadData(int docId)
         {
-            lock (_SyncObj)
+            int* payloadData;
+            if (_DocPayload.TryGetData(docId, out payloadData))
             {
-                int* payloadData;
-                if (_DocPayload.TryGetData(docId, out payloadData))
-                {
-                    return payloadData;
-                }
-                else
-                {
-                    return null;
-                }
+                return payloadData;
+            }
+            else
+            {
+                return null;
             }
         }
 
@@ -2464,7 +2459,7 @@ namespace Hubble.Core.Data
                 List<PayloadSegment> payloadSegment = new List<PayloadSegment>();
                 List<FieldInfoUpdate> untokenizedFields = new List<FieldInfoUpdate>();
 
-                for(int index = 0; index < fieldValues.Count; index++)
+                for (int index = 0; index < fieldValues.Count; index++)
                 {
                     FieldValue fv = fieldValues[index];
                     string fieldNameKey = fv.FieldName.ToLower().Trim();
@@ -2529,7 +2524,7 @@ namespace Hubble.Core.Data
 
                     int i = 0;
 
-                    for(int index = 0; index < docs.Count; index++)
+                    for (int index = 0; index < docs.Count; index++)
                     {
                         Query.DocumentResultForSort dResult = docs[index];
                         //int docId = dResult.DocId;
@@ -2624,84 +2619,83 @@ namespace Hubble.Core.Data
 
                         int* payLoadData;
                         int payLoadFileIndex;
-                        lock (_SyncObj)
+
+                        int payLoadLength;
+                        if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
                         {
-                            int payLoadLength;
-                            if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
+                            foreach (FieldInfoUpdate fieldUpdate in untokenizedFields)
                             {
-                                foreach(FieldInfoUpdate fieldUpdate in untokenizedFields)
+                                Field field = fieldUpdate.Field;
+                                FieldValue fv = docValues[index][fieldUpdate.Index];
+
+                                fv.Type = field.DataType;
+
+                                if (fv.Value == null)
                                 {
-                                    Field field = fieldUpdate.Field;
-                                    FieldValue fv = docValues[index][fieldUpdate.Index];
-
-                                    fv.Type = field.DataType;
-
-                                    if (fv.Value == null)
+                                    if (!field.CanNull)
                                     {
-                                        if (!field.CanNull)
-                                        {
-                                            throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
-                                                field.Name, _Table.Name));
-                                        }
-
-                                        if (field.DefaultValue != null)
-                                        {
-                                            fv.Value = field.DefaultValue;
-                                        }
-                                        else
-                                        {
-                                            if (field.IndexType != Field.Index.None)
-                                            {
-                                                throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
-                                                    field.Name, _Table.Name));
-                                            }
-                                        }
+                                        throw new DataException(string.Format("Field:{0} in table {1}. Can't be null!",
+                                            field.Name, _Table.Name));
                                     }
 
-
-                                    int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, field.SubTabIndex, fv.Value);
-                                    PayloadSegment ps = new PayloadSegment(field.TabIndex, field.SubTabIndex, field.DataType, data);
-
-                                    if (ps.SubTabIndex >= 0)
+                                    if (field.DefaultValue != null)
                                     {
-                                        if (ps.DataType == DataType.TinyInt)
-                                        {
-                                            ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
-                                            payLoadData[ps.TabIndex] |= ps.Data[0];
-                                        }
-                                        else if (ps.DataType == DataType.SmallInt)
-                                        {
-                                            *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
-                                            payLoadData[ps.TabIndex] |= ps.Data[0];
-                                        }
-                                        else
-                                        {
-                                            throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
-                                        }
-
+                                        fv.Value = field.DefaultValue;
                                     }
                                     else
                                     {
-                                        for (int i = 0; i < ps.Data.Length; i++)
+                                        if (field.IndexType != Field.Index.None)
                                         {
-                                            payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                            throw new DataException(string.Format("Field:{0} in table {1}. Can't insert null value on the field that is indexed!",
+                                                field.Name, _Table.Name));
                                         }
                                     }
-                                    //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
                                 }
 
-                                updateIds.Add(docId);
-                                updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
-                            }
-                        }
 
-                        //if (updateIds.Count >= 1000)
-                        //{
-                        //    _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
-                        //    updateIds.Clear();
-                        //    updatePayloads.Clear();
-                        //}
+                                int[] data = DataTypeConvert.GetData(field.DataType, field.DataLength, field.SubTabIndex, fv.Value);
+                                PayloadSegment ps = new PayloadSegment(field.TabIndex, field.SubTabIndex, field.DataType, data);
+
+                                if (ps.SubTabIndex >= 0)
+                                {
+                                    if (ps.DataType == DataType.TinyInt)
+                                    {
+                                        ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
+                                        payLoadData[ps.TabIndex] |= ps.Data[0];
+                                    }
+                                    else if (ps.DataType == DataType.SmallInt)
+                                    {
+                                        *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
+                                        payLoadData[ps.TabIndex] |= ps.Data[0];
+                                    }
+                                    else
+                                    {
+                                        throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
+                                    }
+
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < ps.Data.Length; i++)
+                                    {
+                                        payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                    }
+                                }
+                                //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
+                            }
+
+                            updateIds.Add(docId);
+                            updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
+                        }
                     }
+
+                    //if (updateIds.Count >= 1000)
+                    //{
+                    //    _PayloadFile.Update(updateIds, updatePayloads, _DocPayload);
+                    //    updateIds.Clear();
+                    //    updatePayloads.Clear();
+                    //}
+
 
                     if (updateIds.Count > 0)
                     {
@@ -2900,46 +2894,45 @@ namespace Hubble.Core.Data
 
                         int* payLoadData;
                         int payLoadFileIndex;
-                        lock (_SyncObj)
-                        {
-                            int payLoadLength;
-                            if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
-                            {
-                                foreach (PayloadSegment ps in payloadSegment)
-                                {
-                                    if (ps.SubTabIndex >= 0)
-                                    {
-                                        if (ps.DataType == DataType.TinyInt)
-                                        {
-                                            ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
-                                            payLoadData[ps.TabIndex] |= ps.Data[0];
-                                        }
-                                        else if (ps.DataType == DataType.SmallInt)
-                                        {
-                                            *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
-                                            payLoadData[ps.TabIndex] |= ps.Data[0];
-                                        }
-                                        else
-                                        {
-                                            throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
-                                        }
 
+                        int payLoadLength;
+                        if (_DocPayload.TryGetDataAndFileIndex(docId, out payLoadFileIndex, out payLoadData, out payLoadLength))
+                        {
+                            foreach (PayloadSegment ps in payloadSegment)
+                            {
+                                if (ps.SubTabIndex >= 0)
+                                {
+                                    if (ps.DataType == DataType.TinyInt)
+                                    {
+                                        ((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex] = 0;
+                                        payLoadData[ps.TabIndex] |= ps.Data[0];
+                                    }
+                                    else if (ps.DataType == DataType.SmallInt)
+                                    {
+                                        *(short*)(&(((sbyte*)(&payLoadData[ps.TabIndex]))[ps.SubTabIndex])) = 0;
+                                        payLoadData[ps.TabIndex] |= ps.Data[0];
                                     }
                                     else
                                     {
-                                        for (int i = 0; i < ps.Data.Length; i++)
-                                        {
-                                            payLoadData[i + ps.TabIndex] = ps.Data[i];
-                                            _DocPayload.UpdateRankIndex(docId, ps.TabIndex, ps.Data[i]);
-                                        }
+                                        throw new DataException(string.Format("Invalid type:{0} when ps.SubIndex >=0", ps.DataType));
                                     }
-                                    //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
-                                }
 
-                                updateIds.Add(docId);
-                                updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
+                                }
+                                else
+                                {
+                                    for (int i = 0; i < ps.Data.Length; i++)
+                                    {
+                                        payLoadData[i + ps.TabIndex] = ps.Data[i];
+                                        _DocPayload.UpdateRankIndex(docId, ps.TabIndex, ps.Data[i]);
+                                    }
+                                }
+                                //Array.Copy(ps.Data, 0, payLoadData, ps.TabIndex, ps.Data.Length);
                             }
+
+                            updateIds.Add(docId);
+                            updatePayloads.Add(new Payload(payLoadFileIndex, payLoadData, payLoadLength));
                         }
+
 
                         //if (updateIds.Count >= 1000)
                         //{
