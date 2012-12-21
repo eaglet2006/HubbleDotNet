@@ -33,6 +33,29 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
+        /// <summary>
+        /// Is the tree has or child
+        /// </summary>
+        /// <param name="tree"></param>
+        /// <returns></returns>
+        private bool HasOrChild(ExpressionTree tree)
+        {
+            if (tree.OrChild != null)
+            {
+                return true;
+            }
+
+            if (tree.AndChild != null)
+            {
+                return HasOrChild(tree.AndChild);
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
         private void OptimizeAndChild(ExpressionTree tree)
         {
             ExpressionTree firstTreeUnTokenize = tree;
@@ -45,6 +68,13 @@ namespace Hubble.Core.SFQL.Parse
                 {
                     if (next.Expression is ExpressionTree)
                     {
+                        if (!_ComplexTree)
+                        {
+                            //Expression is Tree and has OR condition, like (a match 'xxx' or b match 'yyy') and ....
+                            //Set it to ComplexTree.
+                            _ComplexTree = HasOrChild(next.Expression as ExpressionTree); //
+                        }
+
                         OptimizeExpressionTree(next.Expression as ExpressionTree);
                     }
 

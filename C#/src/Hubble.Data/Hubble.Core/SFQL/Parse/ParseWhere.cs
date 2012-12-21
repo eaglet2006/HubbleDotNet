@@ -84,7 +84,19 @@ namespace Hubble.Core.SFQL.Parse
             }
         }
 
-        public bool ComplexTree = false;
+        private bool _ComplexTree = false;
+        public bool ComplexTree
+        {
+            get
+            {
+                return _ComplexTree;
+            }
+
+            set
+            {
+                _ComplexTree = value;
+            }
+        }
 
         public ExpressionTree UntokenizedTreeOnRoot = null;
 

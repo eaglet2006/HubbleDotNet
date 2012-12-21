@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.8.6")]
-[assembly: AssemblyFileVersion("1.2.8.6")]
+[assembly: AssemblyVersion("1.2.8.7")]
+[assembly: AssemblyFileVersion("1.2.8.7")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -244,4 +244,8 @@ using System.Runtime.InteropServices;
  * change lock (this) to lock (_SyncObj) of DBProvider class. 
  * 1.2.8.6
  * Deadlock in DBProvider with _SyncObj. Try to fix it.
+ * 1.2.8.7
+ * Fix a bug. If the expression like : (a match 'xxx' or b match 'yyy') and c match 'xxx' ...
+ * it should be a complex expression. Old version think it is not a complex expression and return 
+ * a small result when the expression has between keyword.
  *****************************************************************************************/

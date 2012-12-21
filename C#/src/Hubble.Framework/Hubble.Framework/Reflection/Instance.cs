@@ -50,7 +50,6 @@ namespace Hubble.Framework.Reflection
         static public object CreateInstance(Type type)
         {
             return type.Assembly.CreateInstance(type.FullName);
-
         }
 
         static public object CreateInstance(Type type, string assemblyFile)

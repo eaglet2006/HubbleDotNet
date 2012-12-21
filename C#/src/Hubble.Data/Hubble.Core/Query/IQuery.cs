@@ -109,12 +109,17 @@ namespace Hubble.Core.Query
 
         public bool AndExpressionCanBeOptimized(DBProvider dbProvider)
         {
+            if (ComplexTree)
+            {
+                return false;
+            }
+
             if (NoAndExpression)
             {
                 return true;
             }
 
-            if (!ComplexTree && !NeedQueryFromDatabase && UntokenizedTreeOnRoot != null)
+            if (!NeedQueryFromDatabase && UntokenizedTreeOnRoot != null)
             {
                 bool queryFromDatabase = false;
                 ParseWhere.Preprocess(dbProvider, UntokenizedTreeOnRoot, ref queryFromDatabase);
