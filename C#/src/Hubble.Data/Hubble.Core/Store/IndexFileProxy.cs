@@ -319,12 +319,20 @@ namespace Hubble.Core.Store
                             yield break;
                         }
 
+
+
                         //Get Min Doc id
                         for (int i = 0; i < _DDXFileEnum.Length; i++)
                         {
                             if (minWord == null)
                             {
                                 minWord = _DDXFileEnum[i].Current.Word;
+                                continue;
+                            }
+
+                            if (_DDXFileEnum[i].Current == null)
+                            {
+                                //DDXFile i reached end of the file. eaglet modified at 2013-1-1
                                 continue;
                             }
 
@@ -340,6 +348,13 @@ namespace Hubble.Core.Store
                         //Return min word file position list;
                         for (int i = 0; i < _DDXFileEnum.Length; i++)
                         {
+                            if (_DDXFileEnum[i].Current == null)
+                            {
+                                //DDXFile i reached end of the file. eaglet modified at 2013-1-1
+                                needShrink = true;
+                                continue;
+                            }
+
                             if (minWord == _DDXFileEnum[i].Current.Word)
                             {
                                 result.FilePositionList.Add(new IndexFile.FilePosition(_DDXFileEnum[i].Serial,
