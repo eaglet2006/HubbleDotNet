@@ -36,8 +36,8 @@ using System.Runtime.InteropServices;
 //
 // You can specify all the values or you can default the Revision and Build Numbers 
 // by using the '*' as shown below:
-[assembly: AssemblyVersion("1.2.8.8")]
-[assembly: AssemblyFileVersion("1.2.8.8")]
+[assembly: AssemblyVersion("1.2.8.9")]
+[assembly: AssemblyFileVersion("1.2.8.9")]
 
 /*****************************************************************************************
  * Hubble.Core modification records
@@ -250,4 +250,7 @@ using System.Runtime.InteropServices;
  * a small result when the expression has between keyword.
  * 1.2.8.8
  * Fix a problem of indexfileproxy. continue the loop when _DDXFileEnum[i].Current == null.
+ * 1.2.8.9
+ * Fix a bug, should set TcpClient.NoDelay = true. If not, it will delay long time when the network is not very fast.
+ * This modificaiton will effect Hubble.Client, so you have to replace all client lib normally in Asp Bin folder. 
  *****************************************************************************************/

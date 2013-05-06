@@ -198,12 +198,14 @@ namespace Hubble.Framework.Net
         public TcpClient(bool async)
         {
             _Client = new System.Net.Sockets.TcpClient();
+            _Client.NoDelay = true;
             _Async = async;
         }
 
         public TcpClient()
         {
             _Client = new System.Net.Sockets.TcpClient();
+            _Client.NoDelay = true;
         }
 
         ~TcpClient()
